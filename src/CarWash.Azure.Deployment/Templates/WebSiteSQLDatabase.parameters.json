@@ -6,10 +6,13 @@
             "value": "TestPlan"
         },
         "administratorLogin": {
-            "value": null
+            "value": "AzureDBAccount"
         },
         "databaseName": {
-            "value": null
+            "value": "testdb"
+        },
+        "administratorLoginPassword": {
+            "value": "TestPassword01"
         }
     }
 }
