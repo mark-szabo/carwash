@@ -1,0 +1,231 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "siteName": {
+            "type": "string"
+        },
+        "hostingPlanName": {
+            "type": "string"
+        },
+        "siteLocation": {
+            "type": "string"
+        },
+        "sku": {
+            "type": "string",
+            "allowedValues": [
+                "Free",
+                "Shared",
+                "Basic",
+                "Standard", 
+                "Premium"
+            ],
+            "defaultValue": "Free"
+        },
+        "workerSize": {
+            "type": "string",
+            "allowedValues": [
+                "0",
+                "1",
+                "2"
+            ],
+            "defaultValue": "0"
+        },
+        "repoUrl": {
+            "type": "string"
+        },
+        "branch": {
+            "type": "string",
+            "defaultValue": "master"
+        },
+        "sqlServerName": {
+            "type": "string"
+        },
+        "sqlServerLocation": {
+            "type": "string"
+        },
+        "sqlServerAdminLogin": {
+            "type": "string"
+        },
+        "sqlServerAdminPassword": {
+            "type": "securestring"
+        },
+        "sqlDbName": {
+            "type": "string",
+            "defaultValue": "DemosDB"
+        },
+        "sqlDbCollation": {
+            "type": "string",
+            "defaultValue": "SQL_Latin1_General_CP1_CI_AS"
+        },
+        "sqlDbEdition": {
+            "type": "string",
+            "defaultValue": "Basic"
+        },
+        "sqlDbMaxSizeBytes": {
+            "type": "string",
+            "defaultValue": "1073741824"
+        },
+        "sqlDbServiceObjectiveId": {
+            "type": "string",
+            "defaultValue": "dd6d99bb-f193-4ec1-86f2-43d3bccbc49c"
+        }
+    },
+    "variables": {
+        "apiSiteName": "[concat(parameters('siteName'), 'Api')]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2014-04-01-preview",
+            "name": "[parameters('sqlServerName')]",
+            "type": "Microsoft.Sql/servers",
+            "location": "[parameters('sqlServerLocation')]",
+            "tags": {
+                "displayName": "SQLServer"
+            },
+            "properties": {
+                "administratorLogin": "[parameters('sqlServerAdminLogin')]",
+                "administratorLoginPassword": "[parameters('sqlServerAdminPassword')]"
+            },
+            "resources": [
+                {
+                    "apiVersion": "2014-11-01",
+                    "name": "[parameters('sqlDbName')]",
+                    "type": "databases",
+                    "location": "[parameters('sqlServerLocation')]",
+                    "tags": {
+                        "displayName": "SQLDatabase"
+                    },
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
+                    ],
+                    "properties": {
+                        "edition": "[parameters('sqlDbEdition')]",
+                        "collation": "[parameters('sqlDbCollation')]",
+                        "maxSizeBytes": "[parameters('sqlDbMaxSizeBytes')]",
+                        "requestedServiceObjectiveId": "[parameters('sqlDbServiceObjectiveId')]"
+                    }
+                },
+                {
+                    "apiVersion": "2014-11-01",
+                    "name": "SQLServerFirewallRules",
+                    "type": "firewallrules",
+                    "location": "[parameters('sqlServerLocation')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
+                    ],
+                    "properties": {
+                        "endIpAddress": "0.0.0.0",
+                        "startIpAddress": "0.0.0.0"
+                    }
+                }
+            ]
+        },
+        {
+            "apiVersion": "2014-11-01",
+            "name": "[parameters('hostingPlanName')]",
+            "type": "Microsoft.Web/serverFarms",
+            "location": "[parameters('siteLocation')]",
+            "properties": {
+                "name": "[parameters('hostingPlanName')]",
+                "sku": "[parameters('sku')]",
+                "workerSize": "[parameters('workerSize')]",
+                "numberOfWorkers": 1
+            }
+        },
+        {
+            "apiVersion": "2015-04-01",
+            "name": "[variables('apiSiteName')]",
+            "type": "Microsoft.Web/sites",
+            "location": "[parameters('siteLocation')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverFarms', parameters('hostingPlanName'))]",
+                "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
+            ],
+            "properties": {
+                "serverFarmId": "[parameters('hostingPlanName')]"
+            },
+            "resources": [
+                {
+                    "apiVersion": "2015-04-01",
+                    "name": "appsettings",
+                    "type": "config",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', variables('apiSiteName'))]",
+                    ],
+                    "properties": {
+                        "PROJECT": "src\\MultiChannelToDo\\MultiChannelToDo.csproj",
+                        "clientUrl": "[concat('http://', parameters('siteName'), '.azurewebsites.net')]"
+                    }
+                },
+                {
+                    "apiVersion": "2015-04-01",
+                    "name": "connectionstrings",
+                    "type": "config",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', variables('apiSiteName'))]",
+                        "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
+                    ],
+                    "properties": {
+                        "MultiChannelToDoContext": { "value": "[concat('Data Source=tcp:', reference(concat('Microsoft.Sql/servers/', parameters('sqlServerName'))).fullyQualifiedDomainName, ',1433;Initial Catalog=', parameters('sqlDbName'), ';User Id=', parameters('sqlServerAdminLogin'), '@', parameters('sqlServerName'), ';Password=', parameters('sqlServerAdminPassword'), ';')]", "type": "SQLAzure" }
+                    }
+                },
+                {
+                    "apiVersion": "2015-04-01",
+                    "name": "web",
+                    "type": "sourcecontrols",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', variables('apiSiteName'))]",
+                        "[resourceId('Microsoft.Web/Sites/config', variables('apiSiteName'), 'appsettings')]",
+                        "[resourceId('Microsoft.Web/Sites/config', variables('apiSiteName'), 'connectionstrings')]",
+                    ],
+                    "properties": {
+                        "RepoUrl": "[parameters('repoUrl')]",
+                        "branch": "[parameters('branch')]",
+                        "IsManualIntegration": true
+                    }
+                }
+            ]
+        },
+        {
+            "apiVersion": "2015-04-01",
+            "name": "[parameters('siteName')]",
+            "type": "Microsoft.Web/sites",
+            "location": "[parameters('siteLocation')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverFarms', parameters('hostingPlanName'))]"
+            ],
+            "properties": {
+                "serverFarmId": "[parameters('hostingPlanName')]"
+            },
+            "resources": [
+                {
+                    "apiVersion": "2015-04-01",
+                    "name": "appsettings",
+                    "type": "config",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', parameters('siteName'))]",
+                    ],
+                    "properties": {
+                        "PROJECT": "src\\MultiChannelToDo.Web\\MultiChannelToDo.Web.csproj",
+                        "apiPath": "[concat('http://', variables('apiSiteName'), '.azurewebsites.net/api')]"
+                    }
+                },
+                {
+                    "apiVersion": "2015-04-01",
+                    "name": "web",
+                    "type": "sourcecontrols",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', parameters('siteName'))]",
+                        "[resourceId('Microsoft.Web/Sites/config', parameters('siteName'), 'appsettings')]"
+                    ],
+                    "properties": {
+                        "RepoUrl": "[parameters('repoUrl')]",
+                        "branch": "[parameters('branch')]",
+                        "IsManualIntegration": true
+                    }
+                }
+            ]
+        }
+    ]
+}
