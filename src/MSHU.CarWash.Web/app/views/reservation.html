@@ -1,0 +1,35 @@
+﻿<div ng-init="init()" ng-show="dataLoaded">
+    <div class="row">
+        <div class="alert alert-danger alert-dismissible fade in" role="alert" ng-show="(error != '')">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <strong>OPPS!&nbsp;</strong>{{error}}
+        </div>
+    </div>
+    <div class="white">AKTUÁLIS<hr /></div>
+    <div data-ng-repeat="item in reservationViewModel.ReservationsByDayActive">
+        <div class="white">{{item.MonthName}} {{item.DayNumber}} - {{item.DayName}}</div><br />
+        <div class="list-group">
+            <div class="list-group-item" data-ng-repeat="item2 in item.Reservations">
+                <button class="pull-right btn btn-primary btn-sm" ng-show="item2.IsDeletable" ng-click="deleteReservation(item2.ReservationId);"><span class="glyphicon glyphicon-trash"></span>&nbsp;TÖRÖL</button>
+                <strong>{{item2.VehiclePlateNumber}}&nbsp;&nbsp;{{item2.EmployeeName}}</strong><br />
+                {{item2.SelectedServiceName}}<br />
+                {{item2.Comment}}&nbsp;
+            </div>
+        </div>
+    </div>
+    <br />
+    <div class="white">ELŐZMÉNYEK<hr /></div>
+    <div data-ng-repeat="item in reservationViewModel.ReservationsByDayHistory">
+        <div class="white">{{item.MonthName}} {{item.DayNumber}} - {{item.DayName}}</div><br />
+        <div class="list-group">
+            <div class="list-group-item" data-ng-repeat="item2 in item.Reservations">
+                <button class="pull-right btn btn-primary btn-sm" ng-show="item2.IsDeletable" ng-click="deleteReservation(item2.ReservationId);"><span class="glyphicon glyphicon-trash"></span>&nbsp;TÖRÖL</button>
+                <strong>{{item2.VehiclePlateNumber}}&nbsp;&nbsp;{{item2.EmployeeName}}</strong><br />
+                {{item2.SelectedServiceName}}<br />
+                {{item2.Comment}}&nbsp;
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Carwash</title>
+    <link href="content/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="content/css/bootstrap-theme.min.css" rel="stylesheet" />
+    <link href="content/css/site.min.css" rel="stylesheet" />
+    <link href="content/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="https://code.jquery.com/ui/1.11.4/themes/start/jquery-ui.css" rel="stylesheet" />
+    <script type="text/javascript">  var appInsights=window.appInsights||function(config){    function r(config){t[config]=function(){var i=arguments;t.queue.push(function(){t[config].apply(t,i)})}}var t={config:config},u=document,e=window,o="script",s=u.createElement(o),i,f;for(s.src=config.url||"//az416426.vo.msecnd.net/scripts/a/ai.0.js",u.getElementsByTagName(o)[0].parentNode.appendChild(s),t.cookie=u.cookie,t.queue=[],i=["Event","Exception","Metric","PageView","Trace"];i.length;)r("track"+i.pop());return r("setAuthenticatedUserContext"),r("clearAuthenticatedUserContext"),config.disableExceptionTracking||(i="onerror",r("_"+i),f=e[i],e[i]=function(config,r,u,e,o){var s=f&&f(config,r,u,e,o);return s!==!0&&t["_"+i](config,r,u,e,o),s}),t    }({        instrumentationKey:"817a13fb-f2a1-4744-a484-c85c5785d2e1"    });           window.appInsights=appInsights;    appInsights.trackPageView();</script>
+</head>
+<body ng-app="carwashApp" ng-controller="homeCtrl" role="document">
+    <div class="loading-dialog" data-loading>
+    </div>
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed"
+                        data-toggle="collapse"
+                        data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#/Home"><i class="fa fa-car"></i>&nbsp;C A R W A S H</a>
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li ng-class="{ active: isActive('/Calendar') }"><a href="#/Calendar">NAPTÁR</a></li>
+                    <li ng-class="{ active: isActive('/Reservation') }"><a href="#/Reservation">FOGLALÁSAIM</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li ng-hide="userInfo.isAuthenticated" ng-click="login()"><a>BEJELENTKEZÉS</a></li>
+                    <li class="dropdown" ng-show="userInfo.isAuthenticated">
+                        <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{userInfo.profile.family_name}} {{userInfo.profile.given_name}}</a>
+                        <ul class="dropdown-menu">
+                            <li><a ng-click="logout()">KIJELENTKEZÉS</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="container" role="main">
+        <br /><br /><br />
+        <div class="row">
+            <div class="col-xs-12">
+                <div ng-view class="panel-body">
+                </div>
+            </div>
+        </div>
+    </div>
+    <br /><br />
+    <footer>
+        <div class="navbar navbar-inverse navbar-fixed-bottom" id="footer">
+            <div class="footer-div">
+                <button type="button" class="close pull-right grey" aria-label="Close" onclick="toggler('footer');">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <a class="footer-link" href="http://www.microsoft.hu">© 2015 Microsoft</a>&nbsp;|&nbsp;
+                <a class="footer-link" href="http://go.microsoft.com/fwlink/?LinkId=521839">Adatvédelem és cookie-k</a>&nbsp;|&nbsp;
+                <a class="footer-link" href="http://www.microsoft.com/en-us/legal/intellectualproperty/copyright/default.aspx">Használati feltételek</a>&nbsp;
+            </div>
+        </div>
+    </footer>
+    <script src="scripts/jquery-2.1.4.min.js"></script>
+    <script src="scripts/jquery-ui-1.11.4.min.js"></script>
+    <script src="scripts/angular.min.js"></script>
+    <script src="scripts/angular-route.min.js"></script>
+    <script src="scripts/angular-messages.min.js"></script>
+    <script src="scripts/bootstrap.min.js"></script>
+    <script src="scripts/adal.min.js"></script>
+    <script src="scripts/adal-angular.min.js"></script>
+    <script src="app/all.min.js"></script>
+    <script>
+        $(document).on('click', '.navbar-collapse.in', function (e) {
+            if ($(e.target).is('a') && $(e.target).attr('class') != 'dropdown-toggle') {
+                $(this).collapse('hide');
+            }
+        });
+        function toggler(divId) {
+            $("#" + divId).toggle();
+        }
+    </script>
+</body>
+</html>

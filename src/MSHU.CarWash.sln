@@ -1,0 +1,35 @@
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSHU.CarWash", "MSHU.CarWash.Web\MSHU.CarWash.Web.csproj", "{0E4A83B9-04D4-4EFF-BB15-375D25B6734A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{0C140914-82CB-4897-A204-10459FE882E6}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\nuget.config = .nuget\nuget.config
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0E4A83B9-04D4-4EFF-BB15-375D25B6734A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E4A83B9-04D4-4EFF-BB15-375D25B6734A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E4A83B9-04D4-4EFF-BB15-375D25B6734A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E4A83B9-04D4-4EFF-BB15-375D25B6734A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 2
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://kulcsargabor.visualstudio.com/defaultcollection
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = MSHU.CarWash\\MSHU.CarWash.csproj
+		SccProjectName1 = MSHU.CarWash
+		SccLocalPath1 = MSHU.CarWash
+	EndGlobalSection
+EndGlobal

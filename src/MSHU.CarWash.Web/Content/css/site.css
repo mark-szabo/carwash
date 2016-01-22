@@ -1,0 +1,133 @@
+﻿body {
+    font-family: 'Segoe UI';
+    background-color: rgb(0, 120, 215);
+}
+
+hr {
+        margin-top: 3px;
+}
+
+.white {
+    color:white;
+}
+
+.grey {
+    color:rgb(157, 157, 157) 
+}
+
+.orange {
+    color: rgb(216,59,1)
+}
+
+.red {
+    color:rgb(232,17,35)
+}
+
+.green {
+    color:rgb(16,124,16)
+}
+
+.jumbotron {
+  background-color: rgb(255, 255, 255);
+}
+
+.container .jumbotron,
+.container-fluid .jumbotron {
+  border-radius: 0;
+}
+
+.text-muted {
+    color: rgb(255,255,255);
+}
+
+.btn {
+    border-radius:0;
+    background-color:rgb(0,24,143)
+}
+
+.btn-primary {
+    background-color:rgb(0,24,143);
+    background-image: none;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: rgb(0,32,80);
+}
+
+.form-control {
+    border-radius:0;
+}
+
+.badge {
+  border-radius: 0;
+}
+
+a.list-group-item:hover,
+button.list-group-item:hover,
+a.list-group-item:focus,
+button.list-group-item:focus {
+  background-color: rgb(210, 210, 210);
+}
+
+.today-emphasize {
+    color:rgb(255, 185,0);
+    font-weight:bold;
+}
+
+.text-danger {
+    color:rgb(232,17,35);
+}
+
+.navbar-inverse .navbar-brand{
+     color:rgb(210, 210, 210);
+}
+
+.navbar-inverse .navbar-nav{
+     text-transform: uppercase;
+}
+
+.list-group-item {
+    margin-bottom:3px;
+}
+
+.list-group-item:first-child {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.list-group-item:last-child {
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.footer-div {
+    text-align:center;
+    color:rgb(157, 157, 157);
+    padding-bottom: 15px;
+    padding-top: 15px;
+    padding-left: 15px;
+    padding-right: 15px;
+} 
+
+a.footer-link
+ {
+    color: rgb(157, 157, 157);
+    text-decoration: none;
+}
+
+a.footer-link:hover, a.footer-link:focus
+ {
+    color: rgb(255, 255, 255);
+}
+
+.loading-dialog {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: rgba( 0, 0, 0, .4 ) url('../img/loading.gif') 50% 50% no-repeat;
+}

@@ -1,0 +1,29 @@
+﻿<div ng-init="init()" ng-show="dataLoaded">
+    <div class="row">
+        <div class="alert alert-danger alert-dismissible fade in" role="alert" ng-show="(error != '')">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <strong>OPPS!&nbsp;</strong>{{error}}
+        </div>
+    </div>
+    <div class="row">
+        <div>
+            <div class="glyphicon glyphicon-chevron-left fa-2x col-xs-2 white text-left" ng-click="getweek(weekViewModel.PreviousWeekOffset);"></div>
+            <div class="col-xs-8 fa-2x white text-center">{{weekViewModel.DateInterval}}</div>
+            <div class="glyphicon glyphicon-chevron-right fa-2x col-xs-2 white text-right" ng-click="getweek(weekViewModel.NextWeekOffset);"></div>
+        </div>
+    </div>
+    <hr />
+    <div class="list-group">
+        <a class="list-group-item" data-ng-repeat="item in weekViewModel.Days" ng-click="showDay(item.Day, weekViewModel.Offset);">
+            <span ng-class="{'today-emphasize': item.IsToday}">{{item.DayName}} - {{item.DayNumber}}</span>
+            <span data-ng-repeat="r in item.ReservedSlotCount">
+                <i class="fa fa-square red pull-right"></i>
+            </span>
+            <span data-ng-repeat="a in item.AvailableSlotCount">
+                <i class="fa fa-square green pull-right"></i>
+            </span>
+        </a>
+    </div>
+</div>
