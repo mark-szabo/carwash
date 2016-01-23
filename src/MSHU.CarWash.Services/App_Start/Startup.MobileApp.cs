@@ -6,9 +6,10 @@ using System.Web.Http;
 using Microsoft.Azure.Mobile.Server;
 using Microsoft.Azure.Mobile.Server.Authentication;
 using Microsoft.Azure.Mobile.Server.Config;
-using MSHU.CarWash.Services.DataObjects;
 using MSHU.CarWash.Services.Models;
 using Owin;
+using AutoMapper;
+using MSHU.CarWash.Services.DataObjects;
 
 namespace MSHU.CarWash.Services
 {
@@ -16,10 +17,27 @@ namespace MSHU.CarWash.Services
     {
         public static void ConfigureMobileApp(IAppBuilder app)
         {
+            // Represents the configuration options for the service
             HttpConfiguration config = new HttpConfiguration();
 
-            //For more information on Web API tracing, see http://go.microsoft.com/fwlink/?LinkId=620686 
+            // For more information on Web API tracing, see http://go.microsoft.com/fwlink/?LinkId=620686 
             config.EnableSystemDiagnosticsTracing();
+
+            // To enable individual features, you must call extension methods on the MobileAppConfiguration object 
+            // before calling ApplyTo.
+
+            // UseDefaultConfiguration() is equivalent to the following setup:
+            // new MobileAppConfiguration()
+            //     .AddMobileAppHomeController()             // from the Home package
+            //     .MapApiControllers()
+            //     .AddTables(                               // from the Tables package
+            //         new MobileAppTableConfiguration()
+            //             .MapTableControllers()
+            //             .AddEntityFramework()             // from the Entity package
+            //         )
+            //     .AddPushNotifications()                   // from the Notifications package
+            //     .MapLegacyCrossDomainController()         // from the CrossDomain package
+            //     .ApplyTo(config);
 
             new MobileAppConfiguration()
                 .UseDefaultConfiguration()
@@ -47,22 +65,28 @@ namespace MSHU.CarWash.Services
             }
             app.UseWebApi(config);
         }
+
+        public static void ConfigureAutoMapper()
+        {
+            Mapper.CreateMap<Employee, EmployeeDto>()
+                .ForMember(employeeDto => employeeDto.Id, mce => mce.MapFrom(employee => employee.EmployeeId));
+        }
     }
 
     public class CarWashInitializer : CreateDatabaseIfNotExists<CarWashContext>
     {
         protected override void Seed(CarWashContext context)
         {
-            List<TodoItem> todoItems = new List<TodoItem>
-            {
-                new TodoItem { Id = Guid.NewGuid().ToString(), Text = "First item", Complete = false },
-                new TodoItem { Id = Guid.NewGuid().ToString(), Text = "Second item", Complete = false },
-            };
+            //List<TodoItem> todoItems = new List<TodoItem>
+            //{
+            //    new TodoItem { Id = Guid.NewGuid().ToString(), Text = "First item", Complete = false },
+            //    new TodoItem { Id = Guid.NewGuid().ToString(), Text = "Second item", Complete = false },
+            //};
 
-            foreach (TodoItem todoItem in todoItems)
-            {
-                context.Set<TodoItem>().Add(todoItem);
-            }
+            //foreach (TodoItem todoItem in todoItems)
+            //{
+            //    context.Set<TodoItem>().Add(todoItem);
+            //}
 
             base.Seed(context);
         }

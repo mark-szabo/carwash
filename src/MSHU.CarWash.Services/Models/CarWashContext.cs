@@ -22,7 +22,9 @@ namespace MSHU.CarWash.Services.Models
         {
         } 
 
-        public DbSet<TodoItem> TodoItems { get; set; }
+        public DbSet<Employee> Employees { get; set; }
+        public DbSet<Reservation> Reservations { get; set; }
+
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
