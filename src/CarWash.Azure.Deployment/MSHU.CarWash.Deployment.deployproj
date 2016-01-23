@@ -35,7 +35,6 @@
     <Content Include="Scripts\Deploy-AzureResourceGroup.ps1" />
     <Content Include="Templates\WebSiteSQLDatabase.json" />
     <Content Include="Templates\WebSiteSQLDatabase.parameters.json" />
-    <None Include="Templates\azuredeploy.json" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Tools\AzCopy.exe" />
