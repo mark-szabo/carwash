@@ -8,7 +8,8 @@ Param(
     [switch] $UploadArtifacts,
     [string] $StorageAccountName,
     [string] $StorageAccountResourceGroupName, 
-    [string] $StorageContainerName = $ResourceGroupName.ToLowerInvariant() + '-stageartifacts',
+	#must be changed, otherwise AzCopy fails ('.' causes error during parse)
+    [string] $StorageContainerName = "carwash" + '-stageartifacts',
     [string] $TemplateFile = '..\Templates\WebSiteSQLDatabase.json',
     [string] $TemplateParametersFile = '..\Templates\WebSiteSQLDatabase.parameters.json',
     [string] $ArtifactStagingDirectory = '..\bin\Debug\staging',
@@ -73,10 +74,12 @@ if ($UploadArtifacts) {
 
     # Generate the value for artifacts location if it is not provided in the parameter file
     $ArtifactsLocation = $OptionalParameters[$ArtifactsLocationName]
-    if ($ArtifactsLocation -eq $null) {
+    
+	#This needs to be replaced with the following lines.  All we are doing is commenting out the if statement, the $ArtifactsLocation variable is actually not null, it is a space, so that throws off the script.
+	#if ($ArtifactsLocation -eq $null) {
         $ArtifactsLocation = $StorageAccountContext.BlobEndPoint + $StorageContainerName
         $OptionalParameters[$ArtifactsLocationName] = $ArtifactsLocation
-    }
+    #}
 
     # Use AzCopy to copy files from the local storage drop path to the storage account container
     & $AzCopyPath """$ArtifactStagingDirectory""", $ArtifactsLocation, "/DestKey:$StorageAccountKey", "/S", "/Y", "/Z:$env:LocalAppData\Microsoft\Azure\AzCopy\$ResourceGroupName"

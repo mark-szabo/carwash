@@ -76,7 +76,27 @@
       "metadata": {
         "description": "Describes the performance level for Edition"
       }
-    }
+    },
+      "_artifactsLocation": {
+          "type": "string"
+      },
+      "_artifactsLocationSasToken": {
+          "type": "securestring"
+      },
+      "CarWashApiServiceWebDeployPackageFolder": {
+          "type": "string",
+          "minLength": 1,
+          "metadata": {
+              "description": "WebDeploy package location. This path is relative to the _artifactsLocation parameter"
+          }
+      },
+      "CarWashApiServiceWebDeployPackageFileName": {
+          "type": "string",
+          "minLength": 1,
+          "metadata": {
+              "description": "Name of the webdeploy package"
+          }
+      }
   },
   "variables": {
     "apiSiteName": "[concat('webSite', uniqueString(resourceGroup().id))]",
@@ -182,9 +202,30 @@
                     "[concat('Microsoft.Web/Sites/', variables('apiSiteName'))]"
                 ],
                 "properties": {
-                    "DefaultConnection": {
+                    "MS_TableConnectionString": {
                         "value": "[concat('Data Source=tcp:', reference(concat('Microsoft.Sql/servers/', variables('sqlserverName'))).fullyQualifiedDomainName, ',1433;Initial Catalog=', parameters('databaseName'), ';User Id=', parameters('administratorLogin'), '@', variables('sqlserverName'), ';Password=', parameters('administratorLoginPassword'), ';')]",
                         "type": "SQLServer"
+                    }
+                }
+            },
+            {
+                "name": "MSDeploy",
+                "type": "extensions",
+                "location": "[resourceGroup().location]",
+                "apiVersion": "2015-08-01",
+                "dependsOn": [
+                    "[concat('Microsoft.Web/sites/', variables('apiSiteName'))]"
+                ],
+                "tags": {
+                    "displayName": "CarWashApiServiceWebDeploy"
+                },
+                "properties": {
+                    "packageUri": "[concat(parameters('_artifactsLocation'), '/', parameters('CarWashApiServiceWebDeployPackageFolder'), '/', parameters('CarWashApiServiceWebDeployPackageFileName'), parameters('_artifactsLocationSasToken'))]",
+                    "dbType": "Sql",
+                    "connectionString": "[concat('Data Source=tcp:', reference(concat('Microsoft.Sql/servers/', variables('sqlserverName'))).fullyQualifiedDomainName, ',1433;Initial Catalog=', parameters('databaseName'), ';User Id=', parameters('administratorLogin'), '@', variables('sqlserverName'), ';Password=', parameters('administratorLoginPassword'), ';')]",
+                    "setParameters": {
+                        "IIS Web Application Name": "[variables('apiSiteName')]",
+                        "MS_TableConnectionString-Web.config Connection String": "[concat('Data Source=tcp:', reference(concat('Microsoft.Sql/servers/', variables('sqlserverName'))).fullyQualifiedDomainName, ',1433;Initial Catalog=', parameters('databaseName'), ';User Id=', parameters('administratorLogin'), '@', variables('sqlserverName'), ';Password=', parameters('administratorLoginPassword'), ';')]"
                     }
                 }
             }

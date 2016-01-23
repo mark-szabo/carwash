@@ -9,10 +9,16 @@
             "value": "AzureDBAccount"
         },
         "databaseName": {
-            "value": "testdb"
+            "value": "MSHU.CarWashService.Database"
         },
         "administratorLoginPassword": {
             "value": "TestPassword01"
+        },
+        "CarWashApiServiceWebDeployPackageFolder": {
+            "value": "MSHU.CarWash.Services"
+        },
+        "CarWashApiServiceWebDeployPackageFileName": {
+            "value": "package.zip"
         }
     }
 }

@@ -55,5 +55,12 @@
       <Visible>False</Visible>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MSHU.CarWash.Services\MSHU.CarWash.Services.csproj">
+      <Targets>Build;Package</Targets>
+      <AdditionalProperties>PackageLocation=..\CarWash.Azure.Deployment\$(ProjectReferencesOutputPath)\MSHU.CarWash.Services\package.zip</AdditionalProperties>
+      <IncludeFilePath>$(ProjectReferencesOutputPath)\MSHU.CarWash.Services\package.zip</IncludeFilePath>
+    </ProjectReference>
+  </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />
 </Project>
