@@ -1,0 +1,36 @@
+﻿<views:BasePage
+    x:Class="MSHU.CarWash.UWP.Views.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MSHU.CarWash.UWP.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="using:MSHU.CarWash.UWP.Views"
+    xmlns:vm="using:MSHU.CarWash.UWP.ViewModels"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <RelativePanel>
+            <RelativePanel.Background>
+                <ImageBrush Stretch="UniformToFill" ImageSource="ms-appx:///Assets/Background.png"/>
+            </RelativePanel.Background>
+            <TextBlock RelativePanel.AlignHorizontalCenterWithPanel="True"
+                       RelativePanel.Above="LoginTextBlock" Text="Welcome!" x:Name="WelComeTextBlock"
+                       FontSize="24" Margin="8"/>
+            <TextBlock RelativePanel.AlignHorizontalCenterWithPanel="True"
+                       RelativePanel.AlignVerticalCenterWithPanel="True" FontSize="15" Margin="8"
+                       Text="Please login to access application functionality!" x:Name="LoginTextBlock" />
+            <Button RelativePanel.AlignHorizontalCenterWithPanel="True" Padding="0" x:Name="LoginAADButton"
+                    RelativePanel.Below="LoginTextBlock" Command="{Binding LoginWithAADCommand}">
+                <Button.Content>
+                    <Image Source="ms-appx:///Assets/work-or-school-account.png" Width="200" />
+                </Button.Content>
+            </Button>
+            <Button RelativePanel.AlignHorizontalCenterWithPanel="True" Padding="0" Margin="0,8,0,0"
+                    RelativePanel.Below="LoginAADButton" Content="Login with Microsoft account"
+                    IsEnabled="False">
+            </Button>
+        </RelativePanel>
+    </Grid>
+
+</views:BasePage>
