@@ -1,0 +1,29 @@
+﻿<views:BasePage
+    x:Class="MSHU.CarWash.UWP.Views.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MSHU.CarWash.UWP.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="using:MSHU.CarWash.UWP.Views"
+    mc:Ignorable="d">
+
+    <RelativePanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <TextBlock Text="User:" x:Name="UserTextBlock" Margin="12"
+                   RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignTopWithPanel="True" />
+        <TextBlock Text="Given name:" x:Name="GivenNameTextBlock" Margin="12"
+                   RelativePanel.AlignLeftWithPanel="True" RelativePanel.Below="UserTextBlock" />
+        <TextBlock Text="{Binding GivenName}" RelativePanel.RightOf="GivenNameTextBlock"
+                   RelativePanel.AlignVerticalCenterWith="GivenNameTextBlock"/>
+        <TextBlock Text="Family name:" x:Name="FamilyNameTextBlock" Margin="12"
+                   RelativePanel.AlignLeftWithPanel="True" RelativePanel.Below="GivenNameTextBlock" />
+        <TextBlock Text="{Binding FamilyName}" RelativePanel.RightOf="FamilyNameTextBlock"
+                   RelativePanel.AlignVerticalCenterWith="FamilyNameTextBlock"/>
+        <TextBlock Text="Email:" x:Name="EmailTextBlock" Margin="12"
+                   RelativePanel.AlignLeftWithPanel="True" RelativePanel.Below="FamilyNameTextBlock" />
+        <TextBlock Text="{Binding Email}" RelativePanel.RightOf="EmailTextBlock"
+                   RelativePanel.AlignVerticalCenterWith="EmailTextBlock"/>
+        <Button Content="Sign out" Command="{Binding SignOutWithAADCommand}" Margin="12"
+                RelativePanel.Below="EmailTextBlock" RelativePanel.AlignLeftWithPanel="True" />
+    </RelativePanel>
+</views:BasePage>
