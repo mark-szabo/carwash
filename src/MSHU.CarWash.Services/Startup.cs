@@ -13,6 +13,7 @@ namespace MSHU.CarWash.Services
         {
             ConfigureMobileApp(app);
             ConfigureAutoMapper();
+            ConfigureAuth(app);
         }
     }
 }

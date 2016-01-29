@@ -1,7 +1,10 @@
 ﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using System;
+using System.Diagnostics;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using Windows.UI.Popups;
 
 namespace MSHU.CarWash.UWP.Common
 {
@@ -11,8 +14,8 @@ namespace MSHU.CarWash.UWP.Common
     public class AuthenticationManager
     {
         // Native client application settings
-        private string _clientID = "9bd115b5-299b-4264-a9b7-2b5361f26e67";
-        private Uri _redirectUri = new Uri("ms-app://s-1-15-2-348789351-3529148773-2918319933-3807175127-3638082815-3054471230-807679675/");
+        private string _clientID = "d79fea3f-2357-4797-9be8-48d630f6e1a3";
+        private Uri _redirectUri = new Uri("http://aszegowebapp.webapi.client");
         // Session to Azure AD
         private const string _authority = "https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47";
         private AuthenticationContext _authContext = new AuthenticationContext(_authority);
@@ -23,7 +26,7 @@ namespace MSHU.CarWash.UWP.Common
         public const string TenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47";
         public const string ClientIdForUserAuthn = "66133929-66a4-4edc-aaee-13b04b03207d";
         public const string AuthString = "https://login.microsoftonline.com/" + TenantName;
-        public const string ResourceUrl = "https://graph.windows.net";
+        public const string ResourceUrl = "https://aszegoappservice.azurewebsites.net";
 
         /// <summary>
         /// Value indicates if the user has already been authenticated.
@@ -52,8 +55,8 @@ namespace MSHU.CarWash.UWP.Common
                 }
                 else
                 {
-                    //MessageDialog dialog = new MessageDialog(string.Format("If the error continues, please contact your administrator.\n\nError: {0}\n\nError Description:\n\n{1}", result.Error, result.ErrorDescription), "Sorry, an error occurred while signing you in.");
-                    //await dialog.ShowAsync();
+                    MessageDialog dialog = new MessageDialog(string.Format("If the error continues, please contact your administrator.\n\nError: {0}\n\nError Description:\n\n{1}", result.Error, result.ErrorDescription), "Sorry, an error occurred while signing you in.");
+                    await dialog.ShowAsync();
                 }
             }
             else
@@ -72,15 +75,38 @@ namespace MSHU.CarWash.UWP.Common
         /// <returns></returns>
         public async Task<bool> SignOutWithAAD()
         {
-            bool result = false;
-            _authContext.TokenCache.Clear();
-            string requestUrl = "https://login.windows.net/common/oauth2/logout";
-            HttpResponseMessage msg = await SendMessage(requestUrl);
-            if (msg.IsSuccessStatusCode)
+            AuthenticationResult result = await _authContext.AcquireTokenAsync(
+                ResourceUrl,
+                _clientID,
+                _redirectUri,
+                PromptBehavior.Auto);
+            // Create an HTTP client and add the token to the Authorization header
+            HttpClient httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                result.AccessTokenType, result.AccessToken);
+
+            // Call the Web API to get the values
+            Uri requestURI = new Uri(new Uri("https://aszegoappservice.azurewebsites.net/"), "api/values");
+            Debug.WriteLine("Reading values from '{0}'.", requestURI);
+            HttpResponseMessage httpResponse = await httpClient.GetAsync(requestURI);
+            Debug.WriteLine("HTTP Status Code: '{0}'", httpResponse.StatusCode.ToString());
+            if (httpResponse.IsSuccessStatusCode)
             {
-                result = true;
+                //
+                // Code to do something with the data returned goes here.
+                //
             }
-            return result;
+            return (httpResponse.IsSuccessStatusCode);
+
+            //bool result = false;
+            //_authContext.TokenCache.Clear();
+            //string requestUrl = "https://login.windows.net/common/oauth2/logout";
+            //HttpResponseMessage msg = await SendMessage(requestUrl);
+            //if (msg.IsSuccessStatusCode)
+            //{
+            //    result = true;
+            //}
+            //return result;
         }
 
         private async Task<HttpResponseMessage> SendMessage(string requestUrl)
