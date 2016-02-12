@@ -113,9 +113,9 @@ namespace MSHU.CarWash.UWP.ViewModels
             //Microsoft.WindowsAzure.MobileServices.MobileServiceUser user = 
             //    await ServiceClient.ServiceClient.MobileService.LoginAsync(
             //        Microsoft.WindowsAzure.MobileServices.MobileServiceAuthenticationProvider.WindowsAzureActiveDirectory,payload);
-            bool success = await 
+            string result = await 
                 App.AuthenticationManager.ReadValues(App.AuthenticationManager.BearerAccessToken);
-
+            
         }
     }
 }

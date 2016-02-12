@@ -16,12 +16,14 @@ namespace MSHU.CarWash.UWP.Common
         //vadkertimobiletestnativeapp's properies in Azure AD
         private string m_ClientId = "1d316939-3200-4b05-9072-a5c92ae8c5a0";
         private Uri m_AppUri = new Uri("ms-app://s-1-15-2-348789351-3529148773-2918319933-3807175127-3638082815-3054471230-807679675/");
-
+       
         //Session to Azure AD
         private const string s_TenantId = "microsoft.onmicrosoft.com";
         private const string s_Authority = "https://login.microsoftonline.com/"+ s_TenantId;
         private AuthenticationContext m_AuthContext = new AuthenticationContext(s_Authority);
-        
+
+        private const string s_BaseUrl = "https://vadkertitestwebapp.azurewebsites.net";
+
         /// <summary>
         /// Value indicates if the user has already been authenticated.
         /// </summary>
@@ -61,16 +63,8 @@ namespace MSHU.CarWash.UWP.Common
         {
             bool success = false;
 
-            /*MobileServiceClient client = 
-                new MobileServiceClient("https://vadkertitestmobile.azurewebsites.net");
-            MobileServiceUser user
-                = await client.LoginAsync(MobileServiceAuthenticationProvider.WindowsAzureActiveDirectory);
-
-            IMobileServiceTable table = client.GetTable("TodoItem");
-            JToken result = await table.ReadAsync("select * from TodoItem");*/
-
             AuthenticationResult result = await m_AuthContext.AcquireTokenAsync(
-                "https://vadkertitestmobile.azurewebsites.net",
+                "https://vadkertitestwebapp.azurewebsites.net",
                 m_ClientId,
                 m_AppUri,
                 PromptBehavior.Auto);
@@ -126,18 +120,23 @@ namespace MSHU.CarWash.UWP.Common
             return response;
         }
 
-        public async Task<bool> ReadValues(string token)
+        public async Task<string> ReadValues(string token)
         {
+            string returnValue = String.Empty;
             // Create an HTTP client and add the token to the Authorization header
             HttpClient httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Authorization = 
                 new AuthenticationHeaderValue("Bearer", token);
 
             // Call the Web API to get the values
-            Uri requestURI = new Uri("https://vadkertitestmobile.azurewebsites.net/Tables/TodoItem?ZUMO-API-VERSION=2.0.0");
+            //https://mshucarwash.azurewebsites.net/api/Calendar/GetReservations
+            //Uri requestURI = new Uri("https://vadkertitestmobile.azurewebsites.net/Tables/TodoItem?ZUMO-API-VERSION=2.0.0");
+            Uri requestURI = new Uri(s_BaseUrl + "/api/Calendar/GetReservations");
+            //Uri requestURI = new Uri(s_BaseUrl);
             HttpResponseMessage httpResponse = await httpClient.GetAsync(requestURI);
             if (httpResponse.IsSuccessStatusCode)
             {
+                returnValue = await httpResponse.Content.ReadAsStringAsync();
                 // Code to do something with the data returned goes here.
                 Windows.UI.Popups.MessageDialog dialog =
                        new Windows.UI.Popups.MessageDialog(string.Format("{0}", await httpResponse.Content.ReadAsStringAsync()));
@@ -150,10 +149,9 @@ namespace MSHU.CarWash.UWP.Common
                        new Windows.UI.Popups.MessageDialog(string.Format("{0}", httpResponse.StatusCode.ToString()));
                 await dialog.ShowAsync();
             }
-            return (httpResponse.IsSuccessStatusCode);
+            return returnValue;
         }
-
-
+        
     }
 
 }
