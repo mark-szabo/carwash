@@ -23,7 +23,15 @@
                    RelativePanel.AlignLeftWithPanel="True" RelativePanel.Below="FamilyNameTextBlock" />
         <TextBlock Text="{Binding Email}" RelativePanel.RightOf="EmailTextBlock"
                    RelativePanel.AlignVerticalCenterWith="EmailTextBlock"/>
-        <Button Content="Sign out" Command="{Binding SignOutWithAADCommand}" Margin="12"
-                RelativePanel.Below="EmailTextBlock" RelativePanel.AlignLeftWithPanel="True" />
+        <Button Name="RequestServiceButton" Content="Request service" Command="{Binding RequestServiceCommand}" Margin="12"
+                RelativePanel.Below="EmailTextBlock"/>
+        <Button Name="SignOutButton" Content="Sign out" Command="{Binding SignOutWithAADCommand}" Margin="12"
+                RelativePanel.Below="RequestServiceButton"/>
+        <TextBlock x:Name="DocumentTitle" Text="..." RelativePanel.Below="SignOutButton"></TextBlock>
+        <WebView Name="webView" RelativePanel.Below="DocumentTitle" RelativePanel.AlignRightWithPanel="True" RelativePanel.AlignLeftWithPanel="True"
+                 RelativePanel.AlignBottomWithPanel="True"
+                    Source="https://vadkertitestmobile.azurewebsites.net" 
+                    NavigationCompleted="WebView_NavigationCompleted">
+        </WebView>
     </RelativePanel>
 </views:BasePage>

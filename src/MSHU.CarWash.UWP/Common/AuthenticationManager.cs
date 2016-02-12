@@ -1,6 +1,9 @@
 ﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.WindowsAzure.MobileServices;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 namespace MSHU.CarWash.UWP.Common
@@ -10,21 +13,15 @@ namespace MSHU.CarWash.UWP.Common
     /// </summary>
     public class AuthenticationManager
     {
-        // Native client application settings
-        private string _clientID = "9bd115b5-299b-4264-a9b7-2b5361f26e67";
-        private Uri _redirectUri = new Uri("ms-app://s-1-15-2-348789351-3529148773-2918319933-3807175127-3638082815-3054471230-807679675/");
-        // Session to Azure AD
-        private const string _authority = "https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47";
-        private AuthenticationContext _authContext = new AuthenticationContext(_authority);
+        //vadkertimobiletestnativeapp's properies in Azure AD
+        private string m_ClientId = "1d316939-3200-4b05-9072-a5c92ae8c5a0";
+        private Uri m_RedirectUri = new Uri("ms-app://s-1-15-2-348789351-3529148773-2918319933-3807175127-3638082815-3054471230-807679675/");
 
-        public static string TokenForUser;
-
-        public const string TenantName = "GraphDir1.onMicrosoft.com";
-        public const string TenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47";
-        public const string ClientIdForUserAuthn = "66133929-66a4-4edc-aaee-13b04b03207d";
-        public const string AuthString = "https://login.microsoftonline.com/" + TenantName;
-        public const string ResourceUrl = "https://graph.windows.net";
-
+        //Session to Azure AD
+        private const string s_TenantId = "microsoft.onmicrosoft.com";
+        private const string s_Authority = "https://login.microsoftonline.com/"+ s_TenantId;
+        private AuthenticationContext m_AuthContext = new AuthenticationContext(s_Authority);
+        
         /// <summary>
         /// Value indicates if the user has already been authenticated.
         /// </summary>
@@ -35,34 +32,72 @@ namespace MSHU.CarWash.UWP.Common
         /// </summary>
         public UserInfo UserData { get; private set; }
 
+        /// <summary>
+        /// Gets the access token for further HttpRequest 
+        /// </summary>
+        public string BearerAccessToken { get; private set; }
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        public AuthenticationManager()
+        {
+            // To determine this application's redirect URI, which is necessary when registering the app
+            // in AAD, set a breakpoint on the next line, run the app, and copy the string value of the URI.
+            // This is the only purposes of this line of code, it has no functional purpose in the application.
+            this.m_RedirectUri = 
+                Windows.Security.Authentication.Web.WebAuthenticationBroker.GetCurrentApplicationCallbackUri();
+
+        }
+
+
+        /// <summary>
+        /// Login via Azure Active Directory
+        /// </summary>
+        /// <remarks>
+        /// </remarks>
+        /// <returns></returns>
         public async Task<bool> LoginWithAAD()
         {
             bool success = false;
 
-            AuthenticationResult result = await _authContext.AcquireTokenAsync(
-                ResourceUrl,
-                _clientID,
-                _redirectUri,
-                PromptBehavior.Auto);
-            if (result.Status != AuthenticationStatus.Success)
-            {
-                if (result.Error == "authentication_canceled")
-                {
-                    // The user cancelled the sign-in, no need to display a message.
-                }
-                else
-                {
-                    //MessageDialog dialog = new MessageDialog(string.Format("If the error continues, please contact your administrator.\n\nError: {0}\n\nError Description:\n\n{1}", result.Error, result.ErrorDescription), "Sorry, an error occurred while signing you in.");
-                    //await dialog.ShowAsync();
-                }
-            }
-            else
-            {
-                IsUserAuthenticated = true;
-                UserData = result.UserInfo;
-                success = true;
-            }
+            MobileServiceClient client = 
+                new MobileServiceClient("https://vadkertitestmobile.azurewebsites.net");
+            MobileServiceUser user
+                = await client.LoginAsync(MobileServiceAuthenticationProvider.WindowsAzureActiveDirectory, true);
 
+            IMobileServiceTable table = client.GetTable("TodoItem");
+            JToken result = await table.ReadAsync("select * from TodoItem");
+            
+            //AuthenticationResult result = await m_AuthContext.AcquireTokenAsync(
+            //    "https://vadkertitestmobile.azurewebsites.net",
+            //    m_ClientId,
+            //    m_RedirectUri,
+            //    PromptBehavior.Auto);
+            //if (result.Status != AuthenticationStatus.Success)
+            //{
+            //    if (result.Error == "authentication_canceled")
+            //    {
+            //        // The user cancelled the sign-in, no need to display a message.
+            //    }
+            //    else
+            //    {
+            //        //pop up the error message
+            //        Windows.UI.Popups.MessageDialog dialog =
+            //            new Windows.UI.Popups.MessageDialog(string.Format("If the error continues, please contact your administrator.\n\nError: {0}\n\nError Description:\n\n{1}", result.Error, result.ErrorDescription), "Sorry, an error occurred while signing you in.");
+            //        await dialog.ShowAsync();
+            //    }
+            //}
+            //else
+            //{
+            //    //successful sign in
+            //    IsUserAuthenticated = true;
+            //    UserData = result.UserInfo;
+            //    success = true;
+            //    BearerAccessToken = result.AccessToken;
+            //    //if this called then the webview needs no authentication at all
+            //    await ReadValues(BearerAccessToken);
+            //}
             return success;
         }
 
@@ -73,7 +108,7 @@ namespace MSHU.CarWash.UWP.Common
         public async Task<bool> SignOutWithAAD()
         {
             bool result = false;
-            _authContext.TokenCache.Clear();
+            m_AuthContext.TokenCache.Clear();
             string requestUrl = "https://login.windows.net/common/oauth2/logout";
             HttpResponseMessage msg = await SendMessage(requestUrl);
             if (msg.IsSuccessStatusCode)
@@ -91,49 +126,33 @@ namespace MSHU.CarWash.UWP.Common
             return response;
         }
 
-        /// <summary>
-        /// Async task to acquire token for User.
-        /// </summary>
-        /// <returns>Token for user.</returns>
-        public static async Task<string> AcquireTokenAsyncForUser()
+        public async Task<bool> ReadValues(string token)
         {
-            return await GetTokenForUser();
-        }
+            // Create an HTTP client and add the token to the Authorization header
+            HttpClient httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization = 
+                new AuthenticationHeaderValue("Bearer", token);
 
-        /// <summary>
-        /// Get Token for User.
-        /// </summary>
-        /// <returns>Token for user.</returns>
-        public static async Task<string> GetTokenForUser()
-        {
-            if (TokenForUser == null)
+            // Call the Web API to get the values
+            Uri requestURI = new Uri("https://vadkertitestmobile.azurewebsites.net");
+            HttpResponseMessage httpResponse = await httpClient.GetAsync(requestURI);
+            if (httpResponse.IsSuccessStatusCode)
             {
-                var redirectUri = new Uri("https://localhost");
-                AuthenticationContext authenticationContext = new AuthenticationContext(AuthString, false);
-                AuthenticationResult userAuthnResult = await authenticationContext.AcquireTokenAsync(
-                    ResourceUrl,
-                    ClientIdForUserAuthn,
-                    redirectUri,
-                    PromptBehavior.Always);
-                TokenForUser = userAuthnResult.AccessToken;
-                //Console.WriteLine("\n Welcome " + userAuthnResult.UserInfo.GivenName + " " +
-                //                  userAuthnResult.UserInfo.FamilyName);
+                // Code to do something with the data returned goes here.
+                Windows.UI.Popups.MessageDialog dialog =
+                       new Windows.UI.Popups.MessageDialog(string.Format("{0}", await httpResponse.Content.ReadAsStringAsync()));
+                await dialog.ShowAsync();
+
             }
-            return TokenForUser;
+            else
+            {
+                Windows.UI.Popups.MessageDialog dialog =
+                       new Windows.UI.Popups.MessageDialog(string.Format("{0}", httpResponse.StatusCode.ToString()));
+                await dialog.ShowAsync();
+            }
+            return (httpResponse.IsSuccessStatusCode);
         }
 
-        ///// <summary>
-        ///// Get Active Directory Client for User.
-        ///// </summary>
-        ///// <returns>ActiveDirectoryClient for User.</returns>
-        //public static ActiveDirectoryClient GetActiveDirectoryClientAsUser()
-        //{
-        //    Uri servicePointUri = new Uri(Constants.ResourceUrl);
-        //    Uri serviceRoot = new Uri(servicePointUri, Constants.TenantId);
-        //    ActiveDirectoryClient activeDirectoryClient = new ActiveDirectoryClient(serviceRoot,
-        //        async () => await AcquireTokenAsyncForUser());
-        //    return activeDirectoryClient;
-        //}
 
     }
 

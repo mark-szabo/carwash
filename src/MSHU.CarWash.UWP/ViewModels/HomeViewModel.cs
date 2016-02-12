@@ -65,6 +65,11 @@ namespace MSHU.CarWash.UWP.ViewModels
         public RelayCommand SignOutWithAADCommand { get; set; }
 
         /// <summary>
+        /// Gets or sets the SignOutWithAADCommand.
+        /// </summary>
+        public RelayCommand RequestServiceCommand { get; set; }
+
+        /// <summary>
         /// Default constructor initializes instance state.
         /// </summary>
         public HomeViewModel()
@@ -78,6 +83,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
             // Initialize the SignOutWithAADCommand.
             SignOutWithAADCommand = new RelayCommand(ExecuteSignOutWithAADCommand);
+            RequestServiceCommand = new RelayCommand(ExecuteRequestServiceCommand);
         }
 
         /// <summary>
@@ -94,6 +100,22 @@ namespace MSHU.CarWash.UWP.ViewModels
                     UserSignedOut(this, new EventArgs());
                 }
             }
+        }
+
+        /// <summary>
+        /// Event handler for the Executed event of the SignOutWithAADCommand.
+        /// </summary>
+        /// <param name="param"></param>
+        private async void ExecuteRequestServiceCommand(object param)
+        {
+            //Newtonsoft.Json.Linq.JObject payload = new Newtonsoft.Json.Linq.JObject();
+            //payload["access_token"] = App.AuthenticationManager.BearerAccessToken;
+            //Microsoft.WindowsAzure.MobileServices.MobileServiceUser user = 
+            //    await ServiceClient.ServiceClient.MobileService.LoginAsync(
+            //        Microsoft.WindowsAzure.MobileServices.MobileServiceAuthenticationProvider.WindowsAzureActiveDirectory,payload);
+            bool success = await 
+                App.AuthenticationManager.ReadValues(App.AuthenticationManager.BearerAccessToken);
+
         }
     }
 }

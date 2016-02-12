@@ -36,11 +36,6 @@ namespace MSHU.CarWash.UWP.Views
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-
-            // Obtain the redirect Uri for the app
-            // Actually it is:
-            // ms-app://s-1-15-2-348789351-3529148773-2918319933-3807175127-3638082815-3054471230-807679675/
-            //Uri redirectUri = WebAuthenticationBroker.GetCurrentApplicationCallbackUri(); ;
         }
     }
 }

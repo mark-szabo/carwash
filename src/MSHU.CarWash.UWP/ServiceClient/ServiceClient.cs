@@ -7,7 +7,7 @@ namespace MSHU.CarWash.UWP.ServiceClient
         // This MobileServiceClient has been configured to communicate with the Azure Mobile App.
         // You're all set to start working with your Mobile App!
         public static MobileServiceClient MobileService = new MobileServiceClient(
-            "https://mshucarwash.azurewebsites.net"
+            "https://vadkertitestmobile.azurewebsites.net"
             );
     }
 }
