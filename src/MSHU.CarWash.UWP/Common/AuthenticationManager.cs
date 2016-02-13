@@ -1,5 +1,6 @@
 ﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.WindowsAzure.MobileServices;
+using MSHU.CarWash.DomainModel;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Net.Http;
@@ -22,8 +23,7 @@ namespace MSHU.CarWash.UWP.Common
         private const string s_Authority = "https://login.microsoftonline.com/"+ s_TenantId;
         private AuthenticationContext m_AuthContext = new AuthenticationContext(s_Authority);
 
-        private const string s_BaseUrl = "https://vadkertitestwebapp.azurewebsites.net";
-
+       
         /// <summary>
         /// Value indicates if the user has already been authenticated.
         /// </summary>
@@ -89,8 +89,6 @@ namespace MSHU.CarWash.UWP.Common
                 UserData = result.UserInfo;
                 success = true;
                 BearerAccessToken = result.AccessToken;
-                //if this called then the webview needs no authentication at all
-                await ReadValues(BearerAccessToken);
             }
             return success;
         }
@@ -118,38 +116,6 @@ namespace MSHU.CarWash.UWP.Common
             var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
             var response = await client.SendAsync(request);
             return response;
-        }
-
-        public async Task<string> ReadValues(string token)
-        {
-            string returnValue = String.Empty;
-            // Create an HTTP client and add the token to the Authorization header
-            HttpClient httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Authorization = 
-                new AuthenticationHeaderValue("Bearer", token);
-
-            // Call the Web API to get the values
-            //https://mshucarwash.azurewebsites.net/api/Calendar/GetReservations
-            //Uri requestURI = new Uri("https://vadkertitestmobile.azurewebsites.net/Tables/TodoItem?ZUMO-API-VERSION=2.0.0");
-            Uri requestURI = new Uri(s_BaseUrl + "/api/Calendar/GetReservations");
-            //Uri requestURI = new Uri(s_BaseUrl);
-            HttpResponseMessage httpResponse = await httpClient.GetAsync(requestURI);
-            if (httpResponse.IsSuccessStatusCode)
-            {
-                returnValue = await httpResponse.Content.ReadAsStringAsync();
-                // Code to do something with the data returned goes here.
-                Windows.UI.Popups.MessageDialog dialog =
-                       new Windows.UI.Popups.MessageDialog(string.Format("{0}", await httpResponse.Content.ReadAsStringAsync()));
-                await dialog.ShowAsync();
-
-            }
-            else
-            {
-                Windows.UI.Popups.MessageDialog dialog =
-                       new Windows.UI.Popups.MessageDialog(string.Format("{0}", httpResponse.StatusCode.ToString()));
-                await dialog.ShowAsync();
-            }
-            return returnValue;
         }
         
     }

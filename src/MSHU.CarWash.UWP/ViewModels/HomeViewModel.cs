@@ -1,5 +1,7 @@
 ﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using MSHU.CarWash.DomainModel;
 using System;
+using System.Text;
 
 namespace MSHU.CarWash.UWP.ViewModels
 {
@@ -8,6 +10,7 @@ namespace MSHU.CarWash.UWP.ViewModels
         private string _givenName;
         private string _familyName;
         private string _displayableID;
+        private string m_RegistrationInfo;
 
         public event EventHandler UserSignedOut;
 
@@ -60,6 +63,22 @@ namespace MSHU.CarWash.UWP.ViewModels
         }
 
         /// <summary>
+        /// Gets the user id.
+        /// </summary>
+        public string RegistrationInfo
+        {
+            get
+            {
+                return this.m_RegistrationInfo;
+            }
+            private set
+            {
+                this.m_RegistrationInfo = value;
+                OnPropertyChanged("RegistrationInfo");
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the SignOutWithAADCommand.
         /// </summary>
         public RelayCommand SignOutWithAADCommand { get; set; }
@@ -80,10 +99,12 @@ namespace MSHU.CarWash.UWP.ViewModels
                 GivenName = info.GivenName;
                 FamilyName = info.FamilyName;
                 Email = info.DisplayableId;
+                
             }
             // Initialize the SignOutWithAADCommand.
             SignOutWithAADCommand = new RelayCommand(ExecuteSignOutWithAADCommand);
             RequestServiceCommand = new RelayCommand(ExecuteRequestServiceCommand);
+            RequestServiceCommand.Execute(this);
         }
 
         /// <summary>
@@ -108,14 +129,23 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// <param name="param"></param>
         private async void ExecuteRequestServiceCommand(object param)
         {
-            //Newtonsoft.Json.Linq.JObject payload = new Newtonsoft.Json.Linq.JObject();
-            //payload["access_token"] = App.AuthenticationManager.BearerAccessToken;
-            //Microsoft.WindowsAzure.MobileServices.MobileServiceUser user = 
-            //    await ServiceClient.ServiceClient.MobileService.LoginAsync(
-            //        Microsoft.WindowsAzure.MobileServices.MobileServiceAuthenticationProvider.WindowsAzureActiveDirectory,payload);
-            string result = await 
-                App.AuthenticationManager.ReadValues(App.AuthenticationManager.BearerAccessToken);
-            
+             ReservationViewModel result = await 
+                ServiceClient.ServiceClient.GetReservations(App.AuthenticationManager.BearerAccessToken);
+
+            if (result != null)
+            {
+                StringBuilder builder = new StringBuilder();
+                foreach(ReservationDayDetailsViewModel s in result.ReservationsByDayActive)
+                {
+                    if (s.Reservations != null && s.Reservations.Count > 0)
+                    {
+                        string plateNumber = s.Reservations[0].VehiclePlateNumber;
+                        builder.AppendFormat("Reservation for {0} on {1} {2}, {3}.", plateNumber, s.MonthName, s.DayNumber, s.DayName);
+                    }
+                }
+                this.RegistrationInfo = builder.ToString();
+            }
+
         }
-    }
+}
 }

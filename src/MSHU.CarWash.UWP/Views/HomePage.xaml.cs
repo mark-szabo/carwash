@@ -40,9 +40,5 @@ namespace MSHU.CarWash.UWP.Views
             Navigate(typeof(MainPage));
         }
 
-        private void WebView_NavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
-        {
-            this.DocumentTitle.Text = args.Uri.ToString();
-        }
     }
 }
