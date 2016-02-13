@@ -143,7 +143,16 @@ namespace MSHU.CarWash.UWP.ViewModels
                         builder.AppendFormat("Reservation for {0} on {1} {2}, {3}.", plateNumber, s.MonthName, s.DayNumber, s.DayName);
                     }
                 }
-                this.RegistrationInfo = builder.ToString();
+                string generated = builder.ToString();
+                //if there is no reservation
+                if (String.IsNullOrEmpty(generated) == true)
+                {
+                    this.RegistrationInfo = "There is currently no reservation for car wash";
+                }
+                else
+                {
+                    this.RegistrationInfo = builder.ToString();
+                }
             }
 
         }

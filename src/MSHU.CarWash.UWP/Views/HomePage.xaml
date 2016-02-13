@@ -31,6 +31,5 @@
                 RelativePanel.Below="RegistrationBlock"/>
         <Button Name="SignOutButton" Content="Sign out" Command="{Binding SignOutWithAADCommand}" Margin="12"
                 RelativePanel.Below="RequestServiceButton"/>
-        <TextBlock x:Name="DocumentTitle" Text="..." RelativePanel.Below="SignOutButton"></TextBlock>
     </RelativePanel>
 </views:BasePage>
