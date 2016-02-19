@@ -14,10 +14,10 @@
         "administratorLoginPassword": {
             "value": "TestPassword01"
         },
-        "CarWashApiServiceWebDeployPackageFolder": {
-            "value": "MSHU.CarWash.Services"
+        "CarWashWebDeployPackageFolder": {
+            "value": "MSHU.CarWash.Web"
         },
-        "CarWashApiServiceWebDeployPackageFileName": {
+        "CarWashWebDeployPackageFileName": {
             "value": "package.zip"
         }
     }

@@ -55,10 +55,10 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MSHU.CarWash.Services\MSHU.CarWash.Services.csproj">
+    <ProjectReference Include="..\MSHU.CarWash.Web\MSHU.CarWash.Web.csproj">
       <Targets>Build;Package</Targets>
-      <AdditionalProperties>PackageLocation=..\CarWash.Azure.Deployment\$(ProjectReferencesOutputPath)\MSHU.CarWash.Services\package.zip</AdditionalProperties>
-      <IncludeFilePath>$(ProjectReferencesOutputPath)\MSHU.CarWash.Services\package.zip</IncludeFilePath>
+      <AdditionalProperties>PackageLocation=..\CarWash.Azure.Deployment\$(ProjectReferencesOutputPath)\MSHU.CarWash.Web\package.zip</AdditionalProperties>
+      <IncludeFilePath>$(ProjectReferencesOutputPath)\MSHU.CarWash.Web\package.zip</IncludeFilePath>
     </ProjectReference>
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />
