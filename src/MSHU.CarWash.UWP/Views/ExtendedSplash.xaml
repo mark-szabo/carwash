@@ -24,4 +24,8 @@
         <ProgressRing IsActive="True"/>
         <TextBlock x:Name="m_StatusText" Text="Initializing..." Foreground="White"></TextBlock>
     </StackPanel>
+    <StackPanel Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Center">
+        <TextBlock x:Name="m_PoweredByText" Foreground="White" 
+                   Text="Premier Support for Development" FontStyle="Italic" />
+    </StackPanel>
 </Grid>

@@ -1,20 +1,14 @@
 ﻿using MSHU.CarWash.UWP.Controls;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Foundation.Metadata;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Automation;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
@@ -30,25 +24,35 @@ namespace MSHU.CarWash.UWP.Views
         private List<NavigationMenuItem> navlist = new List<NavigationMenuItem>(
             new[]
             {
-                //upcoming workshops
+                // Home page
                 new NavigationMenuItem()
                 {
                     Symbol = Symbol.Home,
-                    Label = "Start screen",
-                    DestPage = typeof(MainPage)
+                    Label = "Home",
+                    DestPage = typeof(HomePage)
+                },
+
+                // Registrations
+                new NavigationMenuItem()
+                {
+                    Symbol = Symbol.Home,
+                    Label = "Registrations",
+                    DestPage = typeof(Registrations)
+                },
+
+                // About
+                new NavigationMenuItem()
+                {
+                    Symbol = Symbol.Home,
+                    Label = "About",
+                    DestPage = typeof(About)
                 },
 
             });
 
         public static AppShell Current = null;
 
-        public Frame AppFrame
-        {
-            get
-            {
-                return this.frame;
-            }
-        }
+        public Frame AppFrame => this.frame;
 
 
 
@@ -80,7 +84,8 @@ namespace MSHU.CarWash.UWP.Views
             }
 
             NavMenuList.ItemsSource = navlist;
-
+            // Navigate to the first page
+            this.AppFrame.Navigate(typeof(HomePage));
         }
 
         /// <summary>
@@ -257,9 +262,21 @@ namespace MSHU.CarWash.UWP.Views
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void TogglePaneButton_Checked(object sender, RoutedEventArgs e)
+        private void TogglePaneButton_Unchecked(object sender, RoutedEventArgs e)
         {
             this.CheckTogglePaneButtonSizeChanged();
+            this.FooterPanel.Visibility = Visibility.Collapsed;
+        }
+
+        /// <summary>
+        /// Callback when the SplitView's Pane is toggled open or close.  When the Pane is not visible
+        /// then the floating hamburger may be occluding other content in the app unless it is aware.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TogglePaneButton_Checked(object sender, RoutedEventArgs e)
+        {
+            this.FooterPanel.Visibility = Visibility.Visible;
         }
 
         /// <summary>
@@ -268,7 +285,7 @@ namespace MSHU.CarWash.UWP.Views
         /// </summary>
         private void CheckTogglePaneButtonSizeChanged()
         {
-            if (this.RootSplitView.DisplayMode == SplitViewDisplayMode.Inline ||
+            if (this.RootSplitView.DisplayMode == SplitViewDisplayMode.CompactInline ||
                 this.RootSplitView.DisplayMode == SplitViewDisplayMode.Overlay)
             {
                 var transform = this.TogglePaneButton.TransformToVisual(this);

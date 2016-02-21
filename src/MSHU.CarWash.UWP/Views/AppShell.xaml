@@ -34,7 +34,7 @@
                         <AdaptiveTrigger MinWindowWidth="641" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter Target="RootSplitView.DisplayMode" Value="Inline"/>
+                        <Setter Target="RootSplitView.DisplayMode" Value="CompactInline"/>
                         <Setter Target="RootSplitView.IsPaneOpen" Value="True"/>
                     </VisualState.Setters>
                 </VisualState>
@@ -44,6 +44,7 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="RootSplitView.DisplayMode" Value="Overlay"/>
+                        <Setter Target="FooterPanel.Visibility" Value="Collapsed" />
                     </VisualState.Setters>
                 </VisualState>
 
@@ -52,7 +53,7 @@
 
         <!-- Top-level navigation menu + app content -->
         <SplitView x:Name="RootSplitView"
-                   DisplayMode="Inline"
+                   DisplayMode="CompactInline"
                    OpenPaneLength="256"
                    IsTabStop="False">
             <SplitView.Pane>
@@ -113,7 +114,8 @@
                       TabIndex="1"
                       Style="{StaticResource SplitViewTogglePaneButtonStyle}"
                       IsChecked="{Binding IsPaneOpen, ElementName=RootSplitView, Mode=TwoWay}"
-                      Unchecked="TogglePaneButton_Checked"
+                      Unchecked="TogglePaneButton_Unchecked"
+                      Checked="TogglePaneButton_Checked"
                       AutomationProperties.Name="Menu"
                       ToolTipService.ToolTip="Menu" />
     </Grid>

@@ -30,7 +30,11 @@ namespace MSHU.CarWash.UWP.Views
 
         private void ViewModel_UserAuthenticated(object sender, System.EventArgs e)
         {
-            Navigate(typeof(HomePage));
+            // Create the app shell that will host the entire application content.
+            AppShell shell = new AppShell();
+            Window.Current.Content = shell;
+            Window.Current.Activate();
+            //Navigate(typeof(HomePage));
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)

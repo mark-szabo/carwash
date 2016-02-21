@@ -8,13 +8,21 @@
     xmlns:views="using:MSHU.CarWash.UWP.Views"
     mc:Ignorable="d">
 
-    <StackPanel>
-        <StackPanel.Background>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.Background>
             <ImageBrush Stretch="UniformToFill" Opacity="0.25"
                     ImageSource="ms-appx:///Assets/Background.png"/>
-        </StackPanel.Background>
+        </Grid.Background>
 
-        <RelativePanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <RelativePanel Grid.Column="0" Background="Transparent">
             <TextBlock Text="User:" x:Name="UserTextBlock" Margin="12"
                    RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignTopWithPanel="True" />
             <TextBlock Text="Given name:" x:Name="GivenNameTextBlock" Margin="12"
@@ -39,6 +47,7 @@
                 RelativePanel.Below="RequestServiceButton"/>
         </RelativePanel>
 
-    </StackPanel>
+    </Grid>
+    
     
 </views:BasePage>
