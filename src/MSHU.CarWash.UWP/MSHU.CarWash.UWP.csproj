@@ -99,11 +99,13 @@
     <Compile Include="Common\SuspensionManager.cs" />
     <Compile Include="Controls\NavigationMenuItem.cs" />
     <Compile Include="Controls\NavigationMenuListView.cs" />
+    <Compile Include="Converters\CalendarViewDayItemConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServiceClient\ServiceClient.cs" />
     <Compile Include="ViewModels\Bindable.cs" />
     <Compile Include="ViewModels\HomeViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\RegistrationsViewModel.cs" />
     <Compile Include="ViewModels\RelayCommand.cs" />
     <Compile Include="Views\About.xaml.cs">
       <DependentUpon>About.xaml</DependentUpon>
@@ -121,8 +123,8 @@
     <Compile Include="Views\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Registrations.xaml.cs">
-      <DependentUpon>Registrations.xaml</DependentUpon>
+    <Compile Include="Views\RegistrationsPage.xaml.cs">
+      <DependentUpon>RegistrationsPage.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -184,7 +186,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Registrations.xaml">
+    <Page Include="Views\RegistrationsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

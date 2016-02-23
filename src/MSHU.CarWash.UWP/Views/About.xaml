@@ -8,6 +8,11 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <TextBlock Text="About" />
+        <RelativePanel>
+            <TextBlock Text="About" />
+            <TextBlock Text="Power by Premier Support for Development" Margin="12"
+                       FontSize="14" FontWeight="Bold" FontStyle="Italic" 
+                       RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignRightWithPanel="True" />
+        </RelativePanel>
     </Grid>
 </Page>

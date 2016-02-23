@@ -20,7 +20,7 @@
                      value when the SplitView is 'Compact' while reducing the likelihood of showing
                      redundant information when the label is shown.-->
                 <FontIcon x:Name="Glyph" FontSize="16" Glyph="{x:Bind SymbolAsChar}" VerticalAlignment="Center" HorizontalAlignment="Center" ToolTipService.ToolTip="{x:Bind Label}"/>
-                <TextBlock x:Name="Text" Grid.Column="1" Text="{x:Bind Label}" />
+                <TextBlock x:Name="Text" Grid.Column="1" Text="{x:Bind Label}" Padding="0,0,24,0" />
             </Grid>
         </DataTemplate>
     </Page.Resources>
@@ -31,7 +31,7 @@
             <VisualStateGroup>
                 <VisualState x:Name="wideState">
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="641" />
+                        <AdaptiveTrigger MinWindowWidth="720" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="RootSplitView.DisplayMode" Value="CompactInline"/>
@@ -54,18 +54,21 @@
         <!-- Top-level navigation menu + app content -->
         <SplitView x:Name="RootSplitView"
                    DisplayMode="CompactInline"
-                   OpenPaneLength="256"
+                   OpenPaneLength="158"
                    IsTabStop="False">
             <SplitView.Pane>
                 <RelativePanel Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}">
                     <!-- A custom ListView to display the items in the pane.  The automation Name is set in the ContainerContentChanging event. -->
                     <controls:NavigationMenuListView x:Name="NavMenuList"
-                                          TabIndex="3"
-                                          Margin="0,48,0,0"
-                                          ContainerContentChanging="NavMenuItemContainerContentChanging"
-                                          ItemContainerStyle="{StaticResource NavMenuItemContainerStyle}"
-                                          ItemTemplate="{StaticResource NavMenuItemTemplate}"
-                                          ItemInvoked="NavMenuList_ItemInvoked">
+                                                     TabIndex="3"
+                                                     Margin="0,48,0,0" 
+                                                     HorizontalContentAlignment="Stretch"
+                                                     HorizontalAlignment="Stretch"
+                                                     ContainerContentChanging="NavMenuItemContainerContentChanging"
+                                                     ItemContainerStyle="{StaticResource NavMenuItemContainerStyle}"
+                                                     ItemTemplate="{StaticResource NavMenuItemTemplate}"
+                                                     ItemInvoked="NavMenuList_ItemInvoked"
+                                                     RelativePanel.AlignTopWithPanel="True">
                         <controls:NavigationMenuListView.Header>
                             <!-- Using this custom back navigation button until the system-provided back button is enabled. -->
                             <Button x:Name="BackButton"
@@ -80,7 +83,7 @@
                     <StackPanel x:Name="FooterPanel" Orientation="Vertical" RelativePanel.AlignBottomWithPanel="True">
                         <Image Source="Assets/microsoft-sdk.png" AutomationProperties.Name="Microsoft Logo" Stretch="None" HorizontalAlignment="Left" Margin="10,0,0,0"/>
                         <TextBlock x:Name="Copyright" Text="&#xA9; Microsoft Corporation. All rights reserved." Style="{StaticResource CopyrightTextStyle}"
-                                   RelativePanel.Above="LinksPanel" Margin="10,10,0,0"
+                                   RelativePanel.Above="LinksPanel" Margin="10,10,0,0" FontSize="12"
                                    TextWrapping="Wrap"/>
                         <StackPanel x:Name="LinksPanel" Orientation="Horizontal" Margin="10,10,0,10">
                             <HyperlinkButton Content="Trademarks" Tag="http://www.microsoft.com/About/Legal/EN/US/IntellectualProperty/Trademarks/EN-US.aspx"

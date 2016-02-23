@@ -37,7 +37,7 @@ namespace MSHU.CarWash.UWP.Views
                 {
                     Symbol = Symbol.Home,
                     Label = "Registrations",
-                    DestPage = typeof(Registrations)
+                    DestPage = typeof(RegistrationsPage)
                 },
 
                 // About
