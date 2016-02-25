@@ -19,7 +19,9 @@
                      It appears when the user hovers over the icon, but not the label which provides
                      value when the SplitView is 'Compact' while reducing the likelihood of showing
                      redundant information when the label is shown.-->
-                <FontIcon x:Name="Glyph" FontSize="16" Glyph="{x:Bind SymbolAsChar}" VerticalAlignment="Center" HorizontalAlignment="Center" ToolTipService.ToolTip="{x:Bind Label}"/>
+                <FontIcon x:Name="Glyph" FontSize="16" Glyph="{x:Bind SymbolAsChar}" 
+                          VerticalAlignment="Center" HorizontalAlignment="Center" 
+                          ToolTipService.ToolTip="{x:Bind Label}"/>
                 <TextBlock x:Name="Text" Grid.Column="1" Text="{x:Bind Label}" Padding="0,0,24,0" />
             </Grid>
         </DataTemplate>
@@ -57,15 +59,16 @@
                    OpenPaneLength="158"
                    IsTabStop="False">
             <SplitView.Pane>
-                <RelativePanel Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}">
+                <RelativePanel Background="{StaticResource BrushDarkBlue}">
                     <!-- A custom ListView to display the items in the pane.  The automation Name is set in the ContainerContentChanging event. -->
                     <controls:NavigationMenuListView x:Name="NavMenuList"
+                                                     Foreground="White"
                                                      TabIndex="3"
                                                      Margin="0,48,0,0" 
                                                      HorizontalContentAlignment="Stretch"
                                                      HorizontalAlignment="Stretch"
                                                      ContainerContentChanging="NavMenuItemContainerContentChanging"
-                                                     ItemContainerStyle="{StaticResource NavMenuItemContainerStyle}"
+                                                     ItemContainerStyle="{StaticResource NavListViewItemStyle}"
                                                      ItemTemplate="{StaticResource NavMenuItemTemplate}"
                                                      ItemInvoked="NavMenuList_ItemInvoked"
                                                      RelativePanel.AlignTopWithPanel="True">
@@ -84,32 +87,40 @@
                         <Image Source="Assets/microsoft-sdk.png" AutomationProperties.Name="Microsoft Logo" Stretch="None" HorizontalAlignment="Left" Margin="10,0,0,0"/>
                         <TextBlock x:Name="Copyright" Text="&#xA9; Microsoft Corporation. All rights reserved." Style="{StaticResource CopyrightTextStyle}"
                                    RelativePanel.Above="LinksPanel" Margin="10,10,0,0" FontSize="12"
-                                   TextWrapping="Wrap"/>
+                                   Foreground="White" TextWrapping="Wrap"/>
                         <StackPanel x:Name="LinksPanel" Orientation="Horizontal" Margin="10,10,0,10">
-                            <HyperlinkButton Content="Trademarks" Tag="http://www.microsoft.com/About/Legal/EN/US/IntellectualProperty/Trademarks/EN-US.aspx"
-                        Click="Footer_Click" FontSize="12" Style="{StaticResource HyperlinkStyle}" />
+                            <HyperlinkButton Content="Trademarks" 
+                                             Tag="http://www.microsoft.com/About/Legal/EN/US/IntellectualProperty/Trademarks/EN-US.aspx"
+                                             Click="Footer_Click" FontSize="12" 
+                                             Style="{StaticResource HyperlinkStyle}" />
                             <TextBlock Text="|"  Style="{StaticResource SeparatorStyle}" VerticalAlignment="Center" />
-                            <HyperlinkButton x:Name="PrivacyLink" Content="Privacy" Tag="http://privacy.microsoft.com" Click="Footer_Click" FontSize="12" Style="{StaticResource HyperlinkStyle}"/>
+                            <HyperlinkButton x:Name="PrivacyLink" Content="Privacy" 
+                                             Tag="http://privacy.microsoft.com" 
+                                             Click="Footer_Click" FontSize="12" 
+                                             Style="{StaticResource HyperlinkStyle}"/>
                         </StackPanel>
                     </StackPanel>
                 </RelativePanel>
             </SplitView.Pane>
 
-            <!-- OnNavigatingToPage we synchronize the selected item in the nav menu with the current page.
+            <SplitView.Content>
+                <!-- OnNavigatingToPage we synchronize the selected item in the nav menu with the current page.
                  OnNavigatedToPage we move keyboard focus to the first item on the page after it's loaded. -->
-            <Frame x:Name="frame"
+                <Frame x:Name="frame"
                    Navigating="OnNavigatingToPage"
                    Navigated="OnNavigatedToPage">
-                <Frame.ContentTransitions>
-                    <TransitionCollection>
-                        <NavigationThemeTransition>
-                            <NavigationThemeTransition.DefaultNavigationTransitionInfo>
-                                <EntranceNavigationTransitionInfo/>
-                            </NavigationThemeTransition.DefaultNavigationTransitionInfo>
-                        </NavigationThemeTransition>
-                    </TransitionCollection>
-                </Frame.ContentTransitions>
-            </Frame>
+                    <Frame.ContentTransitions>
+                        <TransitionCollection>
+                            <NavigationThemeTransition>
+                                <NavigationThemeTransition.DefaultNavigationTransitionInfo>
+                                    <EntranceNavigationTransitionInfo/>
+                                </NavigationThemeTransition.DefaultNavigationTransitionInfo>
+                            </NavigationThemeTransition>
+                        </TransitionCollection>
+                    </Frame.ContentTransitions>
+                </Frame>
+            </SplitView.Content>
+
         </SplitView>
 
         <!-- Declared last to have it rendered above everything else, but it needs to be the first item in the tab sequence. -->
@@ -120,6 +131,6 @@
                       Unchecked="TogglePaneButton_Unchecked"
                       Checked="TogglePaneButton_Checked"
                       AutomationProperties.Name="Menu"
-                      ToolTipService.ToolTip="Menu" />
+                      ToolTipService.ToolTip="Menu" Foreground="White" />
     </Grid>
 </Page>

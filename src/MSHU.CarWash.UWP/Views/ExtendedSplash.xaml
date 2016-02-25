@@ -4,7 +4,7 @@
 <!-- PARTICULAR PURPOSE.                                                 -->
 <!--                                                                     -->
 <!-- Copyright (c) Microsoft Corporation. All rights reserved            -->
-<Grid Background="#00b2f0" 
+<Grid Background="{StaticResource BrushDarkBlue}" 
       x:Class="MSHU.CarWash.UWP.Views.ExtendedSplash" 
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 

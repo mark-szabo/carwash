@@ -3,6 +3,8 @@ using MSHU.CarWash.UWP.Views;
 using System;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.Foundation.Metadata;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Navigation;
 
@@ -50,6 +52,8 @@ namespace MSHU.CarWash.UWP
             }
 
             Window.Current.Activate();
+            this.SetupTitleBar();
+            this.SetupSystemTray();
         }
 
         /// <summary>
@@ -76,5 +80,46 @@ namespace MSHU.CarWash.UWP
             await SuspensionManager.SaveAsync();
             deferral.Complete();
         }
+
+        /// <summary>
+        /// Set up the title bar style
+        /// </summary>
+        private void SetupTitleBar()
+        {
+            // Setting the color of the title bar for the desktop app
+            var color = (Color)Current.Resources["VeryDarkBlue"];
+            var foregroundcolor = (Color)Current.Resources["LightGrey"];
+            var foregroundinactivecolor = (Color)Current.Resources["LightGrey"];
+            var hovercolor = (Color)Current.Resources["DarkBlue"];
+            var pressedcolor = (Color)Current.Resources["LightBlue"];
+            var titlebar = Windows.UI.ViewManagement.ApplicationView.GetForCurrentView().TitleBar;
+            titlebar.BackgroundColor = color;
+            titlebar.ForegroundColor = foregroundcolor;
+            titlebar.ButtonBackgroundColor = color;
+            titlebar.ButtonForegroundColor = foregroundcolor;
+            titlebar.ButtonHoverBackgroundColor = hovercolor;
+            titlebar.ButtonHoverForegroundColor = foregroundcolor;
+            titlebar.ButtonPressedForegroundColor = foregroundcolor;
+            titlebar.ButtonPressedBackgroundColor = pressedcolor;
+
+            //// Set inactive title bar color
+            titlebar.InactiveBackgroundColor = color;
+            titlebar.InactiveForegroundColor = foregroundinactivecolor;
+            titlebar.ButtonInactiveBackgroundColor = color;
+            titlebar.ButtonInactiveForegroundColor = foregroundinactivecolor;
+        }
+
+        private void SetupSystemTray()
+        {
+
+            if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
+            {
+                var statusBar = Windows.UI.ViewManagement.StatusBar.GetForCurrentView();
+                statusBar.BackgroundOpacity = 1;
+                statusBar.BackgroundColor = (Color)Current.Resources["VeryDarkBlue"];
+                statusBar.ForegroundColor = Colors.White;
+            }
+        }
+
     }
 }
