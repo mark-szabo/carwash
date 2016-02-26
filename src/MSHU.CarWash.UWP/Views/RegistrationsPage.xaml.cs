@@ -117,5 +117,25 @@ namespace MSHU.CarWash.UWP.Views
 
         }
 
+        /// <summary>
+        /// The event handler send the ActivateDetailsCommand to the Viewmodel (transmitting
+        /// the selected date as command parameter).
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
+        private void CalendarView_SelectedDatesChanged(CalendarView sender, CalendarViewSelectedDatesChangedEventArgs args)
+        {
+            if (args.AddedDates.Count == 1)
+            {
+                DateTimeOffset selectedDate = args.AddedDates[0];
+                ((RegistrationsViewModel)ViewModel).ActivateDetailsCommand.Execute(selectedDate);
+            }
+        }
+
+        private void GoToMasterViewButton_Click(object sender, RoutedEventArgs e)
+        {
+            ((RegistrationsViewModel)ViewModel).UseDetailsView = false;
+
+        }
     }
 }

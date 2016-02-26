@@ -15,7 +15,7 @@
 
         <Style x:Key="CalendarViewDayItemStyle1" TargetType="CalendarViewDayItem">
             <Setter Property="MinWidth" Value="35"/>
-            <Setter Property="MinHeight" Value="35"/>
+            <Setter Property="MinHeight" Value="40"/>
             <Setter Property="Margin" Value="1"/>
             <Setter Property="Padding" Value="0, 0, 0, 4"/>
             <!--<Setter Property="DataContext" Value="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}" />-->
@@ -38,18 +38,69 @@
 
     </views:BasePage.Resources>
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <CalendarView HorizontalAlignment="Stretch" Margin="10,10,10,100" 
-                      VerticalAlignment="Stretch"
-                      DataContext="{Binding}"
-                      CalendarViewDayItemStyle="{StaticResource CalendarViewDayItemStyle1}"
-                      DisplayMode="Month"
-                      FirstDayOfWeek="Monday"
-                      BorderBrush="#FFF9F9F9"
-                      OutOfScopeBackground="Transparent"
-                      CalendarItemBackground="#FFDDEBF7"
-                      DayItemFontSize="11"
-                      CalendarViewDayItemChanging="CalendarView_CalendarViewDayItemChanging"
+    <Grid x:Name="MainGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="VisualStateGroup">
+                <VisualState x:Name="MasterView">
+                    <VisualState.StateTriggers>
+                        <StateTrigger IsActive="{Binding Path=UseMasterView}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="relativePanelDetails.(UIElement.Visibility)" Value="Collapsed"/>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="DetailsView">
+                    <VisualState.StateTriggers>
+                        <StateTrigger IsActive="{Binding Path=UseDetailsView}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="relativePanelMaster.(Grid.Column)" Value="1"/>
+                        <Setter Target="relativePanelMaster.(UIElement.Visibility)" Value="Collapsed"/>
+                        <Setter Target="relativePanelDetails.(Grid.Column)" Value="0"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="0"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Master view -->
+        <RelativePanel x:Name="relativePanelMaster" Grid.Column="0">
+            <CalendarView HorizontalAlignment="Stretch" Margin="12,12,12,12" 
+                          VerticalAlignment="Stretch"
+                          DataContext="{Binding}"
+                          CalendarViewDayItemStyle="{StaticResource CalendarViewDayItemStyle1}"
+                          DisplayMode="Month"
+                          FirstDayOfWeek="Monday"
+                          BorderBrush="#FFF9F9F9"
+                          OutOfScopeBackground="Transparent"
+                          CalendarItemBackground="#FFDDEBF7"
+                          DayItemFontSize="11"
+                          CalendarViewDayItemChanging="CalendarView_CalendarViewDayItemChanging"
+                          SelectedDatesChanged="CalendarView_SelectedDatesChanged"
+                          RelativePanel.AlignLeftWithPanel="True"
+                          RelativePanel.AlignRightWithPanel="True"
                       />
+        </RelativePanel>
+        <RelativePanel x:Name="relativePanelDetails" Grid.Column="1">
+            <Button x:Name="GoToMasterViewButton" Content="Master View" Margin="12"
+                    Click="GoToMasterViewButton_Click" />
+            <Grid RelativePanel.Below="GoToMasterViewButton" >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="200" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="{Binding Path=SelectedDate}" Margin="12,0,12,12" />
+
+            </Grid>
+        </RelativePanel>
+
+        <!-- Details view -->
     </Grid>
 </views:BasePage>
