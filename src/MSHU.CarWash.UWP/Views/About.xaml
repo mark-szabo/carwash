@@ -9,9 +9,11 @@
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <RelativePanel>
-            <TextBlock Text="About" />
+            <TextBlock Text="About" RelativePanel.AlignHorizontalCenterWithPanel="True"
+                       RelativePanel.AlignVerticalCenterWithPanel="True"/>
             <TextBlock Text="Powered by Premier Support for Development" Margin="12"
                        FontSize="14" FontWeight="Bold" FontStyle="Italic" 
+                       Foreground="{StaticResource BrushDarkBlue}"
                        RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignRightWithPanel="True" />
         </RelativePanel>
     </Grid>

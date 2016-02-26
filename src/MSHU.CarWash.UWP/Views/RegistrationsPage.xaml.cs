@@ -1,19 +1,10 @@
-﻿using MSHU.CarWash.UWP.ViewModels;
+﻿using MSHU.CarWash.UWP.Common.UI;
+using MSHU.CarWash.UWP.Converters;
+using MSHU.CarWash.UWP.ViewModels;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -24,8 +15,11 @@ namespace MSHU.CarWash.UWP.Views
     /// </summary>
     public sealed partial class RegistrationsPage : BasePage
     {
+        private static CalendarViewDayItemConverter _converter;
+
         public RegistrationsPage()
         {
+            _converter = new CalendarViewDayItemConverter();
             this.InitializeComponent();
         }
 
@@ -45,6 +39,32 @@ namespace MSHU.CarWash.UWP.Views
             {
                 item.DataContext = this.ViewModel;
             }
+
+            TextBlock tb = UIHelper.FindVisualChild<TextBlock, string>(
+                item, NameProperty, "FreeSlotsTextBox");
+
+            if (tb != null)
+            {
+                Binding textBinding = new Binding();
+                if (tb.DataContext is CalendarViewDayItem)
+                {
+                    textBinding.Path = new PropertyPath("DataContext.FreeSlots");
+                }
+                else if (tb.DataContext is RegistrationsViewModel)
+                {
+                    textBinding.Path = new PropertyPath("FreeSlots");
+                }
+                else
+                {
+                    throw new InvalidOperationException("Inadequate control hierarchy in CalendarViewDayItem's template!");
+                }
+                textBinding.Converter = _converter;
+                textBinding.ConverterParameter = item.Date;
+                tb.SetBinding(TextBlock.TextProperty, textBinding);
+            }
+
+            //var tb = item.FindName("FreeSlotsTextBox");
+            //tb = VisualTreeHelper.GetChild(VisualTreeHelper.GetChild(VisualTreeHelper.GetChild(item, 0), 0), 0);
 
             // Render basic day items.
             if (args.Phase == 0)
@@ -96,5 +116,6 @@ namespace MSHU.CarWash.UWP.Views
             }
 
         }
+
     }
 }

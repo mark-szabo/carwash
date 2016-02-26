@@ -84,7 +84,7 @@ namespace MSHU.CarWash.UWP.ViewModels
         public RelayCommand SignOutWithAADCommand { get; set; }
 
         /// <summary>
-        /// Gets or sets the SignOutWithAADCommand.
+        /// Gets or sets the RequestServiceCommand.
         /// </summary>
         public RelayCommand RequestServiceCommand { get; set; }
 
@@ -124,7 +124,7 @@ namespace MSHU.CarWash.UWP.ViewModels
         }
 
         /// <summary>
-        /// Event handler for the Executed event of the SignOutWithAADCommand.
+        /// Event handler for the Executed event of the RequestServiceCommand.
         /// </summary>
         /// <param name="param"></param>
         private async void ExecuteRequestServiceCommand(object param)
@@ -156,5 +156,5 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
 
         }
-}
+    }
 }

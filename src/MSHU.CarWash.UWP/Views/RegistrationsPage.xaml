@@ -18,14 +18,16 @@
             <Setter Property="MinHeight" Value="35"/>
             <Setter Property="Margin" Value="1"/>
             <Setter Property="Padding" Value="0, 0, 0, 4"/>
-            <Setter Property="DataContext" Value="{Binding}" />
+            <!--<Setter Property="DataContext" Value="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}" />-->
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CalendarViewDayItem">
-                        <StackPanel VerticalAlignment="Bottom">
+                        <StackPanel VerticalAlignment="Bottom"
+                                    DataContext="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <TextBlock Text="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Converter={StaticResource dayItemConverter}, ConverterParameter={Binding Path=DataContext}}" 
-                                           FontSize="11"/>
+                                <TextBlock x:Name="FreeSlotsTextBox" FontSize="11" 
+                                           />
+                                <!--Text="{Binding Converter={StaticResource dayItemConverter}, ConverterParameter={Binding}}"-->
                                 <TextBlock Text=" free slot(s)" FontSize="11"/>
                             </StackPanel>
                         </StackPanel>

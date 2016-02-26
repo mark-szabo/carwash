@@ -15,22 +15,15 @@ namespace MSHU.CarWash.UWP.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            CalendarViewDayItem item = value as CalendarViewDayItem;
-            if (item != null)
+            if (targetType.Equals(typeof(string)))
             {
-                if (item.DataContext == null)
+                RegistrationsViewModel vm = value as RegistrationsViewModel;
+                DateTimeOffset dt = (DateTimeOffset)parameter;
+                if (vm != null)
                 {
-                    FrameworkElement parent = VisualTreeHelper.GetParent(item) as FrameworkElement;
-                    RegistrationsViewModel vm = parent?.DataContext as RegistrationsViewModel;
-                    if (vm != null)
-                    {
-                        item.DataContext = vm;
-                        value = vm.GetReservationCountByDay(item.Date);
-                    }
-
+                    value = vm.GetReservationCountByDay(dt);
                 }
             }
-
             return value;
         }
 

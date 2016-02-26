@@ -20,6 +20,8 @@ namespace MSHU.CarWash.UWP
         /// </summary>
         public static AuthenticationManager AuthenticationManager = new AuthenticationManager();
 
+        public static readonly int MAX_RESERVATIONS_PER_DAY = 6;
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
