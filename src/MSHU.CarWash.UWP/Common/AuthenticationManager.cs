@@ -6,6 +6,7 @@ using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace MSHU.CarWash.UWP.Common
 {
@@ -61,13 +62,8 @@ namespace MSHU.CarWash.UWP.Common
         /// <returns></returns>
         public async Task<bool> LoginWithAAD()
         {
-            bool success = false;
+            AuthenticationResult result = await TryLoginWithAadAsync(PromptBehavior.Auto);
 
-            AuthenticationResult result = await m_AuthContext.AcquireTokenAsync(
-                "https://vadkertitestwebapp.azurewebsites.net",
-                m_ClientId,
-                m_AppUri,
-                PromptBehavior.Auto);
             if (result.Status != AuthenticationStatus.Success)
             {
                 if (result.Error == "authentication_canceled")
@@ -81,16 +77,36 @@ namespace MSHU.CarWash.UWP.Common
                         new Windows.UI.Popups.MessageDialog(string.Format("If the error continues, please contact your administrator.\n\nError: {0}\n\nError Description:\n\n{1}", result.Error, result.ErrorDescription), "Sorry, an error occurred while signing you in.");
                     await dialog.ShowAsync();
                 }
+
+                return false;
             }
-            else
+
+            return true;
+        }
+
+        private async Task<AuthenticationResult> TryLoginWithAadAsync(PromptBehavior promptBehavior)
+        {
+            var result = await m_AuthContext.AcquireTokenAsync(
+                "https://vadkertitestwebapp.azurewebsites.net",
+                m_ClientId,
+                m_AppUri,
+                promptBehavior);
+
+            if (result.Status == AuthenticationStatus.Success)
             {
                 //successful sign in
                 IsUserAuthenticated = true;
                 UserData = result.UserInfo;
-                success = true;
                 BearerAccessToken = result.AccessToken;
             }
-            return success;
+
+            return result;
+        }
+
+        public async Task<bool> TryAutoLoginWithAadAsync()
+        {
+            var result = await TryLoginWithAadAsync(PromptBehavior.Never);
+            return result.Status == AuthenticationStatus.Success;
         }
 
         /// <summary>
@@ -117,7 +133,6 @@ namespace MSHU.CarWash.UWP.Common
             var response = await client.SendAsync(request);
             return response;
         }
-        
     }
 
 }
