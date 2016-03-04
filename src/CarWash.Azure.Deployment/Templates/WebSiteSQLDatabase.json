@@ -83,14 +83,14 @@
       "_artifactsLocationSasToken": {
           "type": "securestring"
       },
-      "CarWashApiServiceWebDeployPackageFolder": {
+      "CarWashWebDeployPackageFolder": {
           "type": "string",
           "minLength": 1,
           "metadata": {
               "description": "WebDeploy package location. This path is relative to the _artifactsLocation parameter"
           }
       },
-      "CarWashApiServiceWebDeployPackageFileName": {
+      "CarWashWebDeployPackageFileName": {
           "type": "string",
           "minLength": 1,
           "metadata": {
@@ -220,12 +220,12 @@
                     "displayName": "CarWashApiServiceWebDeploy"
                 },
                 "properties": {
-                    "packageUri": "[concat(parameters('_artifactsLocation'), '/', parameters('CarWashApiServiceWebDeployPackageFolder'), '/', parameters('CarWashApiServiceWebDeployPackageFileName'), parameters('_artifactsLocationSasToken'))]",
+                    "packageUri": "[concat(parameters('_artifactsLocation'), '/', parameters('CarWashWebDeployPackageFolder'), '/', parameters('CarWashWebDeployPackageFileName'), parameters('_artifactsLocationSasToken'))]",
                     "dbType": "Sql",
                     "connectionString": "[concat('Data Source=tcp:', reference(concat('Microsoft.Sql/servers/', variables('sqlserverName'))).fullyQualifiedDomainName, ',1433;Initial Catalog=', parameters('databaseName'), ';User Id=', parameters('administratorLogin'), '@', variables('sqlserverName'), ';Password=', parameters('administratorLoginPassword'), ';')]",
                     "setParameters": {
                         "IIS Web Application Name": "[variables('apiSiteName')]",
-                        "MS_TableConnectionString-Web.config Connection String": "[concat('Data Source=tcp:', reference(concat('Microsoft.Sql/servers/', variables('sqlserverName'))).fullyQualifiedDomainName, ',1433;Initial Catalog=', parameters('databaseName'), ';User Id=', parameters('administratorLogin'), '@', variables('sqlserverName'), ';Password=', parameters('administratorLoginPassword'), ';')]"
+                        "MSHUCarWashConnectionString-Web.config Connection String": "[concat('Data Source=tcp:', reference(concat('Microsoft.Sql/servers/', variables('sqlserverName'))).fullyQualifiedDomainName, ',1433;Initial Catalog=', parameters('databaseName'), ';User Id=', parameters('administratorLogin'), '@', variables('sqlserverName'), ';Password=', parameters('administratorLoginPassword'), ';')]"
                     }
                 }
             }

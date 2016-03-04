@@ -30,17 +30,16 @@ namespace MSHU.CarWash.UWP.Views
 
         private void ViewModel_UserAuthenticated(object sender, System.EventArgs e)
         {
-            Navigate(typeof(HomePage));
+            // Create the app shell that will host the entire application content.
+            AppShell shell = new AppShell();
+            Window.Current.Content = shell;
+            Window.Current.Activate();
+            //Navigate(typeof(HomePage));
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-
-            // Obtain the redirect Uri for the app
-            // Actually it is:
-            // ms-app://s-1-15-2-348789351-3529148773-2918319933-3807175127-3638082815-3054471230-807679675/
-            //Uri redirectUri = WebAuthenticationBroker.GetCurrentApplicationCallbackUri(); ;
         }
     }
 }

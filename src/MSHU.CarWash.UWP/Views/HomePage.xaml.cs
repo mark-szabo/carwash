@@ -39,5 +39,6 @@ namespace MSHU.CarWash.UWP.Views
         {
             Navigate(typeof(MainPage));
         }
+
     }
 }

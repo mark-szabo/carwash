@@ -8,22 +8,42 @@
     xmlns:views="using:MSHU.CarWash.UWP.Views"
     mc:Ignorable="d">
 
-    <RelativePanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <TextBlock Text="User:" x:Name="UserTextBlock" Margin="12"
+    <Grid Background="White">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <RelativePanel Grid.Column="0" Background="Transparent">
+            <TextBlock Text="User:" x:Name="UserTextBlock" Margin="12"
                    RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignTopWithPanel="True" />
-        <TextBlock Text="Given name:" x:Name="GivenNameTextBlock" Margin="12"
+            <TextBlock Text="Given name:" x:Name="GivenNameTextBlock" Margin="12"
                    RelativePanel.AlignLeftWithPanel="True" RelativePanel.Below="UserTextBlock" />
-        <TextBlock Text="{Binding GivenName}" RelativePanel.RightOf="GivenNameTextBlock"
+            <TextBlock Text="{Binding GivenName}" RelativePanel.RightOf="GivenNameTextBlock"
                    RelativePanel.AlignVerticalCenterWith="GivenNameTextBlock"/>
-        <TextBlock Text="Family name:" x:Name="FamilyNameTextBlock" Margin="12"
+            <TextBlock Text="Family name:" x:Name="FamilyNameTextBlock" Margin="12"
                    RelativePanel.AlignLeftWithPanel="True" RelativePanel.Below="GivenNameTextBlock" />
-        <TextBlock Text="{Binding FamilyName}" RelativePanel.RightOf="FamilyNameTextBlock"
+            <TextBlock Text="{Binding FamilyName}" RelativePanel.RightOf="FamilyNameTextBlock"
                    RelativePanel.AlignVerticalCenterWith="FamilyNameTextBlock"/>
-        <TextBlock Text="Email:" x:Name="EmailTextBlock" Margin="12"
+            <TextBlock Text="Email:" x:Name="EmailTextBlock" Margin="12"
                    RelativePanel.AlignLeftWithPanel="True" RelativePanel.Below="FamilyNameTextBlock" />
-        <TextBlock Text="{Binding Email}" RelativePanel.RightOf="EmailTextBlock"
+            <TextBlock Text="{Binding Email}" RelativePanel.RightOf="EmailTextBlock"
                    RelativePanel.AlignVerticalCenterWith="EmailTextBlock"/>
-        <Button Content="Sign out" Command="{Binding SignOutWithAADCommand}" Margin="12"
-                RelativePanel.Below="EmailTextBlock" RelativePanel.AlignLeftWithPanel="True" />
-    </RelativePanel>
+            <TextBlock Text="Registration:" x:Name="RegistrationBlock" Margin="12"
+                   RelativePanel.AlignLeftWithPanel="True" RelativePanel.Below="EmailTextBlock" />
+            <TextBlock Text="{Binding RegistrationInfo}" RelativePanel.RightOf="RegistrationBlock"
+                   RelativePanel.AlignVerticalCenterWith="RegistrationBlock"/>
+            <Button Name="RequestServiceButton" Content="Get my reservations" Command="{Binding RequestServiceCommand}" Margin="12"
+                RelativePanel.Below="RegistrationBlock"/>
+            <Button Name="SignOutButton" Content="Sign out" Command="{Binding SignOutWithAADCommand}" Margin="12"
+                RelativePanel.Below="RequestServiceButton"/>
+        </RelativePanel>
+
+    </Grid>
+
+
 </views:BasePage>
