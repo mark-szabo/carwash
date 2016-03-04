@@ -110,7 +110,7 @@ namespace MSHU.CarWash.UWP.Views
 
             await Task.Delay(2000);
 
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
                 Frame rootFrame = Window.Current.Content as Frame;
 
@@ -131,7 +131,15 @@ namespace MSHU.CarWash.UWP.Views
                     // When the navigation stack isn't restored navigate to the first page,
                     // configuring the new page by passing required information as a navigation
                     // parameter
-                    rootFrame.Navigate(typeof(MainPage), null);
+                    var autoSignInSucceeded = await App.AuthenticationManager.TryAutoSignInWithAadAsync();
+                    if (!autoSignInSucceeded)
+                    {
+                        rootFrame.Navigate(typeof(MainPage), null);
+                    }
+                    else
+                    {
+                        rootFrame.Navigate(typeof(AppShell), null);
+                    }
                 }
                 Window.Current.Content = rootFrame;
                 // Ensure the current window is active

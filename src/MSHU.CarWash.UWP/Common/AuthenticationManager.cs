@@ -62,7 +62,7 @@ namespace MSHU.CarWash.UWP.Common
         /// <returns></returns>
         public async Task<bool> LoginWithAAD()
         {
-            AuthenticationResult result = await TryLoginWithAadAsync(PromptBehavior.Auto);
+            AuthenticationResult result = await TrySignInWithAadAsync(PromptBehavior.Auto);
 
             if (result.Status != AuthenticationStatus.Success)
             {
@@ -84,7 +84,7 @@ namespace MSHU.CarWash.UWP.Common
             return true;
         }
 
-        private async Task<AuthenticationResult> TryLoginWithAadAsync(PromptBehavior promptBehavior)
+        private async Task<AuthenticationResult> TrySignInWithAadAsync(PromptBehavior promptBehavior)
         {
             var result = await m_AuthContext.AcquireTokenAsync(
                 "https://vadkertitestwebapp.azurewebsites.net",
@@ -103,9 +103,9 @@ namespace MSHU.CarWash.UWP.Common
             return result;
         }
 
-        public async Task<bool> TryAutoLoginWithAadAsync()
+        public async Task<bool> TryAutoSignInWithAadAsync()
         {
-            var result = await TryLoginWithAadAsync(PromptBehavior.Never);
+            var result = await TrySignInWithAadAsync(PromptBehavior.Never);
             return result.Status == AuthenticationStatus.Success;
         }
 
