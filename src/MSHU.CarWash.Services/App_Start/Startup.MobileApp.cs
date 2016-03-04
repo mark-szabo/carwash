@@ -10,8 +10,6 @@ using MSHU.CarWash.Services.Models;
 using Owin;
 using AutoMapper;
 using MSHU.CarWash.Services.DataObjects;
-using Microsoft.Owin.Security.ActiveDirectory;
-using System.IdentityModel.Tokens;
 
 namespace MSHU.CarWash.Services
 {
@@ -73,21 +71,6 @@ namespace MSHU.CarWash.Services
             Mapper.CreateMap<Employee, EmployeeDto>()
                 .ForMember(employeeDto => employeeDto.Id, mce => mce.MapFrom(employee => employee.EmployeeId));
         }
-
-        public void ConfigureAuth(IAppBuilder app)
-        {
-            app.UseWindowsAzureActiveDirectoryBearerAuthentication(
-                new WindowsAzureActiveDirectoryBearerAuthenticationOptions
-                {
-                    Tenant = ConfigurationManager.AppSettings["ida:Tenant"],
-                    TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidAudience = ConfigurationManager.AppSettings["ida:Audience"]
-                    },
-                   
-                });
-        }
-
     }
 
     public class CarWashInitializer : CreateDatabaseIfNotExists<CarWashContext>

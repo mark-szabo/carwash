@@ -20,7 +20,7 @@ using MSHU.CarWashService.DataObjects;
 
 namespace MSHU.CarWash.Controllers
 {
-    //[Authorize]
+    [Authorize]
     //[RequireHttps]
     public class CalendarController : ApiController
     {

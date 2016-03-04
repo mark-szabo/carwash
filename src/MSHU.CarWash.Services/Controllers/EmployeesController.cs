@@ -22,7 +22,7 @@ namespace MSHU.CarWash.Controllers
     // A table controller provides access to entity data in a table-based data store, 
     // such as SQL Database or Azure Table storage. 
     [Authorize]
-    [RequireHttps]
+    //[RequireHttps]
     public class EmployeesController : TableController<Employee>
     {
         private CarWashContext _db = new CarWashContext();
