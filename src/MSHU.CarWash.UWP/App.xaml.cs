@@ -5,7 +5,9 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation.Metadata;
 using Windows.UI;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 
 namespace MSHU.CarWash.UWP
@@ -30,6 +32,17 @@ namespace MSHU.CarWash.UWP
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+            this.Resuming += OnAppResuming;
+        }
+        /// <summary>
+        /// Triggers when 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void OnAppResuming(object sender, object e)
+        {
+            //after resuming we are using the same logic as start up
+            await ExtendedSplash.ShowMainPage();
         }
 
         /// <summary>
