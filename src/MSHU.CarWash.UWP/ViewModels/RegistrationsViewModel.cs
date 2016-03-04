@@ -24,9 +24,36 @@ namespace MSHU.CarWash.UWP.ViewModels
         private string _selectedDate;
 
         /// <summary>
+        /// Private fields holds a reference to the reservation instance.
+        /// The field has a value - not null - if the current user has
+        /// a reservation for the currently selected day (SelectedDayDetails.Day).
+        /// The field is null if the user has no reservation.
+        /// 
+        /// If the user doesn't have any reservation and he/she creates a new one
+        /// then this field is assigned with the new instance of Reservation.
+        /// </summary>
+        private ReservationDayDetailViewModel _currentReservation;
+
+        /// <summary>
         /// Gets or sets the RequestServiceCommand.
         /// </summary>
         public RelayCommand RequestServiceCommand { get; set; }
+
+        /// <summary>
+        /// Gets or sets the CreateReservationsCommand.
+        /// </summary>
+        public RelayCommand CreateReservationCommand { get; set; }
+
+        /// <summary>
+        /// Gets or sets the CancelReservationChangesCommand.
+        /// </summary>
+        public RelayCommand CancelReservationChangesCommand { get; set; }
+
+
+        /// <summary>
+        /// Gets or sets the SaveReservationChangesCommand.
+        /// </summary>
+        public RelayCommand SaveReservationChangesCommand { get; set; }
 
         public object FreeSlots => this;
 
@@ -42,7 +69,13 @@ namespace MSHU.CarWash.UWP.ViewModels
                 _useDetailsView = value;
                 OnPropertyChanged("UseDetailsView");
                 OnPropertyChanged("UseMasterView");
-                OnPropertyChanged("SelectedDate");
+                if (!value)
+                {
+                    // The user navigated back to the master view so clear the selected
+                    // date relating properties!
+                    SelectedDayDetails = null;
+                    CurrentReservation = null;
+                }
             }
         }
 
@@ -65,7 +98,41 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// </summary>
         public RelayCommand ActivateDetailsCommand { get; set; }
 
-        public string SelectedDate => _selectedDate;
+        public string SelectedDate
+        {
+            get
+            {
+                return _selectedDate;
+            }
+            private set
+            {
+                _selectedDate = value;
+                OnPropertyChanged("SelectedDate");
+            }
+        }
+
+        /// <summary>
+        /// Private fields holds a reference to the reservation instance.
+        /// The field has a value - not null - if the current user has
+        /// a reservation for the currently selected day (SelectedDayDetails.Day).
+        /// The field is null if the user has no reservation.
+        /// 
+        /// If the user doesn't have any reservation and he/she creates a new one
+        /// then this field is assigned with the new instance of Reservation.
+        /// </summary>
+        public ReservationDayDetailViewModel CurrentReservation
+        {
+            get
+            {
+                return _currentReservation;
+            }
+
+            set
+            {
+                _currentReservation = value;
+                OnPropertyChanged("CurrentReservation");
+            }
+        }
 
         public RegistrationsViewModel()
         {
@@ -75,8 +142,17 @@ namespace MSHU.CarWash.UWP.ViewModels
             RequestServiceCommand = new RelayCommand(ExecuteRequestServiceCommand);
             RequestServiceCommand.Execute(this);
 
-            // Create the ActivateDetailsCommand
+            // Create the ActivateDetailsCommand.
             ActivateDetailsCommand = new RelayCommand(ExecuteActivateDetailsCommand);
+
+            // Create the CreateReservationCommand.
+            CreateReservationCommand = new RelayCommand(ExecuteCreateReservationCommand);
+
+            // Create the CancelReservationChangesCommand.
+            CancelReservationChangesCommand = new RelayCommand(ExecuteCancelReservationChangesCommand);
+
+            // Create the SaveReservationChangesCommand.
+            SaveReservationChangesCommand = new RelayCommand(ExecuteSaveReservationChangesCommand);
         }
 
 
@@ -146,7 +222,7 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// for data binding UI elements.
         /// </summary>
         /// <param name="param"></param>
-        private async void ExecuteActivateDetailsCommand(object param)
+        private void ExecuteActivateDetailsCommand(object param)
         {
             DateTimeOffset selectedDate = (DateTimeOffset)param;
             if (selectedDate.CompareTo(DateTimeOffset.Now) < 0)
@@ -159,9 +235,30 @@ namespace MSHU.CarWash.UWP.ViewModels
                 SelectedDayDetails =
                     _rmv.ReservationsByDayActive.Find(x => x.Day.Equals(selectedDate.Date));
             }
-            _selectedDate = selectedDate.ToString("D");
+            SelectedDate = selectedDate.ToString("D");
+
+            if (SelectedDayDetails != null)
+            {
+                // Check if the user has reservation for the selected date.
+                CurrentReservation = SelectedDayDetails.Reservations.Find(
+                    x => x.EmployeeId.Equals(App.AuthenticationManager.UserData.DisplayableId));
+            }
 
             UseDetailsView = true;
+        }
+
+        private void ExecuteCreateReservationCommand(object param)
+        {
+            CurrentReservation = new ReservationDayDetailViewModel();
+        }
+
+        private void ExecuteCancelReservationChangesCommand(object param)
+        {
+
+        }
+
+        private void ExecuteSaveReservationChangesCommand(object param)
+        {
 
         }
 

@@ -7,17 +7,20 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="using:MSHU.CarWash.UWP.Views"
     xmlns:converters="using:MSHU.CarWash.UWP.Converters"
+    xmlns:controls="using:MSHU.CarWash.UWP.Controls"
     mc:Ignorable="d">
 
     <views:BasePage.Resources>
 
         <converters:CalendarViewDayItemConverter x:Key="dayItemConverter" />
+        <converters:ReferenceToVisibilityConverter x:Key="reservationDetailsViewConverter" />
+        <converters:InverseReferenceToVisibilityConverter x:Key="inverseRef2VisConverter" />
 
         <Style x:Key="CalendarViewDayItemStyle1" TargetType="CalendarViewDayItem">
             <Setter Property="MinWidth" Value="35"/>
             <Setter Property="MinHeight" Value="40"/>
             <Setter Property="Margin" Value="1"/>
-            <Setter Property="Padding" Value="0, 0, 0, 4"/>
+            <Setter Property="Padding" Value="0"/>
             <!--<Setter Property="DataContext" Value="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}" />-->
             <Setter Property="Template">
                 <Setter.Value>
@@ -84,23 +87,35 @@
                           RelativePanel.AlignRightWithPanel="True"
                       />
         </RelativePanel>
+
+        <!-- Details view -->
+
         <RelativePanel x:Name="relativePanelDetails" Grid.Column="1">
             <Button x:Name="GoToMasterViewButton" Content="Master View" Margin="12"
                     Click="GoToMasterViewButton_Click" />
             <Grid RelativePanel.Below="GoToMasterViewButton" >
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="200" />
+                    <ColumnDefinition Width="auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0" Text="{Binding Path=SelectedDate}" Margin="12,0,12,12" />
 
+                <controls:ReservationDetailsView Grid.Row="1" Margin="12,0,12,12"
+                                                 Visibility="{Binding CurrentReservation, Converter={StaticResource reservationDetailsViewConverter}}"
+                                                 SaveCommand="{Binding SaveReservationChangesCommand}"
+                                                 CancelCommand="{Binding CancelReservationChangesCommand}"/>
+
+                <Button Grid.Row="1" Content="Create new reservation" Margin="12,0,12,12"
+                        Visibility="{Binding CurrentReservation, Converter={StaticResource inverseRef2VisConverter}}"
+                        Command="{Binding CreateReservationCommand}"/>
+
             </Grid>
         </RelativePanel>
 
-        <!-- Details view -->
     </Grid>
 </views:BasePage>
