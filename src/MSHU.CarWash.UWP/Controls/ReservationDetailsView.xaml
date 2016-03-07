@@ -35,14 +35,19 @@
         <TextBlock Text="Plate number:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" />
         <TextBox Text="{Binding CurrentReservation.VehiclePlateNumber}" Grid.Row="0" Grid.Column="1" />
         <TextBlock Text="Selected service:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" />
-        <TextBox Text="{Binding CurrentReservation.SelectedServiceName}" Grid.Row="1" Grid.Column="1" />
+        <ComboBox ItemsSource="{Binding ServicesSource.View, Mode=TwoWay}" HorizontalAlignment="Stretch" Margin="8,4,8,4"
+                  Grid.Row="1" Grid.Column="1" DisplayMemberPath="ServiceName" SelectedValuePath="ServiceId" />
         <TextBlock Text="Comment:" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" />
-        <TextBox Text="{Binding CurrentReservation.Comment}" Grid.Row="2" Grid.Column="1" />
+        <TextBox Text="{Binding CurrentComment, Mode=TwoWay}" Grid.Row="2" Grid.Column="1" />
         <RelativePanel Grid.Row="3" Grid.Column="1" >
             <Button Content="Cancel" x:Name="CancelButton" Command="{Binding CancelCommand, ElementName=viewControl}"
                     RelativePanel.AlignRightWithPanel="True" Margin="0,4,8,4" Padding="32,4,32,4"/>
-            <Button Content="Save" RelativePanel.LeftOf="CancelButton" Margin="0,4,8,4" Padding="32,4,32,4"
+            <Button Content="Save" x:Name="SaveButton" RelativePanel.LeftOf="CancelButton" 
+                    Margin="0,4,8,4" Padding="32,4,32,4"
                     Command="{Binding SaveCommand, ElementName=viewControl}"/>
+            <Button Content="Delete" x:Name="DeleteButton" IsEnabled="False"
+                    Command="{Binding DeleteCommand, ElementName=viewControl}"
+                    RelativePanel.AlignRightWithPanel="True" Margin="0,4,8,4" Padding="32,4,32,4"/>
         </RelativePanel>
     </Grid>
 </UserControl>

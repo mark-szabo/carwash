@@ -41,6 +41,11 @@ namespace MSHU.CarWash.UWP.Common
         public string BearerAccessToken { get; private set; }
 
         /// <summary>
+        /// Gets the Employee instance that represents the currently signed-in user.
+        /// </summary>
+        public Employee CurrentEmployee { get; private set; }
+
+        /// <summary>
         /// Default constructor
         /// </summary>
         public AuthenticationManager()
@@ -98,6 +103,8 @@ namespace MSHU.CarWash.UWP.Common
                 IsUserAuthenticated = true;
                 UserData = result.UserInfo;
                 BearerAccessToken = result.AccessToken;
+                // Get the Employee instance assigned to the current user.
+                CurrentEmployee = await ServiceClient.ServiceClient.GetCurrentUser(BearerAccessToken);
             }
 
             return result;

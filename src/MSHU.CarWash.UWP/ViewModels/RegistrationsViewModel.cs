@@ -1,10 +1,12 @@
 ﻿using MSHU.CarWash.DomainModel;
+using MSHU.CarWash.DomainModel.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.UI.Xaml.Data;
 
 namespace MSHU.CarWash.UWP.ViewModels
 {
@@ -22,6 +24,7 @@ namespace MSHU.CarWash.UWP.ViewModels
 
         private ReservationDayDetailsViewModel _selectedDayDetails;
         private string _selectedDate;
+        private DateTimeOffset _currentDate;
 
         /// <summary>
         /// Private fields holds a reference to the reservation instance.
@@ -54,6 +57,11 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// Gets or sets the SaveReservationChangesCommand.
         /// </summary>
         public RelayCommand SaveReservationChangesCommand { get; set; }
+
+        /// <summary>
+        /// Gets or sets the DeleteReservationCommand.
+        /// </summary>
+        public RelayCommand DeleteReservationCommand { get; set; }
 
         public object FreeSlots => this;
 
@@ -131,6 +139,46 @@ namespace MSHU.CarWash.UWP.ViewModels
             {
                 _currentReservation = value;
                 OnPropertyChanged("CurrentReservation");
+                // Set the selected service
+                if (_currentReservation != null)
+                {
+                    if (!string.IsNullOrEmpty(_currentReservation.SelectedServiceName))
+                    {
+                        var selectedService = Services.Find(
+                            x => x.ServiceName.Equals(_currentReservation.SelectedServiceName));
+                        ServicesSource.View.MoveCurrentTo(selectedService);
+                    }
+                    else
+                    {
+                        ServicesSource.View.MoveCurrentToFirst();
+                    }
+                    //OnPropertyChanged("Services");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the available services list.
+        /// </summary>
+        public List<ServiceViewModel> Services { get; set; }
+
+        public CollectionViewSource ServicesSource { get; set; }
+
+        public string CurrentComment
+        {
+            get
+            {
+                return CurrentReservation?.Comment;
+            }
+
+            set
+            {
+                // Setting the comment is actually only allowed for new reservations.
+                if (CurrentReservation.ReservationId == 0)
+                {
+                    CurrentReservation.Comment = value;
+                    OnPropertyChanged("CurrentComment");
+                }
             }
         }
 
@@ -153,6 +201,18 @@ namespace MSHU.CarWash.UWP.ViewModels
 
             // Create the SaveReservationChangesCommand.
             SaveReservationChangesCommand = new RelayCommand(ExecuteSaveReservationChangesCommand);
+
+            // Create the DeleteReservationCommand.
+            DeleteReservationCommand = new RelayCommand(ExecuteDeleteReservationCommand);
+
+            Services = new List<ServiceViewModel>();
+            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosas, ServiceName = ServiceEnum.KulsoMosas.GetDescription(), Selected = false });
+            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.BelsoTakaritas, ServiceName = ServiceEnum.BelsoTakaritas.GetDescription(), Selected = false });
+            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasBelsoTakaritas, ServiceName = ServiceEnum.KulsoMosasBelsoTakaritas.GetDescription(), Selected = false });
+            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas, ServiceName = ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas.GetDescription(), Selected = false });
+
+            ServicesSource = new CollectionViewSource();
+            ServicesSource.Source = Services;
         }
 
 
@@ -236,6 +296,7 @@ namespace MSHU.CarWash.UWP.ViewModels
                     _rmv.ReservationsByDayActive.Find(x => x.Day.Equals(selectedDate.Date));
             }
             SelectedDate = selectedDate.ToString("D");
+            _currentDate = selectedDate;
 
             if (SelectedDayDetails != null)
             {
@@ -249,15 +310,44 @@ namespace MSHU.CarWash.UWP.ViewModels
 
         private void ExecuteCreateReservationCommand(object param)
         {
-            CurrentReservation = new ReservationDayDetailViewModel();
+            var cr = new ReservationDayDetailViewModel();
+            cr.VehiclePlateNumber = App.AuthenticationManager.CurrentEmployee.VehiclePlateNumber;
+            CurrentReservation = cr;
+            CurrentComment = string.Empty;
         }
 
         private void ExecuteCancelReservationChangesCommand(object param)
         {
-
+            CurrentReservation = null;
         }
 
-        private void ExecuteSaveReservationChangesCommand(object param)
+        private async void ExecuteSaveReservationChangesCommand(object param)
+        {
+            NewReservationViewModel nrvm = new NewReservationViewModel();
+            nrvm.EmployeeId = App.AuthenticationManager.UserData.DisplayableId;
+            nrvm.EmployeeName = App.AuthenticationManager.CurrentEmployee.Name;
+            nrvm.VehiclePlateNumber = CurrentReservation.VehiclePlateNumber;
+            nrvm.SelectedServiceId = ((ServiceViewModel)ServicesSource.View.CurrentItem).ServiceId;
+            nrvm.Comment = CurrentReservation.Comment;
+            nrvm.SelectedServiceId = ServicesSource.View.CurrentPosition;
+            nrvm.Date = _currentDate.Date;
+            bool result = await ServiceClient.ServiceClient.SaveReservation(
+                nrvm,
+                App.AuthenticationManager.BearerAccessToken);
+            if (result)
+            {
+                // Refresh the ReservationViewModel reference.
+                _rmv = await ServiceClient.ServiceClient.GetReservations(
+                    App.AuthenticationManager.BearerAccessToken);
+                if (_rmv != null)
+                {
+                    OnPropertyChanged("FreeSlots");
+                    ExecuteActivateDetailsCommand(_currentDate);
+                }
+            }
+        }
+
+        private async void ExecuteDeleteReservationCommand(object param)
         {
 
         }

@@ -103,6 +103,7 @@
     <Compile Include="Controls\ReservationDetailsView.xaml.cs">
       <DependentUpon>ReservationDetailsView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Converters\ButtonsDisplayModeConverter.cs" />
     <Compile Include="Converters\CalendarViewDayItemConverter.cs" />
     <Compile Include="Converters\InverseReferenceToVisibilityConverter.cs" />
     <Compile Include="Converters\ReferenceToVisibilityConverter.cs" />
