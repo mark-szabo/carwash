@@ -40,6 +40,11 @@ namespace MSHU.CarWash.UWP.Views
                 item.DataContext = this.ViewModel;
             }
 
+            if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
+            {
+                item.IsBlackout = true;
+            }
+
             TextBlock tb = UIHelper.FindVisualChild<TextBlock, string>(
                 item, NameProperty, "FreeSlotsTextBox");
 
@@ -82,8 +87,9 @@ namespace MSHU.CarWash.UWP.Views
                 //{
                 //    args.Item.IsBlackout = true;
                 //}
-                // Register callback for next phase.
-                args.RegisterUpdateCallback(CalendarView_CalendarViewDayItemChanging);
+
+                //// Register callback for next phase.
+                //args.RegisterUpdateCallback(CalendarView_CalendarViewDayItemChanging);
             }
             // Set density bars.
             else if (args.Phase == 2)

@@ -105,6 +105,7 @@
     </Compile>
     <Compile Include="Converters\ButtonsDisplayModeConverter.cs" />
     <Compile Include="Converters\CalendarViewDayItemConverter.cs" />
+    <Compile Include="Converters\InverseBooleanToVisibilityConverter.cs" />
     <Compile Include="Converters\InverseReferenceToVisibilityConverter.cs" />
     <Compile Include="Converters\ReferenceToVisibilityConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

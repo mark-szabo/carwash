@@ -16,6 +16,7 @@
         <converters:ReferenceToVisibilityConverter x:Key="reservationDetailsViewConverter" />
         <converters:InverseReferenceToVisibilityConverter x:Key="inverseRef2VisConverter" />
         <converters:ButtonsDisplayModeConverter x:Key="buttonsDisplayModeConverter" />
+        <converters:InverseBooleanToVisibilityConverter x:Key="inverseBool2VisibilityConverter" />
 
         <Style x:Key="CalendarViewDayItemStyle1" TargetType="CalendarViewDayItem">
             <Setter Property="MinWidth" Value="35"/>
@@ -27,7 +28,8 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="CalendarViewDayItem">
                         <StackPanel VerticalAlignment="Bottom"
-                                    DataContext="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}">
+                                    DataContext="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                                    Visibility="{Binding Path=IsBlackout, RelativeSource={RelativeSource Mode=TemplatedParent}, Converter={StaticResource inverseBool2VisibilityConverter}}">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                 <TextBlock x:Name="FreeSlotsTextBox" FontSize="11" 
                                            />
