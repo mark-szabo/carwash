@@ -70,7 +70,7 @@ namespace MSHU.CarWash.Controllers
             {
                 ret.DateInterval = string.Format("{0} {1} - {2}", ret.StartOfWeek.ToString("MMMM", CultureInfo.CreateSpecificCulture("hu-HU")), ret.StartOfWeek.Day, endOfWeek.Day).ToUpper();
             }
-            ret.Days = await GetDaysDetailsAsync(ret.StartOfWeek);
+            ret.Days = await GetDaysDetailsAsync(ret.StartOfWeek, endOfWeek);
 
             return Ok(ret);
         }
@@ -109,15 +109,15 @@ namespace MSHU.CarWash.Controllers
                                 {
                                     Date = s.Date,
                                     EmployeeId = (s.EmployeeId == currentUser.Id || currentUser.IsAdmin) ? s.EmployeeId : "",
-                                    EmployeeName = (s.EmployeeId == currentUser.Id  || currentUser.IsAdmin) ? s.Employee.Name : "",
+                                    EmployeeName = (s.EmployeeId == currentUser.Id || currentUser.IsAdmin) ? s.Employee.Name : "",
                                     ReservationId = (s.EmployeeId == currentUser.Id || currentUser.IsAdmin) ? s.ReservationId : 0,
-                                    SelectedServiceName = (s.EmployeeId == currentUser.Id || currentUser.IsAdmin) ?  ((ServiceEnum)s.SelectedServiceId).GetDescription() : "",
+                                    SelectedServiceName = (s.EmployeeId == currentUser.Id || currentUser.IsAdmin) ? ((ServiceEnum)s.SelectedServiceId).GetDescription() : "",
                                     VehiclePlateNumber = s.VehiclePlateNumber,
                                     Comment = (s.EmployeeId == currentUser.Id || currentUser.IsAdmin) ? s.Comment : "",
                                     IsDeletable = (s.EmployeeId == currentUser.Id && s.Date > DateTime.Today) || currentUser.IsAdmin
                                 })
                                 .ToList<ReservationDetailViewModel>();
-                       
+
             ret.ReservationIsAllowed = (ret.AvailableSlots > 0);
 
             if (ret.ReservationIsAllowed && !currentUser.IsAdmin)
@@ -127,7 +127,7 @@ namespace MSHU.CarWash.Controllers
                         orderby b.Date >= DateTime.Today
                         select b;
                 queryResult = await query.ToListAsync();
-
+                //csak akkor foglalhat, ha nincs aktív foglalása
                 ret.ReservationIsAllowed = !queryResult.Any();
             }
 
@@ -144,6 +144,87 @@ namespace MSHU.CarWash.Controllers
 
             return Ok(ret);
         }
+               
+
+        [HttpGet]
+        [ResponseType(typeof(HomeViewModel))]
+        public async Task<IHttpActionResult> GetFirstAvailableDay()
+        {
+            var currentUser = UserHelper.GetCurrentUser();
+            DateTime day = DateTime.Today;
+
+            if (!currentUser.IsAdmin)
+            {
+                #region  ha van aktív foglalása a szimpla usernek, akkor nem foglalhat
+                var query = from b in _db.Reservations.Include(i => i.Employee)
+                            where b.Date >= day && b.EmployeeId == currentUser.Id
+                            orderby b.Date
+                            select b;
+                var queryResult = await query.ToListAsync();
+                var activeReservation = queryResult.FirstOrDefault();
+                if (activeReservation != null)
+                {
+                    HomeViewModel ret = new HomeViewModel();
+
+                    ret.HasActiveReservation = true;
+                    ret.ActiveReservation =
+                        new ReservationDetailViewModel
+                        {
+                            Date = activeReservation.Date,
+                            EmployeeId = activeReservation.EmployeeId,
+                            EmployeeName = activeReservation.Employee.Name,
+                            ReservationId = activeReservation.ReservationId,
+                            SelectedServiceName =  ((ServiceEnum)activeReservation.SelectedServiceId).GetDescription(),
+                            VehiclePlateNumber = activeReservation.VehiclePlateNumber,
+                            Comment = activeReservation.Comment,
+                            IsDeletable = activeReservation.Date > DateTime.Today
+                        };
+
+                    return Ok(ret);
+                }
+                #endregion
+
+                #region  havi limit ellenőrzés személyenként, azaz melyik naptól kezdődően foglalhat
+                var startOfMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                query = from b in _db.Reservations
+                        where b.Date >= startOfMonth && b.EmployeeId == currentUser.Id
+                        orderby b.Date
+                        select b;
+                queryResult = await query.ToListAsync();
+                int sum = 0;
+                foreach (var item in queryResult)
+                {
+                    if (item.SelectedServiceId == (int)ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas)
+                        sum += 2;
+                    else
+                        sum += 1;
+                }               
+                if (sum >= _monthlyLimitPerPerson)
+                {
+                    //csak a következő hónapban foglalhat
+                    day = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(1);
+                }
+                #endregion
+            }
+
+            var q = from b in _db.Reservations
+                    where b.Date >= day
+                    orderby b.Date
+                    select b;
+            var qResult = await q.ToListAsync();
+
+            int availableSlots = GetAvailableSlots(qResult, day);
+            while (availableSlots == 0)
+            {
+                day = day.AddDays(1);
+                availableSlots = GetAvailableSlots(qResult, day);
+            }
+
+            HomeViewModel retVal = await CreateHomeViewModelAsync(day, currentUser);
+
+            return Ok(retVal);
+        }
+       
 
         [HttpPost]
         [ResponseType(typeof(void))]
@@ -368,16 +449,15 @@ namespace MSHU.CarWash.Controllers
         }
 
         #region Private methods
-        private async Task<List<DayViewModel>> GetDaysDetailsAsync(DateTime startOfWeek)
+        private async Task<List<DayViewModel>> GetDaysDetailsAsync(DateTime startDate, DateTime endDate)
         {
-            DateTime endOfWeek = startOfWeek.AddDays(7);
             var query = from b in _db.Reservations
-                        where b.Date >= startOfWeek && b.Date < endOfWeek
+                        where b.Date >= startDate && b.Date <= endDate
                         select b;
             var queryResult = await query.ToListAsync();
 
             List<DayViewModel> result = new List<DayViewModel>();
-            for (DateTime date = startOfWeek; date <= startOfWeek.AddDays(6); date = date.AddDays(1))
+            for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
             {
                 var dayViewModel = new DayViewModel
                 {
@@ -410,17 +490,20 @@ namespace MSHU.CarWash.Controllers
         private int GetAvailableSlots(List<Reservation> queryResult, DateTime date)
         {
             var availableSlots = GetConfiguredAvailableSlotsOnDate(date);
-            var reservationsOnDate = queryResult.FindAll(q => q.Date.Month == date.Month && q.Date.Day == date.Day);
-
-            foreach (var item in reservationsOnDate)
+            if (availableSlots > 0)
             {
-                if (item.SelectedServiceId == (int)ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas)
+                var reservationsOnDate = queryResult.FindAll(q => q.Date.Month == date.Month && q.Date.Day == date.Day);
+
+                foreach (var item in reservationsOnDate)
                 {
-                    availableSlots = availableSlots - 2;
-                }
-                else
-                {
-                    availableSlots = availableSlots - 1;
+                    if (item.SelectedServiceId == (int)ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas)
+                    {
+                        availableSlots = availableSlots - 2;
+                    }
+                    else
+                    {
+                        availableSlots = availableSlots - 1;
+                    }
                 }
             }
 
@@ -445,6 +528,23 @@ namespace MSHU.CarWash.Controllers
             }
 
             return result;
+        }
+
+        private async Task<HomeViewModel> CreateHomeViewModelAsync(DateTime day, User user)
+        {
+            HomeViewModel ret = new HomeViewModel();
+
+            ret.Day = day;
+
+            Employee employee = await _db.Employees.FindAsync(user.Id);
+            ret.NewReservation = new NewReservationViewModel();
+            ret.NewReservation.Date = day;
+            ret.NewReservation.EmployeeId = user.Id;
+            ret.NewReservation.EmployeeName = user.FullName;
+            ret.NewReservation.VehiclePlateNumber = employee != null ? employee.VehiclePlateNumber : "";
+            ret.NewReservation.IsAdmin = user.IsAdmin;
+
+            return ret;
         }
 
         #endregion Private methods
