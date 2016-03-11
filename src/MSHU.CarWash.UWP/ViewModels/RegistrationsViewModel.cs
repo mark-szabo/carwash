@@ -344,6 +344,12 @@ namespace MSHU.CarWash.UWP.ViewModels
                     OnPropertyChanged("FreeSlots");
                     ExecuteActivateDetailsCommand(_currentDate);
                 }
+                // If the user has changed the plate number then refresh the CurrentEmployee instance 
+                // at the AuthenticationManager.
+                if (CurrentReservation.VehiclePlateNumber != App.AuthenticationManager.CurrentEmployee.VehiclePlateNumber)
+                {
+                    App.AuthenticationManager.RefreshCurrentUser();
+                }
             }
         }
 

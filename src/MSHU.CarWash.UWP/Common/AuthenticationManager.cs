@@ -140,6 +140,16 @@ namespace MSHU.CarWash.UWP.Common
             var response = await client.SendAsync(request);
             return response;
         }
+
+        /// <summary>
+        /// Retrieves the current Employee instance from the service, again.
+        /// </summary>
+        /// <returns></returns>
+        public async Task RefreshCurrentUser()
+        {
+            // Get the Employee instance assigned to the current user.
+            CurrentEmployee = await ServiceClient.ServiceClient.GetCurrentUser(BearerAccessToken);
+        }
     }
 
 }

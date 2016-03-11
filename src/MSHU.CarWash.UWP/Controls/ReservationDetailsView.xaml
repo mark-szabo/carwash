@@ -33,7 +33,7 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <TextBlock Text="Plate number:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" />
-        <TextBox Text="{Binding CurrentReservation.VehiclePlateNumber}" Grid.Row="0" Grid.Column="1" />
+        <TextBox Text="{Binding CurrentReservation.VehiclePlateNumber, Mode=TwoWay}" Grid.Row="0" Grid.Column="1" />
         <TextBlock Text="Selected service:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" />
         <ComboBox ItemsSource="{Binding ServicesSource.View, Mode=TwoWay}" HorizontalAlignment="Stretch" Margin="8,4,8,4"
                   Grid.Row="1" Grid.Column="1" DisplayMemberPath="ServiceName" SelectedValuePath="ServiceId" />
