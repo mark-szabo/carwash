@@ -53,7 +53,6 @@ namespace MSHU.CarWash.UWP.ViewModels
             get
             {
                 return reservationDateString;
-
             }
             set
             {
@@ -187,6 +186,28 @@ namespace MSHU.CarWash.UWP.ViewModels
         public RelayCommand GetNextFreeSlotCommand { get; set; }
 
         /// <summary>
+        /// Gets or sets the QuickReserveCommand.
+        /// </summary>
+        public RelayCommand QuickReserveCommand { get; set; }
+
+        private bool quickReservationSucceeded;
+        public bool QuickReservationSucceeded
+        {
+            get { return quickReservationSucceeded; }
+            set
+            {
+                quickReservationSucceeded = value;
+                OnPropertyChanged(nameof(QuickReservationSucceeded));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the QuickReserveCommand.
+        /// </summary>
+        public RelayCommand QuickReserveExtraCommand { get; set; }
+
+
+        /// <summary>
         /// Default constructor initializes instance state.
         /// </summary>
         public HomeViewModel()
@@ -220,6 +241,35 @@ namespace MSHU.CarWash.UWP.ViewModels
 
             GetNextFreeSlotCommand = new RelayCommand(HandleGetNextFreeSlotCommand);
             GetNextFreeSlotCommand.Execute(this);
+
+            QuickReserveCommand = new RelayCommand(HandleQuickReserveCommand);
+            QuickReserveExtraCommand = new RelayCommand(HandleQuickReserveExtraCommand);
+        }
+
+        private void HandleQuickReserveExtraCommand(object obj)
+        {
+            AppShell.Current.AppFrame.Navigate(typeof(RegistrationsPage), nextFreeSlotDate.Value);
+        }
+
+        private async void HandleQuickReserveCommand(object obj)
+        {
+            var reservation = new NewReservationViewModel()
+            {
+                VehiclePlateNumber = App.AuthenticationManager.CurrentEmployee.VehiclePlateNumber,
+                EmployeeId = App.AuthenticationManager.UserData.DisplayableId,
+                EmployeeName = App.AuthenticationManager.CurrentEmployee.Name,
+                // TODO: this is weird here... need to fix the domain model
+                SelectedServiceId = new Nullable<int>((int)ServiceEnum.KulsoMosasBelsoTakaritas),
+                Date = nextFreeSlotDate.Value
+            };
+
+            bool result = await ServiceClient.ServiceClient.SaveReservation(reservation, App.AuthenticationManager.BearerAccessToken);
+            if(result)
+            {
+                QuickReservationSucceeded = true;
+                RequestServiceCommand.Execute(null);
+                GetNextFreeSlotCommand.Execute(null);
+            }
         }
 
         private async void HandleGetNextFreeSlotCommand(object param)
@@ -227,7 +277,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             nextFreeSlotDate = await ServiceClient.ServiceClient.GetNextFreeSlotDate(App.AuthenticationManager.BearerAccessToken);
             if (nextFreeSlotDate.HasValue)
             {
-                NextFreeSlotDateString = nextFreeSlotDate.Value.ToString(CultureInfo.CurrentUICulture.DateTimeFormat.ShortDatePattern);
+                NextFreeSlotDateString = GetSmartDateString(nextFreeSlotDate.Value);
                 NextFreeSlotAvailable = true;
             }
             else
@@ -269,11 +319,31 @@ namespace MSHU.CarWash.UWP.ViewModels
                 {
                     ReservationAvailable = true;
                     NumberPlate = result.ReservationsByDayActive[0].Reservations[0].VehiclePlateNumber;
-                    ReservationDateString = result.ReservationsByDayActive[0].Day
-                        .ToString(CultureInfo.CurrentUICulture.DateTimeFormat.ShortDatePattern);
+                    ReservationDateString = GetSmartDateString(result.ReservationsByDayActive[0].Day);
                 }
             }
 
+        }
+
+        private string GetSmartDateString(DateTime date)
+        {
+            var dateString = date.ToString(CultureInfo.CurrentUICulture.DateTimeFormat.ShortDatePattern);
+            if ((DateTime.Now - date).Days == 0)
+            {
+                return String.Concat(dateString, " (today)");
+            }
+
+            if ((DateTime.Now - date).Days==1)
+            {
+                return String.Concat(dateString, " (tomorrow)");
+            }
+
+            if ((DateTime.Now - date).Days < 7)
+            {
+                return String.Concat(dateString, $" ({date.DayOfWeek})");
+            }
+
+            return dateString;
         }
     }
 }

@@ -312,6 +312,10 @@ namespace MSHU.CarWash.UWP.ViewModels
         {
             var cr = new ReservationDayDetailViewModel();
             cr.VehiclePlateNumber = App.AuthenticationManager.CurrentEmployee.VehiclePlateNumber;
+            if(param is DateTime)
+            {
+                _currentDate = new DateTimeOffset((DateTime)param);
+            }
             CurrentReservation = cr;
             CurrentComment = string.Empty;
         }
