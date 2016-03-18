@@ -358,6 +358,28 @@ namespace MSHU.CarWash.Controllers
             return Ok(ret);
         }
 
+        /// <summary>
+        /// Retrieves date of next free slot.
+        /// </summary>
+        /// <returns>Date of next free slot or null if none is available</returns>
+        public async Task<DateTime?> GetNextFreeSlotDate()
+        {
+            var today = DateTime.Now.Date;
+            var until = today.AddDays(14);
+
+            var nextReservations = _db.Reservations.Where(r => r.Date >= today && r.Date < until);
+
+            for (var day = today; day < until; day = day.AddDays(1))
+            {
+                if(GetAvailableSlots(await nextReservations.ToListAsync<Reservation>(), day) >= 2)
+                {
+                    return day;
+                }
+            }
+
+            return null;
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -366,7 +388,7 @@ namespace MSHU.CarWash.Controllers
             }
             base.Dispose(disposing);
         }
-
+        
         #region Private methods
         private async Task<List<DayViewModel>> GetDaysDetailsAsync(DateTime startOfWeek)
         {

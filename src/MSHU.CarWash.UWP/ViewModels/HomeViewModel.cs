@@ -1,5 +1,6 @@
 ﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using MSHU.CarWash.DomainModel;
+using MSHU.CarWash.UWP.Views;
 using System;
 using System.Globalization;
 using System.Text;
@@ -61,6 +62,43 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
         }
         private string reservationDateString;
+
+        /// <summary>
+        /// Holds textual representation of next free slot's date
+        /// </summary>
+        public string NextFreeSlotDateString
+        {
+            get
+            {
+                return nextFreeSlotDateString;
+
+            }
+            set
+            {
+                nextFreeSlotDateString = value;
+                OnPropertyChanged(nameof(NextFreeSlotDateString));
+            }
+        }
+        private string nextFreeSlotDateString;
+
+        /// <summary>
+        /// Actual date for next free slot
+        /// </summary>
+        private DateTime? nextFreeSlotDate;
+
+        /// <summary>
+        /// Is a next free slot available at all?
+        /// </summary>
+        public bool NextFreeSlotAvailable
+        {
+            get { return nextFreeSlotAvailable; }
+            set
+            {
+                nextFreeSlotAvailable = value;
+                OnPropertyChanged(nameof(NextFreeSlotAvailable));
+            }
+        }
+        private bool nextFreeSlotAvailable;
 
         public event EventHandler UserSignedOut;
 
@@ -144,6 +182,11 @@ namespace MSHU.CarWash.UWP.ViewModels
         public RelayCommand DeleteReservationCommand { get; set; }
 
         /// <summary>
+        /// Gets or sets the GetNextFreeSlotCommand.
+        /// </summary>
+        public RelayCommand GetNextFreeSlotCommand { get; set; }
+
+        /// <summary>
         /// Default constructor initializes instance state.
         /// </summary>
         public HomeViewModel()
@@ -157,7 +200,8 @@ namespace MSHU.CarWash.UWP.ViewModels
                 ReservationAvailable = true;
                 reservationDateString = (DateTime.Now + TimeSpan.FromDays(1)).ToString(CultureInfo.CurrentUICulture.DateTimeFormat.ShortDatePattern);
                 NumberPlate = "MS-0001";
-
+                nextFreeSlotDateString = (DateTime.Now + TimeSpan.FromDays(4)).ToString(CultureInfo.CurrentUICulture.DateTimeFormat.ShortDatePattern);
+                nextFreeSlotAvailable = true;
                 return;
             }
             if (App.AuthenticationManager.IsUserAuthenticated)
@@ -170,8 +214,27 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
             // Initialize the SignOutWithAADCommand.
             SignOutWithAADCommand = new RelayCommand(ExecuteSignOutWithAADCommand);
+
             RequestServiceCommand = new RelayCommand(ExecuteRequestServiceCommand);
-            RequestServiceCommand.Execute(this);            
+            RequestServiceCommand.Execute(this);
+
+            GetNextFreeSlotCommand = new RelayCommand(HandleGetNextFreeSlotCommand);
+            GetNextFreeSlotCommand.Execute(this);
+        }
+
+        private async void HandleGetNextFreeSlotCommand(object param)
+        {
+            nextFreeSlotDate = await ServiceClient.ServiceClient.GetNextFreeSlotDate(App.AuthenticationManager.BearerAccessToken);
+            if (nextFreeSlotDate.HasValue)
+            {
+                NextFreeSlotDateString = nextFreeSlotDate.Value.ToString(CultureInfo.CurrentUICulture.DateTimeFormat.ShortDatePattern);
+                NextFreeSlotAvailable = true;
+            }
+            else
+            {
+                NextFreeSlotDateString = "No free slots found";
+                NextFreeSlotAvailable = false;
+            }
         }
 
         /// <summary>

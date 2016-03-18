@@ -208,6 +208,9 @@
     </Content>
     <None Include="bundleconfig.json" />
     <None Include="Properties\PublishProfiles\vadkertitestmobile - Web Deploy.pubxml" />
+    <None Include="Properties\PublishProfiles\vadkertitestwebapp - FTP %282%29.pubxml" />
+    <None Include="Properties\PublishProfiles\vadkertitestwebapp - FTP.pubxml" />
+    <None Include="Properties\PublishProfiles\vadkertitestwebapp - Web Deploy %282%29.pubxml" />
     <None Include="Properties\PublishProfiles\vadkertitestwebapp - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-2.1.4.intellisense.js" />
     <Content Include="Scripts\jquery-2.1.4.js" />
