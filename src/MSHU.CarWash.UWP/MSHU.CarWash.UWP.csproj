@@ -103,6 +103,7 @@
     <Compile Include="Controls\ReservationDetailsView.xaml.cs">
       <DependentUpon>ReservationDetailsView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
     <Compile Include="Converters\ButtonsDisplayModeConverter.cs" />
     <Compile Include="Converters\CalendarViewDayItemConverter.cs" />
     <Compile Include="Converters\InverseBooleanToVisibilityConverter.cs" />
@@ -224,6 +225,9 @@
     <SDKReference Include="WindowsMobile, Version=10.0.10586.0">
       <Name>Windows Mobile Extensions for the UWP</Name>
     </SDKReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="SampleData\" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

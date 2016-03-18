@@ -5,6 +5,7 @@ using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
+using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -28,6 +29,16 @@ namespace MSHU.CarWash.UWP.Views
             ViewModel = new RegistrationsViewModel();
 
             base.InitializePage();
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            if (e.Parameter is DateTime)
+            {
+                (ViewModel as RegistrationsViewModel).CreateReservationCommand.Execute(e.Parameter);
+                (ViewModel as RegistrationsViewModel).UseDetailsView = true;
+            }
         }
 
         private void CalendarView_CalendarViewDayItemChanging(CalendarView sender, CalendarViewDayItemChangingEventArgs args)
