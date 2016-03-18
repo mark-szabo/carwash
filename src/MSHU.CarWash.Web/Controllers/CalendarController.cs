@@ -359,17 +359,17 @@ namespace MSHU.CarWash.Controllers
         }
 
         /// <summary>
-        /// Retrieves date of next free slot.
+        /// Retrieves date of next free slot (excluding today).
         /// </summary>
         /// <returns>Date of next free slot or null if none is available</returns>
         public async Task<DateTime?> GetNextFreeSlotDate()
         {
-            var today = DateTime.Now.Date;
-            var until = today.AddDays(14);
+            var tomorrow = DateTime.Now.Date.AddDays(1);
+            var until = tomorrow.AddDays(14);
 
-            var nextReservations = _db.Reservations.Where(r => r.Date >= today && r.Date < until);
+            var nextReservations = _db.Reservations.Where(r => r.Date >= tomorrow && r.Date < until);
 
-            for (var day = today; day < until; day = day.AddDays(1))
+            for (var day = tomorrow; day < until; day = day.AddDays(1))
             {
                 if(GetAvailableSlots(await nextReservations.ToListAsync<Reservation>(), day) >= 2)
                 {

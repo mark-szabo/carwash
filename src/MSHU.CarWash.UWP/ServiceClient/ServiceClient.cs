@@ -141,5 +141,37 @@ namespace MSHU.CarWash.UWP.ServiceClient
             }
             return null;
         }
+
+        /// <summary>
+        /// Deletes a reservation.
+        /// </summary>
+        /// <param name="reservationId">ID of the reservation</param>
+        /// <param name="token">Token used for authentication</param>
+        /// <returns>True if removal has succeeded, false otherwise</returns>
+        public static async Task<bool> DeleteReservation(int reservationId, string token)
+        {
+            // Create an HTTP client and add the token to the Authorization header
+            HttpClient httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+
+            // Call the Web API to get the values
+            Uri requestURI = new Uri(s_BaseUrl + "/api/Calendar/DeleteReservation?reservationId=" + reservationId);
+            HttpResponseMessage httpResponse = await httpClient.GetAsync(requestURI);
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                return true;
+            }
+            else
+            {
+                Windows.UI.Popups.MessageDialog dialog =
+                    new Windows.UI.Popups.MessageDialog(string.Format("{0}\n{1}", httpResponse.StatusCode.ToString(),
+                    await httpResponse.Content.ReadAsStringAsync()));
+
+                await dialog.ShowAsync();
+            }
+            return false;
+        }
+
     }
 }
