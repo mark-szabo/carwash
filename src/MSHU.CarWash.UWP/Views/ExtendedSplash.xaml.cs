@@ -108,7 +108,7 @@ namespace MSHU.CarWash.UWP.Views
         {
             dismissed = true;
 
-            await Task.Delay(2000);
+            //await Task.Delay(2000);
 
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {

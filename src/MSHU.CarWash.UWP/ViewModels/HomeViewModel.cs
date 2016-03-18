@@ -63,6 +63,11 @@ namespace MSHU.CarWash.UWP.ViewModels
         private string reservationDateString;
 
         /// <summary>
+        /// Holds ID of reservation
+        /// </summary>
+        private int reservationID;
+
+        /// <summary>
         /// Holds textual representation of next free slot's date
         /// </summary>
         public string NextFreeSlotDateString
@@ -244,6 +249,15 @@ namespace MSHU.CarWash.UWP.ViewModels
 
             QuickReserveCommand = new RelayCommand(HandleQuickReserveCommand);
             QuickReserveExtraCommand = new RelayCommand(HandleQuickReserveExtraCommand);
+
+            DeleteReservationCommand = new RelayCommand(HandleDeleteReservationCommand);
+        }
+
+        private async void HandleDeleteReservationCommand(object obj)
+        {
+            bool result = await ServiceClient.ServiceClient.DeleteReservation(reservationID, App.AuthenticationManager.BearerAccessToken);
+            ReservationAvailable = false;
+            GetNextFreeSlotCommand.Execute(null);
         }
 
         private void HandleQuickReserveExtraCommand(object obj)
@@ -320,6 +334,7 @@ namespace MSHU.CarWash.UWP.ViewModels
                     ReservationAvailable = true;
                     NumberPlate = result.ReservationsByDayActive[0].Reservations[0].VehiclePlateNumber;
                     ReservationDateString = GetSmartDateString(result.ReservationsByDayActive[0].Day);
+                    reservationID = result.ReservationsByDayActive[0].Reservations[0].ReservationId;
                 }
             }
 
@@ -328,17 +343,16 @@ namespace MSHU.CarWash.UWP.ViewModels
         private string GetSmartDateString(DateTime date)
         {
             var dateString = date.ToString(CultureInfo.CurrentUICulture.DateTimeFormat.ShortDatePattern);
-            if ((DateTime.Now - date).Days == 0)
+            var days = (date.Date - DateTime.Now.Date).Days;
+            if (days == 0)
             {
                 return String.Concat(dateString, " (today)");
             }
-
-            if ((DateTime.Now - date).Days==1)
+            if (days == 1)
             {
                 return String.Concat(dateString, " (tomorrow)");
             }
-
-            if ((DateTime.Now - date).Days < 7)
+            if (days < 7)
             {
                 return String.Concat(dateString, $" ({date.DayOfWeek})");
             }
