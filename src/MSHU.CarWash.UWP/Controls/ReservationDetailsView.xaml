@@ -45,7 +45,7 @@
             <Button Content="Save" x:Name="SaveButton" RelativePanel.LeftOf="CancelButton" 
                     Margin="0,4,8,4" Padding="32,4,32,4"
                     Command="{Binding SaveCommand, ElementName=viewControl}"/>
-            <Button Content="Delete" x:Name="DeleteButton" IsEnabled="False"
+            <Button Content="Delete" x:Name="DeleteButton"
                     Command="{Binding DeleteCommand, ElementName=viewControl}"
                     RelativePanel.AlignRightWithPanel="True" Margin="0,4,8,4" Padding="32,4,32,4"/>
         </RelativePanel>

@@ -203,7 +203,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             SaveReservationChangesCommand = new RelayCommand(ExecuteSaveReservationChangesCommand);
 
             // Create the DeleteReservationCommand.
-            DeleteReservationCommand = new RelayCommand(ExecuteDeleteReservationCommand);
+            DeleteReservationCommand = new RelayCommand(ExecuteDeleteReservationCommand, CanExecuteDeleteReservationCommand);
 
             Services = new List<ServiceViewModel>();
             this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosas, ServiceName = ServiceEnum.KulsoMosas.GetDescription(), Selected = false });
@@ -353,9 +353,20 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
         }
 
+        private bool CanExecuteDeleteReservationCommand() => CurrentReservation?.IsDeletable ?? false;
+
         private async void ExecuteDeleteReservationCommand(object param)
         {
+            bool result = await ServiceClient.ServiceClient.DeleteReservation(
+                CurrentReservation.ReservationId,
+                App.AuthenticationManager.BearerAccessToken);
+            if (result)
+            {
+                // Remove the deleted reservation.
+                _rmv.ReservationsByDayActive.Find( x => x.Day == CurrentReservation.)
 
+                CurrentReservation = null;
+            }
         }
 
     }
