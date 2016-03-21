@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace MSHU.CarWash.UWP.ServiceClient
 {
+    // TODO: refactor this class to remove duplicates
     public class ServiceClient
     {
         private const string s_BaseUrl = "https://vadkertitestwebapp.azurewebsites.net";
@@ -72,7 +73,8 @@ namespace MSHU.CarWash.UWP.ServiceClient
             else
             {
                 Windows.UI.Popups.MessageDialog dialog =
-                       new Windows.UI.Popups.MessageDialog(string.Format("{0}", httpResponse.StatusCode.ToString()));
+                       new Windows.UI.Popups.MessageDialog(string.Format("{0}\n{1}", httpResponse.StatusCode.ToString(),
+                       await httpResponse.Content.ReadAsStringAsync()));
                 await dialog.ShowAsync();
             }
 
@@ -107,22 +109,29 @@ namespace MSHU.CarWash.UWP.ServiceClient
             return returnValue;
         }
 
-        public static async Task<bool> DeleteReservation(int reservationId, string token)
+        /// <summary>
+        /// Retrieves date of next free slot.
+        /// </summary>
+        /// <param name="token">Token used for authentication</param>
+        /// <returns>Date of next free slot</returns>
+        public static async Task<DateTime?> GetNextFreeSlotDate(string token)
         {
-            bool result = false;
-
             // Create an HTTP client and add the token to the Authorization header
             HttpClient httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", token);
 
             // Call the Web API to get the values
-            Uri requestURI = new Uri(s_BaseUrl + 
-                $"/api/Calendar/DeleteReservation?reservationId={reservationId}");
+            Uri requestURI = new Uri(s_BaseUrl + "/api/Calendar/GetNextFreeSlotDate");
             HttpResponseMessage httpResponse = await httpClient.GetAsync(requestURI);
             if (httpResponse.IsSuccessStatusCode)
             {
-                result = true;
+                string jSonResult = await httpResponse.Content.ReadAsStringAsync();
+
+                var date =
+                    Newtonsoft.Json.JsonConvert.DeserializeObject<DateTime?>(jSonResult);
+
+                return date;
             }
             else
             {
@@ -130,8 +139,38 @@ namespace MSHU.CarWash.UWP.ServiceClient
                        new Windows.UI.Popups.MessageDialog(string.Format("{0}", httpResponse.StatusCode.ToString()));
                 await dialog.ShowAsync();
             }
+            return null;
+        }
 
-            return result;
+        /// <summary>
+        /// Deletes a reservation.
+        /// </summary>
+        /// <param name="reservationId">ID of the reservation</param>
+        /// <param name="token">Token used for authentication</param>
+        /// <returns>True if removal has succeeded, false otherwise</returns>
+        public static async Task<bool> DeleteReservation(int reservationId, string token)
+        {
+            // Create an HTTP client and add the token to the Authorization header
+            HttpClient httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+
+            // Call the Web API to get the values
+            Uri requestURI = new Uri(s_BaseUrl + "/api/Calendar/DeleteReservation?reservationId=" + reservationId);
+            HttpResponseMessage httpResponse = await httpClient.GetAsync(requestURI);
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                return true;
+            }
+            else
+            {
+                Windows.UI.Popups.MessageDialog dialog =
+                    new Windows.UI.Popups.MessageDialog(string.Format("{0}\n{1}", httpResponse.StatusCode.ToString(),
+                    await httpResponse.Content.ReadAsStringAsync()));
+
+                await dialog.ShowAsync();
+            }
+            return false;
         }
 
     }
