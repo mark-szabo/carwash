@@ -103,30 +103,40 @@
 
         <!-- Details view -->
         <RelativePanel x:Name="relativePanelDetails" Grid.Column="1" Grid.Row="1">
-            <Button x:Name="GoToMasterViewButton" Content="Master View" Margin="12"
-                    Click="GoToMasterViewButton_Click" />
-            <Grid RelativePanel.Below="GoToMasterViewButton" >
+            <Grid RelativePanel.AlignHorizontalCenterWithPanel="True"
+                  RelativePanel.AlignVerticalCenterWithPanel="True" Padding="12">
+                <Grid.Background>
+                    <SolidColorBrush Color="#FFECECEC" Opacity="0.4"/>
+                </Grid.Background>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Text="{Binding Path=SelectedDate}" Margin="12,0,12,12" />
+                <Button x:Name="GoToMasterViewButton" Margin="12"
+                         Style="{StaticResource CWButtonStyle}"
+                    Click="GoToMasterViewButton_Click" Grid.Row="0">
+                    <FontIcon x:Name="BackGlyph" FontSize="24" Glyph="&#xE0A6;" MirroredWhenRightToLeft="True" />
+                </Button>
 
-                <controls:ReservationDetailsView Grid.Row="1" Margin="12,0,12,12"
+                <TextBlock Grid.Row="1" Text="{Binding Path=SelectedDate}" Margin="12,0,12,12" />
+
+                <controls:ReservationDetailsView Grid.Row="2" Margin="12,0,12,12"
                                                  Visibility="{Binding CurrentReservation, Converter={StaticResource reservationDetailsViewConverter}}"
                                                  SaveCommand="{Binding SaveReservationChangesCommand}"
                                                  CancelCommand="{Binding CancelReservationChangesCommand}"
                                                  DeleteCommand="{Binding DeleteReservationCommand}"
                                                  DisplayMode="{Binding CurrentReservation, Converter={StaticResource buttonsDisplayModeConverter}}"/>
 
-                <Button Grid.Row="1" Content="Create new reservation" Margin="12,0,12,12"
+                <Button Grid.Row="2" Content="Create new reservation" Margin="12,0,12,12"
                         Visibility="{Binding CurrentReservation, Converter={StaticResource inverseRef2VisConverter}}"
-                        Command="{Binding CreateReservationCommand}"/>
+                        Command="{Binding CreateReservationCommand}"
+                        Style="{StaticResource CWButtonStyle}"/>
 
             </Grid>
         </RelativePanel>
