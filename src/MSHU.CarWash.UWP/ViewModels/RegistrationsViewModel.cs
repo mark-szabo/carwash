@@ -2,15 +2,11 @@
 using MSHU.CarWash.DomainModel.Helpers;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Windows.UI.Xaml.Data;
 
 namespace MSHU.CarWash.UWP.ViewModels
 {
-    public class RegistrationsViewModel : Bindable
+    public class RegistrationsViewModel : BaseViewModel
     {
         /// <summary>
         /// Holds a reference to the ReservationViewModel. It is used for looking

@@ -44,7 +44,10 @@
 
     </views:BasePage.Resources>
 
-    <Grid x:Name="MainGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid x:Name="MainGrid">
+        <Grid.Background>
+            <ImageBrush Stretch="UniformToFill" ImageSource="ms-appx:///Assets/background.png"/>
+        </Grid.Background>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="VisualStateGroup">
                 <VisualState x:Name="MasterView">
@@ -71,9 +74,16 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="0"/>
         </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Header control -->
+        <views:SignOutControl Grid.Row="0"/>
 
         <!-- Master view -->
-        <RelativePanel x:Name="relativePanelMaster" Grid.Column="0">
+        <RelativePanel x:Name="relativePanelMaster" Grid.Column="0" Grid.Row="1">
             <CalendarView HorizontalAlignment="Stretch" Margin="12,12,12,12" 
                           VerticalAlignment="Stretch"
                           DataContext="{Binding}"
@@ -92,8 +102,7 @@
         </RelativePanel>
 
         <!-- Details view -->
-
-        <RelativePanel x:Name="relativePanelDetails" Grid.Column="1">
+        <RelativePanel x:Name="relativePanelDetails" Grid.Column="1" Grid.Row="1">
             <Button x:Name="GoToMasterViewButton" Content="Master View" Margin="12"
                     Click="GoToMasterViewButton_Click" />
             <Grid RelativePanel.Below="GoToMasterViewButton" >
