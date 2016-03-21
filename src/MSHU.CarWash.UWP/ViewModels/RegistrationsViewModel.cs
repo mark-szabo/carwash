@@ -235,7 +235,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             if (_rmv != null)
             {
                 int number = -1;
-                if (date.CompareTo(DateTimeOffset.Now) < 0)
+                if (date.CompareTo(DateTimeOffset.Now.Date) < 0)
                 {
                     number = GetReservationCountFromList(date, _rmv.ReservationsByDayHistory);
                 }
@@ -293,7 +293,7 @@ namespace MSHU.CarWash.UWP.ViewModels
         private void ExecuteActivateDetailsCommand(object param)
         {
             DateTimeOffset selectedDate = (DateTimeOffset)param;
-            if (selectedDate.CompareTo(DateTimeOffset.Now) < 0)
+            if (selectedDate.CompareTo(DateTimeOffset.Now.Date) < 0)
             {
                 SelectedDayDetails =
                     _rmv.ReservationsByDayHistory.Find(x => x.Day.Equals(selectedDate.Date));
