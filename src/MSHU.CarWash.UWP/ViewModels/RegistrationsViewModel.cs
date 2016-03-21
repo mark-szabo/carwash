@@ -134,7 +134,8 @@ namespace MSHU.CarWash.UWP.ViewModels
             set
             {
                 _currentReservation = value;
-                OnPropertyChanged("CurrentReservation");
+                OnPropertyChanged(nameof(CurrentReservation));
+                OnPropertyChanged(nameof(IsEditable));
                 // Set the selected service
                 if (_currentReservation != null)
                 {
@@ -175,6 +176,17 @@ namespace MSHU.CarWash.UWP.ViewModels
                     CurrentReservation.Comment = value;
                     OnPropertyChanged("CurrentComment");
                 }
+            }
+        }
+
+        /// <summary>
+        /// Indicates if the current reservation can be edited.
+        /// </summary>
+        public bool IsEditable
+        {
+            get
+            {
+                return CurrentReservation?.IsDeletable ?? false;
             }
         }
 
@@ -324,6 +336,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             {
                 _currentDate = new DateTimeOffset((DateTime)param);
             }
+            cr.IsDeletable = true;
             CurrentReservation = cr;
             CurrentComment = string.Empty;
         }
