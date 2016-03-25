@@ -14,8 +14,6 @@
 
 
     <views:BasePage.Resources>
-        <Converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
-        <Converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <DataTemplate x:Key="DateHeader">
             <StackPanel Orientation="Horizontal">
                 <FontIcon x:Name="CalendarGlyph" FontSize="24" Glyph="&#xE163;" MirroredWhenRightToLeft="True" VerticalAlignment="Center" HorizontalAlignment="Center"/>
