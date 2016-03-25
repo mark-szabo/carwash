@@ -15,6 +15,7 @@ using System.Globalization;
 using System.Configuration;
 using System.Security.Claims;
 using MSHU.CarWash.Helpers;
+using System.Diagnostics;
 
 namespace MSHU.CarWash.Controllers
 {
@@ -364,12 +365,13 @@ namespace MSHU.CarWash.Controllers
         /// <returns>Date of next free slot or null if none is available</returns>
         public async Task<DateTime?> GetNextFreeSlotDate()
         {
-            var tomorrow = DateTime.Now.Date.AddDays(1);
-            var until = tomorrow.AddDays(14);
+            var now = DateTime.Now;
+            var from = now.Hour >= 14 ? now.Date.AddDays(1) : now.Date;
+            var until = from.AddDays(14);
 
-            var nextReservations = _db.Reservations.Where(r => r.Date >= tomorrow && r.Date < until);
+            var nextReservations = _db.Reservations.Where(r => r.Date >= from && r.Date < until);
 
-            for (var day = tomorrow; day < until; day = day.AddDays(1))
+            for (var day = from; day < until; day = day.AddDays(1))
             {
                 if(GetAvailableSlots(await nextReservations.ToListAsync<Reservation>(), day) >= 2)
                 {
