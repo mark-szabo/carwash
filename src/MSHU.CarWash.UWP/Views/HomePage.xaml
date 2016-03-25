@@ -36,7 +36,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <views:SignOutControl Grid.Row="0"/>
-        <Viewbox Grid.Column="0" Grid.Row="1">
+        <Viewbox Grid.Column="0" Grid.Row="1" StretchDirection="DownOnly">
             <StackPanel Padding="10">
                 <StackPanel.Background>
                     <SolidColorBrush Color="#FFECECEC" Opacity="0.4"/>
