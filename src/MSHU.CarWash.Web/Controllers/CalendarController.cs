@@ -167,7 +167,7 @@ namespace MSHU.CarWash.Controllers
                             orderby b.Date
                             select b;
                 var queryResult = await query.ToListAsync();
-                if (queryResult.Count > 0)
+                if (queryResult.Count > 2)
                 {
                     ModelState.AddModelError("", string.Format("Van már foglalt időpontod {0}-n!", queryResult.FirstOrDefault().Date));
                     return BadRequest(ModelState);
