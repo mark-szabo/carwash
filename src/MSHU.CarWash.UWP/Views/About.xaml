@@ -1,20 +1,45 @@
-﻿<Page
+﻿<views:BasePage
     x:Class="MSHU.CarWash.UWP.Views.About"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:MSHU.CarWash.UWP.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="using:MSHU.CarWash.UWP.Views"
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <RelativePanel>
-            <TextBlock Text="About" RelativePanel.AlignHorizontalCenterWithPanel="True"
-                       RelativePanel.AlignVerticalCenterWithPanel="True"/>
-            <TextBlock Text="Powered by Premier Support for Development" Margin="12"
-                       FontSize="14" FontWeight="Bold" FontStyle="Italic" 
-                       Foreground="{StaticResource BrushDarkBlue}"
-                       RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignRightWithPanel="True" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <views:SignOutControl Grid.Row="0"/>
+        <RelativePanel Grid.Row="1" Margin="5,5,5,5">
+            <StackPanel>
+                <TextBlock Text="CarWash Universal App" Style="{ThemeResource SubheaderTextBlockStyle}"/>
+                <TextBlock Style="{ThemeResource BodyTextBlockStyle}">
+                    <LineBreak/>
+                    CarWash Universal Application is intended to help Microsoft employees working in the Hungarian subsidiaries to reserve and to order car washing services from different service providers. 
+                    Users are able to register car washing on every workday until free slots are available.
+                    The application can run on every platform where Windows 10 is already deployed. Amongst others Windows 10 desktop editions, Windows 10 Mobile, Xbox One and also Windows 10 IoT editions.
+                </TextBlock>
+                <TextBlock></TextBlock>
+                <TextBlock Style="{ThemeResource BaseTextBlockStyle}" TextWrapping="Wrap">
+                    <LineBreak></LineBreak>
+                    Authors:<LineBreak></LineBreak>
+                    Ákos Szegő - <Hyperlink NavigateUri="mailto:akos.szego@microsoft.com"> 
+                        akos.szego@microsoft.com </Hyperlink>, Tamás Veiland - <Hyperlink NavigateUri="mailto:tamas.veiland@microsoft.com"> 
+                        tamas.veiland@microsoft.com </Hyperlink>, József Vadkerti - <Hyperlink NavigateUri="mailto:jozsef.vadkerti@microsoft.com"> 
+                        jozsef.vadkerti@microsoft.com </Hyperlink>
+                </TextBlock>
+                <TextBlock></TextBlock>
+            </StackPanel>
+            <TextBlock Style="{ThemeResource CaptionTextBlockStyle}" Margin="5"
+                                      RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignRightWithPanel="True" >
+                    <Hyperlink NavigateUri="https://www.microsoft.com/en-us/microsoftservices/premier_support_developers.aspx"> 
+                        Premier Support for Developers
+                    </Hyperlink>
+            </TextBlock>
         </RelativePanel>
     </Grid>
-</Page>
+</views:BasePage>
