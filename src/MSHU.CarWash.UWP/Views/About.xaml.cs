@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MSHU.CarWash.UWP.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,6 +26,12 @@ namespace MSHU.CarWash.UWP.Views
         public About()
         {
             this.InitializeComponent();
+        }
+
+        protected override void InitializePage()
+        {
+            this.ViewModel = new AboutViewModel();
+            base.InitializePage();
         }
     }
 }

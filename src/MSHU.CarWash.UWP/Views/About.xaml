@@ -6,40 +6,46 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="using:MSHU.CarWash.UWP.Views"
-    mc:Ignorable="d">
-
+    xmlns:viewModels="using:MSHU.CarWash.UWP.ViewModels"
+    mc:Ignorable="d"
+    d:DataContext="{Binding Source={d:DesignInstance IsDesignTimeCreatable=True, Type=viewModels:AboutViewModel}}"
+    >
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         <views:SignOutControl Grid.Row="0"/>
-        <RelativePanel Grid.Row="1" Margin="5,5,5,5">
-            <StackPanel>
-                <TextBlock Text="CarWash Universal App" Style="{ThemeResource SubheaderTextBlockStyle}"/>
-                <TextBlock Style="{ThemeResource BodyTextBlockStyle}">
-                    <LineBreak/>
-                    CarWash Universal Application is intended to help Microsoft employees working in the Hungarian subsidiaries to reserve and to order car washing services from different service providers. 
-                    Users are able to register car washing on every workday until free slots are available.
-                    The application can run on every platform where Windows 10 is already deployed. Amongst others Windows 10 desktop editions, Windows 10 Mobile, Xbox One and also Windows 10 IoT editions.
-                </TextBlock>
-                <TextBlock></TextBlock>
-                <TextBlock Style="{ThemeResource BaseTextBlockStyle}" TextWrapping="Wrap">
-                    <LineBreak></LineBreak>
-                    Authors:<LineBreak></LineBreak>
-                    Ákos Szegő - <Hyperlink NavigateUri="mailto:akos.szego@microsoft.com"> 
+            <RelativePanel Grid.Row="1" Margin="5,5,5,5">
+            <StackPanel Name="MyStack" RelativePanel.AlignTopWithPanel="True">
+                    <TextBlock Text="CarWash Universal App" Style="{ThemeResource SubheaderTextBlockStyle}"/>
+                    <TextBlock Style="{ThemeResource BodyTextBlockStyle}">
+                        <LineBreak/>
+                        CarWash Universal Application is intended to help Microsoft employees working in the Hungarian subsidiaries to reserve and to order car washing services from different service providers. 
+                        Users are able to register car washing on every workday until free slots are available.
+                        The application can run on every platform where Windows 10 is already deployed. Amongst others Windows 10 desktop editions, Windows 10 Mobile, Xbox One and also Windows 10 IoT editions.
+                    </TextBlock>
+                    <TextBlock></TextBlock>
+                    <TextBlock Style="{ThemeResource BaseTextBlockStyle}" TextWrapping="Wrap">
+                        <LineBreak></LineBreak>
+                        Authors:<LineBreak></LineBreak>
+                        Ákos Szegő - <Hyperlink NavigateUri="mailto:akos.szego@microsoft.com"> 
                         akos.szego@microsoft.com </Hyperlink>, Tamás Veiland - <Hyperlink NavigateUri="mailto:tamas.veiland@microsoft.com"> 
                         tamas.veiland@microsoft.com </Hyperlink>, József Vadkerti - <Hyperlink NavigateUri="mailto:jozsef.vadkerti@microsoft.com"> 
                         jozsef.vadkerti@microsoft.com </Hyperlink>
-                </TextBlock>
-                <TextBlock></TextBlock>
-            </StackPanel>
-            <TextBlock Style="{ThemeResource CaptionTextBlockStyle}" Margin="5"
-                                      RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignRightWithPanel="True" >
+                    </TextBlock>
+                    <TextBlock><LineBreak></LineBreak><LineBreak></LineBreak></TextBlock>
+                <TextBlock Style="{ThemeResource CaptionTextBlockStyle}" Margin="5"
+                                       RelativePanel.Below="MyStack">
                     <Hyperlink NavigateUri="https://www.microsoft.com/en-us/microsoftservices/premier_support_developers.aspx"> 
                         Premier Support for Developers
                     </Hyperlink>
+                </TextBlock>
+                </StackPanel>
+            <TextBlock Text="{Binding PackageInformation}" Style="{ThemeResource CaptionTextBlockStyle}" Margin="5"
+                       RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignRightWithPanel="True">
             </TextBlock>
         </RelativePanel>
+      
     </Grid>
 </views:BasePage>
