@@ -54,8 +54,6 @@ namespace MSHU.CarWash.UWP.Controls
             typeof(ReservationDetailsView), 
             new PropertyMetadata(ButtonsDisplayMode.Delete, OnDisplayModeChanged));
 
-
-
         public RelayCommand DeleteCommand
         {
             get { return (RelayCommand)GetValue(DeleteCommandProperty); }

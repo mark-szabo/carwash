@@ -42,6 +42,9 @@
             <StackPanel.Background>
                 <SolidColorBrush Color="#FFECECEC" Opacity="0.4"/>
             </StackPanel.Background>
+            <StackPanel.ChildrenTransitions>
+                <NavigationThemeTransition/>
+            </StackPanel.ChildrenTransitions>
 
             <RelativePanel>
                 <ContentControl ContentTemplate="{StaticResource DateHeader}" Content="Coming up" x:Name="RegistrationBlock" DataContext="{StaticResource  AppBarBackgroundThemeBrush}"/>

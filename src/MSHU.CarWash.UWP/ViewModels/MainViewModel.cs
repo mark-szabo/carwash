@@ -2,7 +2,7 @@
 
 namespace MSHU.CarWash.UWP.ViewModels
 {
-    public class MainViewModel : Bindable
+    public class MainViewModel : BaseViewModel
     {
         public event EventHandler UserAuthenticated;
 

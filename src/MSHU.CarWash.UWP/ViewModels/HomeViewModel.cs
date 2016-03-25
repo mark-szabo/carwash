@@ -8,7 +8,7 @@ using Windows.ApplicationModel;
 
 namespace MSHU.CarWash.UWP.ViewModels
 {
-    public class HomeViewModel : Bindable
+    public class HomeViewModel : BaseViewModel
     {
         private string _givenName;
         private string _familyName;
@@ -104,8 +104,6 @@ namespace MSHU.CarWash.UWP.ViewModels
         }
         private bool nextFreeSlotAvailable;
 
-        public event EventHandler UserSignedOut;
-
         /// <summary>
         /// Gets the given name of the user.
         /// </summary>
@@ -118,7 +116,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             set
             {
                 _givenName = value;
-                OnPropertyChanged("GivenName");
+                OnPropertyChanged(nameof(GivenName));
             }
         }
 
@@ -134,7 +132,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             private set
             {
                 _familyName = value;
-                OnPropertyChanged("FamilyName");
+                OnPropertyChanged(nameof(FamilyName));
             }
         }
 
@@ -150,7 +148,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             private set
             {
                 _displayableID = value;
-                OnPropertyChanged("Email");
+                OnPropertyChanged(nameof(Email));
             }
         }
 
@@ -166,14 +164,9 @@ namespace MSHU.CarWash.UWP.ViewModels
             private set
             {
                 this.m_RegistrationInfo = value;
-                OnPropertyChanged("RegistrationInfo");
+                OnPropertyChanged(nameof(RegistrationInfo));
             }
         }
-
-        /// <summary>
-        /// Gets or sets the SignOutWithAADCommand.
-        /// </summary>
-        public RelayCommand SignOutWithAADCommand { get; set; }
 
         /// <summary>
         /// Gets or sets the RequestServiceCommand.
@@ -238,8 +231,6 @@ namespace MSHU.CarWash.UWP.ViewModels
                 Email = info.DisplayableId;
 
             }
-            // Initialize the SignOutWithAADCommand.
-            SignOutWithAADCommand = new RelayCommand(ExecuteSignOutWithAADCommand);
 
             RequestServiceCommand = new RelayCommand(ExecuteRequestServiceCommand);
             RequestServiceCommand.Execute(this);
@@ -298,22 +289,6 @@ namespace MSHU.CarWash.UWP.ViewModels
             {
                 NextFreeSlotDateString = "No free slots found";
                 NextFreeSlotAvailable = false;
-            }
-        }
-
-        /// <summary>
-        /// Event handler for the Executed event of the SignOutWithAADCommand.
-        /// </summary>
-        /// <param name="param"></param>
-        private async void ExecuteSignOutWithAADCommand(object param)
-        {
-            bool success = await App.AuthenticationManager.SignOutWithAAD();
-            if (success)
-            {
-                if (UserSignedOut != null)
-                {
-                    UserSignedOut(this, new EventArgs());
-                }
             }
         }
 

@@ -2,15 +2,11 @@
 using MSHU.CarWash.DomainModel.Helpers;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Windows.UI.Xaml.Data;
 
 namespace MSHU.CarWash.UWP.ViewModels
 {
-    public class RegistrationsViewModel : Bindable
+    public class RegistrationsViewModel : BaseViewModel
     {
         /// <summary>
         /// Holds a reference to the ReservationViewModel. It is used for looking
@@ -138,7 +134,8 @@ namespace MSHU.CarWash.UWP.ViewModels
             set
             {
                 _currentReservation = value;
-                OnPropertyChanged("CurrentReservation");
+                OnPropertyChanged(nameof(CurrentReservation));
+                OnPropertyChanged(nameof(IsEditable));
                 // Set the selected service
                 if (_currentReservation != null)
                 {
@@ -182,6 +179,17 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
         }
 
+        /// <summary>
+        /// Indicates if the current reservation can be edited.
+        /// </summary>
+        public bool IsEditable
+        {
+            get
+            {
+                return CurrentReservation?.IsDeletable ?? false;
+            }
+        }
+
         public RegistrationsViewModel()
         {
             UseDetailsView = false;
@@ -203,7 +211,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             SaveReservationChangesCommand = new RelayCommand(ExecuteSaveReservationChangesCommand);
 
             // Create the DeleteReservationCommand.
-            DeleteReservationCommand = new RelayCommand(ExecuteDeleteReservationCommand);
+            DeleteReservationCommand = new RelayCommand(ExecuteDeleteReservationCommand, CanExecuteDeleteReservationCommand);
 
             Services = new List<ServiceViewModel>();
             this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosas, ServiceName = ServiceEnum.KulsoMosas.GetDescription(), Selected = false });
@@ -213,6 +221,18 @@ namespace MSHU.CarWash.UWP.ViewModels
 
             ServicesSource = new CollectionViewSource();
             ServicesSource.Source = Services;
+
+            // Subscribe to the PropertyChanged event. If the CurrentReservation
+            // property changes we must fire the CanExecuteChanged event on the
+            // DeleteReservationCommand otherwise the UWP's CommandManager doesn't
+            // reevaluate if the DeleteReservationCommand can be executed.
+            this.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(CurrentReservation))
+                {
+                    DeleteReservationCommand.RaiseCanExecuteChanged();
+                }
+            };
         }
 
 
@@ -227,7 +247,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             if (_rmv != null)
             {
                 int number = -1;
-                if (date.CompareTo(DateTimeOffset.Now) < 0)
+                if (date.CompareTo(DateTimeOffset.Now.Date) < 0)
                 {
                     number = GetReservationCountFromList(date, _rmv.ReservationsByDayHistory);
                 }
@@ -285,7 +305,7 @@ namespace MSHU.CarWash.UWP.ViewModels
         private void ExecuteActivateDetailsCommand(object param)
         {
             DateTimeOffset selectedDate = (DateTimeOffset)param;
-            if (selectedDate.CompareTo(DateTimeOffset.Now) < 0)
+            if (selectedDate.CompareTo(DateTimeOffset.Now.Date) < 0)
             {
                 SelectedDayDetails =
                     _rmv.ReservationsByDayHistory.Find(x => x.Day.Equals(selectedDate.Date));
@@ -316,6 +336,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             {
                 _currentDate = new DateTimeOffset((DateTime)param);
             }
+            cr.IsDeletable = true;
             CurrentReservation = cr;
             CurrentComment = string.Empty;
         }
@@ -357,9 +378,37 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
         }
 
+        private bool CanExecuteDeleteReservationCommand()
+        {
+            return CurrentReservation?.IsDeletable ?? false;
+        }
+
+        /// <summary>
+        /// Event handler for the DeleteReservationCommand.
+        /// It deletes the currently selected reservation at the service
+        /// and resets properties that the user interface can use to
+        /// reflect current state.
+        /// </summary>
+        /// <param name="param"></param>
         private async void ExecuteDeleteReservationCommand(object param)
         {
-
+            bool result = await ServiceClient.ServiceClient.DeleteReservation(
+                CurrentReservation.ReservationId,
+                App.AuthenticationManager.BearerAccessToken);
+            if (result)
+            {
+                // Find the reservations made for the selected date.
+                ReservationDayDetailsViewModel reservationByCurrentDate =
+                    _rmv.ReservationsByDayActive.Find(x => x.Day == _currentDate.Date);
+                // Remove the current reservation.
+                reservationByCurrentDate.Reservations.RemoveAll(
+                    x => x.ReservationId == _currentReservation.ReservationId);
+                // Reset the current reservation instance.
+                CurrentReservation = null;
+                // Let the user interface update the number of free slots on the
+                // master view.
+                OnPropertyChanged(nameof(FreeSlots));
+            }
         }
 
     }
