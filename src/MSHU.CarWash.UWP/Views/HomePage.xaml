@@ -43,9 +43,10 @@
                 <SolidColorBrush Color="#FFECECEC" Opacity="0.4"/>
             </StackPanel.Background>
             <StackPanel.ChildrenTransitions>
-                <NavigationThemeTransition/>
+                <TransitionCollection>
+                    <EntranceThemeTransition/>
+                </TransitionCollection>
             </StackPanel.ChildrenTransitions>
-
             <RelativePanel>
                 <ContentControl ContentTemplate="{StaticResource DateHeader}" Content="Coming up" x:Name="RegistrationBlock" DataContext="{StaticResource  AppBarBackgroundThemeBrush}"/>
                 <TextBlock x:Name="MissingReservationTextBlock" Text="No reservation" 
