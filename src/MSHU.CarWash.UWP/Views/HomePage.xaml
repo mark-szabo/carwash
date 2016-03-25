@@ -14,8 +14,6 @@
 
 
     <views:BasePage.Resources>
-        <Converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
-        <Converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <DataTemplate x:Key="DateHeader">
             <StackPanel Orientation="Horizontal">
                 <FontIcon x:Name="CalendarGlyph" FontSize="24" Glyph="&#xE163;" MirroredWhenRightToLeft="True" VerticalAlignment="Center" HorizontalAlignment="Center"/>
@@ -38,61 +36,63 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <views:SignOutControl Grid.Row="0"/>
-        <StackPanel Grid.Column="0" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10">
-            <StackPanel.Background>
-                <SolidColorBrush Color="#FFECECEC" Opacity="0.4"/>
-            </StackPanel.Background>
-            <StackPanel.ChildrenTransitions>
-                <TransitionCollection>
-                    <EntranceThemeTransition/>
-                </TransitionCollection>
-            </StackPanel.ChildrenTransitions>
-            <RelativePanel>
-                <ContentControl ContentTemplate="{StaticResource DateHeader}" Content="Coming up" x:Name="RegistrationBlock" DataContext="{StaticResource  AppBarBackgroundThemeBrush}"/>
-                <TextBlock x:Name="MissingReservationTextBlock" Text="No reservation" 
+        <Viewbox Grid.Column="0" Grid.Row="1">
+            <StackPanel Padding="10">
+                <StackPanel.Background>
+                    <SolidColorBrush Color="#FFECECEC" Opacity="0.4"/>
+                </StackPanel.Background>
+                <StackPanel.ChildrenTransitions>
+                    <TransitionCollection>
+                        <EntranceThemeTransition/>
+                    </TransitionCollection>
+                </StackPanel.ChildrenTransitions>
+                <RelativePanel>
+                    <ContentControl ContentTemplate="{StaticResource DateHeader}" Content="Coming up" x:Name="RegistrationBlock" DataContext="{StaticResource  AppBarBackgroundThemeBrush}"/>
+                    <TextBlock x:Name="MissingReservationTextBlock" Text="No reservation" 
 					Style="{StaticResource TitleTextBlockStyle}" FontWeight="Bold" Visibility="{Binding ReservationAvailable, Converter={StaticResource InverseBooleanToVisibilityConverter}}" 
                        RelativePanel.AlignLeftWith="RegistrationBlock" RelativePanel.Below="RegistrationBlock"/>
 
-                <RelativePanel x:Name="DateBlock" RelativePanel.AlignLeftWith="RegistrationBlock" RelativePanel.Below="RegistrationBlock"
+                    <RelativePanel x:Name="DateBlock" RelativePanel.AlignLeftWith="RegistrationBlock" RelativePanel.Below="RegistrationBlock"
                            Visibility="{Binding ReservationAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <TextBlock x:Name="DateTextBlock" Text="{Binding ReservationDateString}" 
+                        <TextBlock x:Name="DateTextBlock" Text="{Binding ReservationDateString}" 
 					Style="{StaticResource TitleTextBlockStyle}" FontWeight="Bold" />
-                    <Button Margin="12, 0" RelativePanel.RightOf="DateTextBlock" RelativePanel.AlignVerticalCenterWithPanel="True"
+                        <Button Margin="12, 0" RelativePanel.RightOf="DateTextBlock" RelativePanel.AlignVerticalCenterWithPanel="True"
                             Command="{Binding DeleteReservationCommand}">
-                        <FontIcon x:Name="TrashGlyph" FontSize="24" Glyph="&#xE107;" MirroredWhenRightToLeft="True" />
-                    </Button>
-                    <TextBlock Text="{Binding NumberPlate}" RelativePanel.Below="DateTextBlock" RelativePanel.AlignHorizontalCenterWith="DateTextBlock" />
+                            <FontIcon x:Name="TrashGlyph" FontSize="24" Glyph="&#xE107;" MirroredWhenRightToLeft="True" />
+                        </Button>
+                        <TextBlock Text="{Binding NumberPlate}" RelativePanel.Below="DateTextBlock" RelativePanel.AlignHorizontalCenterWith="DateTextBlock" />
 
+                    </RelativePanel>
                 </RelativePanel>
-            </RelativePanel>
-            <RelativePanel>
-                <ContentControl ContentTemplate="{StaticResource DateHeader}" Content="Next free slot" x:Name="NextFreeSlotBlock" 
+                <RelativePanel>
+                    <ContentControl ContentTemplate="{StaticResource DateHeader}" Content="Next free slot" x:Name="NextFreeSlotBlock" 
                                 DataContext="{StaticResource  AppBarBackgroundThemeBrush}"/>
-                <RelativePanel x:Name="NextFreeDateBlock" RelativePanel.AlignLeftWith="NextFreeSlotBlock" RelativePanel.Below="NextFreeSlotBlock"
+                    <RelativePanel x:Name="NextFreeDateBlock" RelativePanel.AlignLeftWith="NextFreeSlotBlock" RelativePanel.Below="NextFreeSlotBlock"
                                Visibility="{Binding QuickReservationSucceeded, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
-                    <TextBlock x:Name="NextFreeDateTextBlock" Text="{Binding NextFreeSlotDateString}" 
+                        <TextBlock x:Name="NextFreeDateTextBlock" Text="{Binding NextFreeSlotDateString}" 
 					Style="{StaticResource TitleTextBlockStyle}" FontWeight="Bold" />
-                    <Button Name="ReserveButton" Margin="12, 0" RelativePanel.RightOf="NextFreeDateTextBlock" RelativePanel.AlignVerticalCenterWith="NextFreeDateTextBlock"
+                        <Button Name="ReserveButton" Margin="12, 0" RelativePanel.RightOf="NextFreeDateTextBlock" RelativePanel.AlignVerticalCenterWith="NextFreeDateTextBlock"
                             Command="{Binding QuickReserveCommand}"
                             Visibility="{Binding NextFreeSlotAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <FontIcon x:Name="ReserveGlyph" FontSize="24" Glyph="&#xECC8;" MirroredWhenRightToLeft="True" />
-                    </Button>
-                    <TextBlock TextWrapping="NoWrap" Name="ExtraText" Text="Extra wishes?" Style="{StaticResource TitleTextBlockStyle}" RelativePanel.AlignVerticalCenterWith="ExtraButton"
+                            <FontIcon x:Name="ReserveGlyph" FontSize="24" Glyph="&#xECC8;" MirroredWhenRightToLeft="True" />
+                        </Button>
+                        <TextBlock TextWrapping="NoWrap" Name="ExtraText" Text="Extra wishes?" Style="{StaticResource TitleTextBlockStyle}" RelativePanel.AlignVerticalCenterWith="ExtraButton"
                                RelativePanel.AlignHorizontalCenterWith="NextFreeDateTextBlock" />
-                    <Button Name="ExtraButton" Margin="12, 12" RelativePanel.Below="ReserveButton" RelativePanel.AlignHorizontalCenterWith="ReserveButton"
+                        <Button Name="ExtraButton" Margin="12, 12" RelativePanel.Below="ReserveButton" RelativePanel.AlignHorizontalCenterWith="ReserveButton"
                             Command="{Binding QuickReserveExtraCommand}"
                             Visibility="{Binding NextFreeSlotAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <FontIcon x:Name="ReserveExtraGlyph" FontSize="24" Glyph="&#xECC8;" MirroredWhenRightToLeft="True" />
-                    </Button>
+                            <FontIcon x:Name="ReserveExtraGlyph" FontSize="24" Glyph="&#xECC8;" MirroredWhenRightToLeft="True" />
+                        </Button>
 
-                </RelativePanel>
-                <TextBlock Text="Reservation succeeded" Style="{StaticResource TitleTextBlockStyle}" RelativePanel.AlignHorizontalCenterWithPanel="True"
+                    </RelativePanel>
+                    <TextBlock Text="Reservation succeeded" Style="{StaticResource TitleTextBlockStyle}" RelativePanel.AlignHorizontalCenterWithPanel="True"
                            RelativePanel.Below="NextFreeSlotBlock"
                            FontWeight="Bold"
                            Visibility="{Binding QuickReservationSucceeded, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
-            </RelativePanel>
-        </StackPanel>
+                </RelativePanel>
+            </StackPanel>
+        </Viewbox>
 
     </Grid>
 

@@ -3,7 +3,8 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:MSHU.CarWash.UWP"
-    RequestedTheme="Light">
+    RequestedTheme="Light"
+    xmlns:Converters="using:MSHU.CarWash.UWP.Converters">
 
     <Application.Resources>
         <!-- Application-specific resources -->
@@ -14,6 +15,10 @@
                     Required by Visual Studio project and item templates
                  -->
                 <ResourceDictionary Source="/Styles/Styles.xaml"/>
+                <ResourceDictionary>
+                    <Converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
+                    <Converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+                </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

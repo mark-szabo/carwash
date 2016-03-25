@@ -7,7 +7,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="using:MSHU.CarWash.UWP.Views"
     xmlns:vm="using:MSHU.CarWash.UWP.ViewModels"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    d:DataContext="{Binding Source={d:DesignInstance IsDesignTimeCreatable=True, Type=vm:MainViewModel}}">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <RelativePanel Background="{StaticResource BrushDarkBlue}">
@@ -15,20 +16,34 @@
                 <ImageBrush Stretch="UniformToFill" ImageSource="ms-appx:///Assets/Background.png"/>
             </RelativePanel.Background>-->
             <TextBlock RelativePanel.AlignHorizontalCenterWithPanel="True" Foreground="White"
-                       RelativePanel.Above="LoginTextBlock" Text="Welcome!" x:Name="WelComeTextBlock"
+                       RelativePanel.Above="InstructionsPanel" Text="Welcome!" x:Name="WelComeTextBlock"
                        FontSize="24" Margin="8"/>
-            <TextBlock RelativePanel.AlignHorizontalCenterWithPanel="True" Foreground="White"
+            <RelativePanel Name="InstructionsPanel" RelativePanel.AlignHorizontalCenterWithPanel="True" 
+                           RelativePanel.AlignVerticalCenterWithPanel="True" >
+                <TextBlock Foreground="White"
+                       FontSize="15" Margin="8"
+                       Text="Please login to access application functionality!" 
+                       TextAlignment="Center"
+                       TextWrapping="Wrap"
+                       x:Name="LoginTextBlock"
+                       Visibility="{Binding InternetAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                <TextBlock RelativePanel.AlignHorizontalCenterWithPanel="True" Foreground="White"
                        RelativePanel.AlignVerticalCenterWithPanel="True" FontSize="15" Margin="8"
-                       Text="Please login to access application functionality!" x:Name="LoginTextBlock" />
+                       Text="Unfortunately, this app cannot work without Internet connection."
+                       TextWrapping="Wrap" TextAlignment="Center"
+                       Visibility="{Binding InternetAvailable, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+            </RelativePanel>
             <Button RelativePanel.AlignHorizontalCenterWithPanel="True" Padding="0" x:Name="LoginAADButton"
-                    RelativePanel.Below="LoginTextBlock" Command="{Binding LoginWithAADCommand}">
+                    RelativePanel.Below="InstructionsPanel" Command="{Binding LoginWithAADCommand}"
+                    Visibility="{Binding InternetAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <Button.Content>
                     <Image Source="ms-appx:///Assets/work-or-school-account.png" Width="200" />
                 </Button.Content>
             </Button>
             <Button RelativePanel.AlignHorizontalCenterWithPanel="True" Padding="0" Margin="0,8,0,0"
                     RelativePanel.Below="LoginAADButton" Content="Login with Microsoft account"
-                    IsEnabled="False" Foreground="White">
+                    IsEnabled="False" Foreground="White"
+                    Visibility="{Binding InternetAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
             </Button>
         </RelativePanel>
     </Grid>
