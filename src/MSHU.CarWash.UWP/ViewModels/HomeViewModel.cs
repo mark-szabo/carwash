@@ -188,14 +188,14 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// </summary>
         public RelayCommand QuickReserveCommand { get; set; }
 
-        private bool quickReservationSucceeded;
-        public bool QuickReservationSucceeded
+        private bool showQuickReservationSucceess;
+        public bool ShowQuickReservationSucceess
         {
-            get { return quickReservationSucceeded; }
+            get { return showQuickReservationSucceess; }
             set
             {
-                quickReservationSucceeded = value;
-                OnPropertyChanged(nameof(QuickReservationSucceeded));
+                showQuickReservationSucceess = value;
+                OnPropertyChanged(nameof(ShowQuickReservationSucceess));
             }
         }
 
@@ -250,6 +250,10 @@ namespace MSHU.CarWash.UWP.ViewModels
             ReservationAvailable = false;
             GetNextFreeSlotCommand.Execute(null);
             RequestServiceCommand.Execute(null);
+
+            // in case we still had the success feedback there - let's remove it to make
+            // a new quick reservation possible
+            ShowQuickReservationSucceess = false;
         }
 
         private void HandleQuickReserveExtraCommand(object obj)
@@ -272,7 +276,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             bool result = await ServiceClient.ServiceClient.SaveReservation(reservation, App.AuthenticationManager.BearerAccessToken);
             if(result)
             {
-                QuickReservationSucceeded = true;
+                ShowQuickReservationSucceess = true;
                 RequestServiceCommand.Execute(null);
                 GetNextFreeSlotCommand.Execute(null);
             }
