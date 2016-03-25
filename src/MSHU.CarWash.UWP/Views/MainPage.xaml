@@ -12,9 +12,6 @@
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <RelativePanel Background="{StaticResource BrushDarkBlue}">
-            <!--<RelativePanel.Background>
-                <ImageBrush Stretch="UniformToFill" ImageSource="ms-appx:///Assets/Background.png"/>
-            </RelativePanel.Background>-->
             <TextBlock RelativePanel.AlignHorizontalCenterWithPanel="True" Foreground="White"
                        RelativePanel.Above="InstructionsPanel" Text="Welcome!" x:Name="WelComeTextBlock"
                        FontSize="24" Margin="8"/>

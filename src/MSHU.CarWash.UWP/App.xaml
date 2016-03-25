@@ -18,6 +18,8 @@
                 <ResourceDictionary>
                     <Converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
                     <Converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+                    <ImageBrush ImageSource="ms-appx:///Assets/background.png" x:Key="BackgroundImage"
+                                Stretch="UniformToFill"/>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

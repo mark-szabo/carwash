@@ -37,7 +37,7 @@ namespace MSHU.CarWash.UWP.Views
                 // Registrations
                 new NavigationMenuItem()
                 {
-                    Symbol = Symbol.Home,
+                    Symbol = Symbol.Calendar,
                     Label = "Registrations",
                     DestPage = typeof(RegistrationsPage)
                 },
@@ -45,7 +45,7 @@ namespace MSHU.CarWash.UWP.Views
                 // About
                 new NavigationMenuItem()
                 {
-                    Symbol = Symbol.Home,
+                    Symbol = Symbol.Comment,
                     Label = "About",
                     DestPage = typeof(About)
                 },

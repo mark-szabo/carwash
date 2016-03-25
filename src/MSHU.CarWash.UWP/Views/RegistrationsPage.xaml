@@ -44,10 +44,7 @@
 
     </views:BasePage.Resources>
 
-    <Grid x:Name="MainGrid">
-        <Grid.Background>
-            <ImageBrush Stretch="UniformToFill" ImageSource="ms-appx:///Assets/background.png"/>
-        </Grid.Background>
+    <Grid x:Name="MainGrid" Background="{StaticResource BackgroundImage}">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="VisualStateGroup">
                 <VisualState x:Name="MasterView">

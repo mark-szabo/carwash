@@ -24,10 +24,8 @@
     </views:BasePage.Resources>
 
 
-    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-        <Grid.Background>
-            <ImageBrush Stretch="UniformToFill" ImageSource="ms-appx:///Assets/background.png"/>
-        </Grid.Background>
+    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+          Background="{StaticResource BackgroundImage}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
