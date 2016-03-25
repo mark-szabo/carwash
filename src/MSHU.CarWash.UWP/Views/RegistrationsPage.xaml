@@ -85,7 +85,7 @@
         <!-- Master view -->
         <RelativePanel x:Name="relativePanelMaster" Grid.Column="0" Grid.Row="1">
             <CalendarView HorizontalAlignment="Stretch" Margin="12,12,12,12" 
-                          VerticalAlignment="Stretch"
+                          VerticalAlignment="Stretch" x:Name="MainCalendarView"
                           DataContext="{Binding}"
                           CalendarViewDayItemStyle="{StaticResource CalendarViewDayItemStyle1}"
                           DisplayMode="Month"
