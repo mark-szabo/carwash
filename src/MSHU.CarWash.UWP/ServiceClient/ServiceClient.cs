@@ -3,6 +3,8 @@ using Microsoft.WindowsAzure.MobileServices;
 using MSHU.CarWash.DomainModel;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -171,6 +173,87 @@ namespace MSHU.CarWash.UWP.ServiceClient
                 await dialog.ShowAsync();
             }
             return false;
+        }
+
+        /// <summary>
+        /// Retrieves the number of available slots for the given day.
+        /// </summary>
+        /// <param name="day">The day that the number of available slots is calculated for.</param>
+        /// <param name="token">Token used for authentication</param>
+        /// <returns>The number of available slots.</returns>
+        public static async Task<int?> GetCapacityByDay(DateTime day, string token)
+        {
+            // Create an HTTP client and add the token to the Authorization header
+            HttpClient httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+
+            // Call the Web API to get the values
+            Uri requestURI = new Uri(s_BaseUrl + $"/api/Calendar/CapacityByDay?day={day.ToString("D", CultureInfo.InvariantCulture)}");
+            string reservationJSON = Newtonsoft.Json.JsonConvert.SerializeObject(day);
+            //HttpContent contentPost = new StringContent(reservationJSON, Encoding.UTF8, "application/json");
+            HttpResponseMessage httpResponse = await httpClient.GetAsync(requestURI);
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                string jSonResult = await httpResponse.Content.ReadAsStringAsync();
+
+                //var availableSlots =
+                //    Newtonsoft.Json.JsonConvert.DeserializeObject<int?>(jSonResult);
+
+                int availableSlots = 0;
+                int.TryParse(jSonResult, out availableSlots);
+
+                return availableSlots;
+            }
+            else
+            {
+                Windows.UI.Popups.MessageDialog dialog =
+                       new Windows.UI.Popups.MessageDialog(string.Format("{0}", httpResponse.StatusCode.ToString()));
+                await dialog.ShowAsync();
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Retrieves the number of available slots for every day between the specified
+        /// start and end date.
+        /// </summary>
+        /// <param name="startDay">The start date of the desired time interval.</param>
+        /// <param name="endDay">The end date of the desired time interval.</param>
+        /// <param name="token">Token used for authentication</param>
+        /// <returns>
+        /// The number of available slots corresponding to the day index in the time interval.
+        /// </returns>
+        public static async Task<List<int>> GetCapacityForTimeInterval(DateTime startDay, DateTime endDay, 
+            string token)
+        {
+            // Create an HTTP client and add the token to the Authorization header
+            HttpClient httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+
+            // Call the Web API to get the values
+            Uri requestURI = new Uri(s_BaseUrl + 
+                String.Format("/api/Calendar/CapacityForTimeInterval?startDate={0}&endDate={1}",
+                startDay.ToString("D", CultureInfo.InvariantCulture),
+                endDay.ToString("D", CultureInfo.InvariantCulture)));
+            HttpResponseMessage httpResponse = await httpClient.GetAsync(requestURI);
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                string jSonResult = await httpResponse.Content.ReadAsStringAsync();
+
+                var availableSlots =
+                    Newtonsoft.Json.JsonConvert.DeserializeObject<List<int>> (jSonResult);
+
+                return availableSlots;
+            }
+            else
+            {
+                Windows.UI.Popups.MessageDialog dialog =
+                       new Windows.UI.Popups.MessageDialog(string.Format("{0}", httpResponse.StatusCode.ToString()));
+                await dialog.ShowAsync();
+            }
+            return null;
         }
 
     }
