@@ -1,9 +1,11 @@
 ﻿using MSHU.CarWash.UWP.Controls;
+using MSHU.CarWash.UWP.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Windows.Foundation.Metadata;
+using Windows.Networking.Connectivity;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Automation;
@@ -18,7 +20,7 @@ namespace MSHU.CarWash.UWP.Views
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class AppShell : Page
+    public sealed partial class AppShell : BasePage
     {
         // Declare the top level nav items
         private List<NavigationMenuItem> navlist = new List<NavigationMenuItem>(
@@ -331,6 +333,22 @@ namespace MSHU.CarWash.UWP.Views
         async void Footer_Click(object sender, RoutedEventArgs e)
         {
             await Windows.System.Launcher.LaunchUriAsync(new Uri(((HyperlinkButton)sender).Tag.ToString()));
+        }
+
+        protected override void InitializePage()
+        {
+            ViewModel = new AppShellViewModel();
+
+            NetworkInformation.NetworkStatusChanged += NetworkInformation_NetworkStatusChanged;
+            NetworkInformation_NetworkStatusChanged(this);
+            base.InitializePage();
+        }
+
+        private void NetworkInformation_NetworkStatusChanged(object sender)
+        {
+            Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                () => ((AppShellViewModel)ViewModel).InternetAvailable = NetworkInformation.GetInternetConnectionProfile()
+                .GetNetworkConnectivityLevel() == NetworkConnectivityLevel.InternetAccess);
         }
     }
 }

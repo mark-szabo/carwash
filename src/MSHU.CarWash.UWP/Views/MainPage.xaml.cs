@@ -1,4 +1,7 @@
 ﻿using MSHU.CarWash.UWP.ViewModels;
+using System.Threading.Tasks;
+using Windows.Networking.Connectivity;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -25,7 +28,17 @@ namespace MSHU.CarWash.UWP.Views
             ViewModel = new MainViewModel();
             ((MainViewModel)ViewModel).UserAuthenticated += ViewModel_UserAuthenticated;
 
+            NetworkInformation.NetworkStatusChanged += NetworkInformation_NetworkStatusChanged;
+            NetworkInformation_NetworkStatusChanged(this);
+
             base.InitializePage();
+        }
+
+        private void NetworkInformation_NetworkStatusChanged(object sender)
+        {
+            Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                () => ((MainViewModel)ViewModel).InternetAvailable = NetworkInformation.GetInternetConnectionProfile()
+                .GetNetworkConnectivityLevel() == NetworkConnectivityLevel.InternetAccess);
         }
 
         private void ViewModel_UserAuthenticated(object sender, System.EventArgs e)

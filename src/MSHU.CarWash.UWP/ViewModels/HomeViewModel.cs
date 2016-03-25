@@ -249,6 +249,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             bool result = await ServiceClient.ServiceClient.DeleteReservation(reservationID, App.AuthenticationManager.BearerAccessToken);
             ReservationAvailable = false;
             GetNextFreeSlotCommand.Execute(null);
+            RequestServiceCommand.Execute(null);
         }
 
         private void HandleQuickReserveExtraCommand(object obj)

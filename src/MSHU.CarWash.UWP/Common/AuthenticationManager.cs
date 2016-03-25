@@ -112,8 +112,15 @@ namespace MSHU.CarWash.UWP.Common
 
         public async Task<bool> TryAutoSignInWithAadAsync()
         {
-            var result = await TrySignInWithAadAsync(PromptBehavior.Never);
-            return result.Status == AuthenticationStatus.Success;
+            try
+            {
+                var result = await TrySignInWithAadAsync(PromptBehavior.Never);
+                return result.Status == AuthenticationStatus.Success;
+            }
+            catch(HttpRequestException)
+            {
+                return false;
+            }
         }
 
         /// <summary>
