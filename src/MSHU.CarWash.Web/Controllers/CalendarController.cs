@@ -65,11 +65,11 @@ namespace MSHU.CarWash.Controllers
             DateTime endOfWeek = ret.StartOfWeek.AddDays(6);
             if (ret.StartOfWeek.Month != endOfWeek.Month)
             {
-                ret.DateInterval = string.Format("{0} {1} - {2} {3}", ret.StartOfWeek.ToString("MMMM", CultureInfo.CreateSpecificCulture("hu-HU")), ret.StartOfWeek.Day, endOfWeek.ToString("MMMM", CultureInfo.CreateSpecificCulture("hu-HU")), endOfWeek.Day).ToUpper();
+                ret.DateInterval = string.Format("{0} {1} - {2} {3}", ret.StartOfWeek.ToString("MMMM", CultureInfo.CreateSpecificCulture("en-US")), ret.StartOfWeek.Day, endOfWeek.ToString("MMMM", CultureInfo.CreateSpecificCulture("en-US")), endOfWeek.Day).ToUpper();
             }
             else
             {
-                ret.DateInterval = string.Format("{0} {1} - {2}", ret.StartOfWeek.ToString("MMMM", CultureInfo.CreateSpecificCulture("hu-HU")), ret.StartOfWeek.Day, endOfWeek.Day).ToUpper();
+                ret.DateInterval = string.Format("{0} {1} - {2}", ret.StartOfWeek.ToString("MMMM", CultureInfo.CreateSpecificCulture("en-US")), ret.StartOfWeek.Day, endOfWeek.Day).ToUpper();
             }
             ret.Days = await GetDaysDetailsAsync(ret.StartOfWeek, endOfWeek);
 
@@ -195,7 +195,7 @@ namespace MSHU.CarWash.Controllers
                 int sum = 0;
                 foreach (var item in queryResult)
                 {
-                    if (item.SelectedServiceId == (int)ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas)
+                    if (item.SelectedServiceId == (int)ServiceEnum.ExteriorInteriorCarpet)
                         sum += 2;
                     else
                         sum += 1;
@@ -264,12 +264,12 @@ namespace MSHU.CarWash.Controllers
                 int sum = 0;
                 foreach (var item in queryResult)
                 {
-                    if (item.SelectedServiceId == (int)ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas)
+                    if (item.SelectedServiceId == (int)ServiceEnum.ExteriorInteriorCarpet)
                         sum += 2;
                     else
                         sum += 1;
                 }
-                if (newReservationViewModel.SelectedServiceId == (int)ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas)
+                if (newReservationViewModel.SelectedServiceId == (int)ServiceEnum.ExteriorInteriorCarpet)
                     sum += 2;
                 else
                     sum += 1;
@@ -284,7 +284,7 @@ namespace MSHU.CarWash.Controllers
                                    select b;
             var queryReservationResult = await queryReservation.ToListAsync();
             var availableSlots = GetAvailableSlots(queryReservationResult, newReservationViewModel.Date);
-            if (newReservationViewModel.SelectedServiceId == (int)ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas)
+            if (newReservationViewModel.SelectedServiceId == (int)ServiceEnum.ExteriorInteriorCarpet)
             {
                 availableSlots = availableSlots - 2;
             }
@@ -434,8 +434,8 @@ namespace MSHU.CarWash.Controllers
                 }
             }
 
-            ret.ReservationsByDayActive = temp.FindAll(t => t.Day >= DateTime.Today);
-            ret.ReservationsByDayHistory = temp.FindAll(t => t.Day < DateTime.Today);
+            ret.ReservationsByDayActive = temp.FindAll(t => t.Day >= DateTime.Today).OrderBy(t => t.Day).ToList();
+            ret.ReservationsByDayHistory = temp.FindAll(t => t.Day < DateTime.Today).OrderByDescending(t => t.Day).ToList();
 
             return Ok(ret);
         }
@@ -583,7 +583,7 @@ namespace MSHU.CarWash.Controllers
 
                 foreach (var item in reservationsOnDate)
                 {
-                    if (item.SelectedServiceId == (int)ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas)
+                    if (item.SelectedServiceId == (int)ServiceEnum.ExteriorInteriorCarpet)
                     {
                         availableSlots = availableSlots - 2;
                     }

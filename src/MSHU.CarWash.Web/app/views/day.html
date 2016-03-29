@@ -17,7 +17,7 @@
         <hr />
         <div class="list-group">
             <div class="list-group-item" data-ng-repeat="item in dayDetailsViewModel.Reservations">
-                <button class="pull-right btn btn-primary btn-sm" ng-show="item.IsDeletable" ng-click="deleteReservation(item.ReservationId);"><span class="glyphicon glyphicon-trash"></span>&nbsp;TÖRÖL</button>
+                <button class="pull-right btn btn-primary btn-sm" ng-show="item.IsDeletable" ng-click="deleteReservation(item.ReservationId);"><span class="glyphicon glyphicon-trash"></span>&nbsp;REMOVE</button>
                 <strong>{{item.VehiclePlateNumber}}&nbsp;&nbsp;{{item.EmployeeName}}</strong><br />
                 {{item.SelectedServiceName}}<br />
                 {{item.Comment}}&nbsp;
@@ -25,7 +25,7 @@
         </div>
         <p ng-show="showReservation()">
             <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-                <span class="glyphicon glyphicon-plus"></span>&nbsp;IDŐPONT FOGLALÁS
+                <span class="glyphicon glyphicon-plus"></span>&nbsp;RESERVE
             </button>
         </p>
         <div class="collapse" id="collapseExample">
@@ -39,72 +39,72 @@
                             </div>
                         </div>
                         <div class="form-group row">
-                            <label for="inputName" class="col-sm-2 form-control-label">NÉV</label>
+                            <label for="inputName" class="col-sm-2 form-control-label">NAME</label>
                             <div class="col-sm-10">
-                                <input type="text" class="form-control" id="inputName" name="inputName" placeholder="NÉV" ng-model="dayDetailsViewModel.NewReservation.EmployeeName" ng-readonly="!(dayDetailsViewModel.NewReservation.IsAdmin)" ng-keyup="autoCompleteEmployeeName()" required ng-maxlength="100">
+                                <input type="text" class="form-control" id="inputName" name="inputName" placeholder="NAME" ng-model="dayDetailsViewModel.NewReservation.EmployeeName" ng-readonly="!(dayDetailsViewModel.NewReservation.IsAdmin)" ng-keyup="autoCompleteEmployeeName()" required ng-maxlength="100">
                                 <div ng-messages="newReservationForm.inputName.$error">
-                                    <div ng-message="required" class="text-danger">A 'NÉV' KITÖLTÉSE KÖTELEZŐ!</div>
-                                    <div ng-message="maxlength" class="text-danger">A 'NÉV' TÚL HOSSZÚ!</div>
+                                    <div ng-message="required" class="text-danger">THE FIELD IS REQUIRED</div>
+                                    <div ng-message="maxlength" class="text-danger">THE TEXT IS TOO LONG</div>
                                 </div>
                                 <div ng-messages="newReservationForm.inputEmployeeId.$error">
-                                    <div ng-message="required" class="text-danger">A 'NÉV'-BEN MEGADOTT SZEMÉLY NEM LÉTEZIK A RENDSZERBEN!</div>
+                                    <div ng-message="required" class="text-danger">THE PERSON ALREADY EXISTS</div>
                                 </div>
                             </div>
                         </div>
                         <div class="form-group row">
-                            <label for="inputVehicle" class="col-sm-2 form-control-label">RENDSZÁM</label>
+                            <label for="inputVehicle" class="col-sm-2 form-control-label">PLATE NUMBER</label>
                             <div class="col-sm-10">
                                 <input type="text" class="form-control" id="inputVehicle" name="inputVehicle" placeholder="ABC-123" ng-model="dayDetailsViewModel.NewReservation.VehiclePlateNumber" required ng-pattern="vehiclePlateNumberFormat">
                                 <div ng-messages="newReservationForm.inputVehicle.$error">
-                                    <div ng-message="required" class="text-danger">A 'RENDSZÁM' KITÖLTÉSE KÖTELEZŐ!</div>
-                                    <div ng-message="pattern" class="text-danger">A 'RENDSZÁM' FORMÁTUMA NEM MEGFELELŐ!</div>
+                                    <div ng-message="required" class="text-danger">THE FIELD IS REQUIRED</div>
+                                    <div ng-message="pattern" class="text-danger">WRONG FORMAT</div>
                                 </div>
                             </div>
                         </div>
                         <div class="form-group row">
-                            <label class="col-sm-2">SZOLGÁLTATÁS</label>
+                            <label class="col-sm-2">SERVICE</label>
                             <div class="col-sm-10">
                                 <div class="radio">
                                     <label>
                                         <input type="radio" name="gridRadios" id="gridRadios1" value="0" ng-model="dayDetailsViewModel.NewReservation.SelectedServiceId" ng-required="!dayDetailsViewModel.NewReservation.SelectedServiceId">
-                                        KÜLSŐ MOSÁS
+                                        EXTERIOR
                                     </label>
                                 </div>
                                 <div class="radio">
                                     <label>
                                         <input type="radio" name="gridRadios" id="gridRadios2" value="1" ng-model="dayDetailsViewModel.NewReservation.SelectedServiceId" ng-required="!dayDetailsViewModel.NewReservation.SelectedServiceId">
-                                        BELSŐ TAKARÍTÁS
+                                        INTERIOR
                                     </label>
                                 </div>
                                 <div class="radio">
                                     <label>
                                         <input type="radio" name="gridRadios" id="gridRadios3" value="2" ng-model="dayDetailsViewModel.NewReservation.SelectedServiceId" ng-required="!dayDetailsViewModel.NewReservation.SelectedServiceId">
-                                        KÜLSŐ MOSÁS + BELSŐ TAKARÍTÁS
+                                        EXTERIOR + INTERIOR
                                     </label>
                                 </div>
                                 <div class="radio">
                                     <label>
                                         <input type="radio" name="gridRadios" id="gridRadios4" value="3" ng-model="dayDetailsViewModel.NewReservation.SelectedServiceId" ng-required="!dayDetailsViewModel.NewReservation.SelectedServiceId" ng-disabled="kulsoBelsoKarpitDisabled()">
-                                        KÜLSŐ MOSÁS + BELSŐ TAKARÍTÁS + KÁRPITTISZTÍTÁS
+                                        EXTERIOR + INTERIOR + CARPET
                                     </label>
                                 </div>
                                 <div ng-messages="newReservationForm.gridRadios.$error">
-                                    <div ng-message="required" class="text-danger">A 'SZOLGÁLTATÁS' KITÖLTÉSE KÖTELEZŐ!</div>
+                                    <div ng-message="required" class="text-danger">THE FIELD IS REQUIRED</div>
                                 </div>
                             </div>
                         </div>
                         <div class="form-group row">
-                            <label for="inputComment" class="col-sm-2 form-control-label">MEGJEGYZÉS</label>
+                            <label for="inputComment" class="col-sm-2 form-control-label">COMMENT</label>
                             <div class="col-sm-10">
-                                <input type="text" class="form-control" id="inputComment" name="inputComment" placeholder="MEGJEGYZÉS" ng-model="dayDetailsViewModel.NewReservation.Comment" ng-maxlength="250">
+                                <input type="text" class="form-control" id="inputComment" name="inputComment" placeholder="COMMENT" ng-model="dayDetailsViewModel.NewReservation.Comment" ng-maxlength="250">
                                 <div ng-messages="newReservationForm.inputComment.$error">
-                                    <div ng-message="maxlength" class="text-danger">A 'MEGJEGYZÉS' TÚL HOSSZÚ!</div>
+                                    <div ng-message="maxlength" class="text-danger">THE TEXT IS TOO LONG</div>
                                 </div>
                             </div>
                         </div>
                         <div class="form-group row">
                             <div class="col-sm-offset-2 col-sm-10">
-                                <button type="submit" class="btn btn-primary" ng-click="saveReservation()" ng-disabled="newReservationForm.$invalid"><span class="glyphicon glyphicon-ok"></span>&nbsp;FOGLAL</button>
+                                <button type="submit" class="btn btn-primary" ng-click="saveReservation()" ng-disabled="newReservationForm.$invalid"><span class="glyphicon glyphicon-ok"></span>&nbsp;RESERVE</button>
                             </div>
                         </div>
                     </form>
