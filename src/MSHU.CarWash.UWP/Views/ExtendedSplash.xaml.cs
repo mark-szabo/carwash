@@ -142,6 +142,9 @@ namespace MSHU.CarWash.UWP.Views
                 // When the navigation stack isn't restored navigate to the first page,
                 // configuring the new page by passing required information as a navigation
                 // parameter
+
+                // Inform user about sign in progress
+                (Window.Current.Content as ExtendedSplash).m_StatusText.Text = "Signing in...";
                 var autoSignInSucceeded = await App.AuthenticationManager.TryAutoSignInWithAadAsync();
                 if (!autoSignInSucceeded)
                 {
