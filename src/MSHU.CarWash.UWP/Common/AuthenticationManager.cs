@@ -112,8 +112,15 @@ namespace MSHU.CarWash.UWP.Common
 
         public async Task<bool> TryAutoSignInWithAadAsync()
         {
-            var result = await TrySignInWithAadAsync(PromptBehavior.Never);
-            return result.Status == AuthenticationStatus.Success;
+            try
+            {
+                var result = await TrySignInWithAadAsync(PromptBehavior.Never);
+                return result.Status == AuthenticationStatus.Success;
+            }
+            catch(HttpRequestException)
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -139,6 +146,16 @@ namespace MSHU.CarWash.UWP.Common
             var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
             var response = await client.SendAsync(request);
             return response;
+        }
+
+        /// <summary>
+        /// Retrieves the current Employee instance from the service, again.
+        /// </summary>
+        /// <returns></returns>
+        public async Task RefreshCurrentUser()
+        {
+            // Get the Employee instance assigned to the current user.
+            CurrentEmployee = await ServiceClient.ServiceClient.GetCurrentUser(BearerAccessToken);
         }
     }
 

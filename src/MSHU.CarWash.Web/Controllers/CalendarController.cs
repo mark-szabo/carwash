@@ -15,6 +15,7 @@ using System.Globalization;
 using System.Configuration;
 using System.Security.Claims;
 using MSHU.CarWash.Helpers;
+using System.Diagnostics;
 
 namespace MSHU.CarWash.Controllers
 {
@@ -247,7 +248,7 @@ namespace MSHU.CarWash.Controllers
                             orderby b.Date
                             select b;
                 var queryResult = await query.ToListAsync();
-                if (queryResult.Count > 0)
+                if (queryResult.Count > 2)
                 {
                     ModelState.AddModelError("", string.Format("Van már foglalt időpontod {0}-n!", queryResult.FirstOrDefault().Date));
                     return BadRequest(ModelState);
@@ -439,6 +440,92 @@ namespace MSHU.CarWash.Controllers
             return Ok(ret);
         }
 
+        /// <summary>
+        /// Retrieves date of next free slot (excluding today).
+        /// </summary>
+        /// <returns>Date of next free slot or null if none is available</returns>
+        public async Task<DateTime?> GetNextFreeSlotDate()
+        {
+            var now = DateTime.Now;
+            var from = now.Hour >= 14 ? now.Date.AddDays(1) : now.Date;
+            var until = from.AddDays(14);
+
+            var nextReservations = _db.Reservations.Where(r => r.Date >= from && r.Date < until);
+
+            for (var day = from; day < until; day = day.AddDays(1))
+            {
+                if(GetAvailableSlots(await nextReservations.ToListAsync<Reservation>(), day) >= 2)
+                {
+                    return day;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Retrieves the number of available slots from the database.
+        /// </summary>
+        /// <param name="day">The date that the number of free slots is calculated for.</param>
+        /// <returns>Number of available slots.</returns>
+        [HttpGet]
+        [ResponseType(typeof(int))]
+        public async Task<IHttpActionResult> CapacityByDay(DateTime day)
+        {
+            if (day > DateTime.Today.AddDays(350) || day < DateTime.Today.AddDays(-350))
+            {
+                return BadRequest();
+            }
+
+            // Query the list of reservations on the given day.
+            var query = from b in _db.Reservations
+                        where b.Date == day
+                        select b;
+            var queryResult = await query.ToListAsync();
+            // Get the number of available slots.
+            int availableSlots = day < DateTime.Today ? 0 : GetAvailableSlots(queryResult, day);
+            // Return the number of available slots.
+            return Json(availableSlots);
+        }
+
+        /// <summary>
+        /// Retrieves the number of available slots from the database.
+        /// </summary>
+        /// <param name="day">The date that the number of free slots is calculated for.</param>
+        /// <returns>Number of available slots.</returns>
+        [HttpGet]
+        //[ResponseType(typeof(DayDetailsViewModel))]
+        public async Task<IHttpActionResult> CapacityForTimeInterval(DateTime startDate, DateTime endDate)
+        {
+            if (startDate > DateTime.Today.AddDays(350) || 
+                startDate < DateTime.Today.AddDays(-350) ||
+                endDate > DateTime.Today.AddDays(350) ||
+                endDate < DateTime.Today.AddDays(-350) ||
+                startDate > endDate)
+            {
+                return BadRequest();
+            }
+
+            DateTime current = startDate;
+            List<int> availableSlots = new List<int>();
+            int availableSlotsNr;
+            while (current <= endDate)
+            {
+                // Query the list of reservations on the given day.
+                var query = from b in _db.Reservations
+                            where b.Date == current
+                            select b;
+                var queryResult = await query.ToListAsync();
+                // Get the number of available slots.
+                availableSlotsNr = current < DateTime.Today ? 0 : GetAvailableSlots(queryResult, current);
+                availableSlots.Add(availableSlotsNr);
+                current = current.AddDays(1);
+            }
+
+            // Return the number of available slots.
+            return Json(availableSlots);
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -447,7 +534,7 @@ namespace MSHU.CarWash.Controllers
             }
             base.Dispose(disposing);
         }
-
+        
         #region Private methods
         private async Task<List<DayViewModel>> GetDaysDetailsAsync(DateTime startDate, DateTime endDate)
         {

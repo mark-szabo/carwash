@@ -2,5 +2,5 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/src/MSHU.CarWash.UWP/bin/x86/Debug
-/src/MSHU.CarWash.UWP/obj/x86/Debug
+/src/MSHU.CarWash.UWP/bin
+/src/MSHU.CarWash.UWP/obj

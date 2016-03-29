@@ -33,7 +33,7 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <TextBlock Text="Plate number:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" />
-        <TextBox Text="{Binding CurrentReservation.VehiclePlateNumber}" Grid.Row="0" Grid.Column="1" />
+        <TextBox Text="{Binding CurrentReservation.VehiclePlateNumber, Mode=TwoWay}" Grid.Row="0" Grid.Column="1" />
         <TextBlock Text="Selected service:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" />
         <ComboBox ItemsSource="{Binding ServicesSource.View, Mode=TwoWay}" HorizontalAlignment="Stretch" Margin="8,4,8,4"
                   Grid.Row="1" Grid.Column="1" DisplayMemberPath="ServiceName" SelectedValuePath="ServiceId" />
@@ -41,12 +41,13 @@
         <TextBox Text="{Binding CurrentComment, Mode=TwoWay}" Grid.Row="2" Grid.Column="1" />
         <RelativePanel Grid.Row="3" Grid.Column="1" >
             <Button Content="Cancel" x:Name="CancelButton" Command="{Binding CancelCommand, ElementName=viewControl}"
-                    RelativePanel.AlignRightWithPanel="True" Margin="0,4,8,4" Padding="32,4,32,4"/>
+                    RelativePanel.AlignRightWithPanel="True" Margin="0,4,8,4" Padding="32,4,32,4"
+                     Style="{StaticResource CWButtonStyle}"/>
             <Button Content="Save" x:Name="SaveButton" RelativePanel.LeftOf="CancelButton" 
                     Margin="0,4,8,4" Padding="32,4,32,4"
-                    Command="{Binding SaveCommand, ElementName=viewControl}"/>
-            <Button Content="Delete" x:Name="DeleteButton" IsEnabled="False"
-                    Command="{Binding DeleteCommand, ElementName=viewControl}"
+                    Command="{Binding SaveCommand, ElementName=viewControl}" Style="{StaticResource CWButtonStyle}"/>
+            <Button Content="Delete" x:Name="DeleteButton"
+                    Command="{Binding DeleteCommand, ElementName=viewControl}"  Style="{StaticResource CWButtonStyle}"
                     RelativePanel.AlignRightWithPanel="True" Margin="0,4,8,4" Padding="32,4,32,4"/>
         </RelativePanel>
     </Grid>

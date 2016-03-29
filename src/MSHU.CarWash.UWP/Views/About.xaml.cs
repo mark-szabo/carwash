@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MSHU.CarWash.UWP.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,11 +21,17 @@ namespace MSHU.CarWash.UWP.Views
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class About : Page
+    public sealed partial class About : BasePage
     {
         public About()
         {
             this.InitializeComponent();
+        }
+
+        protected override void InitializePage()
+        {
+            this.ViewModel = new AboutViewModel();
+            base.InitializePage();
         }
     }
 }

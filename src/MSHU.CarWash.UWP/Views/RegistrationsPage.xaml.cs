@@ -5,6 +5,7 @@ using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
+using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -30,6 +31,16 @@ namespace MSHU.CarWash.UWP.Views
             base.InitializePage();
         }
 
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            if (e.Parameter is DateTime)
+            {
+                (ViewModel as RegistrationsViewModel).CreateReservationCommand.Execute(e.Parameter);
+                (ViewModel as RegistrationsViewModel).UseDetailsView = true;
+            }
+        }
+
         private void CalendarView_CalendarViewDayItemChanging(CalendarView sender, CalendarViewDayItemChangingEventArgs args)
         {
             CalendarViewDayItem item = args.Item;
@@ -38,6 +49,11 @@ namespace MSHU.CarWash.UWP.Views
             if (item.DataContext == null)
             {
                 item.DataContext = this.ViewModel;
+            }
+
+            if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
+            {
+                item.IsBlackout = true;
             }
 
             TextBlock tb = UIHelper.FindVisualChild<TextBlock, string>(
@@ -82,8 +98,9 @@ namespace MSHU.CarWash.UWP.Views
                 //{
                 //    args.Item.IsBlackout = true;
                 //}
-                // Register callback for next phase.
-                args.RegisterUpdateCallback(CalendarView_CalendarViewDayItemChanging);
+
+                //// Register callback for next phase.
+                //args.RegisterUpdateCallback(CalendarView_CalendarViewDayItemChanging);
             }
             // Set density bars.
             else if (args.Phase == 2)
