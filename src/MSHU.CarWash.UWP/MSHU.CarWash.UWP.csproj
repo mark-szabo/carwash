@@ -103,6 +103,7 @@
     <Compile Include="Common\AuthenticationManager.cs" />
     <Compile Include="Common\SuspensionManager.cs" />
     <Compile Include="Common\UI\UIHelper.cs" />
+    <Compile Include="Controls\CWCalendarView.cs" />
     <Compile Include="Controls\NavigationMenuItem.cs" />
     <Compile Include="Controls\NavigationMenuListView.cs" />
     <Compile Include="Controls\ReservationDetailsView.xaml.cs">

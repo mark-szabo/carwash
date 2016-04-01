@@ -34,6 +34,8 @@ namespace MSHU.CarWash.UWP.ViewModels
 
         private bool _initializing;
 
+        private DateTime _currentMonth;
+
         /// <summary>
         /// Private fields holds a reference to the reservation instance.
         /// The field has a value - not null - if the current user has
@@ -230,6 +232,16 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the PreviousPeriodCommand.
+        /// </summary>
+        public RelayCommand PreviousPeriodCommand { get; set; }
+
+        /// <summary>
+        /// Gets or sets the PreviousPeriodCommand.
+        /// </summary>
+        public RelayCommand NextPeriodCommand { get; set; }
+
         public RegistrationsViewModel()
         {
             UseDetailsView = false;
@@ -252,6 +264,12 @@ namespace MSHU.CarWash.UWP.ViewModels
 
             // Create the DeleteReservationCommand.
             DeleteReservationCommand = new RelayCommand(ExecuteDeleteReservationCommand, CanExecuteDeleteReservationCommand);
+
+            // Create the PreviousPeriodCommand.
+            PreviousPeriodCommand = new RelayCommand(ExecutePreviousPeriodCommand);
+
+            // Create the NextPeriodCommand.
+            NextPeriodCommand = new RelayCommand(ExecuteNextPeriodCommand);
 
             Services = new List<ServiceViewModel>();
             this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosas, ServiceName = ServiceEnum.KulsoMosas.GetDescription(), Selected = false });
@@ -277,6 +295,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             _freeSlotsByDate = new Dictionary<DateTime, string>();
 
             DateTime now = DateTime.Now.Date;
+            _currentMonth = new DateTime(now.Year, now.Month, 1);
             GetFreeSlotNumberForTimeInterval(now.AddDays(-7 * NUMBEROFWEEKS), now.AddDays(7 * 2 * NUMBEROFWEEKS));
 
             _initializing = true;
@@ -520,5 +539,30 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
         }
 
+        /// <summary>
+        /// Handles the Executed event of the PreviousPeriodCommand.
+        /// Actually, it loads the number of free slots for the previous
+        /// time period.
+        /// </summary>
+        /// <param name="param"></param>
+        private void ExecutePreviousPeriodCommand(object param)
+        {
+            _currentMonth = _currentMonth.AddMonths(-1);
+            var lastDayOfMonth = _currentMonth.AddMonths(1).AddDays(-1);
+            GetFreeSlotNumberForTimeInterval(_currentMonth, lastDayOfMonth);
+        }
+
+        /// <summary>
+        /// Handles the Executed event of the NextPeriodCommand.
+        /// Actually, it loads the number of free slots for the previous
+        /// time period.
+        /// </summary>
+        /// <param name="param"></param>
+        private void ExecuteNextPeriodCommand(object param)
+        {
+            _currentMonth = _currentMonth.AddMonths(1);
+            var lastDayOfMonth = _currentMonth.AddMonths(1).AddDays(-1);
+            GetFreeSlotNumberForTimeInterval(_currentMonth, lastDayOfMonth);
+        }
     }
 }
