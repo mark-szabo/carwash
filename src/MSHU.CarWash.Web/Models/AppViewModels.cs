@@ -25,7 +25,7 @@ namespace MSHU.CarWash.Models
         {
             get
             {
-                return this.Day == DateTime.Today ? "MA" : this.Day.ToString("dddd", CultureInfo.CreateSpecificCulture("hu-HU")).ToUpper();
+                return this.Day == DateTime.Today ? "TODAY" : this.Day.ToString("dddd", CultureInfo.CreateSpecificCulture("en-US")).ToUpper();
             }
         }
         public int DayNumber
@@ -50,14 +50,14 @@ namespace MSHU.CarWash.Models
         {
             get
             {
-                return this.Day.ToString("dddd", CultureInfo.CreateSpecificCulture("hu-HU")).ToUpper();
+                return this.Day.ToString("dddd", CultureInfo.CreateSpecificCulture("en-US")).ToUpper();
             }
         }
         public string MonthName
         {
             get
             {
-                return this.Day.ToString("MMMM", CultureInfo.CreateSpecificCulture("hu-HU")).ToUpper();
+                return this.Day.ToString("MMMM", CultureInfo.CreateSpecificCulture("en-US")).ToUpper();
             }
         }
         public int DayNumber
@@ -68,14 +68,38 @@ namespace MSHU.CarWash.Models
             }
         }
         public int AvailableSlots { get; set; }
-
         public bool ReservationIsAllowed { get; set; }
-
-        public List<ReservationDetailViewModel> Reservations { get; set; }
-        
-
+        public List<ReservationDetailViewModel> Reservations { get; set; }      
         public NewReservationViewModel NewReservation { get; set; }
+    }
 
+    public class HomeViewModel
+    {
+        public DateTime Day { get; set; }
+        public string DayName
+        {
+            get
+            {
+                return this.Day.ToString("dddd", CultureInfo.CreateSpecificCulture("en-US")).ToUpper();
+            }
+        }
+        public string MonthName
+        {
+            get
+            {
+                return this.Day.ToString("MMMM", CultureInfo.CreateSpecificCulture("en-US")).ToUpper();
+            }
+        }
+        public int DayNumber
+        {
+            get
+            {
+                return this.Day.Day;
+            }
+        }
+        public bool HasActiveReservation { get; set; }
+        public ReservationDetailViewModel ActiveReservation { get; set; }
+        public NewReservationViewModel NewReservation { get; set; }
     }
 
     public class ReservationDetailViewModel
@@ -93,6 +117,7 @@ namespace MSHU.CarWash.Models
         public string SelectedServiceName { get; set; }
 
         public string Comment { get; set; }
+
         public bool IsDeletable { get; set; }
     }
 
@@ -101,10 +126,10 @@ namespace MSHU.CarWash.Models
         public NewReservationViewModel()
         {
             this.Services = new List<ServiceViewModel>();
-            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosas, ServiceName = ServiceEnum.KulsoMosas.GetDescription(), Selected = false });
-            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.BelsoTakaritas, ServiceName = ServiceEnum.BelsoTakaritas.GetDescription(), Selected = false });
-            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasBelsoTakaritas, ServiceName = ServiceEnum.KulsoMosasBelsoTakaritas.GetDescription(), Selected = false });
-            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas, ServiceName = ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas.GetDescription(), Selected = false });
+            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.Exterior, ServiceName = ServiceEnum.Exterior.GetDescription(), Selected = false });
+            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.Interior, ServiceName = ServiceEnum.Interior.GetDescription(), Selected = false });
+            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.ExteriorInterior, ServiceName = ServiceEnum.ExteriorInterior.GetDescription(), Selected = false });
+            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.ExteriorInteriorCarpet, ServiceName = ServiceEnum.ExteriorInteriorCarpet.GetDescription(), Selected = false });
         }
         [Required]
         public DateTime Date { get; set; }
@@ -175,14 +200,14 @@ namespace MSHU.CarWash.Models
         {
             get
             {
-                return this.Day.ToString("dddd", CultureInfo.CreateSpecificCulture("hu-HU")).ToUpper();
+                return this.Day.ToString("dddd", CultureInfo.CreateSpecificCulture("en-US")).ToUpper();
             }
         }
         public string MonthName
         {
             get
             {
-                return this.Day.ToString("MMMM", CultureInfo.CreateSpecificCulture("hu-HU")).ToUpper();
+                return this.Day.ToString("MMMM", CultureInfo.CreateSpecificCulture("en-US")).ToUpper();
             }
         }
         public int DayNumber

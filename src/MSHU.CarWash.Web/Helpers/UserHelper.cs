@@ -17,8 +17,8 @@ namespace MSHU.CarWash.Helpers
             var user = new User();
             user.Id = ClaimsPrincipal.Current.Identity.Name;
             user.FullName = string.Format("{0} {1}",
-                                    ClaimsPrincipal.Current.FindFirst(ClaimTypes.Surname).Value,
-                                    ClaimsPrincipal.Current.FindFirst(ClaimTypes.GivenName).Value).ToUpper();
+                                    ClaimsPrincipal.Current.FindFirst(ClaimTypes.GivenName).Value,
+                                    ClaimsPrincipal.Current.FindFirst(ClaimTypes.Surname).Value).ToUpper();
             user.Email = ClaimsPrincipal.Current.Identity.Name;
             user.IsAdmin = admins.ToLower().Contains(user.Email.ToLower());
             return user;

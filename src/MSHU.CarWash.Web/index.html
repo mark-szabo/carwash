@@ -29,15 +29,15 @@
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li ng-class="{ active: isActive('/Calendar') }"><a href="#/Calendar">NAPTÁR</a></li>
-                    <li ng-class="{ active: isActive('/Reservation') }"><a href="#/Reservation">FOGLALÁSAIM</a></li>
+                    <li ng-class="{ active: isActive('/Calendar') }"><a href="#/Calendar">CALENDAR</a></li>
+                    <li ng-class="{ active: isActive('/Reservation') }"><a href="#/Reservation">RESERVATIONS</a></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <li ng-hide="userInfo.isAuthenticated" ng-click="login()"><a>BEJELENTKEZÉS</a></li>
+                    <li ng-hide="userInfo.isAuthenticated" ng-click="login()"><a href="">LOGIN</a></li>
                     <li class="dropdown" ng-show="userInfo.isAuthenticated">
-                        <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{userInfo.profile.family_name}} {{userInfo.profile.given_name}}</a>
+                        <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{userInfo.profile.given_name}} {{userInfo.profile.family_name}}</a>
                         <ul class="dropdown-menu">
-                            <li><a ng-click="logout()">KIJELENTKEZÉS</a></li>
+                            <li><a href="" ng-click="logout()">LOGOUT</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -60,9 +60,9 @@
                 <button type="button" class="close pull-right grey" aria-label="Close" onclick="toggler('footer');">
                     <span aria-hidden="true">&times;</span>
                 </button>
-                <a class="footer-link" href="http://www.microsoft.hu">© 2015 Microsoft</a>&nbsp;|&nbsp;
-                <a class="footer-link" href="http://go.microsoft.com/fwlink/?LinkId=521839">Adatvédelem és cookie-k</a>&nbsp;|&nbsp;
-                <a class="footer-link" href="http://www.microsoft.com/en-us/legal/intellectualproperty/copyright/default.aspx">Használati feltételek</a>&nbsp;
+                <a class="footer-link" href="http://www.microsoft.hu">© 2016 Microsoft</a>&nbsp;|&nbsp;
+                <a class="footer-link" href="http://go.microsoft.com/fwlink/?LinkId=521839">Privacy & Cookies</a>&nbsp;|&nbsp;
+                <a class="footer-link" href="http://www.microsoft.com/en-us/legal/intellectualproperty/copyright/default.aspx">Terms of Use</a>&nbsp;
             </div>
         </div>
     </footer>
