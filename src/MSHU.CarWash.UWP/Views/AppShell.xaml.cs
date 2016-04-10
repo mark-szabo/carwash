@@ -41,7 +41,13 @@ namespace MSHU.CarWash.UWP.Views
                     Label = "Registrations",
                     DestPage = typeof(RegistrationsPage)
                 },
-
+                // Settings
+                new NavigationMenuItem()
+                {
+                    Symbol = Symbol.Setting,
+                    Label = "Settings",
+                    DestPage = typeof(SettingsPage)
+                },
                 // About
                 new NavigationMenuItem()
                 {
@@ -86,8 +92,17 @@ namespace MSHU.CarWash.UWP.Views
             }
 
             NavMenuList.ItemsSource = navlist;
-            // Navigate to the first page
-            this.AppFrame.Navigate(typeof(HomePage));
+
+            if (String.IsNullOrWhiteSpace(App.AuthenticationManager.CurrentEmployee?.VehiclePlateNumber))
+            {
+                this.AppFrame.Navigate(typeof(SettingsPage), true);
+                IsMenuEnabled = false;
+            }
+            else
+            {
+                // Navigate to the first page
+                this.AppFrame.Navigate(typeof(HomePage));
+            }
         }
 
         /// <summary>
@@ -349,6 +364,23 @@ namespace MSHU.CarWash.UWP.Views
             Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                 () => ((AppShellViewModel)ViewModel).InternetAvailable = NetworkInformation.GetInternetConnectionProfile()
                 .GetNetworkConnectivityLevel() == NetworkConnectivityLevel.InternetAccess);
+        }
+
+        public bool IsMenuEnabled
+        {
+            set
+            {
+                if (value)
+                {
+                    NavMenuList.Visibility = Visibility.Visible;
+                    TogglePaneButton.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    NavMenuList.Visibility = Visibility.Collapsed;
+                    TogglePaneButton.Visibility = Visibility.Collapsed;
+                }
+            }
         }
     }
 }

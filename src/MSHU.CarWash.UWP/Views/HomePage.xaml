@@ -7,6 +7,7 @@
     xmlns:views="using:MSHU.CarWash.UWP.Views"
     xmlns:viewModels="using:MSHU.CarWash.UWP.ViewModels"
     xmlns:Converters="using:MSHU.CarWash.UWP.Converters"
+    xmlns:collection="using:System.Collections.Generic"
     x:Class="MSHU.CarWash.UWP.Views.HomePage"
     mc:Ignorable="d"
     d:DataContext="{Binding Source={d:DesignInstance IsDesignTimeCreatable=True, Type=viewModels:HomeViewModel}}"
@@ -14,13 +15,6 @@
 
 
     <views:BasePage.Resources>
-        <DataTemplate x:Key="DateHeader">
-            <StackPanel Orientation="Horizontal">
-                <FontIcon x:Name="CalendarGlyph" FontSize="24" Glyph="&#xE163;" MirroredWhenRightToLeft="True" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                <TextBlock Text="{Binding}"  Margin="12"
-					RelativePanel.AlignLeftWithPanel="True" />
-            </StackPanel>
-        </DataTemplate>
     </views:BasePage.Resources>
 
 
@@ -45,7 +39,11 @@
                     </TransitionCollection>
                 </StackPanel.ChildrenTransitions>
                 <RelativePanel>
-                    <ContentControl ContentTemplate="{StaticResource DateHeader}" Content="Coming up" x:Name="RegistrationBlock" DataContext="{StaticResource  AppBarBackgroundThemeBrush}"/>
+                    <RelativePanel.Resources>
+                        <viewModels:CaptionViewModel x:Key="ComingUpCaption" Glyph="&#xE163;" Text="Coming up" />
+                    </RelativePanel.Resources>
+                    <ContentControl ContentTemplate="{StaticResource GlyphCaption}" Content="{StaticResource ComingUpCaption}"  x:Name="RegistrationBlock" DataContext="{StaticResource  AppBarBackgroundThemeBrush}">
+                    </ContentControl>
                     <TextBlock x:Name="MissingReservationTextBlock" Text="No reservation" 
 					Style="{StaticResource TitleTextBlockStyle}" FontWeight="Bold" Visibility="{Binding ReservationAvailable, Converter={StaticResource InverseBooleanToVisibilityConverter}}" 
                        RelativePanel.AlignLeftWith="RegistrationBlock" RelativePanel.Below="RegistrationBlock"/>
@@ -63,7 +61,10 @@
                     </RelativePanel>
                 </RelativePanel>
                 <RelativePanel>
-                    <ContentControl ContentTemplate="{StaticResource DateHeader}" Content="Next free slot" x:Name="NextFreeSlotBlock" 
+                    <RelativePanel.Resources>
+                        <viewModels:CaptionViewModel x:Key="NextFreeSlotCaption" Glyph="&#xE163;" Text="Next free slot" />
+                    </RelativePanel.Resources>
+                    <ContentControl ContentTemplate="{StaticResource GlyphCaption}" Content="{StaticResource NextFreeSlotCaption}" x:Name="NextFreeSlotBlock" 
                                 DataContext="{StaticResource  AppBarBackgroundThemeBrush}"/>
                     <RelativePanel x:Name="NextFreeDateBlock" RelativePanel.AlignLeftWith="NextFreeSlotBlock" RelativePanel.Below="NextFreeSlotBlock"
                                Visibility="{Binding ShowQuickReservationSucceess, Converter={StaticResource InverseBooleanToVisibilityConverter}}">

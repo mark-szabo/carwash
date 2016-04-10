@@ -20,6 +20,13 @@
                     <Converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
                     <ImageBrush ImageSource="ms-appx:///Assets/background.png" x:Key="BackgroundImage"
                                 Stretch="UniformToFill"/>
+                    <DataTemplate x:Key="GlyphCaption">
+                        <StackPanel Orientation="Horizontal">
+                            <FontIcon x:Name="CalendarGlyph" FontSize="24" Glyph="{Binding Glyph}" MirroredWhenRightToLeft="True" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding Text}"  Margin="12"
+					RelativePanel.AlignLeftWithPanel="True" />
+                        </StackPanel>
+                    </DataTemplate>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

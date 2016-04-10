@@ -45,6 +45,7 @@
     <Compile Include="Reservation.cs" />
     <Compile Include="ReservationViewModels.cs" />
     <Compile Include="ServiceEnum.cs" />
+    <Compile Include="Settings.cs" />
     <Compile Include="User.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />

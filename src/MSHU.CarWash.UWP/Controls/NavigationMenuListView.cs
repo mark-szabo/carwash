@@ -240,6 +240,13 @@ namespace MSHU.CarWash.UWP.Controls
         /// </summary>
         private void OnPaneToggled()
         {
+            // ItemsPanelRoot can be at startup
+            // (e.g. if we hide the menu)
+            if(this.ItemsPanelRoot == null)
+            {
+                return;
+            }
+
             if (this.splitViewHost.IsPaneOpen)
             {
                 this.ItemsPanelRoot.ClearValue(FrameworkElement.WidthProperty);

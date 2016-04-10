@@ -256,5 +256,37 @@ namespace MSHU.CarWash.UWP.ServiceClient
             return null;
         }
 
+        /// <summary>
+        /// Saves settings for the current user.
+        /// </summary>
+        /// <param name="settings">Settings to save</param>
+        /// <returns>True if succeeded</returns>
+        public static async Task<bool> SaveSettings(Settings setting, string token)
+        {
+            // Create an HTTP client and add the token to the Authorization header
+            HttpClient httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+
+            Uri requestURI = new Uri(s_BaseUrl + "/api/Employees/SaveSettings");
+            string reservationJSON = Newtonsoft.Json.JsonConvert.SerializeObject(setting);
+
+            HttpContent content = new StringContent(reservationJSON, Encoding.UTF8, "application/json");
+            HttpResponseMessage httpResponse = await httpClient.PostAsync(requestURI, content);
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                return true;
+            }
+            else
+            {
+                Windows.UI.Popups.MessageDialog dialog =
+                    new Windows.UI.Popups.MessageDialog(string.Format("{0}\n{1}", httpResponse.StatusCode.ToString(),
+                    await httpResponse.Content.ReadAsStringAsync()));
+
+                await dialog.ShowAsync();
+            }
+            return false;
+
+        }
     }
 }

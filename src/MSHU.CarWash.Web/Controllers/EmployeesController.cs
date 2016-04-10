@@ -103,6 +103,28 @@ namespace MSHU.CarWash.Controllers
             return Ok(ret);
         }
 
+        /// <summary>
+        /// Saves settings for the current user.
+        /// </summary>
+        /// <param name="settings">Settings to save</param>
+        /// <returns>True if succeeded</returns>
+        public async Task<IHttpActionResult> SaveSettings(MSHU.CarWash.DomainModel.Settings settings)
+        {
+            var currentUser = UserHelper.GetCurrentUser();
+
+            Employee employee = await _db.Employees.FindAsync(currentUser.Id);
+
+            if (employee == null)
+                return NotFound();
+
+            // apply settings
+            employee.VehiclePlateNumber = settings.DefaultNumberPlate;
+
+            await _db.SaveChangesAsync();
+
+            return Ok();
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
