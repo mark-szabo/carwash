@@ -7,18 +7,17 @@
     xmlns:views="using:MSHU.CarWash.UWP.Views"
     xmlns:viewModels="using:MSHU.CarWash.UWP.ViewModels"
     xmlns:Converters="using:MSHU.CarWash.UWP.Converters"
+    xmlns:Interactivity="using:Microsoft.Xaml.Interactivity" xmlns:Core="using:Microsoft.Xaml.Interactions.Core"
+    xmlns:Media="using:Microsoft.Xaml.Interactions.Media"
     x:Class="MSHU.CarWash.UWP.Views.SettingsPage"
+    x:Name="SettigsPageControl"
     mc:Ignorable="d"
     d:DataContext="{Binding Source={d:DesignInstance IsDesignTimeCreatable=True, Type=viewModels:SettingsViewModel}}"
     >
 
 
-    <views:BasePage.Resources>
-    </views:BasePage.Resources>
-
-
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-          Background="{StaticResource BackgroundImage}">
+		Background="{StaticResource BackgroundImage}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
@@ -29,21 +28,21 @@
         </Grid.RowDefinitions>
         <views:SignOutControl Grid.Row="0"/>
         <RelativePanel x:Name="FirstLaunchAlert"  Grid.Row="1" Padding="8"
-                       Visibility="{Binding FirstLaunch, Converter={StaticResource BooleanToVisibilityConverter}}">
+			Visibility="{Binding FirstLaunch, Converter={StaticResource BooleanToVisibilityConverter}}">
             <RelativePanel.Background>
                 <SolidColorBrush Color="#FFFF5050" Opacity="0.8"/>
             </RelativePanel.Background>
             <FontIcon x:Name="AlertGlyph" FontSize="32" Glyph="&#xE8C9;" 
-                      MirroredWhenRightToLeft="True"
-                      RelativePanel.AlignLeftWithPanel="True"
-                      RelativePanel.AlignVerticalCenterWithPanel="True"/>
+				MirroredWhenRightToLeft="True"
+				RelativePanel.AlignLeftWithPanel="True"
+				RelativePanel.AlignVerticalCenterWithPanel="True"/>
             <TextBlock x:Name="FirstLaunchHint"
-                       Text="Before you start using this application, please fill-in this form."
-                       TextWrapping="WrapWholeWords"
-                       Style="{StaticResource BodyTextBlockStyle}"
-                       RelativePanel.RightOf="AlertGlyph"
-                       RelativePanel.AlignVerticalCenterWithPanel="True"
-                       TextAlignment="Justify"/>
+				Text="Before you start using this application, please fill-in this form."
+				TextWrapping="WrapWholeWords"
+				Style="{StaticResource BodyTextBlockStyle}"
+				RelativePanel.RightOf="AlertGlyph"
+				RelativePanel.AlignVerticalCenterWithPanel="True"
+				TextAlignment="Justify"/>
         </RelativePanel>
         <Viewbox Grid.Column="0" Grid.Row="2" StretchDirection="DownOnly">
             <StackPanel Padding="10" Margin="12">
@@ -60,22 +59,22 @@
                         <viewModels:CaptionViewModel x:Key="NumberPlateCaption" Glyph="&#xE804;" Text="Default number plate" />
                     </RelativePanel.Resources>
                     <ContentControl x:Name="NumberPlateCaption" 
-                                    ContentTemplate="{StaticResource GlyphCaption}" 
-                                    Content="{StaticResource NumberPlateCaption}" 
-                                    DataContext="{StaticResource AppBarBackgroundThemeBrush}"
-                                    RelativePanel.AlignTopWithPanel="True"
-                                    RelativePanel.AlignLeftWithPanel="True"/>
-                    <TextBox x:Name="NumberPlateBox"
-                        RelativePanel.AlignLeftWithPanel="True"
-                             RelativePanel.Below="NumberPlateCaption"
-                             MinWidth="160" PlaceholderText="ABC-123"
-                             Text="{Binding DefaultNumberPlate, Mode=TwoWay}"
+						ContentTemplate="{StaticResource GlyphCaption}" 
+						Content="{StaticResource NumberPlateCaption}" 
+						DataContext="{StaticResource AppBarBackgroundThemeBrush}"
+						RelativePanel.AlignTopWithPanel="True"
+						RelativePanel.AlignLeftWithPanel="True"/>
+                    <TextBox x:Name="NumberPlateBox" 
+                             RelativePanel.AlignLeftWithPanel="True"
+						     RelativePanel.Below="NumberPlateCaption"
+						     MinWidth="160" PlaceholderText="ABC-123"
+						     Text="{Binding DefaultNumberPlate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              />
                     <Button RelativePanel.AlignRightWithPanel="True" 
-                            RelativePanel.Below="NumberPlateBox"
-                            Content="Save"
-                            Margin="5"
-                            Command="{Binding SaveCommand, Mode=TwoWay}"
+						RelativePanel.Below="NumberPlateBox"
+						Content="Save"
+						Margin="5"
+						Command="{Binding SaveCommand, Mode=TwoWay}"
                             />
                 </RelativePanel>
             </StackPanel>
