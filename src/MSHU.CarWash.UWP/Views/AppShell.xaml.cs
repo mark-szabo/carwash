@@ -382,5 +382,11 @@ namespace MSHU.CarWash.UWP.Views
                 }
             }
         }
+
+        internal void GoBack()
+        {
+            bool ignored = false;
+            BackRequested(ref ignored);
+        }
     }
 }
