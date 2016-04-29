@@ -147,8 +147,8 @@
     <Compile Include="Views\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\RegistrationsPage.xaml.cs">
-      <DependentUpon>RegistrationsPage.xaml</DependentUpon>
+    <Compile Include="Views\ReservationsPage.xaml.cs">
+      <DependentUpon>ReservationsPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\SignOutControl.xaml.cs">
       <DependentUpon>SignOutControl.xaml</DependentUpon>
@@ -222,7 +222,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\RegistrationsPage.xaml">
+    <Page Include="Views\ReservationsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

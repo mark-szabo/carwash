@@ -258,7 +258,7 @@ namespace MSHU.CarWash.UWP.ViewModels
 
         private void HandleQuickReserveExtraCommand(object obj)
         {
-            AppShell.Current.AppFrame.Navigate(typeof(RegistrationsPage), nextFreeSlotDate.Value);
+            AppShell.Current.AppFrame.Navigate(typeof(ReservationsPage), nextFreeSlotDate.Value);
         }
 
         private async void HandleQuickReserveCommand(object obj)

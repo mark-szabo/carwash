@@ -38,8 +38,8 @@ namespace MSHU.CarWash.UWP.Views
                 new NavigationMenuItem()
                 {
                     Symbol = Symbol.Calendar,
-                    Label = "Registrations",
-                    DestPage = typeof(RegistrationsPage)
+                    Label = "Reservations",
+                    DestPage = typeof(ReservationsPage)
                 },
                 // Settings
                 new NavigationMenuItem()
