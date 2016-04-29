@@ -67,7 +67,7 @@
                     <ContentControl ContentTemplate="{StaticResource GlyphCaption}" Content="{StaticResource NextFreeSlotCaption}" x:Name="NextFreeSlotBlock" 
                                 DataContext="{StaticResource  AppBarBackgroundThemeBrush}"/>
                     <RelativePanel x:Name="NextFreeDateBlock" RelativePanel.AlignLeftWith="NextFreeSlotBlock" RelativePanel.Below="NextFreeSlotBlock"
-                               Visibility="{Binding ShowQuickReservationSucceess, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                               Visibility="{Binding ShowQuickReservationControls, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <TextBlock x:Name="NextFreeDateTextBlock" Text="{Binding NextFreeSlotDateString}" 
 					Style="{StaticResource TitleTextBlockStyle}" FontWeight="Bold" />
                         <Button Name="ReserveButton" Margin="12, 0" RelativePanel.RightOf="NextFreeDateTextBlock" RelativePanel.AlignVerticalCenterWith="NextFreeDateTextBlock"
@@ -87,8 +87,12 @@
                     <TextBlock Text="Reservation succeeded" Style="{StaticResource TitleTextBlockStyle}" RelativePanel.AlignHorizontalCenterWithPanel="True"
                            RelativePanel.Below="NextFreeSlotBlock"
                            FontWeight="Bold"
-                           Visibility="{Binding ShowQuickReservationSucceess, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                           Visibility="{Binding ShowQuickReservationSuccess, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
+                    <TextBlock Text="Maximum limit reached" Style="{StaticResource TitleTextBlockStyle}" RelativePanel.AlignHorizontalCenterWithPanel="True"
+                           RelativePanel.Below="NextFreeSlotBlock"
+                           FontWeight="Bold"
+                           Visibility="{Binding ShowReservationLimitReached, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                 </RelativePanel>
             </StackPanel>
         </Viewbox>

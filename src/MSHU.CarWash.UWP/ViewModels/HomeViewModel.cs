@@ -188,16 +188,50 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// </summary>
         public RelayCommand QuickReserveCommand { get; set; }
 
-        private bool showQuickReservationSucceess;
-        public bool ShowQuickReservationSucceess
+        private bool showQuickReservationSuccess;
+        public bool ShowQuickReservationSuccess
         {
-            get { return showQuickReservationSucceess; }
+            get { return showQuickReservationSuccess; }
             set
             {
-                showQuickReservationSucceess = value;
-                OnPropertyChanged(nameof(ShowQuickReservationSucceess));
+                showQuickReservationSuccess = value;
+                OnPropertyChanged(nameof(ShowQuickReservationSuccess));
             }
         }
+
+        public bool ShowReservationLimitReached
+        {
+            get { return showReservationLimitReached; }
+            set
+            {
+                showReservationLimitReached = value;
+                OnPropertyChanged(nameof(ShowReservationLimitReached));
+            }
+        }
+        private bool showReservationLimitReached;
+
+        public bool ShowQuickReservationControls
+        {
+            get
+            {
+                // we depend on two other properties, so let's subscribe to them
+                if(!showQuickReservationControlsSetup)
+                {
+                    PropertyChanged += (sender, args) =>
+                    {
+                        if (args.PropertyName == nameof(ShowReservationLimitReached) ||
+                            args.PropertyName == nameof(ShowReservationLimitReached))
+                        {
+                            OnPropertyChanged(nameof(ShowQuickReservationControls));
+                        }
+                    };
+                    showQuickReservationControlsSetup = true;
+                }
+                return !ShowReservationLimitReached && !ShowQuickReservationSuccess;
+            }
+        }
+        private bool showQuickReservationControlsSetup;
+
 
         /// <summary>
         /// Gets or sets the QuickReserveCommand.
@@ -221,6 +255,8 @@ namespace MSHU.CarWash.UWP.ViewModels
                 NumberPlate = "MS-0001";
                 nextFreeSlotDateString = (DateTime.Now + TimeSpan.FromDays(4)).ToString(CultureInfo.CurrentUICulture.DateTimeFormat.ShortDatePattern);
                 nextFreeSlotAvailable = true;
+
+                ShowQuickReservationSuccess = false;
                 return;
             }
             if (App.AuthenticationManager.IsUserAuthenticated)
@@ -253,7 +289,7 @@ namespace MSHU.CarWash.UWP.ViewModels
 
             // in case we still had the success feedback there - let's remove it to make
             // a new quick reservation possible
-            ShowQuickReservationSucceess = false;
+            ShowQuickReservationSuccess = false;
         }
 
         private void HandleQuickReserveExtraCommand(object obj)
@@ -276,7 +312,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             bool result = await ServiceClient.ServiceClient.SaveReservation(reservation, App.AuthenticationManager.BearerAccessToken);
             if(result)
             {
-                ShowQuickReservationSucceess = true;
+                ShowQuickReservationSuccess = true;
                 RequestServiceCommand.Execute(null);
                 GetNextFreeSlotCommand.Execute(null);
             }
@@ -315,6 +351,15 @@ namespace MSHU.CarWash.UWP.ViewModels
                     NumberPlate = result.ReservationsByDayActive[0].Reservations[0].VehiclePlateNumber;
                     ReservationDateString = GetSmartDateString(result.ReservationsByDayActive[0].Day);
                     reservationID = result.ReservationsByDayActive[0].Reservations[0].ReservationId;
+                    if (result.ReservationsByDayActive.Count >= 2)
+                    {
+                        ShowReservationLimitReached = true;
+                    }
+                    else
+                    {
+                        ShowReservationLimitReached = false;
+                    }
+
                 }
             }
 
