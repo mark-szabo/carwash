@@ -201,7 +201,22 @@ namespace MSHU.CarWash.UWP.ViewModels
 
         public bool ShowReservationLimitReached
         {
-            get { return showReservationLimitReached; }
+            get
+            {
+                // we depend on two other properties, so let's subscribe to them
+                if (!showReservationLimitReachedSetup)
+                {
+                    PropertyChanged += (sender, args) =>
+                    {
+                        if (args.PropertyName == nameof(ShowQuickReservationSuccess))
+                        {
+                            OnPropertyChanged(nameof(ShowReservationLimitReached));
+                        }
+                    };
+                    showReservationLimitReachedSetup = true;
+                }
+                return showReservationLimitReached && !ShowQuickReservationSuccess;
+            }
             set
             {
                 showReservationLimitReached = value;
@@ -209,6 +224,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
         }
         private bool showReservationLimitReached;
+        private bool showReservationLimitReachedSetup;
 
         public bool ShowQuickReservationControls
         {
