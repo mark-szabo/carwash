@@ -28,6 +28,7 @@ namespace MSHU.CarWash.Controllers
         private readonly int _slotsPerDay;
         private readonly Dictionary<DateTime, int> _exceptionalDays;
         private readonly int _monthlyLimitPerPerson;
+        private readonly int _reservationLimitPerPerson;
         #endregion private fields
 
         public CalendarController()
@@ -45,6 +46,7 @@ namespace MSHU.CarWash.Controllers
                 }
             }
             _monthlyLimitPerPerson = Convert.ToInt32(ConfigurationManager.AppSettings["MontlySlotLimitPerPerson"]);
+            _reservationLimitPerPerson = 2;
         }
 
         [HttpGet]
@@ -524,6 +526,38 @@ namespace MSHU.CarWash.Controllers
 
             // Return the number of available slots.
             return Json(availableSlots);
+        }
+
+        /// <summary>
+        /// Checks if the current user can create new reservation (limit has not been exceeded).
+        /// </summary>
+        /// <returns>True, if the user allowed to create a new reservation.</returns>
+        [HttpGet]
+        [ResponseType(typeof(bool))]
+        public async Task<IHttpActionResult> NewReservationAvailable()
+        {
+            bool result = false;
+
+            var currentUser = UserHelper.GetCurrentUser();
+            DateTime day = DateTime.Today;
+
+            if (!currentUser.IsAdmin)
+            {
+                #region  Check the number of open reservations
+                var query = from b in _db.Reservations.Include(i => i.Employee)
+                            where b.Date >= day && b.EmployeeId == currentUser.Id
+                            orderby b.Date
+                            select b;
+                var queryResult = await query.ToListAsync();
+                if (queryResult.Count < _reservationLimitPerPerson)
+                {
+                    result = true;
+                }
+                #endregion
+            }
+
+            // Return the number of available slots.
+            return Json(result);
         }
 
         protected override void Dispose(bool disposing)

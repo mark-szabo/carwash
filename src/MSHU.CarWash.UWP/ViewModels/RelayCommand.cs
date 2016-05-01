@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Windows.Foundation;
 
 namespace MSHU.CarWash.UWP.ViewModels
 {
@@ -14,8 +15,9 @@ namespace MSHU.CarWash.UWP.ViewModels
     public class RelayCommand : ICommand
     {
         private readonly Action<object> _execute;
-        private readonly Func<bool> _canExecute;
+        private readonly Func<object, bool> _canExecute;
         private readonly Task _executeAsync;
+        private Func<object, Task<bool>> _canExecuteAsync;
 
         /// <summary>
         /// Raised when RaiseCanExecuteChanged is called.
@@ -27,7 +29,7 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// </summary>
         /// <param name="execute">The execution logic.</param>
         public RelayCommand(Action<object> execute)
-            : this(execute, null)
+            : this(execute, (Func<object, bool>)null)
         {
         }
 
@@ -36,10 +38,10 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// </summary>
         /// <param name="execute">The execution logic.</param>
         /// <param name="canExecute">The execution status logic.</param>
-        public RelayCommand(Action<object> execute, Func<bool> canExecute)
+        public RelayCommand(Action<object> execute, Func<object, bool> canExecute)
         {
             if (execute == null)
-                throw new ArgumentNullException("execute");
+                throw new ArgumentNullException(nameof(execute));
             _execute = execute;
             _canExecute = canExecute;
         }
@@ -48,7 +50,7 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// Creates a new command that can always execute.
         /// </summary>
         /// <param name="execute">The execution logic.</param>
-        public RelayCommand(Task execute) : this(execute, null)
+        public RelayCommand(Task execute) : this(execute, (Func<object, Task<bool>>)null)
         {
         }
 
@@ -57,15 +59,35 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// </summary>
         /// <param name="execute">The execution logic.</param>
         /// <param name="canExecute">The execution status logic.</param>
-        public RelayCommand(Task execute, Func<bool> canExecute)
+        public RelayCommand(Task execute, Func<object, bool> canExecute)
         {
             if (execute == null)
             {
-                throw new ArgumentNullException("execute");
+                throw new ArgumentNullException(nameof(execute));
             }
             _executeAsync = execute;
             _canExecute = canExecute;
         }
+
+        public RelayCommand(Action<object> execute, Func<object, Task<bool>> canExecute) : this(execute)
+        {
+            if (execute == null)
+            {
+                throw new ArgumentNullException(nameof(execute));
+            }
+            _canExecuteAsync = canExecute;
+        }
+
+        public RelayCommand(Task execute, Func<object, Task<bool>> canExecute)
+        {
+            if (execute == null)
+            {
+                throw new ArgumentNullException(nameof(execute));
+            }
+            _executeAsync = execute;
+            _canExecuteAsync = canExecute;
+        }
+
 
         /// <summary>
         /// Determines whether this <see cref="RelayCommand"/> can execute in its current state.
@@ -76,7 +98,19 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// <returns>true if this command can be executed; otherwise, false.</returns>
         public bool CanExecute(object parameter)
         {
-            return _canExecute == null ? true : _canExecute();
+            return _canExecute == null ? true : _canExecute(parameter);
+        }
+
+        public async Task<bool> CanExecuteAsync(object parameter)
+        {
+            if (_canExecuteAsync != null)
+            {
+                return await _canExecuteAsync(parameter);
+            }
+            else
+            {
+                return true;
+            }
         }
 
         /// <summary>

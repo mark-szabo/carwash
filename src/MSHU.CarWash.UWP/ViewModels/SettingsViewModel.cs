@@ -49,7 +49,9 @@ namespace MSHU.CarWash.UWP.ViewModels
 
         public SettingsViewModel()
         {
-            SaveCommand = new RelayCommand(async o => await HandleSaveCommand(), CanExecuteSaveCommand);
+            SaveCommand = new RelayCommand(
+                async o => await HandleSaveCommand(), 
+                (Func<object, bool>)CanExecuteSaveCommand);
             // Subscribe to the PropertyChanged event. If the DefaultNumberPlate
             // property changes we must fire the CanExecuteChanged event on the
             // SaveCommand otherwise the UWP's CommandManager doesn't
@@ -76,7 +78,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
         }
 
-        private bool CanExecuteSaveCommand()
+        private bool CanExecuteSaveCommand(object param)
         {
             bool result = false;
             // If DefaultNumberPlate property has a string a value and it has the correct format

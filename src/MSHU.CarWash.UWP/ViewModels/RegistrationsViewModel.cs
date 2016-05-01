@@ -12,6 +12,7 @@ namespace MSHU.CarWash.UWP.ViewModels
     public class RegistrationsViewModel : BaseViewModel
     {
         private static readonly int NUMBEROFWEEKS = 6;
+        private static readonly string LIMITEXCEEDED = "You have reached the reservation limit!";
 
         /// <summary>
         /// Holds a reference to the ReservationViewModel. It is used for looking
@@ -35,6 +36,8 @@ namespace MSHU.CarWash.UWP.ViewModels
         private bool _initializing;
 
         private DateTime _currentMonth;
+
+        private string _feedback;
 
         /// <summary>
         /// Private fields holds a reference to the reservation instance.
@@ -242,6 +245,20 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// </summary>
         public RelayCommand NextPeriodCommand { get; set; }
 
+        public string Feedback
+        {
+            get
+            {
+                return _feedback;
+            }
+
+            set
+            {
+                _feedback = value;
+                OnPropertyChanged(nameof(Feedback));
+            }
+        }
+
         public RegistrationsViewModel()
         {
             UseDetailsView = false;
@@ -254,7 +271,8 @@ namespace MSHU.CarWash.UWP.ViewModels
             ActivateDetailsCommand = new RelayCommand(ExecuteActivateDetailsCommand);
 
             // Create the CreateReservationCommand.
-            CreateReservationCommand = new RelayCommand(ExecuteCreateReservationCommand);
+            CreateReservationCommand = new RelayCommand(ExecuteCreateReservationCommand,
+                async param => await CanExecuteCreateReservationCommand(param));
 
             // Create the CancelReservationChangesCommand.
             CancelReservationChangesCommand = new RelayCommand(ExecuteCancelReservationChangesCommand);
@@ -263,7 +281,8 @@ namespace MSHU.CarWash.UWP.ViewModels
             SaveReservationChangesCommand = new RelayCommand(ExecuteSaveReservationChangesCommand);
 
             // Create the DeleteReservationCommand.
-            DeleteReservationCommand = new RelayCommand(ExecuteDeleteReservationCommand, CanExecuteDeleteReservationCommand);
+            DeleteReservationCommand = new RelayCommand(ExecuteDeleteReservationCommand, 
+                (Func<object, bool>)CanExecuteDeleteReservationCommand);
 
             // Create the PreviousPeriodCommand.
             PreviousPeriodCommand = new RelayCommand(ExecutePreviousPeriodCommand);
@@ -430,7 +449,7 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// for data binding UI elements.
         /// </summary>
         /// <param name="param"></param>
-        private void ExecuteActivateDetailsCommand(object param)
+        private async void ExecuteActivateDetailsCommand(object param)
         {
             DateTimeOffset selectedDate = (DateTimeOffset)param;
             if (selectedDate.CompareTo(DateTimeOffset.Now.Date) < 0)
@@ -451,9 +470,59 @@ namespace MSHU.CarWash.UWP.ViewModels
                 // Check if the user has reservation for the selected date.
                 CurrentReservation = SelectedDayDetails.Reservations.Find(
                     x => x.EmployeeId.Equals(App.AuthenticationManager.UserData.DisplayableId));
+                // If the user doesn't have reservation for the selected date then let's find out
+                // if the user can create a new one.
+                if (CurrentReservation == null)
+                {
+                    await CreateNewReservationIfPossible(CreateReservationCommand, selectedDate, this);
+                }
+            }
+            else
+            {
+                // If there's no reservation for the selected date then let's find out
+                // if the user can create a new one.
+                if (CurrentReservation == null)
+                {
+                    await CreateNewReservationIfPossible(CreateReservationCommand, selectedDate, this);
+                }
             }
 
             UseDetailsView = true;
+        }
+
+        private static async Task CreateNewReservationIfPossible(
+            RelayCommand createReservationCommand,
+            DateTimeOffset selectedDate,
+            RegistrationsViewModel vm)
+        {
+            bool? reservationAvailable =
+                await ServiceClient.ServiceClient.NewReservationAvailable(App.AuthenticationManager.BearerAccessToken);
+            if (reservationAvailable.HasValue && reservationAvailable.Value)
+            {
+                bool canExecute = await createReservationCommand.CanExecuteAsync(selectedDate);
+                // Execute the C
+                if (canExecute)
+                {
+                    createReservationCommand.Execute(selectedDate);
+                }
+            }
+            else
+            {
+                vm.Feedback = LIMITEXCEEDED;
+            }
+        }
+
+        private async Task<bool> CanExecuteCreateReservationCommand(object param)
+        {
+            bool result = false;
+            bool? canCreateNewReservation = await ServiceClient.ServiceClient.NewReservationAvailable(
+                App.AuthenticationManager.BearerAccessToken);
+            if (CurrentReservation == null && canCreateNewReservation.HasValue &&
+                canCreateNewReservation.Value)
+            {
+                result = true;
+            }
+            return result;
         }
 
         private void ExecuteCreateReservationCommand(object param)
@@ -506,7 +575,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
         }
 
-        private bool CanExecuteDeleteReservationCommand()
+        private bool CanExecuteDeleteReservationCommand(object param)
         {
             return CurrentReservation?.IsDeletable ?? false;
         }
@@ -536,6 +605,7 @@ namespace MSHU.CarWash.UWP.ViewModels
                 // Let the user interface update the number of free slots on the
                 // master view.
                 OnPropertyChanged(nameof(FreeSlots));
+                this.Feedback = string.Empty;
             }
         }
 
