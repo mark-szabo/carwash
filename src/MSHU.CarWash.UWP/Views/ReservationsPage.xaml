@@ -29,16 +29,21 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CalendarViewDayItem">
-                        <StackPanel VerticalAlignment="Bottom"
+                        <RelativePanel>
+                            <Ellipse RelativePanel.AlignTopWithPanel="True" Width="10" Height="10"
+                                     RelativePanel.AlignLeftWithPanel="True" Margin="4"
+                                     x:Name="StatusControl" />
+                            <StackPanel RelativePanel.AlignBottomWithPanel="True" VerticalAlignment="Bottom"
                                     DataContext="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}"
                                     Visibility="{Binding Path=IsBlackout, RelativeSource={RelativeSource Mode=TemplatedParent}, Converter={StaticResource inverseBool2VisibilityConverter}}">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <TextBlock x:Name="FreeSlotsTextBox" FontSize="11" 
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <TextBlock x:Name="FreeSlotsTextBox" FontSize="11" Margin="4,0,0,0"
                                            />
-                                <!--Text="{Binding Converter={StaticResource dayItemConverter}, ConverterParameter={Binding}}"-->
-                                <TextBlock Text=" free slot(s)" FontSize="11"/>
+                                    <!--Text="{Binding Converter={StaticResource dayItemConverter}, ConverterParameter={Binding}}"-->
+                                    <TextBlock Text=" free slot(s)" FontSize="11"/>
+                                </StackPanel>
                             </StackPanel>
-                        </StackPanel>
+                        </RelativePanel>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>

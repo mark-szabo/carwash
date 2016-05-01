@@ -15,6 +15,18 @@ namespace MSHU.CarWash.UWP.ViewModels
         private static readonly int NUMBEROFWEEKS = 6;
         private static readonly string LIMITEXCEEDED = "You have reached the reservation limit!";
 
+        public enum StatusValue
+        {
+            // For past dates and weekends
+            NotAvailable,
+            // For days that have free slots
+            Available,
+            // For days that the user has reservation on
+            Reserved,
+            // No more free slot
+            BookedUp
+        }
+
         /// <summary>
         /// Holds a reference to the ReservationViewModel. It is used for looking
         /// up the number of reservations for a given date.
@@ -279,6 +291,11 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
         }
 
+        /// <summary>
+        /// Helper property for the status feedback on the daily level.
+        /// </summary>
+        public object DayStatus => this;
+
         public RegistrationsViewModel()
         {
             UseDetailsView = false;
@@ -364,6 +381,7 @@ namespace MSHU.CarWash.UWP.ViewModels
                 }
                 _requestedDates.Remove(requestedDay);
                 OnPropertyChanged(nameof(FreeSlots));
+                OnPropertyChanged(nameof(DayStatus));
             }
         }
 
@@ -434,6 +452,7 @@ namespace MSHU.CarWash.UWP.ViewModels
                 key = key.AddDays(1);
             }
             OnPropertyChanged(nameof(FreeSlots));
+            OnPropertyChanged(nameof(DayStatus));
             _initializing = false;
         }
 
@@ -579,6 +598,14 @@ namespace MSHU.CarWash.UWP.ViewModels
                 App.AuthenticationManager.BearerAccessToken);
             if (result)
             {
+                // Update the slot number cache
+                int count;
+                bool success = int.TryParse(_freeSlotsByDate[_currentDate.Date], out count);
+                if (success)
+                {
+                    _freeSlotsByDate[_currentDate.Date] = (--count).ToString();
+                }
+
                 // If the user has changed the plate number then refresh the CurrentEmployee instance 
                 // at the AuthenticationManager.
                 if (CurrentReservation.VehiclePlateNumber != App.AuthenticationManager.CurrentEmployee.VehiclePlateNumber)
@@ -590,7 +617,8 @@ namespace MSHU.CarWash.UWP.ViewModels
                     App.AuthenticationManager.BearerAccessToken);
                 if (_rmv != null)
                 {
-                    OnPropertyChanged("FreeSlots");
+                    OnPropertyChanged(nameof(FreeSlots));
+                    OnPropertyChanged(nameof(DayStatus));
 
                     // request subscribing view to do a smart go back
                     SmartGoBackRequested?.Invoke(this, null);
@@ -623,11 +651,20 @@ namespace MSHU.CarWash.UWP.ViewModels
                 // Remove the current reservation.
                 reservationByCurrentDate.Reservations.RemoveAll(
                     x => x.ReservationId == _currentReservation.ReservationId);
+
+                int count;
+                bool success = int.TryParse(_freeSlotsByDate[_currentDate.Date], out count);
+                if (success)
+                {
+                    _freeSlotsByDate[_currentDate.Date] = (++count).ToString();
+                }
+
                 // Reset the current reservation instance.
                 CurrentReservation = null;
                 // Let the user interface update the number of free slots on the
                 // master view.
                 OnPropertyChanged(nameof(FreeSlots));
+                OnPropertyChanged(nameof(DayStatus));
                 this.Feedback = string.Empty;
             }
         }
@@ -656,6 +693,78 @@ namespace MSHU.CarWash.UWP.ViewModels
             _currentMonth = _currentMonth.AddMonths(1);
             var lastDayOfMonth = _currentMonth.AddMonths(1).AddDays(-1);
             GetFreeSlotNumberForTimeInterval(_currentMonth, lastDayOfMonth);
+        }
+
+        public StatusValue GetStatus(DateTimeOffset date)
+        {
+            StatusValue result = StatusValue.NotAvailable;
+
+            // Check if the date is in the past.
+            if (date < DateTimeOffset.Now.Date)
+            {
+                result = StatusValue.NotAvailable;
+            }
+            // Check if the date is on a weekend.
+            else if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
+            {
+                result = StatusValue.NotAvailable;
+            }
+            // Check if there are available slots.
+            else
+            {
+                // Check if the user has a reservation on the given day.
+                //if (_rmv.ReservationsByDayActive.)
+                bool hasReservation = false;
+                if (_rmv?.ReservationsByDayActive != null)
+                {
+                    ReservationDayDetailsViewModel selectedDayDetails =
+                            _rmv.ReservationsByDayActive.Find(x => x.Day.Equals(date.Date));
+                    if (selectedDayDetails != null)
+                    {
+                        // Check if the user has reservation for the selected date.
+                        ReservationDayDetailViewModel currentReservation =
+                            selectedDayDetails.Reservations.Find(
+                                x => x.EmployeeId.Equals(App.AuthenticationManager.UserData.DisplayableId));
+                        // If the user has reservation for the selected date then we return
+                        // StatusValue.Reserved
+                        if (currentReservation != null)
+                        {
+                            hasReservation = true;
+                            result = StatusValue.Reserved;
+                        }
+                    }
+                }
+
+                if (!hasReservation)
+                {
+                    // If we don't have the number of available slots for the given date
+                    // we return StatusValue.NotAvailable
+                    if (!_freeSlotsByDate.ContainsKey(date.Date))
+                    {
+                        result = StatusValue.NotAvailable;
+                    }
+                    else
+                    {
+                        int slotCount;
+                        bool success = int.TryParse(_freeSlotsByDate[date.Date], out slotCount);
+                        if (success)
+                        {
+                            // If we have at least 1 free slot...
+                            if (slotCount > 0)
+                            {
+                                result = StatusValue.Available;
+                            }
+                            else
+                            {
+                                // No more slots...
+                                result = StatusValue.BookedUp;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return result;
         }
     }
 }
