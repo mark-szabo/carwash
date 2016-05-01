@@ -18,6 +18,11 @@ namespace MSHU.CarWash.UWP.Views
     {
         private static CalendarViewDayItemConverter _converter;
 
+        /// <summary>
+        /// True if user caused switch from master to detail view.
+        /// </summary>
+        private bool comingFromMasterView;
+
         public ReservationsPage()
         {
             _converter = new CalendarViewDayItemConverter();
@@ -34,10 +39,28 @@ namespace MSHU.CarWash.UWP.Views
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
+            (ViewModel as RegistrationsViewModel).SmartGoBackRequested += ReservationsPage_SmartGoBackRequested;
             if (e.Parameter is DateTime)
             {
                 (ViewModel as RegistrationsViewModel).CreateReservationCommand.Execute(e.Parameter);
                 (ViewModel as RegistrationsViewModel).UseDetailsView = true;
+            }
+        }
+
+        /// <summary>
+        /// Handles smart go back reqeusts from view
+        /// </summary>
+        private void ReservationsPage_SmartGoBackRequested(object sender, EventArgs e)
+        {
+            if(comingFromMasterView)
+            {
+                // switch to master view
+                (ViewModel as RegistrationsViewModel).UseDetailsView = false;
+            }
+            else
+            {
+                // go back to previous page
+                AppShell.Current.GoBack();
             }
         }
 
@@ -142,6 +165,7 @@ namespace MSHU.CarWash.UWP.Views
         /// <param name="args"></param>
         private void CalendarView_SelectedDatesChanged(CalendarView sender, CalendarViewSelectedDatesChangedEventArgs args)
         {
+            comingFromMasterView = true;
             if (args.AddedDates.Count == 1)
             {
                 DateTimeOffset selectedDate = args.AddedDates[0];
@@ -151,8 +175,7 @@ namespace MSHU.CarWash.UWP.Views
 
         private void GoToMasterViewButton_Click(object sender, RoutedEventArgs e)
         {
-            ((RegistrationsViewModel)ViewModel).UseDetailsView = false;
-
+            ReservationsPage_SmartGoBackRequested(this, null);
         }
     }
 }

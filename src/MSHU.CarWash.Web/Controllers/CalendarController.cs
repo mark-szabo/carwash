@@ -452,11 +452,12 @@ namespace MSHU.CarWash.Controllers
             var from = now.Hour >= 14 ? now.Date.AddDays(1) : now.Date;
             var until = from.AddDays(14);
 
-            var nextReservations = _db.Reservations.Where(r => r.Date >= from && r.Date < until);
+            var currentUser = UserHelper.GetCurrentUser();
+            var nextReservations = await _db.Reservations.Where(r => r.Date >= from && r.Date < until).ToListAsync<Reservation>();
 
             for (var day = from; day < until; day = day.AddDays(1))
             {
-                if(GetAvailableSlots(await nextReservations.ToListAsync<Reservation>(), day) >= 2)
+                if(GetAvailableSlots(nextReservations, day) >= 2)
                 {
                     return day;
                 }
@@ -610,6 +611,7 @@ namespace MSHU.CarWash.Controllers
 
         private int GetAvailableSlots(List<Reservation> queryResult, DateTime date)
         {
+            var currentUser = UserHelper.GetCurrentUser();
             var availableSlots = GetConfiguredAvailableSlotsOnDate(date);
             if (availableSlots > 0)
             {
@@ -624,6 +626,12 @@ namespace MSHU.CarWash.Controllers
                     else
                     {
                         availableSlots = availableSlots - 1;
+                    }
+                    // ...make sure we don't allow 2 reservations for a single day (unless user is admin)
+                    if (item.EmployeeId == currentUser.Id && !currentUser.IsAdmin)
+                    {
+                        availableSlots = 0;
+                        break;
                     }
                 }
             }

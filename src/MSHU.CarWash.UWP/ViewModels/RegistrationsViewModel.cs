@@ -1,5 +1,6 @@
 ﻿using MSHU.CarWash.DomainModel;
 using MSHU.CarWash.DomainModel.Helpers;
+using MSHU.CarWash.UWP.Views;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -38,6 +39,11 @@ namespace MSHU.CarWash.UWP.ViewModels
         private DateTime _currentMonth;
 
         private string _feedback;
+
+        /// <summary>
+        /// Signals if go back to previous view (could be master view or page) is requested
+        /// </summary>
+        public event EventHandler SmartGoBackRequested;
 
         /// <summary>
         /// Private fields holds a reference to the reservation instance.
@@ -541,6 +547,7 @@ namespace MSHU.CarWash.UWP.ViewModels
         private void ExecuteCancelReservationChangesCommand(object param)
         {
             CurrentReservation = null;
+            SmartGoBackRequested?.Invoke(this, null);
         }
 
         private async void ExecuteSaveReservationChangesCommand(object param)
@@ -564,7 +571,9 @@ namespace MSHU.CarWash.UWP.ViewModels
                 if (_rmv != null)
                 {
                     OnPropertyChanged("FreeSlots");
-                    ExecuteActivateDetailsCommand(_currentDate);
+
+                    // request subscribing view to do a smart go back
+                    SmartGoBackRequested?.Invoke(this, null);
                 }
                 // If the user has changed the plate number then refresh the CurrentEmployee instance 
                 // at the AuthenticationManager.
