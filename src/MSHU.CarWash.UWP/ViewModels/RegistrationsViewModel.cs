@@ -158,6 +158,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             {
                 _currentReservation = value;
                 OnPropertyChanged(nameof(CurrentReservation));
+                OnPropertyChanged(nameof(CanCreateNewReservation));
                 OnPropertyChanged(nameof(IsEditable));
                 // Set the selected service
                 if (_currentReservation != null)
@@ -174,6 +175,18 @@ namespace MSHU.CarWash.UWP.ViewModels
                     }
                     //OnPropertyChanged("Services");
                 }
+            }
+        }
+
+        /// <summary>
+        /// Helper property that is used at the visibility check for the create new reservation
+        /// button.
+        /// </summary>
+        public bool CanCreateNewReservation
+        {
+            get
+            {
+                return CurrentReservation == null && string.IsNullOrEmpty(Feedback);
             }
         }
 
@@ -262,6 +275,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             {
                 _feedback = value;
                 OnPropertyChanged(nameof(Feedback));
+                OnPropertyChanged(nameof(CanCreateNewReservation));
             }
         }
 
@@ -565,6 +579,12 @@ namespace MSHU.CarWash.UWP.ViewModels
                 App.AuthenticationManager.BearerAccessToken);
             if (result)
             {
+                // If the user has changed the plate number then refresh the CurrentEmployee instance 
+                // at the AuthenticationManager.
+                if (CurrentReservation.VehiclePlateNumber != App.AuthenticationManager.CurrentEmployee.VehiclePlateNumber)
+                {
+                    App.AuthenticationManager.RefreshCurrentUser();
+                }
                 // Refresh the ReservationViewModel reference.
                 _rmv = await ServiceClient.ServiceClient.GetReservations(
                     App.AuthenticationManager.BearerAccessToken);
@@ -574,12 +594,6 @@ namespace MSHU.CarWash.UWP.ViewModels
 
                     // request subscribing view to do a smart go back
                     SmartGoBackRequested?.Invoke(this, null);
-                }
-                // If the user has changed the plate number then refresh the CurrentEmployee instance 
-                // at the AuthenticationManager.
-                if (CurrentReservation.VehiclePlateNumber != App.AuthenticationManager.CurrentEmployee.VehiclePlateNumber)
-                {
-                    App.AuthenticationManager.RefreshCurrentUser();
                 }
             }
         }
