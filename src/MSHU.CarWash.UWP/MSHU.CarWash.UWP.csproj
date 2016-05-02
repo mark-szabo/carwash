@@ -19,7 +19,7 @@
     <PackageCertificateKeyFile>MSHU.CarWash.UWP_StoreKey.pfx</PackageCertificateKeyFile>
     <PackageCertificateThumbprint>D991B7BA8DC0565A9DA5518FB4C6B19DFDF937A2</PackageCertificateThumbprint>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
-    <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
+    <AppxBundlePlatforms>x86</AppxBundlePlatforms>
     <AppxBundle>Always</AppxBundle>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
