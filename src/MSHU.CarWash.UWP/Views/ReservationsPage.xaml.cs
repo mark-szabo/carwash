@@ -6,6 +6,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Navigation;
+using Windows.UI.Xaml.Shapes;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -17,6 +18,7 @@ namespace MSHU.CarWash.UWP.Views
     public sealed partial class ReservationsPage : BasePage
     {
         private static CalendarViewDayItemConverter _converter;
+        private static StatusConverter _statusConverter;
 
         /// <summary>
         /// True if user caused switch from master to detail view.
@@ -26,6 +28,7 @@ namespace MSHU.CarWash.UWP.Views
         public ReservationsPage()
         {
             _converter = new CalendarViewDayItemConverter();
+            _statusConverter = new StatusConverter();
             this.InitializeComponent();
         }
 
@@ -100,6 +103,28 @@ namespace MSHU.CarWash.UWP.Views
                 textBinding.Converter = _converter;
                 textBinding.ConverterParameter = item.Date;
                 tb.SetBinding(TextBlock.TextProperty, textBinding);
+            }
+
+            Ellipse statusControl = UIHelper.FindVisualChild<Ellipse, string>(
+                item, NameProperty, "StatusControl");
+            if (statusControl != null)
+            {
+                Binding fillBinding = new Binding();
+                if (statusControl.DataContext is CalendarViewDayItem)
+                {
+                    fillBinding.Path = new PropertyPath("DataContext.DayStatus");
+                }
+                else if (statusControl.DataContext is RegistrationsViewModel)
+                {
+                    fillBinding.Path = new PropertyPath("DayStatus");
+                }
+                else
+                {
+                    throw new InvalidOperationException("Inadequate control hierarchy in CalendarViewDayItem's template!");
+                }
+                fillBinding.Converter = _statusConverter;
+                fillBinding.ConverterParameter = item.Date;
+                statusControl.SetBinding(Ellipse.FillProperty, fillBinding);
             }
 
             //var tb = item.FindName("FreeSlotsTextBox");

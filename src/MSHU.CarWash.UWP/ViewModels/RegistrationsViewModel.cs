@@ -13,6 +13,19 @@ namespace MSHU.CarWash.UWP.ViewModels
     public class RegistrationsViewModel : BaseViewModel
     {
         private static readonly int NUMBEROFWEEKS = 6;
+        private static readonly string LIMITEXCEEDED = "You have reached the reservation limit!";
+
+        public enum StatusValue
+        {
+            // For past dates and weekends
+            NotAvailable,
+            // For days that have free slots
+            Available,
+            // For days that the user has reservation on
+            Reserved,
+            // No more free slot
+            BookedUp
+        }
 
         /// <summary>
         /// Holds a reference to the ReservationViewModel. It is used for looking
@@ -36,6 +49,8 @@ namespace MSHU.CarWash.UWP.ViewModels
         private bool _initializing;
 
         private DateTime _currentMonth;
+
+        private string _feedback;
 
         /// <summary>
         /// Signals if go back to previous view (could be master view or page) is requested
@@ -155,6 +170,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             {
                 _currentReservation = value;
                 OnPropertyChanged(nameof(CurrentReservation));
+                OnPropertyChanged(nameof(CanCreateNewReservation));
                 OnPropertyChanged(nameof(IsEditable));
                 // Set the selected service
                 if (_currentReservation != null)
@@ -171,6 +187,18 @@ namespace MSHU.CarWash.UWP.ViewModels
                     }
                     //OnPropertyChanged("Services");
                 }
+            }
+        }
+
+        /// <summary>
+        /// Helper property that is used at the visibility check for the create new reservation
+        /// button.
+        /// </summary>
+        public bool CanCreateNewReservation
+        {
+            get
+            {
+                return CurrentReservation == null && string.IsNullOrEmpty(Feedback);
             }
         }
 
@@ -248,6 +276,26 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// </summary>
         public RelayCommand NextPeriodCommand { get; set; }
 
+        public string Feedback
+        {
+            get
+            {
+                return _feedback;
+            }
+
+            set
+            {
+                _feedback = value;
+                OnPropertyChanged(nameof(Feedback));
+                OnPropertyChanged(nameof(CanCreateNewReservation));
+            }
+        }
+
+        /// <summary>
+        /// Helper property for the status feedback on the daily level.
+        /// </summary>
+        public object DayStatus => this;
+
         public RegistrationsViewModel()
         {
             UseDetailsView = false;
@@ -260,7 +308,8 @@ namespace MSHU.CarWash.UWP.ViewModels
             ActivateDetailsCommand = new RelayCommand(ExecuteActivateDetailsCommand);
 
             // Create the CreateReservationCommand.
-            CreateReservationCommand = new RelayCommand(ExecuteCreateReservationCommand);
+            CreateReservationCommand = new RelayCommand(ExecuteCreateReservationCommand,
+                async param => await CanExecuteCreateReservationCommand(param));
 
             // Create the CancelReservationChangesCommand.
             CancelReservationChangesCommand = new RelayCommand(ExecuteCancelReservationChangesCommand);
@@ -269,7 +318,8 @@ namespace MSHU.CarWash.UWP.ViewModels
             SaveReservationChangesCommand = new RelayCommand(ExecuteSaveReservationChangesCommand);
 
             // Create the DeleteReservationCommand.
-            DeleteReservationCommand = new RelayCommand(ExecuteDeleteReservationCommand, CanExecuteDeleteReservationCommand);
+            DeleteReservationCommand = new RelayCommand(ExecuteDeleteReservationCommand, 
+                (Func<object, bool>)CanExecuteDeleteReservationCommand);
 
             // Create the PreviousPeriodCommand.
             PreviousPeriodCommand = new RelayCommand(ExecutePreviousPeriodCommand);
@@ -331,6 +381,7 @@ namespace MSHU.CarWash.UWP.ViewModels
                 }
                 _requestedDates.Remove(requestedDay);
                 OnPropertyChanged(nameof(FreeSlots));
+                OnPropertyChanged(nameof(DayStatus));
             }
         }
 
@@ -401,6 +452,7 @@ namespace MSHU.CarWash.UWP.ViewModels
                 key = key.AddDays(1);
             }
             OnPropertyChanged(nameof(FreeSlots));
+            OnPropertyChanged(nameof(DayStatus));
             _initializing = false;
         }
 
@@ -436,7 +488,7 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// for data binding UI elements.
         /// </summary>
         /// <param name="param"></param>
-        private void ExecuteActivateDetailsCommand(object param)
+        private async void ExecuteActivateDetailsCommand(object param)
         {
             DateTimeOffset selectedDate = (DateTimeOffset)param;
             if (selectedDate.CompareTo(DateTimeOffset.Now.Date) < 0)
@@ -457,9 +509,59 @@ namespace MSHU.CarWash.UWP.ViewModels
                 // Check if the user has reservation for the selected date.
                 CurrentReservation = SelectedDayDetails.Reservations.Find(
                     x => x.EmployeeId.Equals(App.AuthenticationManager.UserData.DisplayableId));
+                // If the user doesn't have reservation for the selected date then let's find out
+                // if the user can create a new one.
+                if (CurrentReservation == null)
+                {
+                    await CreateNewReservationIfPossible(CreateReservationCommand, selectedDate, this);
+                }
+            }
+            else
+            {
+                // If there's no reservation for the selected date then let's find out
+                // if the user can create a new one.
+                if (CurrentReservation == null)
+                {
+                    await CreateNewReservationIfPossible(CreateReservationCommand, selectedDate, this);
+                }
             }
 
             UseDetailsView = true;
+        }
+
+        private static async Task CreateNewReservationIfPossible(
+            RelayCommand createReservationCommand,
+            DateTimeOffset selectedDate,
+            RegistrationsViewModel vm)
+        {
+            bool? reservationAvailable =
+                await ServiceClient.ServiceClient.NewReservationAvailable(App.AuthenticationManager.BearerAccessToken);
+            if (reservationAvailable.HasValue && reservationAvailable.Value)
+            {
+                bool canExecute = await createReservationCommand.CanExecuteAsync(selectedDate);
+                // Execute the C
+                if (canExecute)
+                {
+                    createReservationCommand.Execute(selectedDate);
+                }
+            }
+            else
+            {
+                vm.Feedback = LIMITEXCEEDED;
+            }
+        }
+
+        private async Task<bool> CanExecuteCreateReservationCommand(object param)
+        {
+            bool result = false;
+            bool? canCreateNewReservation = await ServiceClient.ServiceClient.NewReservationAvailable(
+                App.AuthenticationManager.BearerAccessToken);
+            if (CurrentReservation == null && canCreateNewReservation.HasValue &&
+                canCreateNewReservation.Value)
+            {
+                result = true;
+            }
+            return result;
         }
 
         private void ExecuteCreateReservationCommand(object param)
@@ -496,26 +598,35 @@ namespace MSHU.CarWash.UWP.ViewModels
                 App.AuthenticationManager.BearerAccessToken);
             if (result)
             {
-                // Refresh the ReservationViewModel reference.
-                _rmv = await ServiceClient.ServiceClient.GetReservations(
-                    App.AuthenticationManager.BearerAccessToken);
-                if (_rmv != null)
+                // Update the slot number cache
+                int count;
+                bool success = int.TryParse(_freeSlotsByDate[_currentDate.Date], out count);
+                if (success)
                 {
-                    OnPropertyChanged("FreeSlots");
-
-                    // request subscribing view to do a smart go back
-                    SmartGoBackRequested?.Invoke(this, null);
+                    _freeSlotsByDate[_currentDate.Date] = (--count).ToString();
                 }
+
                 // If the user has changed the plate number then refresh the CurrentEmployee instance 
                 // at the AuthenticationManager.
                 if (CurrentReservation.VehiclePlateNumber != App.AuthenticationManager.CurrentEmployee.VehiclePlateNumber)
                 {
                     App.AuthenticationManager.RefreshCurrentUser();
                 }
+                // Refresh the ReservationViewModel reference.
+                _rmv = await ServiceClient.ServiceClient.GetReservations(
+                    App.AuthenticationManager.BearerAccessToken);
+                if (_rmv != null)
+                {
+                    OnPropertyChanged(nameof(FreeSlots));
+                    OnPropertyChanged(nameof(DayStatus));
+
+                    // request subscribing view to do a smart go back
+                    SmartGoBackRequested?.Invoke(this, null);
+                }
             }
         }
 
-        private bool CanExecuteDeleteReservationCommand()
+        private bool CanExecuteDeleteReservationCommand(object param)
         {
             return CurrentReservation?.IsDeletable ?? false;
         }
@@ -540,11 +651,21 @@ namespace MSHU.CarWash.UWP.ViewModels
                 // Remove the current reservation.
                 reservationByCurrentDate.Reservations.RemoveAll(
                     x => x.ReservationId == _currentReservation.ReservationId);
+
+                int count;
+                bool success = int.TryParse(_freeSlotsByDate[_currentDate.Date], out count);
+                if (success)
+                {
+                    _freeSlotsByDate[_currentDate.Date] = (++count).ToString();
+                }
+
                 // Reset the current reservation instance.
                 CurrentReservation = null;
                 // Let the user interface update the number of free slots on the
                 // master view.
                 OnPropertyChanged(nameof(FreeSlots));
+                OnPropertyChanged(nameof(DayStatus));
+                this.Feedback = string.Empty;
             }
         }
 
@@ -572,6 +693,78 @@ namespace MSHU.CarWash.UWP.ViewModels
             _currentMonth = _currentMonth.AddMonths(1);
             var lastDayOfMonth = _currentMonth.AddMonths(1).AddDays(-1);
             GetFreeSlotNumberForTimeInterval(_currentMonth, lastDayOfMonth);
+        }
+
+        public StatusValue GetStatus(DateTimeOffset date)
+        {
+            StatusValue result = StatusValue.NotAvailable;
+
+            // Check if the date is in the past.
+            if (date < DateTimeOffset.Now.Date)
+            {
+                result = StatusValue.NotAvailable;
+            }
+            // Check if the date is on a weekend.
+            else if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
+            {
+                result = StatusValue.NotAvailable;
+            }
+            // Check if there are available slots.
+            else
+            {
+                // Check if the user has a reservation on the given day.
+                //if (_rmv.ReservationsByDayActive.)
+                bool hasReservation = false;
+                if (_rmv?.ReservationsByDayActive != null)
+                {
+                    ReservationDayDetailsViewModel selectedDayDetails =
+                            _rmv.ReservationsByDayActive.Find(x => x.Day.Equals(date.Date));
+                    if (selectedDayDetails != null)
+                    {
+                        // Check if the user has reservation for the selected date.
+                        ReservationDayDetailViewModel currentReservation =
+                            selectedDayDetails.Reservations.Find(
+                                x => x.EmployeeId.Equals(App.AuthenticationManager.UserData.DisplayableId));
+                        // If the user has reservation for the selected date then we return
+                        // StatusValue.Reserved
+                        if (currentReservation != null)
+                        {
+                            hasReservation = true;
+                            result = StatusValue.Reserved;
+                        }
+                    }
+                }
+
+                if (!hasReservation)
+                {
+                    // If we don't have the number of available slots for the given date
+                    // we return StatusValue.NotAvailable
+                    if (!_freeSlotsByDate.ContainsKey(date.Date))
+                    {
+                        result = StatusValue.NotAvailable;
+                    }
+                    else
+                    {
+                        int slotCount;
+                        bool success = int.TryParse(_freeSlotsByDate[date.Date], out slotCount);
+                        if (success)
+                        {
+                            // If we have at least 1 free slot...
+                            if (slotCount > 0)
+                            {
+                                result = StatusValue.Available;
+                            }
+                            else
+                            {
+                                // No more slots...
+                                result = StatusValue.BookedUp;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return result;
         }
     }
 }

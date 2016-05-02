@@ -288,5 +288,40 @@ namespace MSHU.CarWash.UWP.ServiceClient
             return false;
 
         }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="token">Token used for authentication</param>
+        /// <returns>
+        /// </returns>
+        public static async Task<bool?> NewReservationAvailable(string token)
+        {
+            // Create an HTTP client and add the token to the Authorization header
+            HttpClient httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+
+            // Call the Web API to get the values
+            Uri requestURI = new Uri(s_BaseUrl +
+                String.Format("/api/Calendar/NewReservationAvailable"));
+            HttpResponseMessage httpResponse = await httpClient.GetAsync(requestURI);
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                string jSonResult = await httpResponse.Content.ReadAsStringAsync();
+
+                var availableSlots =
+                    Newtonsoft.Json.JsonConvert.DeserializeObject<bool>(jSonResult);
+
+                return availableSlots;
+            }
+            else
+            {
+                Windows.UI.Popups.MessageDialog dialog =
+                       new Windows.UI.Popups.MessageDialog(string.Format("{0}", httpResponse.StatusCode.ToString()));
+                await dialog.ShowAsync();
+            }
+            return false;
+        }
+
     }
 }
