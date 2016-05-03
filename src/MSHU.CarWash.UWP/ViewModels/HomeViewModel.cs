@@ -63,9 +63,9 @@ namespace MSHU.CarWash.UWP.ViewModels
         private string reservationDateString;
 
         /// <summary>
-        /// Holds ID of reservation
+        /// Holds next reservation
         /// </summary>
-        private int reservationID;
+        private ReservationDayDetailViewModel upcomingReservation { get; set; }
 
         /// <summary>
         /// Holds textual representation of next free slot's date
@@ -293,12 +293,12 @@ namespace MSHU.CarWash.UWP.ViewModels
             QuickReserveCommand = new RelayCommand(HandleQuickReserveCommand);
             QuickReserveExtraCommand = new RelayCommand(HandleQuickReserveExtraCommand);
 
-            DeleteReservationCommand = new RelayCommand(HandleDeleteReservationCommand);
+            DeleteReservationCommand = new RelayCommand(HandleDeleteReservationCommand, o => ReservationAvailable && upcomingReservation.IsDeletable);
         }
 
         private async void HandleDeleteReservationCommand(object obj)
         {
-            bool result = await ServiceClient.ServiceClient.DeleteReservation(reservationID, App.AuthenticationManager.BearerAccessToken);
+            bool result = await ServiceClient.ServiceClient.DeleteReservation(upcomingReservation.ReservationId, App.AuthenticationManager.BearerAccessToken);
             ReservationAvailable = false;
             GetNextFreeSlotCommand.Execute(null);
             RequestServiceCommand.Execute(null);
@@ -366,7 +366,7 @@ namespace MSHU.CarWash.UWP.ViewModels
                     ReservationAvailable = true;
                     NumberPlate = result.ReservationsByDayActive[0].Reservations[0].VehiclePlateNumber;
                     ReservationDateString = GetSmartDateString(result.ReservationsByDayActive[0].Day);
-                    reservationID = result.ReservationsByDayActive[0].Reservations[0].ReservationId;
+                    upcomingReservation = result.ReservationsByDayActive[0].Reservations[0];
                     if (result.ReservationsByDayActive.Count >= 2)
                     {
                         ShowReservationLimitReached = true;
