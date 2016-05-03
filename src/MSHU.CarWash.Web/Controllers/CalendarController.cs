@@ -295,7 +295,7 @@ namespace MSHU.CarWash.Controllers
             var availableSlots = GetAvailableSlots(queryReservationResult, newReservationViewModel.Date);
             if (newReservationViewModel.SelectedServiceId == (int)ServiceEnum.ExteriorInteriorCarpet)
             {
-                availableSlots = new Tuple<int, int>(availableSlots.Item1, availableSlots.Item2 - 2);
+                availableSlots = new Tuple<int, int>(availableSlots.Item1-2, availableSlots.Item2);
             }
             else if(newReservationViewModel.SelectedServiceId == (int)ServiceEnum.InteriorSteam ||
                 newReservationViewModel.SelectedServiceId == (int)ServiceEnum.ExteriorSteam||
@@ -654,7 +654,7 @@ namespace MSHU.CarWash.Controllers
                     }
                     else
                     {
-                        availableNormalSlots -= 2;
+                        availableNormalSlots -= 1;
                     }
 
                     // ...make sure we don't allow 2 reservations for a single day (unless user is admin)

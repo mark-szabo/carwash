@@ -40,6 +40,7 @@ namespace MSHU.CarWash.UWP.ViewModels
         private ReservationDayDetailsViewModel _selectedDayDetails;
         private string _selectedDate;
         private DateTimeOffset _currentDate;
+        // TODO: does this really need to be a string?
         private Dictionary<DateTime, string> _freeSlotsByDate;
         private ObservableCollection<DateTime> _requestedDates;
 
@@ -318,7 +319,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             SaveReservationChangesCommand = new RelayCommand(ExecuteSaveReservationChangesCommand);
 
             // Create the DeleteReservationCommand.
-            DeleteReservationCommand = new RelayCommand(ExecuteDeleteReservationCommand, 
+            DeleteReservationCommand = new RelayCommand(ExecuteDeleteReservationCommand,
                 (Func<object, bool>)CanExecuteDeleteReservationCommand);
 
             // Create the PreviousPeriodCommand.
@@ -327,11 +328,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             // Create the NextPeriodCommand.
             NextPeriodCommand = new RelayCommand(ExecuteNextPeriodCommand);
 
-            Services = new List<ServiceViewModel>();
-            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosas, ServiceName = ServiceEnum.KulsoMosas.GetDescription(), Selected = false });
-            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.BelsoTakaritas, ServiceName = ServiceEnum.BelsoTakaritas.GetDescription(), Selected = false });
-            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasBelsoTakaritas, ServiceName = ServiceEnum.KulsoMosasBelsoTakaritas.GetDescription(), Selected = false });
-            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas, ServiceName = ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas.GetDescription(), Selected = false });
+            Services = GetAvailableServices();
 
             ServicesSource = new CollectionViewSource();
             ServicesSource.Source = Services;
@@ -357,6 +354,32 @@ namespace MSHU.CarWash.UWP.ViewModels
             _initializing = true;
             _requestedDates = new ObservableCollection<DateTime>();
             _requestedDates.CollectionChanged += RequestedDatesCollectionChanged;
+        }
+
+        /// <summary>
+        /// Returns a list of available services, based on parameters.
+        /// </summary>
+        /// <param name="date">Date (optional)</param>
+        /// <param name="freeNormalSlots">Free slots (optional)</param>
+        /// <returns>Available services</returns>
+        private List<ServiceViewModel> GetAvailableServices(DateTime? date = null, int freeNormalSlots = 2)
+        {
+            var result = new List<ServiceViewModel>();
+            result.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosas, ServiceName = ServiceEnum.KulsoMosas.GetDescription(), Selected = false });
+            result.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.BelsoTakaritas, ServiceName = ServiceEnum.BelsoTakaritas.GetDescription(), Selected = false });
+            result.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasBelsoTakaritas, ServiceName = ServiceEnum.KulsoMosasBelsoTakaritas.GetDescription(), Selected = false });
+            if (freeNormalSlots > 1)
+            {
+                result.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas, ServiceName = ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas.GetDescription(), Selected = false });
+            }
+
+            if (date == null || date?.DayOfWeek == DayOfWeek.Tuesday)
+            {
+                result.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasGozos, ServiceName = ServiceEnum.KulsoMosasGozos.GetDescription(), Selected = false });
+                result.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.BelsoTakaritasGozos, ServiceName = ServiceEnum.BelsoTakaritasGozos.GetDescription(), Selected = false });
+                result.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasBelsoTakaritasGozos, ServiceName = ServiceEnum.KulsoMosasBelsoTakaritasGozos.GetDescription(), Selected = false });
+            }
+            return result;
         }
 
         private async void RequestedDatesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -575,6 +598,9 @@ namespace MSHU.CarWash.UWP.ViewModels
             cr.IsDeletable = true;
             CurrentReservation = cr;
             CurrentComment = string.Empty;
+            
+            // re-fresh services based on date and free slots
+            ServicesSource.Source = GetAvailableServices(_currentDate.Date, Convert.ToInt32(_freeSlotsByDate[_currentDate.Date]));
         }
 
         private void ExecuteCancelReservationChangesCommand(object param)

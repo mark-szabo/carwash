@@ -51,6 +51,9 @@ namespace MSHU.CarWash.DomainModel
             this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.BelsoTakaritas, ServiceName = ServiceEnum.BelsoTakaritas.GetDescription(), Selected = false });
             this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasBelsoTakaritas, ServiceName = ServiceEnum.KulsoMosasBelsoTakaritas.GetDescription(), Selected = false });
             this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas, ServiceName = ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas.GetDescription(), Selected = false });
+            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasGozos, ServiceName = ServiceEnum.KulsoMosas.GetDescription(), Selected = false });
+            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.BelsoTakaritasGozos, ServiceName = ServiceEnum.BelsoTakaritas.GetDescription(), Selected = false });
+            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasBelsoTakaritasGozos, ServiceName = ServiceEnum.KulsoMosasBelsoTakaritas.GetDescription(), Selected = false });
         }
         [Required]
         public DateTime Date { get; set; }
