@@ -26,23 +26,26 @@ namespace MSHU.CarWash.Controllers
         #region private fields
         private readonly MSHUCarWashContext _db;
         private readonly int _slotsPerDay;
-        private readonly Dictionary<DateTime, int> _exceptionalDays;
+        private readonly Dictionary<DateTime, Tuple<int, int>> _exceptionalDays;
         private readonly int _monthlyLimitPerPerson;
         private readonly int _reservationLimitPerPerson;
+        private int _steamSlotsOnTuesday;
         #endregion private fields
 
         public CalendarController()
         {
             _db = new MSHUCarWashContext();
             _slotsPerDay = Convert.ToInt32(ConfigurationManager.AppSettings["SlotsPerDay"]);
-            _exceptionalDays = new Dictionary<DateTime, int>();
+            _steamSlotsOnTuesday = Convert.ToInt32(ConfigurationManager.AppSettings["SteamSlotsOnTuesday"]);
+            _exceptionalDays = new Dictionary<DateTime, Tuple<int, int>>();
             var exceptionalDays = ConfigurationManager.AppSettings["ExceptionalDays"].Split(';');
             foreach (var item in exceptionalDays)
             {
                 if (!string.IsNullOrWhiteSpace(item) && item.Contains(':'))
                 {
                     var splitted = item.Split(':');
-                    _exceptionalDays.Add(Convert.ToDateTime(splitted[0]), Convert.ToInt32(splitted[1]));
+                    var numbers = splitted[1].Split(',');
+                    _exceptionalDays.Add(Convert.ToDateTime(splitted[0]), new Tuple<int, int>(Convert.ToInt32(numbers[0]), Convert.ToInt32(numbers[1])));
                 }
             }
             _monthlyLimitPerPerson = Convert.ToInt32(ConfigurationManager.AppSettings["MontlySlotLimitPerPerson"]);
@@ -105,7 +108,8 @@ namespace MSHU.CarWash.Controllers
             var queryResult = await query.ToListAsync();
 
 
-            ret.AvailableSlots = day < DateTime.Today ? 0 : GetAvailableSlots(queryResult, day);
+            ret.AvailableNormalSlots = day < DateTime.Today ? 0 : GetAvailableSlots(queryResult, day).Item1;
+            ret.AvailableSteamSlots = day < DateTime.Today ? 0 : GetAvailableSlots(queryResult, day).Item2;
 
             ret.Reservations = queryResult
                                 .Select(s => new ReservationDetailViewModel
@@ -121,7 +125,7 @@ namespace MSHU.CarWash.Controllers
                                 })
                                 .ToList<ReservationDetailViewModel>();
 
-            ret.ReservationIsAllowed = (ret.AvailableSlots > 0);
+            ret.ReservationIsAllowed = (ret.AvailableNormalSlots > 0);
 
             if (ret.ReservationIsAllowed && !currentUser.IsAdmin)
             {
@@ -216,11 +220,14 @@ namespace MSHU.CarWash.Controllers
                     select b;
             var qResult = await q.ToListAsync();
 
-            int availableSlots = GetAvailableSlots(qResult, day);
+            // consider only normal washing service
+            int availableSlots = GetAvailableSlots(qResult, day).Item1;
             while (availableSlots == 0)
             {
                 day = day.AddDays(1);
-                availableSlots = GetAvailableSlots(qResult, day);
+
+                // consider only normal washing service
+                availableSlots = GetAvailableSlots(qResult, day).Item1;
             }
 
             HomeViewModel retVal = await CreateHomeViewModelAsync(day, currentUser);
@@ -288,13 +295,19 @@ namespace MSHU.CarWash.Controllers
             var availableSlots = GetAvailableSlots(queryReservationResult, newReservationViewModel.Date);
             if (newReservationViewModel.SelectedServiceId == (int)ServiceEnum.ExteriorInteriorCarpet)
             {
-                availableSlots = availableSlots - 2;
+                availableSlots = new Tuple<int, int>(availableSlots.Item1, availableSlots.Item2 - 2);
+            }
+            else if(newReservationViewModel.SelectedServiceId == (int)ServiceEnum.InteriorSteam ||
+                newReservationViewModel.SelectedServiceId == (int)ServiceEnum.ExteriorSteam||
+                newReservationViewModel.SelectedServiceId == (int)ServiceEnum.ExteriorInteriorSteam)
+            {
+                availableSlots = new Tuple<int, int>(availableSlots.Item1, availableSlots.Item2 - 1);
             }
             else
             {
-                availableSlots = availableSlots - 1;
+                availableSlots = new Tuple<int, int>(availableSlots.Item1 - 1, availableSlots.Item2);
             }
-            if (availableSlots < 0)
+            if (availableSlots.Item1 < 0 || availableSlots.Item2 < 0)
             {
                 ModelState.AddModelError("", "Ezen a napon foglalás már nem lehetséges!");
                 return BadRequest(ModelState);
@@ -443,9 +456,9 @@ namespace MSHU.CarWash.Controllers
         }
 
         /// <summary>
-        /// Retrieves date of next free slot (excluding today).
+        /// Retrieves date of next free, normal slot (excluding today and carpet + steam slots).
         /// </summary>
-        /// <returns>Date of next free slot or null if none is available</returns>
+        /// <returns>Date of next free, normal slot or null if none is available</returns>
         public async Task<DateTime?> GetNextFreeSlotDate()
         {
             var now = DateTime.Now;
@@ -457,7 +470,7 @@ namespace MSHU.CarWash.Controllers
 
             for (var day = from; day < until; day = day.AddDays(1))
             {
-                if(GetAvailableSlots(nextReservations, day) >= 2)
+                if(GetAvailableSlots(nextReservations, day).Item1 >= 1)
                 {
                     return day;
                 }
@@ -486,7 +499,8 @@ namespace MSHU.CarWash.Controllers
                         select b;
             var queryResult = await query.ToListAsync();
             // Get the number of available slots.
-            int availableSlots = day < DateTime.Today ? 0 : GetAvailableSlots(queryResult, day);
+            var slots = GetAvailableSlots(queryResult, day);
+            int availableSlots = day < DateTime.Today ? 0 : slots.Item1 + slots.Item2;
             // Return the number of available slots.
             return Json(availableSlots);
         }
@@ -520,7 +534,8 @@ namespace MSHU.CarWash.Controllers
                             select b;
                 var queryResult = await query.ToListAsync();
                 // Get the number of available slots.
-                availableSlotsNr = current < DateTime.Today ? 0 : GetAvailableSlots(queryResult, current);
+                var slots = GetAvailableSlots(queryResult, current);
+                availableSlotsNr = current < DateTime.Today ? 0 : slots.Item1 + slots.Item2;
                 availableSlots.Add(availableSlotsNr);
                 current = current.AddDays(1);
             }
@@ -584,21 +599,26 @@ namespace MSHU.CarWash.Controllers
                 var dayViewModel = new DayViewModel
                 {
                     Day = date,
-                    AvailableSlots = date < DateTime.Today ? 0 : GetAvailableSlots(queryResult, date),
+                    AvailableNormalSlots = date < DateTime.Today ? 0 : GetAvailableSlots(queryResult, date).Item1,
+                    AvailableSteamSlots = date < DateTime.Today ? 0 : GetAvailableSlots(queryResult, date).Item2,
                     IsToday = (date == DateTime.Today)
                 };
-                int maxAvailableSlotsOnDate = 0;
+                var maxAvailableSlotsOnDate = new Tuple<int, int>(0, 0);
+
+                // exclude past
                 if (date >= DateTime.Today)
                 {
                     maxAvailableSlotsOnDate = GetConfiguredAvailableSlotsOnDate(date);
                 }
+
                 dayViewModel.AvailableSlotCount = new List<string>();
-                for(var i=0; i< dayViewModel.AvailableSlots; i++)
+                for(var i=0; i< dayViewModel.AvailableNormalSlots + dayViewModel.AvailableSteamSlots; i++)
                 {
                     dayViewModel.AvailableSlotCount.Add(i.ToString());
                 }
+
                 dayViewModel.ReservedSlotCount = new List<string>();
-                for (var i = 0; i < maxAvailableSlotsOnDate - dayViewModel.AvailableSlots; i++)
+                for (var i = 0; i < maxAvailableSlotsOnDate.Item1 - dayViewModel.AvailableNormalSlots + maxAvailableSlotsOnDate.Item2 - dayViewModel.AvailableSteamSlots; i++)
                 {
                     dayViewModel.ReservedSlotCount.Add(i.ToString());
                 }
@@ -609,11 +629,14 @@ namespace MSHU.CarWash.Controllers
             return result;
         }
 
-        private int GetAvailableSlots(List<Reservation> queryResult, DateTime date)
+        private Tuple<int, int> GetAvailableSlots(List<Reservation> queryResult, DateTime date)
         {
             var currentUser = UserHelper.GetCurrentUser();
             var availableSlots = GetConfiguredAvailableSlotsOnDate(date);
-            if (availableSlots > 0)
+            var availableNormalSlots = availableSlots.Item1;
+            var availableSteamSlots = availableSlots.Item2;
+
+            if (availableNormalSlots > 0 || availableSteamSlots > 0)
             {
                 var reservationsOnDate = queryResult.FindAll(q => q.Date.Month == date.Month && q.Date.Day == date.Day);
 
@@ -621,42 +644,52 @@ namespace MSHU.CarWash.Controllers
                 {
                     if (item.SelectedServiceId == (int)ServiceEnum.ExteriorInteriorCarpet)
                     {
-                        availableSlots = availableSlots - 2;
+                        availableNormalSlots -= 2;
+                    }
+                    else if(item.SelectedServiceId == (int)ServiceEnum.ExteriorInteriorSteam ||
+                        item.SelectedServiceId == (int)ServiceEnum.ExteriorSteam ||
+                        item.SelectedServiceId == (int)ServiceEnum.InteriorSteam)
+                    {
+                        availableSteamSlots -= 1;
                     }
                     else
                     {
-                        availableSlots = availableSlots - 1;
+                        availableNormalSlots -= 2;
                     }
+
                     // ...make sure we don't allow 2 reservations for a single day (unless user is admin)
                     if (item.EmployeeId == currentUser.Id && !currentUser.IsAdmin)
                     {
-                        availableSlots = 0;
+                        availableSlots = new Tuple<int, int>(0, 0);
                         break;
                     }
                 }
             }
 
-            return availableSlots;
+            return new Tuple<int, int>(availableNormalSlots, availableSteamSlots);
         }
 
-        private int GetConfiguredAvailableSlotsOnDate(DateTime date)
+        private Tuple<int, int> GetConfiguredAvailableSlotsOnDate(DateTime date)
         {
-            int result = 0;
+            var normalSlots = 0;
+            var steamSlots = 0;
 
             if (_exceptionalDays.ContainsKey(date))
             {
-                result = _exceptionalDays[date];
+                normalSlots = _exceptionalDays[date].Item1;
+                steamSlots = _exceptionalDays[date].Item2;
             }
             else if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
             {
-                result = 0;
+                // leave default zeros
             }
             else
             {
-                result = _slotsPerDay;
+                normalSlots = _slotsPerDay;
+                steamSlots = date.DayOfWeek == DayOfWeek.Tuesday ? _steamSlotsOnTuesday : 0;
             }
-
-            return result;
+            
+            return new Tuple<int, int>(normalSlots, steamSlots);
         }
 
         private async Task<HomeViewModel> CreateHomeViewModelAsync(DateTime day, User user)

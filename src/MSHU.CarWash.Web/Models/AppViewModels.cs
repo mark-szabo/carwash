@@ -37,7 +37,8 @@ namespace MSHU.CarWash.Models
         }
 
         public bool IsToday { get; set; }
-        public int AvailableSlots { get; set; }
+        public int AvailableNormalSlots { get; set; }
+        public int AvailableSteamSlots { get; set; }
         public List<string> AvailableSlotCount { get; set; }
         public List<string> ReservedSlotCount { get; set; }
     }
@@ -67,10 +68,11 @@ namespace MSHU.CarWash.Models
                 return this.Day.Day;
             }
         }
-        public int AvailableSlots { get; set; }
+        public int AvailableNormalSlots { get; set; }
         public bool ReservationIsAllowed { get; set; }
         public List<ReservationDetailViewModel> Reservations { get; set; }      
         public NewReservationViewModel NewReservation { get; set; }
+        public int AvailableSteamSlots { get; internal set; }
     }
 
     public class HomeViewModel

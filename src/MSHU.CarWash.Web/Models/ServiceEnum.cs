@@ -19,6 +19,15 @@ namespace MSHU.CarWash.Models
         ExteriorInterior = 2,
 
         [Description("EXTERIOR + INTERIOR + CARPET")]
-        ExteriorInteriorCarpet = 3
+        ExteriorInteriorCarpet = 3,
+
+        [Description("EXTERIOR (STEAM)")]
+        ExteriorSteam = 4,
+
+        [Description("INTERIOR (STEAM)")]
+        InteriorSteam = 5,
+
+        [Description("EXTERIOR + INTERIOR (STEAM)")]
+        ExteriorInteriorSteam = 6
     }
 }

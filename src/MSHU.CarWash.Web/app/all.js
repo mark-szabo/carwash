@@ -149,7 +149,7 @@ angular.module('carwashApp')
     $scope.dataLoaded = false;
     $scope.vehiclePlateNumberFormat = /[a-zA-Z]{3}-[0-9]{3}$/;
     $scope.kulsoBelsoKarpitDisabled = function () {
-        return ($scope.dayDetailsViewModel != null && $scope.dayDetailsViewModel.AvailableSlots != null && $scope.dayDetailsViewModel.AvailableSlots < 2);
+        return ($scope.dayDetailsViewModel != null && $scope.dayDetailsViewModel.AvailableNormalSlots != null && $scope.dayDetailsViewModel.AvailableNormalSlots < 2);
     }
 
     $scope.init = function () {
