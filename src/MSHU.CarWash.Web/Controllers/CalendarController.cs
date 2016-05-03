@@ -121,7 +121,7 @@ namespace MSHU.CarWash.Controllers
                                     SelectedServiceName = (s.EmployeeId == currentUser.Id || currentUser.IsAdmin) ? ((ServiceEnum)s.SelectedServiceId).GetDescription() : "",
                                     VehiclePlateNumber = s.VehiclePlateNumber,
                                     Comment = (s.EmployeeId == currentUser.Id || currentUser.IsAdmin) ? s.Comment : "",
-                                    IsDeletable = (s.EmployeeId == currentUser.Id && s.Date > DateTime.Today) || currentUser.IsAdmin
+                                    IsDeletable = (s.EmployeeId == currentUser.Id && s.Date >= DateTime.Today) || currentUser.IsAdmin
                                 })
                                 .ToList<ReservationDetailViewModel>();
 
@@ -184,7 +184,7 @@ namespace MSHU.CarWash.Controllers
                             SelectedServiceName =  ((ServiceEnum)activeReservation.SelectedServiceId).GetDescription(),
                             VehiclePlateNumber = activeReservation.VehiclePlateNumber,
                             Comment = activeReservation.Comment,
-                            IsDeletable = activeReservation.Date > DateTime.Today
+                            IsDeletable = activeReservation.Date >= DateTime.Today
                         };
 
                     return Ok(ret);
@@ -384,7 +384,7 @@ namespace MSHU.CarWash.Controllers
                     return NotFound();
                 }
 
-                if (reservation.Date <= DateTime.Today)
+                if (reservation.Date < DateTime.Today)
                 {
                     return NotFound();
                 }
@@ -442,7 +442,7 @@ namespace MSHU.CarWash.Controllers
                             SelectedServiceName = ((ServiceEnum)resItem.SelectedServiceId).GetDescription(),
                             VehiclePlateNumber = resItem.VehiclePlateNumber,
                             Comment = resItem.Comment,
-                            IsDeletable = (resItem.EmployeeId == currentUser.Id && resItem.Date > DateTime.Today) || currentUser.IsAdmin
+                            IsDeletable = (resItem.EmployeeId == currentUser.Id && resItem.Date >= DateTime.Today) || currentUser.IsAdmin
                         });
                     }
                     temp.Add(reservationDayDetailsViewModel);

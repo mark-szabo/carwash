@@ -294,6 +294,14 @@ namespace MSHU.CarWash.UWP.ViewModels
             QuickReserveExtraCommand = new RelayCommand(HandleQuickReserveExtraCommand);
 
             DeleteReservationCommand = new RelayCommand(HandleDeleteReservationCommand, o => ReservationAvailable && upcomingReservation.IsDeletable);
+            // make sure we get notified about changes in our dependency (ReservationAvailable)
+            PropertyChanged += (sender, args) =>
+            {
+                if (args.PropertyName == nameof(ReservationAvailable))
+                {
+                    DeleteReservationCommand.RaiseCanExecuteChanged();
+                }
+            };
         }
 
         private async void HandleDeleteReservationCommand(object obj)
@@ -363,7 +371,6 @@ namespace MSHU.CarWash.UWP.ViewModels
                 StringBuilder builder = new StringBuilder();
                 if (result.ReservationsByDayActive.Count > 0)
                 {
-                    ReservationAvailable = true;
                     NumberPlate = result.ReservationsByDayActive[0].Reservations[0].VehiclePlateNumber;
                     ReservationDateString = GetSmartDateString(result.ReservationsByDayActive[0].Day);
                     upcomingReservation = result.ReservationsByDayActive[0].Reservations[0];
@@ -375,7 +382,7 @@ namespace MSHU.CarWash.UWP.ViewModels
                     {
                         ShowReservationLimitReached = false;
                     }
-
+                    ReservationAvailable = true;
                 }
             }
 
