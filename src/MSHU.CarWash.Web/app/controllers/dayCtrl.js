@@ -9,6 +9,11 @@ angular.module('carwashApp')
         return ($scope.dayDetailsViewModel != null && $scope.dayDetailsViewModel.AvailableNormalSlots != null && $scope.dayDetailsViewModel.AvailableNormalSlots < 2);
     }
 
+    // Disable steam if no slots
+    $scope.steamDisabled = function () {
+        return ($scope.dayDetailsViewModel != null && $scope.dayDetailsViewModel.AvailableSteamSlots != null && $scope.dayDetailsViewModel.AvailableSteamSlots == 0);
+    }
+
     $scope.init = function () {
         $scope.getDay(calendarSvc.getValue('day'), calendarSvc.getValue('offset'));
     };

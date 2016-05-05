@@ -1,6 +1,7 @@
 ﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.WindowsAzure.MobileServices;
 using MSHU.CarWash.DomainModel;
+using MSHU.CarWash.UWP.Common;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -43,8 +44,10 @@ namespace MSHU.CarWash.UWP.ServiceClient
             }
             else
             {
-                Windows.UI.Popups.MessageDialog dialog =
-                       new Windows.UI.Popups.MessageDialog(string.Format("{0}", httpResponse.StatusCode.ToString()));
+                var message = string.Format("{0}", httpResponse.StatusCode.ToString());
+                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
+                Diagnostics.ReportError(message);
+
                 await dialog.ShowAsync();
             }
             return returnValue;
@@ -74,9 +77,11 @@ namespace MSHU.CarWash.UWP.ServiceClient
             }
             else
             {
-                Windows.UI.Popups.MessageDialog dialog =
-                       new Windows.UI.Popups.MessageDialog(string.Format("{0}\n{1}", httpResponse.StatusCode.ToString(),
-                       await httpResponse.Content.ReadAsStringAsync()));
+                var message = string.Format("{0}\n{1}", httpResponse.StatusCode.ToString(),
+                       await httpResponse.Content.ReadAsStringAsync());
+                Diagnostics.ReportError(message);
+
+                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
                 await dialog.ShowAsync();
             }
 
@@ -104,8 +109,9 @@ namespace MSHU.CarWash.UWP.ServiceClient
             }
             else
             {
-                Windows.UI.Popups.MessageDialog dialog =
-                       new Windows.UI.Popups.MessageDialog(string.Format("{0}", httpResponse.StatusCode.ToString()));
+                var message = string.Format("{0}", httpResponse.StatusCode.ToString());
+                Diagnostics.ReportError(message);
+                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
                 await dialog.ShowAsync();
             }
             return returnValue;
@@ -137,8 +143,9 @@ namespace MSHU.CarWash.UWP.ServiceClient
             }
             else
             {
-                Windows.UI.Popups.MessageDialog dialog =
-                       new Windows.UI.Popups.MessageDialog(string.Format("{0}", httpResponse.StatusCode.ToString()));
+                var message = string.Format("{0}", httpResponse.StatusCode.ToString());
+                Diagnostics.ReportError(message);
+                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
                 await dialog.ShowAsync();
             }
             return null;
@@ -166,10 +173,11 @@ namespace MSHU.CarWash.UWP.ServiceClient
             }
             else
             {
-                Windows.UI.Popups.MessageDialog dialog =
-                    new Windows.UI.Popups.MessageDialog(string.Format("{0}\n{1}", httpResponse.StatusCode.ToString(),
-                    await httpResponse.Content.ReadAsStringAsync()));
+                var message = string.Format("{0}\n{1}", httpResponse.StatusCode.ToString(),
+                       await httpResponse.Content.ReadAsStringAsync());
+                Diagnostics.ReportError(message);
 
+                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
                 await dialog.ShowAsync();
             }
             return false;
@@ -207,8 +215,9 @@ namespace MSHU.CarWash.UWP.ServiceClient
             }
             else
             {
-                Windows.UI.Popups.MessageDialog dialog =
-                       new Windows.UI.Popups.MessageDialog(string.Format("{0}", httpResponse.StatusCode.ToString()));
+                var message = string.Format("{0}", httpResponse.StatusCode.ToString());
+                Diagnostics.ReportError(message);
+                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
                 await dialog.ShowAsync();
             }
             return null;
@@ -249,8 +258,9 @@ namespace MSHU.CarWash.UWP.ServiceClient
             }
             else
             {
-                Windows.UI.Popups.MessageDialog dialog =
-                       new Windows.UI.Popups.MessageDialog(string.Format("{0}", httpResponse.StatusCode.ToString()));
+                var message = string.Format("{0}", httpResponse.StatusCode.ToString());
+                Diagnostics.ReportError(message);
+                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
                 await dialog.ShowAsync();
             }
             return null;
@@ -279,10 +289,11 @@ namespace MSHU.CarWash.UWP.ServiceClient
             }
             else
             {
-                Windows.UI.Popups.MessageDialog dialog =
-                    new Windows.UI.Popups.MessageDialog(string.Format("{0}\n{1}", httpResponse.StatusCode.ToString(),
-                    await httpResponse.Content.ReadAsStringAsync()));
+                var message = string.Format("{0}\n{1}", httpResponse.StatusCode.ToString(),
+                       await httpResponse.Content.ReadAsStringAsync());
+                Diagnostics.ReportError(message);
 
+                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
                 await dialog.ShowAsync();
             }
             return false;
@@ -316,8 +327,9 @@ namespace MSHU.CarWash.UWP.ServiceClient
             }
             else
             {
-                Windows.UI.Popups.MessageDialog dialog =
-                       new Windows.UI.Popups.MessageDialog(string.Format("{0}", httpResponse.StatusCode.ToString()));
+                var message = string.Format("{0}", httpResponse.StatusCode.ToString());
+                Diagnostics.ReportError(message);
+                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
                 await dialog.ShowAsync();
             }
             return false;

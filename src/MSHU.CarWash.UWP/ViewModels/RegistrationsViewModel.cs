@@ -587,13 +587,15 @@ namespace MSHU.CarWash.UWP.ViewModels
             return result;
         }
 
-        private void ExecuteCreateReservationCommand(object param)
+        private async void ExecuteCreateReservationCommand(object param)
         {
             var cr = new ReservationDayDetailViewModel();
             cr.VehiclePlateNumber = App.AuthenticationManager.CurrentEmployee.VehiclePlateNumber;
             if(param is DateTime)
             {
-                _currentDate = new DateTimeOffset((DateTime)param);
+                var date = (DateTime)param;
+                _currentDate = new DateTimeOffset(date);
+                await GetFreeSlotNumberForTimeInterval(date.Date, date.Date);
             }
             cr.IsDeletable = true;
             CurrentReservation = cr;

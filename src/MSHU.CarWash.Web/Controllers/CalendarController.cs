@@ -125,17 +125,16 @@ namespace MSHU.CarWash.Controllers
                                 })
                                 .ToList<ReservationDetailViewModel>();
 
-            ret.ReservationIsAllowed = (ret.AvailableNormalSlots > 0);
+            ret.ReservationIsAllowed = (ret.AvailableNormalSlots > 0 || ret.AvailableSteamSlots > 0);
 
             if (ret.ReservationIsAllowed && !currentUser.IsAdmin)
             {
                 query = from b in _db.Reservations
-                        where b.EmployeeId == currentUser.Id
-                        orderby b.Date >= DateTime.Today
+                        where b.EmployeeId == currentUser.Id && b.Date >= DateTime.Today
                         select b;
                 queryResult = await query.ToListAsync();
                 //csak akkor foglalhat, ha nincs aktív foglalása
-                ret.ReservationIsAllowed = !queryResult.Any();
+                ret.ReservationIsAllowed = CanUserReserve(currentUser);
             }
 
             if (ret.ReservationIsAllowed)
@@ -251,25 +250,19 @@ namespace MSHU.CarWash.Controllers
             #region Check business rules
             if (!currentUser.IsAdmin)
             {
-                //csak egy aktív foglása lehet személyenként a rendszerben
-                var query = from b in _db.Reservations
-                            where b.Date >= DateTime.Today && b.EmployeeId == newReservationViewModel.EmployeeId
-                            orderby b.Date
-                            select b;
-                var queryResult = await query.ToListAsync();
-                if (queryResult.Count > 2)
+                if (!CanUserReserve(currentUser))
                 {
-                    ModelState.AddModelError("", string.Format("Van már foglalt időpontod {0}-n!", queryResult.FirstOrDefault().Date));
+                    ModelState.AddModelError("", string.Format("Van már foglalt időpontod!"));
                     return BadRequest(ModelState);
                 }
 
                 //havi limit ellenőrzés személyenként
                 var startOfMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-                query = from b in _db.Reservations
+                var query = from b in _db.Reservations
                         where b.Date >= startOfMonth && b.EmployeeId == newReservationViewModel.EmployeeId
                         orderby b.Date
                         select b;
-                queryResult = await query.ToListAsync();
+                var queryResult = await query.ToListAsync();
                 int sum = 0;
                 foreach (var item in queryResult)
                 {
@@ -364,6 +357,17 @@ namespace MSHU.CarWash.Controllers
             #endregion
 
             return StatusCode(HttpStatusCode.NoContent);
+        }
+
+        private bool CanUserReserve(User currentUser)
+        {
+            //csak két aktív foglása lehet személyenként a rendszerben
+            var query = from b in _db.Reservations
+                        where b.Date >= DateTime.Today && b.EmployeeId == currentUser.Id
+                        orderby b.Date
+                        select b;
+
+            return query.Count() < 2;
         }
 
         [HttpGet]
@@ -660,7 +664,7 @@ namespace MSHU.CarWash.Controllers
                     // ...make sure we don't allow 2 reservations for a single day (unless user is admin)
                     if (item.EmployeeId == currentUser.Id && !currentUser.IsAdmin)
                     {
-                        availableSlots = new Tuple<int, int>(0, 0);
+                        availableNormalSlots = availableSteamSlots = 0;
                         break;
                     }
                 }
