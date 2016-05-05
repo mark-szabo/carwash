@@ -33,6 +33,9 @@ namespace MSHU.CarWash.UWP
             this.InitializeComponent();
             this.Suspending += OnSuspending;
             this.Resuming += OnAppResuming;
+
+            // integrate with HockeyApp
+            Microsoft.HockeyApp.HockeyClient.Current.Configure("0205bd2e73b44b9f9f4dc8d0f5dc95e4");
         }
         /// <summary>
         /// Triggers when 

@@ -21,6 +21,7 @@
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxBundlePlatforms>x86</AppxBundlePlatforms>
     <AppxBundle>Always</AppxBundle>
+    <HockeyAppResourceId>0205bd2e73b44b9f9f4dc8d0f5dc95e4</HockeyAppResourceId>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -101,6 +102,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Common\AuthenticationManager.cs" />
+    <Compile Include="Common\Diagnostics.cs" />
     <Compile Include="Common\SuspensionManager.cs" />
     <Compile Include="Common\UI\UIHelper.cs" />
     <Compile Include="Controls\CWCalendarView.cs" />
