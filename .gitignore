@@ -12,3 +12,5 @@ packages
 PublishProfiles
 *.vspscc
 *.user
+/src/MSHU.CarWash.Web/App_Data/MSHUCarWashContext-20151207160057.mdf
+/src/MSHU.CarWash.Web/App_Data/MSHUCarWashContext-20151207160057_log.ldf
