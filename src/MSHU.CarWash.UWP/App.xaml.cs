@@ -33,10 +33,30 @@ namespace MSHU.CarWash.UWP
             this.InitializeComponent();
             this.Suspending += OnSuspending;
             this.Resuming += OnAppResuming;
+            this.UnhandledException += OnUnhandledException;
 
             // integrate with HockeyApp
             Microsoft.HockeyApp.HockeyClient.Current.Configure("0205bd2e73b44b9f9f4dc8d0f5dc95e4");
         }
+
+
+        /// <summary>
+        /// Handling unhandled exceptions
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            e.Handled = true;
+            var message = string.Format("Unexpected error occured: {0}\n Application is closing.", e.Message);
+            //Report to HockeyApp
+            Diagnostics.ReportError(message);
+            Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
+            await dialog.ShowAsync();
+             
+            base.Exit();
+        }
+
         /// <summary>
         /// Triggers when 
         /// </summary>
