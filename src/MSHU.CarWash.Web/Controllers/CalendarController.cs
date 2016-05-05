@@ -664,7 +664,7 @@ namespace MSHU.CarWash.Controllers
                     // ...make sure we don't allow 2 reservations for a single day (unless user is admin)
                     if (item.EmployeeId == currentUser.Id && !currentUser.IsAdmin)
                     {
-                        availableSlots = new Tuple<int, int>(0, 0);
+                        availableNormalSlots = availableSteamSlots = 0;
                         break;
                     }
                 }
