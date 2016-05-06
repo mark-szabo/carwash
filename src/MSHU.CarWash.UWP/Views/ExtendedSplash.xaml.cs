@@ -148,6 +148,8 @@ namespace MSHU.CarWash.UWP.Views
                 var autoSignInSucceeded = await App.AuthenticationManager.TryAutoSignInWithAadAsync();
                 if (!autoSignInSucceeded)
                 {
+                    //if auto sign in doesn't work then prompt for credentials
+                    await App.AuthenticationManager.LoginWithAAD();
                     rootFrame.Navigate(typeof(MainPage), null);
                 }
                 else

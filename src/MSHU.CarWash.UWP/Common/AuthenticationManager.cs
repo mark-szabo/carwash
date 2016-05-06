@@ -67,7 +67,7 @@ namespace MSHU.CarWash.UWP.Common
         /// <returns></returns>
         public async Task<bool> LoginWithAAD()
         {
-            AuthenticationResult result = await TrySignInWithAadAsync(PromptBehavior.Auto);
+            AuthenticationResult result = await TrySignInWithAadAsync(PromptBehavior.Always);
 
             if (result.Status != AuthenticationStatus.Success)
             {
