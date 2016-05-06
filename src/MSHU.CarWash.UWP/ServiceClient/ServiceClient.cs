@@ -1,8 +1,5 @@
-﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using Microsoft.WindowsAzure.MobileServices;
-using MSHU.CarWash.DomainModel;
+﻿using MSHU.CarWash.DomainModel;
 using MSHU.CarWash.UWP.Common;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -18,103 +15,35 @@ namespace MSHU.CarWash.UWP.ServiceClient
     {
         private const string s_BaseUrl = "https://vadkertitestwebapp.azurewebsites.net";
 
-        // This MobileServiceClient has been configured to communicate with the Azure Mobile App.
-        // You're all set to start working with your Mobile App!
-        public static MobileServiceClient MobileService = new MobileServiceClient(
-            s_BaseUrl);
-
+        /// <summary>
+        /// Get all reservations
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns></returns>
         public static async Task<ReservationViewModel> GetReservations(string token)
         {
-            ReservationViewModel returnValue = null;
-            // Create an HTTP client and add the token to the Authorization header
-            HttpClient httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
-
-            // Call the Web API to get the values
-            Uri requestURI = new Uri(s_BaseUrl + "/api/Calendar/GetReservations");
-            HttpResponseMessage httpResponse = await httpClient.GetAsync(requestURI);
-            if (httpResponse.IsSuccessStatusCode)
-            {
-                string jSonResult = await httpResponse.Content.ReadAsStringAsync();
-
-                ReservationViewModel reservation =
-                    Newtonsoft.Json.JsonConvert.DeserializeObject<ReservationViewModel>(jSonResult);
-                returnValue = reservation;
-            }
-            else
-            {
-                var message = string.Format("{0}", httpResponse.StatusCode.ToString());
-                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
-                Diagnostics.ReportError(message);
-
-                await dialog.ShowAsync();
-            }
-            return returnValue;
+            return await GetRestApiCall<ReservationViewModel>(token, "/api/Calendar/GetReservations");
         }
 
-        public static async Task<bool> SaveReservation(NewReservationViewModel newReservation,
-            string token)
+        /// <summary>
+        /// Save Reservation
+        /// </summary>
+        /// <param name="newReservation"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public static async Task<bool> SaveReservation(NewReservationViewModel newReservation, string token)
         {
-            bool result = false;
-
-            // Create an HTTP client and add the token to the Authorization header
-            HttpClient httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
-
-            // Call the Web API to get the values
-            Uri requestURI = new Uri(s_BaseUrl + "/api/Calendar/SaveReservation");
-            //HttpContent content = new HttpContent();
-            string reservationJSON = Newtonsoft.Json.JsonConvert.SerializeObject(newReservation);
-            HttpContent contentPost = new StringContent(reservationJSON, Encoding.UTF8, "application/json");
-
-
-            HttpResponseMessage httpResponse = await httpClient.PostAsync(requestURI, contentPost);
-            if (httpResponse.IsSuccessStatusCode)
-            {
-                result = true;
-            }
-            else
-            {
-                var message = string.Format("{0}\n{1}", httpResponse.StatusCode.ToString(),
-                       await httpResponse.Content.ReadAsStringAsync());
-                Diagnostics.ReportError(message);
-
-                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
-                await dialog.ShowAsync();
-            }
-
-            return result;
+            return await PostRestApi<NewReservationViewModel>(newReservation, token, "/api/Calendar/SaveReservation");
         }
 
+        /// <summary>
+        /// Get current user
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns></returns>
         public static async Task<Employee> GetCurrentUser(string token)
         {
-            Employee returnValue = null;
-            // Create an HTTP client and add the token to the Authorization header
-            HttpClient httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
-
-            // Call the Web API to get the values
-            Uri requestURI = new Uri(s_BaseUrl + "/api/Employees/GetCurrentUser");
-            HttpResponseMessage httpResponse = await httpClient.GetAsync(requestURI);
-            if (httpResponse.IsSuccessStatusCode)
-            {
-                string jSonResult = await httpResponse.Content.ReadAsStringAsync();
-
-                Employee employee =
-                    Newtonsoft.Json.JsonConvert.DeserializeObject<Employee>(jSonResult);
-                returnValue = employee;
-            }
-            else
-            {
-                var message = string.Format("{0}", httpResponse.StatusCode.ToString());
-                Diagnostics.ReportError(message);
-                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
-                await dialog.ShowAsync();
-            }
-            return returnValue;
+            return await GetRestApiCall<Employee>(token, "/api/Employees/GetCurrentUser"); 
         }
 
         /// <summary>
@@ -124,31 +53,7 @@ namespace MSHU.CarWash.UWP.ServiceClient
         /// <returns>Date of next free slot</returns>
         public static async Task<DateTime?> GetNextFreeSlotDate(string token)
         {
-            // Create an HTTP client and add the token to the Authorization header
-            HttpClient httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
-
-            // Call the Web API to get the values
-            Uri requestURI = new Uri(s_BaseUrl + "/api/Calendar/GetNextFreeSlotDate");
-            HttpResponseMessage httpResponse = await httpClient.GetAsync(requestURI);
-            if (httpResponse.IsSuccessStatusCode)
-            {
-                string jSonResult = await httpResponse.Content.ReadAsStringAsync();
-
-                var date =
-                    Newtonsoft.Json.JsonConvert.DeserializeObject<DateTime?>(jSonResult);
-
-                return date;
-            }
-            else
-            {
-                var message = string.Format("{0}", httpResponse.StatusCode.ToString());
-                Diagnostics.ReportError(message);
-                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
-                await dialog.ShowAsync();
-            }
-            return null;
+            return await GetRestApiCall<DateTime?>(token, "/api/Calendar/GetNextFreeSlotDate");
         }
 
         /// <summary>
@@ -159,28 +64,9 @@ namespace MSHU.CarWash.UWP.ServiceClient
         /// <returns>True if removal has succeeded, false otherwise</returns>
         public static async Task<bool> DeleteReservation(int reservationId, string token)
         {
-            // Create an HTTP client and add the token to the Authorization header
-            HttpClient httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
-
-            // Call the Web API to get the values
-            Uri requestURI = new Uri(s_BaseUrl + "/api/Calendar/DeleteReservation?reservationId=" + reservationId);
-            HttpResponseMessage httpResponse = await httpClient.GetAsync(requestURI);
-            if (httpResponse.IsSuccessStatusCode)
-            {
-                return true;
-            }
-            else
-            {
-                var message = string.Format("{0}\n{1}", httpResponse.StatusCode.ToString(),
-                       await httpResponse.Content.ReadAsStringAsync());
-                Diagnostics.ReportError(message);
-
-                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
-                await dialog.ShowAsync();
-            }
-            return false;
+            //Delete returns the removed Reservation unfortunately
+            Reservation reservation = await GetRestApiCall<Reservation>(token, "/api/Calendar/DeleteReservation?reservationId=" + reservationId);
+            return (reservation!=null);
         }
 
         /// <summary>
@@ -191,36 +77,7 @@ namespace MSHU.CarWash.UWP.ServiceClient
         /// <returns>The number of available slots.</returns>
         public static async Task<int?> GetCapacityByDay(DateTime day, string token)
         {
-            // Create an HTTP client and add the token to the Authorization header
-            HttpClient httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
-
-            // Call the Web API to get the values
-            Uri requestURI = new Uri(s_BaseUrl + $"/api/Calendar/CapacityByDay?day={day.ToString("D", CultureInfo.InvariantCulture)}");
-            string reservationJSON = Newtonsoft.Json.JsonConvert.SerializeObject(day);
-            //HttpContent contentPost = new StringContent(reservationJSON, Encoding.UTF8, "application/json");
-            HttpResponseMessage httpResponse = await httpClient.GetAsync(requestURI);
-            if (httpResponse.IsSuccessStatusCode)
-            {
-                string jSonResult = await httpResponse.Content.ReadAsStringAsync();
-
-                //var availableSlots =
-                //    Newtonsoft.Json.JsonConvert.DeserializeObject<int?>(jSonResult);
-
-                int availableSlots = 0;
-                int.TryParse(jSonResult, out availableSlots);
-
-                return availableSlots;
-            }
-            else
-            {
-                var message = string.Format("{0}", httpResponse.StatusCode.ToString());
-                Diagnostics.ReportError(message);
-                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
-                await dialog.ShowAsync();
-            }
-            return null;
+            return await GetRestApiCall<int?>(token, $"/api/Calendar/CapacityByDay?day={day.ToString("D", CultureInfo.InvariantCulture)}");
         }
 
         /// <summary>
@@ -236,34 +93,11 @@ namespace MSHU.CarWash.UWP.ServiceClient
         public static async Task<List<int>> GetCapacityForTimeInterval(DateTime startDay, DateTime endDay, 
             string token)
         {
-            // Create an HTTP client and add the token to the Authorization header
-            HttpClient httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
+            string url = String.Format("/api/Calendar/CapacityForTimeInterval?startDate={0}&endDate={1}",
+               startDay.ToString("D", CultureInfo.InvariantCulture),
+               endDay.ToString("D", CultureInfo.InvariantCulture));
 
-            // Call the Web API to get the values
-            Uri requestURI = new Uri(s_BaseUrl + 
-                String.Format("/api/Calendar/CapacityForTimeInterval?startDate={0}&endDate={1}",
-                startDay.ToString("D", CultureInfo.InvariantCulture),
-                endDay.ToString("D", CultureInfo.InvariantCulture)));
-            HttpResponseMessage httpResponse = await httpClient.GetAsync(requestURI);
-            if (httpResponse.IsSuccessStatusCode)
-            {
-                string jSonResult = await httpResponse.Content.ReadAsStringAsync();
-
-                var availableSlots =
-                    Newtonsoft.Json.JsonConvert.DeserializeObject<List<int>> (jSonResult);
-
-                return availableSlots;
-            }
-            else
-            {
-                var message = string.Format("{0}", httpResponse.StatusCode.ToString());
-                Diagnostics.ReportError(message);
-                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
-                await dialog.ShowAsync();
-            }
-            return null;
+            return await GetRestApiCall<List<int>>(token, url);
         }
 
         /// <summary>
@@ -273,13 +107,88 @@ namespace MSHU.CarWash.UWP.ServiceClient
         /// <returns>True if succeeded</returns>
         public static async Task<bool> SaveSettings(Settings setting, string token)
         {
+            return await PostRestApi<Settings>(setting, token, "/api/Employees/SaveSettings");
+        }
+        
+        /// <summary>
+        /// </summary>
+        /// <param name="token">Token used for authentication</param>
+        /// <returns>
+        /// </returns>
+        public static async Task<bool?> NewReservationAvailable(string token)
+        {
+            return await GetRestApiCall<bool?>(token, "/api/Calendar/NewReservationAvailable");
+        }
+
+
+        /// <summary>
+        /// General Get REST Api call to Service
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="token"></param>
+        /// <param name="relativeApiUrl"></param>
+        /// <returns></returns>
+        private static async Task<T> GetRestApiCall<T>(string token, string relativeApiUrl)
+        {
+            T returnValue = default(T);
             // Create an HTTP client and add the token to the Authorization header
             HttpClient httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", token);
 
-            Uri requestURI = new Uri(s_BaseUrl + "/api/Employees/SaveSettings");
-            string reservationJSON = Newtonsoft.Json.JsonConvert.SerializeObject(setting);
+            // Call the Web API to get the values
+            Uri requestURI = new Uri(s_BaseUrl + relativeApiUrl);
+            HttpResponseMessage httpResponse = await httpClient.GetAsync(requestURI);
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                string jSonResult = await httpResponse.Content.ReadAsStringAsync();
+
+                T resultObject =
+                    Newtonsoft.Json.JsonConvert.DeserializeObject<T>(jSonResult);
+                returnValue = resultObject;
+            }
+            else
+            {
+                //if unauthorized, then try to login again
+                if (httpResponse.StatusCode.ToString().ToLower().Contains("unauthorized"))
+                {
+                    bool authorized = await App.AuthenticationManager.TryAutoSignInWithAadAsync();
+                    //if login is successful
+                    if (authorized == true)
+                    {
+                        //call again the original method
+                        return await GetRestApiCall<T>(token, relativeApiUrl);
+                    }
+                }
+                else
+                {
+                    var message = string.Format("{0}", httpResponse.StatusCode.ToString());
+                    Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
+                    Diagnostics.ReportError(message);
+                    await dialog.ShowAsync();
+                }
+            }
+
+            return returnValue;
+        }
+
+        /// <summary>
+        /// General Post REST Api call to service
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="postObject"></param>
+        /// <param name="token"></param>
+        /// <param name="relativeApiUrl"></param>
+        /// <returns></returns>
+        private static async Task<bool> PostRestApi<T>(T postObject, string token, string relativeApiUrl)
+        {
+            // Create an HTTP client and add the token to the Authorization header
+            HttpClient httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+
+            Uri requestURI = new Uri(s_BaseUrl + relativeApiUrl);
+            string reservationJSON = Newtonsoft.Json.JsonConvert.SerializeObject(postObject);
 
             HttpContent content = new StringContent(reservationJSON, Encoding.UTF8, "application/json");
             HttpResponseMessage httpResponse = await httpClient.PostAsync(requestURI, content);
@@ -289,51 +198,27 @@ namespace MSHU.CarWash.UWP.ServiceClient
             }
             else
             {
-                var message = string.Format("{0}\n{1}", httpResponse.StatusCode.ToString(),
-                       await httpResponse.Content.ReadAsStringAsync());
-                Diagnostics.ReportError(message);
-
-                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
-                await dialog.ShowAsync();
-            }
-            return false;
-
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="token">Token used for authentication</param>
-        /// <returns>
-        /// </returns>
-        public static async Task<bool?> NewReservationAvailable(string token)
-        {
-            // Create an HTTP client and add the token to the Authorization header
-            HttpClient httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
-
-            // Call the Web API to get the values
-            Uri requestURI = new Uri(s_BaseUrl +
-                String.Format("/api/Calendar/NewReservationAvailable"));
-            HttpResponseMessage httpResponse = await httpClient.GetAsync(requestURI);
-            if (httpResponse.IsSuccessStatusCode)
-            {
-                string jSonResult = await httpResponse.Content.ReadAsStringAsync();
-
-                var availableSlots =
-                    Newtonsoft.Json.JsonConvert.DeserializeObject<bool>(jSonResult);
-
-                return availableSlots;
-            }
-            else
-            {
-                var message = string.Format("{0}", httpResponse.StatusCode.ToString());
-                Diagnostics.ReportError(message);
-                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
-                await dialog.ShowAsync();
+                //if unauthorized, then try to login again
+                if (httpResponse.StatusCode.ToString().ToLower().Contains("unauthorized"))
+                {
+                    bool authorized = await App.AuthenticationManager.TryAutoSignInWithAadAsync();
+                    //if login is successful
+                    if (authorized == true)
+                    {
+                        //call again the original method
+                        return await PostRestApi<T>(postObject, token, relativeApiUrl);
+                    }
+                }
+                else
+                {
+                    var message = string.Format("{0}\n{1}", httpResponse.StatusCode.ToString(),
+                    await httpResponse.Content.ReadAsStringAsync());
+                    Diagnostics.ReportError(message);
+                    Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
+                    await dialog.ShowAsync();
+                }
             }
             return false;
         }
-
     }
 }
