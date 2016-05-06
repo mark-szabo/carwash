@@ -186,7 +186,9 @@ namespace MSHU.CarWash.UWP.ViewModels
                     {
                         ServicesSource.View.MoveCurrentToFirst();
                     }
-                    //OnPropertyChanged("Services");
+                    OnPropertyChanged("Services");
+                    OnPropertyChanged(nameof(ServicesSource));
+
                 }
             }
         }
@@ -527,6 +529,10 @@ namespace MSHU.CarWash.UWP.ViewModels
             SelectedDate = selectedDate.ToString("D");
             _currentDate = selectedDate;
 
+            // re-fresh services based on date and free slots
+            Services = GetAvailableServices(_currentDate.Date, Convert.ToInt32(_freeSlotsByDate[_currentDate.Date]));
+            ServicesSource.Source = Services;
+
             if (SelectedDayDetails != null)
             {
                 // Check if the user has reservation for the selected date.
@@ -602,7 +608,8 @@ namespace MSHU.CarWash.UWP.ViewModels
             CurrentComment = string.Empty;
             
             // re-fresh services based on date and free slots
-            ServicesSource.Source = GetAvailableServices(_currentDate.Date, Convert.ToInt32(_freeSlotsByDate[_currentDate.Date]));
+            Services = GetAvailableServices(_currentDate.Date, Convert.ToInt32(_freeSlotsByDate[_currentDate.Date]));
+            ServicesSource.Source = Services;
         }
 
         private void ExecuteCancelReservationChangesCommand(object param)
@@ -619,7 +626,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             nrvm.VehiclePlateNumber = CurrentReservation.VehiclePlateNumber;
             nrvm.SelectedServiceId = ((ServiceViewModel)ServicesSource.View.CurrentItem).ServiceId;
             nrvm.Comment = CurrentReservation.Comment;
-            nrvm.SelectedServiceId = ServicesSource.View.CurrentPosition;
+            //nrvm.SelectedServiceId = ServicesSource.View.CurrentPosition;
             nrvm.Date = _currentDate.Date;
             bool result = await ServiceClient.ServiceClient.SaveReservation(
                 nrvm,
