@@ -4,25 +4,25 @@ namespace MSHU.CarWash.DomainModel
 {
     public enum ServiceEnum
     {
-        [Display(Description = "External")]
+        [Display(Description = "EXTERIOR")]
         KulsoMosas = 0,
 
-        [Display(Description = "Internal ")]
+        [Display(Description = "INTERIOR")]
         BelsoTakaritas = 1,
 
-        [Display(Description = "External + internal")]
+        [Display(Description = "EXTERIOR + INTERIOR")]
         KulsoMosasBelsoTakaritas = 2,
 
-        [Display(Description = "External + internal + carpet")]
+        [Display(Description = "EXTERIOR + INTERIOR + CARPET")]
         KulsoMosasBelsoTakaritasKarpittisztitas = 3,
 
-        [Display(Description = "External (steam)")]
+        [Display(Description = "EXTERIOR (STEAM)")]
         KulsoMosasGozos = 4,
 
-        [Display(Description = "Internal (steam)")]
+        [Display(Description = "INTERIOR (STEAM)")]
         BelsoTakaritasGozos = 5,
 
-        [Display(Description = "External + internal (steam)")]
+        [Display(Description = "EXTERIOR + INTERIOR (STEAM)")]
         KulsoMosasBelsoTakaritasGozos = 6
     }
 }
