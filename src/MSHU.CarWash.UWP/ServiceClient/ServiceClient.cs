@@ -120,6 +120,16 @@ namespace MSHU.CarWash.UWP.ServiceClient
             return await GetRestApiCall<bool?>(token, "/api/Calendar/NewReservationAvailable");
         }
 
+        /// <summary>
+        /// Save Reservation
+        /// </summary>
+        /// <param name="newReservation"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public static async Task<bool> UpdateReservation(Reservation reservation, string token)
+        {
+            return await PostRestApi<Reservation>(reservation, token, "/api/Calendar/UpdateReservation");
+        }
 
         /// <summary>
         /// General Get REST Api call to Service

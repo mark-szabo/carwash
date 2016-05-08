@@ -21,7 +21,7 @@ namespace MSHU.CarWash.UWP.Converters
             }
             else
             {
-                return Controls.ReservationDetailsView.ButtonsDisplayMode.Delete;
+                return Controls.ReservationDetailsView.ButtonsDisplayMode.UpdateDelete;
             }
         }
 

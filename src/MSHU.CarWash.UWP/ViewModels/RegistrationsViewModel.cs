@@ -95,6 +95,11 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// </summary>
         public RelayCommand DeleteReservationCommand { get; set; }
 
+        /// <summary>
+        /// Gets or sets the UpdateReservationCommand.
+        /// </summary>
+        public RelayCommand UpdateReservationCommand { get; set; }
+
         public object FreeSlots => this;
 
         public bool UseDetailsView
@@ -212,24 +217,6 @@ namespace MSHU.CarWash.UWP.ViewModels
 
         public CollectionViewSource ServicesSource { get; set; }
 
-        public string CurrentComment
-        {
-            get
-            {
-                return CurrentReservation?.Comment;
-            }
-
-            set
-            {
-                // Setting the comment is actually only allowed for new reservations.
-                if (CurrentReservation.ReservationId == 0)
-                {
-                    CurrentReservation.Comment = value;
-                    OnPropertyChanged("CurrentComment");
-                }
-            }
-        }
-
         /// <summary>
         /// Indicates if the current reservation can be edited.
         /// </summary>
@@ -323,6 +310,9 @@ namespace MSHU.CarWash.UWP.ViewModels
             // Create the DeleteReservationCommand.
             DeleteReservationCommand = new RelayCommand(ExecuteDeleteReservationCommand,
                 (Func<object, bool>)CanExecuteDeleteReservationCommand);
+
+            // Create the UpdateReservationChangesCommand.
+            UpdateReservationCommand = new RelayCommand(ExecuteUpdateReservationChangesCommand);
 
             // Create the PreviousPeriodCommand.
             PreviousPeriodCommand = new RelayCommand(ExecutePreviousPeriodCommand);
@@ -605,7 +595,6 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
             cr.IsDeletable = true;
             CurrentReservation = cr;
-            CurrentComment = string.Empty;
             
             // re-fresh services based on date and free slots
             Services = GetAvailableServices(_currentDate.Date, Convert.ToInt32(_freeSlotsByDate[_currentDate.Date]));
@@ -633,13 +622,8 @@ namespace MSHU.CarWash.UWP.ViewModels
                 App.AuthenticationManager.BearerAccessToken);
             if (result)
             {
-                // Update the slot number cache
-                int count;
-                bool success = int.TryParse(_freeSlotsByDate[_currentDate.Date], out count);
-                if (success)
-                {
-                    _freeSlotsByDate[_currentDate.Date] = (--count).ToString();
-                }
+                // Update the slot number cache.
+                await UpdateSlotNumberCache(_currentDate.Date);
 
                 // If the user has changed the plate number then refresh the CurrentEmployee instance 
                 // at the AuthenticationManager.
@@ -658,6 +642,17 @@ namespace MSHU.CarWash.UWP.ViewModels
                     // request subscribing view to do a smart go back
                     SmartGoBackRequested?.Invoke(this, null);
                 }
+            }
+        }
+
+        private async Task UpdateSlotNumberCache(DateTime date)
+        {
+            int? count = await ServiceClient.ServiceClient.GetCapacityByDay(
+                date,
+                App.AuthenticationManager.BearerAccessToken);
+            if (count.HasValue)
+            {
+                _freeSlotsByDate[date] = count.Value.ToString();
             }
         }
 
@@ -687,12 +682,8 @@ namespace MSHU.CarWash.UWP.ViewModels
                 reservationByCurrentDate.Reservations.RemoveAll(
                     x => x.ReservationId == _currentReservation.ReservationId);
 
-                int count;
-                bool success = int.TryParse(_freeSlotsByDate[_currentDate.Date], out count);
-                if (success)
-                {
-                    _freeSlotsByDate[_currentDate.Date] = (++count).ToString();
-                }
+                // Update the slot number cache.
+                await UpdateSlotNumberCache(_currentDate.Date);
 
                 // Reset the current reservation instance.
                 CurrentReservation = null;
@@ -701,6 +692,48 @@ namespace MSHU.CarWash.UWP.ViewModels
                 OnPropertyChanged(nameof(FreeSlots));
                 OnPropertyChanged(nameof(DayStatus));
                 this.Feedback = string.Empty;
+            }
+        }
+
+        private async void ExecuteUpdateReservationChangesCommand(object param)
+        {
+            Reservation updatedReservation = new Reservation();
+            updatedReservation.Comment = CurrentReservation.Comment;
+            string id = App.AuthenticationManager.CurrentEmployee.EmployeeId;
+            updatedReservation.CreatedBy = CurrentReservation.EmployeeId;
+            updatedReservation.CreatedOn = DateTime.UtcNow;
+            updatedReservation.Date = _currentDate.Date;
+            updatedReservation.EmployeeId = CurrentReservation.EmployeeId;
+            updatedReservation.ReservationId = CurrentReservation.ReservationId;
+            updatedReservation.SelectedServiceId = ((ServiceViewModel)ServicesSource.View.CurrentItem).ServiceId;
+            updatedReservation.VehiclePlateNumber = CurrentReservation.VehiclePlateNumber;
+
+            // Update the reservation on the service
+            bool result = await ServiceClient.ServiceClient.UpdateReservation(
+                updatedReservation,
+                App.AuthenticationManager.BearerAccessToken);
+            if (result)
+            {
+                // Update the slot number cache.
+                await UpdateSlotNumberCache(_currentDate.Date);
+
+                // If the user has changed the plate number then refresh the CurrentEmployee instance 
+                // at the AuthenticationManager.
+                if (CurrentReservation.VehiclePlateNumber != App.AuthenticationManager.CurrentEmployee.VehiclePlateNumber)
+                {
+                    App.AuthenticationManager.RefreshCurrentUser();
+                }
+                // Refresh the ReservationViewModel reference.
+                _rmv = await ServiceClient.ServiceClient.GetReservations(
+                    App.AuthenticationManager.BearerAccessToken);
+                if (_rmv != null)
+                {
+                    OnPropertyChanged(nameof(FreeSlots));
+                    OnPropertyChanged(nameof(DayStatus));
+
+                    // request subscribing view to do a smart go back
+                    SmartGoBackRequested?.Invoke(this, null);
+                }
             }
         }
 

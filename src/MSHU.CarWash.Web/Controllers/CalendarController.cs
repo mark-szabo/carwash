@@ -580,6 +580,131 @@ namespace MSHU.CarWash.Controllers
             return Json(result);
         }
 
+        [HttpPost]
+        [ResponseType(typeof(void))]
+        public async Task<IHttpActionResult> UpdateReservation(Reservation reservationToUpdate)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var currentUser = UserHelper.GetCurrentUser();
+            DateTime now = DateTime.UtcNow;
+
+            #region Find the reservation that must be updated.
+
+            var query = from b in _db.Reservations
+                        where b.ReservationId == reservationToUpdate.ReservationId && b.EmployeeId == reservationToUpdate.EmployeeId
+                        select b;
+            var queryResult = await query.ToListAsync();
+            if (queryResult.Count == 0)
+            {
+                ModelState.AddModelError("", "The requested operation could not be executed (Reservation not found)!");
+                return BadRequest(ModelState);
+            }
+            Reservation reservationInDb = queryResult[0];
+
+            #endregion
+
+            #region Check business rules
+            // Check if the selected service has been changed. In that case we need to ensure
+            // that there are enough slots available.
+            if (reservationToUpdate.SelectedServiceId != reservationInDb.SelectedServiceId)
+            {
+                var queryReservation = from b in _db.Reservations
+                                       where b.Date == reservationToUpdate.Date
+                                       select b;
+                var queryReservationResult = await queryReservation.ToListAsync();
+                var availableSlots = GetAvailableSlots(
+                    queryReservationResult, 
+                    reservationToUpdate.Date,
+                    false);
+
+                // Increase slot numbers according to the previously selected service
+                if (reservationInDb.SelectedServiceId == (int)ServiceEnum.ExteriorInteriorCarpet)
+                {
+                    availableSlots = new Tuple<int, int>(availableSlots.Item1 + 2, availableSlots.Item2);
+                }
+                else if (reservationInDb.SelectedServiceId == (int)ServiceEnum.InteriorSteam ||
+                    reservationInDb.SelectedServiceId == (int)ServiceEnum.ExteriorSteam ||
+                    reservationInDb.SelectedServiceId == (int)ServiceEnum.ExteriorInteriorSteam)
+                {
+                    availableSlots = new Tuple<int, int>(availableSlots.Item1, availableSlots.Item2 + 1);
+                }
+                else
+                {
+                    availableSlots = new Tuple<int, int>(availableSlots.Item1 + 1, availableSlots.Item2);
+                }
+
+                // Decrease slot numbers according to the newly selected service
+                if (reservationToUpdate.SelectedServiceId == (int)ServiceEnum.ExteriorInteriorCarpet)
+                {
+                    availableSlots = new Tuple<int, int>(availableSlots.Item1 - 2, availableSlots.Item2);
+                }
+                else if (reservationToUpdate.SelectedServiceId == (int)ServiceEnum.InteriorSteam ||
+                    reservationToUpdate.SelectedServiceId == (int)ServiceEnum.ExteriorSteam ||
+                    reservationToUpdate.SelectedServiceId == (int)ServiceEnum.ExteriorInteriorSteam)
+                {
+                    availableSlots = new Tuple<int, int>(availableSlots.Item1, availableSlots.Item2 - 1);
+                }
+                else
+                {
+                    availableSlots = new Tuple<int, int>(availableSlots.Item1 - 1, availableSlots.Item2);
+                }
+                if (availableSlots.Item1 < 0 || availableSlots.Item2 < 0)
+                {
+                    ModelState.AddModelError("", "The newly selected service is not available on the selected day! Please select another service or another day!");
+                    return BadRequest(ModelState);
+                }
+            }
+            #endregion
+
+            #region Update the VehiclePlateNumber to the current given value
+            Employee employee = await _db.Employees.FindAsync(currentUser.Id);
+            if (employee == null)
+            {
+                return NotFound();
+            }
+            if (employee.VehiclePlateNumber != reservationToUpdate.VehiclePlateNumber)
+            {
+                employee.VehiclePlateNumber = reservationToUpdate.VehiclePlateNumber.ToUpper();
+                employee.ModifiedBy = currentUser.Id;
+                employee.ModifiedOn = now;
+
+                _db.Entry(employee).State = EntityState.Modified;
+
+                try
+                {
+                    await _db.SaveChangesAsync();
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+            #endregion
+
+            #region Update reservation
+
+            reservationInDb.SelectedServiceId = reservationToUpdate.SelectedServiceId;
+            reservationInDb.VehiclePlateNumber = reservationToUpdate.VehiclePlateNumber.ToUpper();
+            reservationInDb.Comment = reservationToUpdate.Comment;
+
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            #endregion
+
+            return StatusCode(HttpStatusCode.NoContent);
+        }
+
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -633,7 +758,20 @@ namespace MSHU.CarWash.Controllers
             return result;
         }
 
-        private Tuple<int, int> GetAvailableSlots(List<Reservation> queryResult, DateTime date)
+        /// <summary>
+        /// Calculates the number of available slots for the specified date based on
+        /// the given reservation list.
+        /// Specify false for the checkDuplicate parameter if the method doesn't have to
+        /// check if the user already has a reservation on the specified date.
+        /// </summary>
+        /// <param name="queryResult"></param>
+        /// <param name="date"></param>
+        /// <param name="checkDuplicate"></param>
+        /// <returns></returns>
+        private Tuple<int, int> GetAvailableSlots(
+            List<Reservation> queryResult, 
+            DateTime date,
+            bool checkDuplicate = true)
         {
             var currentUser = UserHelper.GetCurrentUser();
             var availableSlots = GetConfiguredAvailableSlotsOnDate(date);
@@ -662,7 +800,7 @@ namespace MSHU.CarWash.Controllers
                     }
 
                     // ...make sure we don't allow 2 reservations for a single day (unless user is admin)
-                    if (item.EmployeeId == currentUser.Id && !currentUser.IsAdmin)
+                    if (item.EmployeeId == currentUser.Id && !currentUser.IsAdmin && checkDuplicate)
                     {
                         availableNormalSlots = availableSteamSlots = 0;
                         break;

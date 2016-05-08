@@ -11,7 +11,7 @@ namespace MSHU.CarWash.UWP.Controls
         public enum ButtonsDisplayMode
         {
             SaveCancel,
-            Delete
+            UpdateDelete
         }
 
         public RelayCommand CancelCommand
@@ -52,7 +52,7 @@ namespace MSHU.CarWash.UWP.Controls
             "DisplayMode", 
             typeof(ButtonsDisplayMode), 
             typeof(ReservationDetailsView), 
-            new PropertyMetadata(ButtonsDisplayMode.Delete, OnDisplayModeChanged));
+            new PropertyMetadata(ButtonsDisplayMode.UpdateDelete, OnDisplayModeChanged));
 
         public RelayCommand DeleteCommand
         {
@@ -63,6 +63,16 @@ namespace MSHU.CarWash.UWP.Controls
         // Using a DependencyProperty as the backing store for DeleteCommand.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty DeleteCommandProperty =
             DependencyProperty.Register("DeleteCommand", typeof(RelayCommand), typeof(ReservationDetailsView), new PropertyMetadata(null));
+
+        public RelayCommand UpdateCommand
+        {
+            get { return (RelayCommand)GetValue(UpdateCommandProperty); }
+            set { SetValue(UpdateCommandProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for UpdateCommand.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty UpdateCommandProperty =
+            DependencyProperty.Register("UpdateCommand", typeof(RelayCommand), typeof(ReservationDetailsView), new PropertyMetadata(null));
 
         public ReservationDetailsView()
         {
@@ -77,14 +87,16 @@ namespace MSHU.CarWash.UWP.Controls
         private void OnDisplayModeChanged(DependencyPropertyChangedEventArgs args)
         {
             ButtonsDisplayMode mode = (ButtonsDisplayMode)args.NewValue;
-            if (mode == ButtonsDisplayMode.Delete)
+            if (mode == ButtonsDisplayMode.UpdateDelete)
             {
+                UpdateButton.Visibility = Visibility.Visible;
                 DeleteButton.Visibility = Visibility.Visible;
                 SaveButton.Visibility = Visibility.Collapsed;
                 CancelButton.Visibility = Visibility.Collapsed;
             }
             else if (mode == ButtonsDisplayMode.SaveCancel)
             {
+                UpdateButton.Visibility = Visibility.Collapsed;
                 DeleteButton.Visibility = Visibility.Collapsed;
                 SaveButton.Visibility = Visibility.Visible;
                 CancelButton.Visibility = Visibility.Visible;

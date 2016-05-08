@@ -137,6 +137,7 @@
                                                  SaveCommand="{Binding SaveReservationChangesCommand}"
                                                  CancelCommand="{Binding CancelReservationChangesCommand}"
                                                  DeleteCommand="{Binding DeleteReservationCommand}"
+                                                 UpdateCommand="{Binding UpdateReservationCommand}"
                                                  DisplayMode="{Binding CurrentReservation, Converter={StaticResource buttonsDisplayModeConverter}}"
                                                  IsEnabled="{Binding IsEditable}"/>
 
