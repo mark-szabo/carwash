@@ -277,11 +277,10 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
             if (App.AuthenticationManager.IsUserAuthenticated)
             {
-                UserInfo info = App.AuthenticationManager.UserData;
+                ServiceClient.UserInfo info = App.AuthenticationManager.UserData;
                 GivenName = info.GivenName;
                 FamilyName = info.FamilyName;
                 Email = info.DisplayableId;
-
             }
 
             RequestServiceCommand = new RelayCommand(ExecuteRequestServiceCommand);

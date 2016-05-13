@@ -7,6 +7,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Linq;
+using Windows.Security.Credentials;
+using Windows.Security.Authentication.Web.Core;
 
 namespace MSHU.CarWash.UWP.Common
 {
@@ -33,7 +35,7 @@ namespace MSHU.CarWash.UWP.Common
         /// <summary>
         /// Gets the UserInfo structure for the current user.
         /// </summary>
-        public UserInfo UserData { get; private set; }
+        public MSHU.CarWash.UWP.ServiceClient.UserInfo UserData { get; private set; }
 
         /// <summary>
         /// Gets the access token for further HttpRequest 
@@ -55,6 +57,7 @@ namespace MSHU.CarWash.UWP.Common
             // This is the only purposes of this line of code, it has no functional purpose in the application.
             this.m_AppUri = 
                 Windows.Security.Authentication.Web.WebAuthenticationBroker.GetCurrentApplicationCallbackUri();
+            string brokerUri = string.Format("ms-appx-web://Microsoft.AAD.BrokerPlugIn/{0}", Windows.Security.Authentication.Web.WebAuthenticationBroker.GetCurrentApplicationCallbackUri().Host.ToUpper());
 
         }
 
@@ -67,11 +70,95 @@ namespace MSHU.CarWash.UWP.Common
         /// <returns></returns>
         public async Task<bool> LoginWithAAD()
         {
-            AuthenticationResult result = await TrySignInWithAadAsync(PromptBehavior.Always);
+            bool result = await TrySignInWithAadAsync(PromptBehavior.Always);
+            return result;
+        }
 
-            if (result.Status != AuthenticationStatus.Success)
+        private async Task<bool> TrySignInWithAadAsync(PromptBehavior promptBehavior)
+        {
+            bool result = false;
+            result = await TrySignInWithWebBrokerAsync(promptBehavior);
+            if (result == false)
             {
-                if (result.Error == "authentication_canceled")
+                result = await TrySignInWithADALAsync(promptBehavior);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Try to sign in with WebBroker (Windows 10 mode)
+        /// </summary>
+        /// <param name="promptBehavior"></param>
+        /// <returns></returns>
+        private async Task<bool> TrySignInWithWebBrokerAsync(PromptBehavior promptBehavior)
+        {
+            bool result = false;
+            WebAccountProvider wap = await WebAuthenticationCoreManager.FindAccountProviderAsync("https://login.microsoft.com", s_Authority);
+            string resource = "https://vadkertitestwebapp.azurewebsites.net";
+            WebTokenRequest wtr = new WebTokenRequest(wap, string.Empty, m_ClientId);
+            wtr.Properties.Add("resource", resource);
+            WebTokenRequestResult wtrr = await WebAuthenticationCoreManager.RequestTokenAsync(wtr);
+            if (wtrr.ResponseStatus == WebTokenRequestStatus.Success)
+            {
+                string accessToken = wtrr.ResponseData[0].Token;
+                var account = wtrr.ResponseData[0].WebAccount;
+                var properties = wtrr.ResponseData[0].Properties;
+
+                ServiceClient.UserInfo info = new ServiceClient.UserInfo();
+                info.DisplayableId = account.UserName;
+                //[0]: "UPN"
+                //[1]: "DisplayName"
+                //[2]: "TenantId"
+                //[3]: "FirstName"
+                //[4]: "OID"
+                //[5]: "Authority"
+                //[6]: "SignInName"
+                //[7]: "UserName"
+                //[8]: "UID"
+                //[9]: "LastName"
+                info.FamilyName = account.Properties["LastName"];
+                info.GivenName = account.Properties["FirstName"];
+                UserData = info;
+                BearerAccessToken = accessToken;
+                // Get the Employee instance assigned to the current user.
+                CurrentEmployee = await ServiceClient.ServiceClient.GetCurrentUser(BearerAccessToken);
+                result = true;
+            }
+            
+            return result;
+        }
+
+        /// <summary>
+        /// Try to sign in with Active Directory Authentication Library
+        /// </summary>
+        /// <param name="promptBehavior"></param>
+        /// <returns></returns>
+        private async Task<bool> TrySignInWithADALAsync(PromptBehavior promptBehavior)
+        {
+            bool result = false;
+            var authenticationResult = await m_AuthContext.AcquireTokenAsync(
+                                "https://vadkertitestwebapp.azurewebsites.net",
+                                m_ClientId,
+                                m_AppUri,
+                                promptBehavior);
+
+            if (authenticationResult.Status == AuthenticationStatus.Success)
+            {
+                //successful sign in
+                IsUserAuthenticated = true;
+                MSHU.CarWash.UWP.ServiceClient.UserInfo info = new MSHU.CarWash.UWP.ServiceClient.UserInfo();
+                info.DisplayableId = authenticationResult.UserInfo.DisplayableId;
+                info.FamilyName = authenticationResult.UserInfo.DisplayableId;
+                info.GivenName = authenticationResult.UserInfo.DisplayableId;
+                UserData = info;
+                BearerAccessToken = authenticationResult.AccessToken;
+                // Get the Employee instance assigned to the current user.
+                CurrentEmployee = await ServiceClient.ServiceClient.GetCurrentUser(BearerAccessToken);
+                result = true;
+            }
+            if (authenticationResult.Status != AuthenticationStatus.Success)
+            {
+                if (authenticationResult.Error == "authentication_canceled")
                 {
                     // The user cancelled the sign-in, no need to display a message.
                 }
@@ -79,32 +166,11 @@ namespace MSHU.CarWash.UWP.Common
                 {
                     //pop up the error message
                     Windows.UI.Popups.MessageDialog dialog =
-                        new Windows.UI.Popups.MessageDialog(string.Format("If the error continues, please contact your administrator.\n\nError: {0}\n\nError Description:\n\n{1}", result.Error, result.ErrorDescription), "Sorry, an error occurred while signing you in.");
+                        new Windows.UI.Popups.MessageDialog(
+                            string.Format("If the error continues, please contact your administrator.\n\nError: {0}\n\nError Description:\n\n{1}", authenticationResult.Error, authenticationResult.ErrorDescription), "Sorry, an error occurred while signing you in.");
                     await dialog.ShowAsync();
                 }
-
-                return false;
-            }
-
-            return true;
-        }
-
-        private async Task<AuthenticationResult> TrySignInWithAadAsync(PromptBehavior promptBehavior)
-        {
-            var result = await m_AuthContext.AcquireTokenAsync(
-                "https://vadkertitestwebapp.azurewebsites.net",
-                m_ClientId,
-                m_AppUri,
-                promptBehavior);
-
-            if (result.Status == AuthenticationStatus.Success)
-            {
-                //successful sign in
-                IsUserAuthenticated = true;
-                UserData = result.UserInfo;
-                BearerAccessToken = result.AccessToken;
-                // Get the Employee instance assigned to the current user.
-                CurrentEmployee = await ServiceClient.ServiceClient.GetCurrentUser(BearerAccessToken);
+                result = false;
             }
 
             return result;
@@ -115,9 +181,9 @@ namespace MSHU.CarWash.UWP.Common
             try
             {
                 var result = await TrySignInWithAadAsync(PromptBehavior.Never);
-                return result.Status == AuthenticationStatus.Success;
+                return result;
             }
-            catch(HttpRequestException)
+            catch (HttpRequestException)
             {
                 return false;
             }
@@ -135,12 +201,25 @@ namespace MSHU.CarWash.UWP.Common
             HttpResponseMessage msg = await SendMessage(requestUrl);
             if (msg.IsSuccessStatusCode)
             {
+                ClearCookies();
                 result = true;
             }
             return result;
         }
 
-        private async Task<HttpResponseMessage> SendMessage(string requestUrl)
+        // This function clears cookies from the browser control used by ADAL. 
+         private void ClearCookies()
+         { 
+             const int INTERNET_OPTION_END_BROWSER_SESSION = 42; 
+             InternetSetOption(IntPtr.Zero, INTERNET_OPTION_END_BROWSER_SESSION, IntPtr.Zero, 0); 
+         } 
+ 
+ 
+         [System.Runtime.InteropServices.DllImport("wininet.dll", SetLastError = true)] 
+         private static extern bool InternetSetOption(IntPtr hInternet, int dwOption, IntPtr lpBuffer, int lpdwBufferLength);
+
+
+    private async Task<HttpResponseMessage> SendMessage(string requestUrl)
         {
             var client = new HttpClient();
             var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
