@@ -7,6 +7,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Linq;
+using Windows.Security.Credentials;
+using Windows.Security.Authentication.Web.Core;
 
 namespace MSHU.CarWash.UWP.Common
 {
@@ -20,8 +22,8 @@ namespace MSHU.CarWash.UWP.Common
         private Uri m_AppUri = new Uri("ms-app://s-1-15-2-348789351-3529148773-2918319933-3807175127-3638082815-3054471230-807679675/");
        
         //Session to Azure AD
-        private const string s_TenantId = "microsoft.onmicrosoft.com";
-        private const string s_Authority = "https://login.microsoftonline.com/"+ s_TenantId;
+        private const string s_TenantId = "microsoft.com";
+        private const string s_Authority = "https://login.windows.net/"+ s_TenantId;
         private AuthenticationContext m_AuthContext = new AuthenticationContext(s_Authority);
 
        
@@ -67,7 +69,7 @@ namespace MSHU.CarWash.UWP.Common
         /// <returns></returns>
         public async Task<bool> LoginWithAAD()
         {
-            AuthenticationResult result = await TrySignInWithAadAsync(PromptBehavior.Always);
+            AuthenticationResult result = await TrySignInWithAadAsync(PromptBehavior.Auto);
 
             if (result.Status != AuthenticationStatus.Success)
             {
@@ -91,6 +93,18 @@ namespace MSHU.CarWash.UWP.Common
 
         private async Task<AuthenticationResult> TrySignInWithAadAsync(PromptBehavior promptBehavior)
         {
+
+            string tenant = "microsoft.onmicrosoft.com";
+            string authority = "https://login.microsoftonline.com/" + tenant;
+
+            WebAccountProvider wap = await WebAuthenticationCoreManager.FindAccountProviderAsync("https://login.microsoft.com", authority);
+
+            string resource = "https://vadkertitestwebapp.azurewebsites.net";
+            WebTokenRequest wtr = new WebTokenRequest(wap, string.Empty, m_ClientId);
+
+            wtr.Properties.Add("resource", resource);
+            WebTokenRequestResult wtrr = await WebAuthenticationCoreManager.RequestTokenAsync(wtr);
+
             var result = await m_AuthContext.AcquireTokenAsync(
                 "https://vadkertitestwebapp.azurewebsites.net",
                 m_ClientId,
