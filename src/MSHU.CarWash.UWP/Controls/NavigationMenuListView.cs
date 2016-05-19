@@ -90,14 +90,20 @@ namespace MSHU.CarWash.UWP.Controls
 
             for (int i = 0; i < this.Items.Count; i++)
             {
+
                 var lvi = (ListViewItem)this.ContainerFromIndex(i);
-                if (i != index)
+                // at this point, lvi might be null if the nav list has never been rendered
+                // null check seems to be an ugly workaround, but couldn't find better yet
+                if (lvi != null)
                 {
-                    lvi.IsSelected = false;
-                }
-                else if (i == index)
-                {
-                    lvi.IsSelected = true;
+                    if (i != index)
+                    {
+                        lvi.IsSelected = false;
+                    }
+                    else if (i == index)
+                    {
+                        lvi.IsSelected = true;
+                    }
                 }
             }
         }
