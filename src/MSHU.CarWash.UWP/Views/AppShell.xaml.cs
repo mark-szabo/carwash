@@ -257,8 +257,12 @@ namespace MSHU.CarWash.UWP.Views
             ((Page)sender).Focus(FocusState.Programmatic);
             ((Page)sender).Loaded -= Page_Loaded;
             this.CheckTogglePaneButtonSizeChanged();
-        }
 
+            if(NavMenuList.SelectedItem == null)
+            {
+                NavMenuList.SelectedIndex = 0;
+            }
+        }
         #endregion
 
         public Rect TogglePaneButtonRect
