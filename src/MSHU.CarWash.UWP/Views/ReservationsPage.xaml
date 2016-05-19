@@ -37,10 +37,10 @@
                                     DataContext="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}"
                                     Visibility="{Binding Path=IsBlackout, RelativeSource={RelativeSource Mode=TemplatedParent}, Converter={StaticResource inverseBool2VisibilityConverter}}">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <TextBlock x:Name="FreeSlotsTextBox" FontSize="11" Margin="4,0,0,0"
+                                    <TextBlock x:Name="FreeSlotsTextBox" FontSize="9" Margin="4,0,0,0"
                                            />
                                     <!--Text="{Binding Converter={StaticResource dayItemConverter}, ConverterParameter={Binding}}"-->
-                                    <TextBlock Text=" free slot(s)" FontSize="11"/>
+                                    <TextBlock Text=" free slot(s)" FontSize="9"/>
                                 </StackPanel>
                             </StackPanel>
                         </RelativePanel>
@@ -104,7 +104,7 @@
                           RelativePanel.AlignLeftWithPanel="True"
                           RelativePanel.AlignRightWithPanel="True"
                           PreviousButtonCommand="{Binding PreviousPeriodCommand}"
-                          NextButtonCommand="{Binding NextPeriodCommand}"
+                          NextButtonCommand="{Binding NextPeriodCommand}" Background="#CCECECEC"
                       />
             </Viewbox>
         </RelativePanel>

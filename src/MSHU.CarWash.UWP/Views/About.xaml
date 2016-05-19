@@ -221,13 +221,13 @@
             </Setter>
         </Style>
     </views:BasePage.Resources>
-    <Grid Background="{StaticResource BrushDarkBlue}">
+    <Grid Background="{StaticResource BackgroundImage}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         <views:SignOutControl Grid.Row="0"/>
-        <Pivot Grid.Row="1" Padding="4" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Pivot Grid.Row="1" Padding="4" Background="#66ECECEC">
             <Pivot.Resources>
                 <Style TargetType="PivotHeaderPanel">
                     <Setter Property="Background">
@@ -244,7 +244,7 @@
                 <RelativePanel>
                     <StackPanel Name="MyStack" RelativePanel.AlignTopWithPanel="True">
                         <TextBlock Text="CarWash Universal App" Style="{ThemeResource SubheaderTextBlockStyle}"/>
-                        <TextBlock Style="{ThemeResource BodyTextBlockStyle}">
+                        <TextBlock Style="{ThemeResource BodyTextBlockStyle}" TextAlignment="Justify">
                         <LineBreak/>
                         CarWash Universal Application is intended to help Microsoft employees working in the Hungarian subsidiaries to reserve and to order car washing services from different service providers. 
                         Users are able to register car washing on every workday until free slots are available.
@@ -252,12 +252,20 @@
                         </TextBlock>
                         <TextBlock></TextBlock>
                         <TextBlock Style="{ThemeResource BaseTextBlockStyle}" TextWrapping="Wrap">
-                        <LineBreak></LineBreak>
-                        Authors:<LineBreak></LineBreak>
-                        Ákos Szegő - <Hyperlink NavigateUri="mailto:akos.szego@microsoft.com"> 
-                        akos.szego@microsoft.com </Hyperlink>, Tamás Veiland - <Hyperlink NavigateUri="mailto:tamas.veiland@microsoft.com"> 
-                        tamas.veiland@microsoft.com </Hyperlink>, József Vadkerti - <Hyperlink NavigateUri="mailto:jozsef.vadkerti@microsoft.com"> 
-                        jozsef.vadkerti@microsoft.com </Hyperlink>
+                        	<Run Text="Authors:"/>
+                        	<LineBreak/>
+                        	<Run Text="Ákos Szegő - "/>
+                        	<Hyperlink NavigateUri="mailto:akos.szego@microsoft.com">
+                        		<Run Text="akos.szego@microsoft.com"/>
+                        	</Hyperlink>
+                        	<Run Text=", Tamás Veiland - "/>
+                        	<Hyperlink NavigateUri="mailto:tamas.veiland@microsoft.com">
+                        		<Run Text="tamas.veiland@microsoft.com"/>
+                        	</Hyperlink>
+                        	<Run Text=", József Vadkerti - "/>
+                        	<Hyperlink NavigateUri="mailto:jozsef.vadkerti@microsoft.com">
+                        		<Run Text="jozsef.vadkerti@microsoft.com"/>
+                        	</Hyperlink>
                         </TextBlock>
                         <TextBlock><LineBreak></LineBreak><LineBreak></LineBreak></TextBlock>
                         <TextBlock Style="{ThemeResource CaptionTextBlockStyle}" Margin="5"
