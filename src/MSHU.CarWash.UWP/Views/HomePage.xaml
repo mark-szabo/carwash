@@ -69,14 +69,16 @@
                     <RelativePanel x:Name="NextFreeDateBlock" RelativePanel.AlignLeftWith="NextFreeSlotBlock" RelativePanel.Below="NextFreeSlotBlock"
                                Visibility="{Binding ShowQuickReservationControls, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <TextBlock x:Name="NextFreeDateTextBlock" Text="{Binding NextFreeSlotDateString}" 
-					Style="{StaticResource TitleTextBlockStyle}" FontWeight="Bold" />
-                        <Button Name="ReserveButton" Margin="12, 0" RelativePanel.RightOf="NextFreeDateTextBlock" RelativePanel.AlignVerticalCenterWith="NextFreeDateTextBlock"
+					Style="{StaticResource TitleTextBlockStyle}" FontWeight="Bold" RelativePanel.AlignHorizontalCenterWithPanel="True" />
+                        <TextBlock x:Name="QuickTextBlock" Text="Exterior &amp; interior"
+					Style="{StaticResource TitleTextBlockStyle}" RelativePanel.Below="NextFreeDateTextBlock"/>
+                        <Button Name="ReserveButton" Margin="12, 0" RelativePanel.RightOf="QuickTextBlock" RelativePanel.AlignVerticalCenterWith="QuickTextBlock"
                             Command="{Binding QuickReserveCommand}"
                             Visibility="{Binding NextFreeSlotAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <FontIcon x:Name="ReserveGlyph" FontSize="24" Glyph="&#xECC8;" MirroredWhenRightToLeft="True" />
                         </Button>
                         <TextBlock TextWrapping="NoWrap" Name="ExtraText" Text="Extra wishes?" Style="{StaticResource TitleTextBlockStyle}" RelativePanel.AlignVerticalCenterWith="ExtraButton"
-                               RelativePanel.AlignHorizontalCenterWith="NextFreeDateTextBlock" />
+                               RelativePanel.AlignHorizontalCenterWith="QuickTextBlock" />
                         <Button Name="ExtraButton" Margin="12, 12" RelativePanel.Below="ReserveButton" RelativePanel.AlignHorizontalCenterWith="ReserveButton"
                             Command="{Binding QuickReserveExtraCommand}"
                             Visibility="{Binding NextFreeSlotAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
