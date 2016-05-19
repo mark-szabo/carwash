@@ -145,15 +145,21 @@ namespace MSHU.CarWash.UWP.Views
 
                 // Inform user about sign in progress
                 (Window.Current.Content as ExtendedSplash).m_StatusText.Text = "Signing in...";
-                var autoSignInSucceeded = await App.AuthenticationManager.TryAutoSignInWithAadAsync();
-                if (!autoSignInSucceeded)
+
+                var signInSucceeded = await App.AuthenticationManager.TryAutoSignInWithAadAsync();
+                if (!signInSucceeded)
                 {
                     //if auto sign in doesn't work then prompt for credentials
-                    await App.AuthenticationManager.LoginWithAAD();
+                    signInSucceeded = await App.AuthenticationManager.LoginWithAAD();
+                }
+                if (!signInSucceeded)
+                {
+                    // go back to sign in page
                     rootFrame.Navigate(typeof(MainPage), null);
                 }
                 else
                 {
+                    // continue to app shell
                     rootFrame.Navigate(typeof(AppShell), null);
                 }
             }

@@ -24,6 +24,7 @@ namespace MSHU.CarWash.UWP.Common
         //Session to Azure AD
         private const string s_TenantId = "microsoft.onmicrosoft.com";
         private const string s_Authority = "https://login.microsoftonline.com/"+ s_TenantId;
+        private const string backendAddress = "https://vadkertitestwebapp.azurewebsites.net";
         private AuthenticationContext m_AuthContext = new AuthenticationContext(s_Authority);
 
        
@@ -93,11 +94,27 @@ namespace MSHU.CarWash.UWP.Common
         private async Task<bool> TrySignInWithWebBrokerAsync(PromptBehavior promptBehavior)
         {
             bool result = false;
+
             WebAccountProvider wap = await WebAuthenticationCoreManager.FindAccountProviderAsync("https://login.microsoft.com", s_Authority);
-            string resource = "https://vadkertitestwebapp.azurewebsites.net";
+            if(wap == null)
+            {
+                return false;
+            }
+
             WebTokenRequest wtr = new WebTokenRequest(wap, string.Empty, m_ClientId);
-            wtr.Properties.Add("resource", resource);
-            WebTokenRequestResult wtrr = await WebAuthenticationCoreManager.RequestTokenAsync(wtr);
+            wtr.Properties.Add("resource", backendAddress);
+
+            WebTokenRequestResult wtrr = null;
+
+            if (promptBehavior == PromptBehavior.Never)
+            {
+                wtrr = await WebAuthenticationCoreManager.GetTokenSilentlyAsync(wtr);
+            }
+            else
+            {
+                wtrr = await WebAuthenticationCoreManager.RequestTokenAsync(wtr);
+            }
+
             if (wtrr.ResponseStatus == WebTokenRequestStatus.Success)
             {
                 string accessToken = wtrr.ResponseData[0].Token;
@@ -137,7 +154,7 @@ namespace MSHU.CarWash.UWP.Common
         {
             bool result = false;
             var authenticationResult = await m_AuthContext.AcquireTokenAsync(
-                                "https://vadkertitestwebapp.azurewebsites.net",
+                                backendAddress,
                                 m_ClientId,
                                 m_AppUri,
                                 promptBehavior);
@@ -146,7 +163,7 @@ namespace MSHU.CarWash.UWP.Common
             {
                 //successful sign in
                 IsUserAuthenticated = true;
-                MSHU.CarWash.UWP.ServiceClient.UserInfo info = new MSHU.CarWash.UWP.ServiceClient.UserInfo();
+                ServiceClient.UserInfo info = new ServiceClient.UserInfo();
                 info.DisplayableId = authenticationResult.UserInfo.DisplayableId;
                 info.FamilyName = authenticationResult.UserInfo.DisplayableId;
                 info.GivenName = authenticationResult.UserInfo.DisplayableId;
@@ -158,9 +175,10 @@ namespace MSHU.CarWash.UWP.Common
             }
             if (authenticationResult.Status != AuthenticationStatus.Success)
             {
-                if (authenticationResult.Error == "authentication_canceled")
+                if (authenticationResult.Error == "authentication_canceled" || 
+                    (authenticationResult.Error == "user_interaction_required" && promptBehavior == PromptBehavior.Never))
                 {
-                    // The user cancelled the sign-in, no need to display a message.
+                    // The user cancelled the sign-in or we couldn't perform auto sign-in - no need to display a message.
                 }
                 else
                 {
