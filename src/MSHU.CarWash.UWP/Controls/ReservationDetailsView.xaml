@@ -28,7 +28,7 @@
         <VisualStateGroup x:Name="ResponsiveUI">
             <VisualState x:Name="VisualStateMin640">
                 <VisualState.StateTriggers>
-                    <AdaptiveTrigger MinWindowWidth="640"/>
+                    <AdaptiveTrigger MinWindowWidth="400"/>
                 </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="PlateBox.(RelativePanel.AlignRightWithPanel)" Value="True"/>

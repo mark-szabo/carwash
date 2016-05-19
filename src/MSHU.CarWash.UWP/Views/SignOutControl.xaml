@@ -11,7 +11,27 @@
     Name="ThisControl">
 
     <RelativePanel Background="{StaticResource BrushDarkBlue}" >
-        <TextBlock RelativePanel.LeftOf="SignOutButton" RelativePanel.AlignVerticalCenterWith="SignOutButton" Text="{Binding ViewModel.Username, ElementName=ThisControl}" Margin="8, 4" Foreground="White"/>
+        <VisualStateManager.VisualStateGroups>
+
+            <VisualStateGroup x:Name="ResponsiveUI">
+                <VisualState x:Name="VisualStateMin640">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="400"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="VisualStateMin0">
+                    <VisualState.Setters>
+                        <Setter Target="textBlock.(UIElement.Visibility)" Value="Collapsed"/>
+                    </VisualState.Setters>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1"/>
+                    </VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <TextBlock x:Name="textBlock" RelativePanel.LeftOf="SignOutButton" RelativePanel.AlignVerticalCenterWith="SignOutButton" Text="{Binding ViewModel.Username, ElementName=ThisControl}" Margin="8, 4" Foreground="White"/>
         <Button Name="SignOutButton" RelativePanel.AlignRightWithPanel="True" Margin="8, 4" Foreground="White" Command="{Binding ViewModel.SignOutUser, ElementName=ThisControl}">Sign out</Button>
     </RelativePanel>
 </UserControl>
