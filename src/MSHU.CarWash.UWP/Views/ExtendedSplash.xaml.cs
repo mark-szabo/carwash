@@ -145,6 +145,7 @@ namespace MSHU.CarWash.UWP.Views
 
                 // Inform user about sign in progress
                 (Window.Current.Content as ExtendedSplash).m_StatusText.Text = "Signing in...";
+
                 var signInSucceeded = await App.AuthenticationManager.TryAutoSignInWithAadAsync();
                 if (!signInSucceeded)
                 {
