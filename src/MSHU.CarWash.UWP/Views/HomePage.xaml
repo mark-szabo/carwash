@@ -70,7 +70,7 @@
                                Visibility="{Binding ShowQuickReservationControls, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <TextBlock x:Name="NextFreeDateTextBlock" Text="{Binding NextFreeSlotDateString}" 
 					Style="{StaticResource TitleTextBlockStyle}" FontWeight="Bold" RelativePanel.AlignHorizontalCenterWithPanel="True" />
-                        <TextBlock x:Name="QuickTextBlock" Text="Exterior &amp; interior"
+                        <TextBlock x:Name="QuickTextBlock" Text="Standard (ext &amp; int)"
 					Style="{StaticResource TitleTextBlockStyle}" RelativePanel.Below="NextFreeDateTextBlock"/>
                         <Button Name="ReserveButton" Margin="12, 0" RelativePanel.RightOf="QuickTextBlock" RelativePanel.AlignVerticalCenterWith="QuickTextBlock"
                             Command="{Binding QuickReserveCommand}"
