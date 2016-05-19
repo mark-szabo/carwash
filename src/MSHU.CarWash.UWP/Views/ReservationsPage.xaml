@@ -88,8 +88,9 @@
 
         <!-- Master view -->
         <RelativePanel x:Name="relativePanelMaster" Grid.Column="0" Grid.Row="1">
-            <controls:CWCalendarView HorizontalAlignment="Stretch" Margin="12,12,12,12" 
-                          VerticalAlignment="Stretch" x:Name="MainCalendarView"
+            <Viewbox StretchDirection="Both" RelativePanel.AlignHorizontalCenterWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True" >
+                <controls:CWCalendarView Margin="12,12,12,12" 
+                          x:Name="MainCalendarView"
                           DataContext="{Binding}"
                           CalendarViewDayItemStyle="{StaticResource CalendarViewDayItemStyle1}"
                           DisplayMode="Month"
@@ -105,6 +106,7 @@
                           PreviousButtonCommand="{Binding PreviousPeriodCommand}"
                           NextButtonCommand="{Binding NextPeriodCommand}"
                       />
+            </Viewbox>
         </RelativePanel>
 
         <!-- Details view -->
