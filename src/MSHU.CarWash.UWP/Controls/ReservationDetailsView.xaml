@@ -8,12 +8,13 @@
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400"
+    MinWidth="350"
     x:Name="viewControl"
     >
 
     <UserControl.Resources>
         <Style TargetType="TextBlock">
-            <Setter Property="Margin" Value="8,4,8,4" />
+            <Setter Property="Margin" Value="8,12,8,12" />
         </Style>
 
         <Style TargetType="TextBox">
@@ -21,25 +22,54 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Margin="8">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="auto" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
-        <TextBlock Text="Plate number:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" />
-        <TextBox Text="{Binding CurrentReservation.VehiclePlateNumber, Mode=TwoWay}" Grid.Row="0" Grid.Column="1" />
-        <TextBlock Text="Selected service:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" />
-        <ComboBox ItemsSource="{Binding ServicesSource.View, Mode=TwoWay}" HorizontalAlignment="Stretch" Margin="8,4,8,4"
-                  Grid.Row="1" Grid.Column="1" DisplayMemberPath="ServiceName" SelectedValuePath="ServiceId" />
-        <TextBlock Text="Comment:" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" />
-        <TextBox Text="{Binding CurrentReservation.Comment, Mode=TwoWay}" Grid.Row="2" Grid.Column="1" />
-        <RelativePanel Grid.Row="3" Grid.Column="1" >
+    <RelativePanel Margin="8">
+        <VisualStateManager.VisualStateGroups>
+
+        <VisualStateGroup x:Name="ResponsiveUI">
+            <VisualState x:Name="VisualStateMin640">
+                <VisualState.StateTriggers>
+                    <AdaptiveTrigger MinWindowWidth="640"/>
+                </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="PlateBox.(RelativePanel.AlignRightWithPanel)" Value="True"/>
+                        <Setter Target="PlateBox.(RelativePanel.AlignHorizontalCenterWithPanel)" Value="False"/>
+                        <Setter Target="PlateBox.(RelativePanel.AlignVerticalCenterWith)" Value="PlateText"/>
+                        <Setter Target="ServiceBox.(RelativePanel.AlignVerticalCenterWith)" Value="ServiceText"/>
+                        <Setter Target="ServiceBox.(RelativePanel.AlignRightWithPanel)" Value="True"/>
+                        <Setter Target="ServiceBox.(RelativePanel.AlignHorizontalCenterWithPanel)" Value="False"/>
+                        <Setter Target="CommentBox.(RelativePanel.AlignRightWithPanel)" Value="True"/>
+                        <Setter Target="CommentBox.(RelativePanel.AlignVerticalCenterWith)" Value="CommentText"/>
+                    </VisualState.Setters>
+                </VisualState>
+            <VisualState x:Name="VisualStateMin0">
+                <VisualState.Setters>
+                        <Setter Target="PlateBox.(RelativePanel.AlignRightWithPanel)" Value="False"/>
+                        <Setter Target="PlateBox.(RelativePanel.AlignHorizontalCenterWithPanel)" Value="True"/>
+                        <Setter Target="PlateBox.(RelativePanel.Below)" Value="PlateText"/>
+                        <Setter Target="ServiceBox.(RelativePanel.AlignVerticalCenterWith)" Value=""/>
+                        <Setter Target="ServiceBox.(RelativePanel.AlignRightWithPanel)" Value="False"/>
+                        <Setter Target="ServiceBox.(RelativePanel.AlignHorizontalCenterWithPanel)" Value="True"/>
+                        <Setter Target="ServiceBox.(RelativePanel.Below)" Value="ServiceText"/>
+                        <Setter Target="CommentBox.(RelativePanel.AlignRightWithPanel)" Value="False"/>
+                        <Setter Target="CommentBox.(RelativePanel.AlignHorizontalCenterWithPanel)" Value="True"/>
+                        <Setter Target="CommentBox.(RelativePanel.Below)" Value="CommentText"/>
+                        <Setter Target="viewControl.(FrameworkElement.MinWidth)" Value="150"/>
+                    </VisualState.Setters>
+                <VisualState.StateTriggers>
+                    <AdaptiveTrigger MinWindowWidth="1"/>
+                </VisualState.StateTriggers>
+            </VisualState>
+        </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <TextBlock x:Name="PlateText" Text="Plate number:"/>
+        <TextBox x:Name="PlateBox" Text="{Binding CurrentReservation.VehiclePlateNumber, Mode=TwoWay}" RelativePanel.AlignRightWithPanel="True" MinWidth="160"/>
+        <TextBlock x:Name="ServiceText" Text="Selected service:" RelativePanel.Below="PlateBox" />
+        <ComboBox x:Name="ServiceBox" ItemsSource="{Binding ServicesSource.View, Mode=TwoWay}" Margin="8,4,8,4" MinWidth="160"
+                  DisplayMemberPath="ServiceName" SelectedValuePath="ServiceId" RelativePanel.AlignRightWithPanel="True" />
+        <TextBlock x:Name="CommentText" Text="Comment:" RelativePanel.Below="ServiceBox" />
+        <TextBox x:Name="CommentBox" Text="{Binding CurrentReservation.Comment, Mode=TwoWay}" RelativePanel.AlignRightWithPanel="True"
+                 MinWidth="160"/>
+        <RelativePanel RelativePanel.Below="CommentBox" RelativePanel.AlignHorizontalCenterWithPanel="True" >
             <Button Content="Cancel" x:Name="CancelButton" Command="{Binding CancelCommand, ElementName=viewControl}"
                     RelativePanel.AlignRightWithPanel="True" Margin="0,4,8,4" Padding="32,4,32,4"
                      Style="{StaticResource CWButtonStyle}"/>
@@ -53,5 +83,5 @@
                     Margin="0,4,8,4" Padding="32,4,32,4"
                     Command="{Binding UpdateCommand, ElementName=viewControl}" Style="{StaticResource CWButtonStyle}"/>
         </RelativePanel>
-    </Grid>
+    </RelativePanel>
 </UserControl>

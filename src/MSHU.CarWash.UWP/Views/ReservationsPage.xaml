@@ -53,7 +53,7 @@
 
     <Grid x:Name="MainGrid" Background="{StaticResource BackgroundImage}">
         <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup x:Name="VisualStateGroup">
+            <VisualStateGroup x:Name="MasterDetail">
                 <VisualState x:Name="MasterView">
                     <VisualState.StateTriggers>
                         <StateTrigger IsActive="{Binding Path=UseMasterView}" />
