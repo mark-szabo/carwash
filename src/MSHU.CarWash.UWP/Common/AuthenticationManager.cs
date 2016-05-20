@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using Windows.Security.Credentials;
 using Windows.Security.Authentication.Web.Core;
+using Windows.Security.Authentication.Web;
 
 namespace MSHU.CarWash.UWP.Common
 {
@@ -138,8 +139,15 @@ namespace MSHU.CarWash.UWP.Common
                 UserData = info;
                 BearerAccessToken = accessToken;
                 // Get the Employee instance assigned to the current user.
-                CurrentEmployee = await ServiceClient.ServiceClient.GetCurrentUser(BearerAccessToken);
-                result = true;
+                try
+                {
+                    CurrentEmployee = await ServiceClient.ServiceClient.GetCurrentUser(BearerAccessToken);
+                    result = true;
+                }
+                catch (HttpRequestException)
+                {
+                    result = false;
+                }
             }
             
             return result;
@@ -216,28 +224,23 @@ namespace MSHU.CarWash.UWP.Common
             bool result = false;
             m_AuthContext.TokenCache.Clear();
             string requestUrl = "https://login.windows.net/common/oauth2/logout";
-            HttpResponseMessage msg = await SendMessage(requestUrl);
-            if (msg.IsSuccessStatusCode)
+
+            try
             {
-                ClearCookies();
-                result = true;
+                var authResult = await WebAuthenticationBroker.AuthenticateAsync(WebAuthenticationOptions.None, new Uri(requestUrl));
+                if(authResult.ResponseStatus == WebAuthenticationStatus.UserCancel)
+                {
+                    result = true;
+                }
             }
+            catch (Exception)
+            {
+            }
+
             return result;
         }
 
-        // This function clears cookies from the browser control used by ADAL. 
-         private void ClearCookies()
-         { 
-             const int INTERNET_OPTION_END_BROWSER_SESSION = 42; 
-             InternetSetOption(IntPtr.Zero, INTERNET_OPTION_END_BROWSER_SESSION, IntPtr.Zero, 0); 
-         } 
- 
- 
-         [System.Runtime.InteropServices.DllImport("wininet.dll", SetLastError = true)] 
-         private static extern bool InternetSetOption(IntPtr hInternet, int dwOption, IntPtr lpBuffer, int lpdwBufferLength);
-
-
-    private async Task<HttpResponseMessage> SendMessage(string requestUrl)
+     private async Task<HttpResponseMessage> SendMessage(string requestUrl)
         {
             var client = new HttpClient();
             var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
