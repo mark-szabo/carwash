@@ -18,7 +18,7 @@
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <PackageCertificateKeyFile>MSHU.CarWash.UWP_StoreKey.pfx</PackageCertificateKeyFile>
     <PackageCertificateThumbprint>D991B7BA8DC0565A9DA5518FB4C6B19DFDF937A2</PackageCertificateThumbprint>
-    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+    <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
     <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
     <AppxBundle>Always</AppxBundle>
     <HockeyAppResourceId>0205bd2e73b44b9f9f4dc8d0f5dc95e4</HockeyAppResourceId>
