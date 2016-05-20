@@ -32,15 +32,15 @@
                         <RelativePanel>
                             <Ellipse RelativePanel.AlignTopWithPanel="True" Width="10" Height="10"
                                      RelativePanel.AlignLeftWithPanel="True" Margin="4"
-                                     x:Name="StatusControl" />
+                                     x:Name="StatusControl" Visibility="{Binding UpdatePending, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
+                            <ProgressRing IsActive="True" Visibility="{Binding UpdatePending, Converter={StaticResource BooleanToVisibilityConverter}}" RelativePanel.AlignHorizontalCenterWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True" />
                             <StackPanel RelativePanel.AlignBottomWithPanel="True" VerticalAlignment="Bottom"
                                     DataContext="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}"
                                     Visibility="{Binding Path=IsBlackout, RelativeSource={RelativeSource Mode=TemplatedParent}, Converter={StaticResource inverseBool2VisibilityConverter}}">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <TextBlock x:Name="FreeSlotsTextBox" FontSize="9" Margin="4,0,0,0"
-                                           />
+                                    <TextBlock x:Name="FreeSlotsTextBox" FontSize="9" Margin="4,0,0,0" Visibility="{Binding DataContext.UpdatePending, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
                                     <!--Text="{Binding Converter={StaticResource dayItemConverter}, ConverterParameter={Binding}}"-->
-                                    <TextBlock Text=" free" FontSize="9"/>
+                                    <TextBlock Text=" free" FontSize="9" Visibility="{Binding DataContext.UpdatePending, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
                                 </StackPanel>
                             </StackPanel>
                         </RelativePanel>

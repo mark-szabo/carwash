@@ -194,7 +194,12 @@ namespace MSHU.CarWash.UWP.Views
             if (args.AddedDates.Count == 1)
             {
                 DateTimeOffset selectedDate = args.AddedDates[0];
-                ((RegistrationsViewModel)ViewModel).ActivateDetailsCommand.Execute(selectedDate);
+
+                var viewModel = (RegistrationsViewModel)ViewModel;
+                if (viewModel.ActivateDetailsCommand.CanExecute(selectedDate))
+                {
+                    viewModel.ActivateDetailsCommand.Execute(selectedDate);
+                }
             }
         }
 

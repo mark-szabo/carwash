@@ -282,6 +282,20 @@ namespace MSHU.CarWash.UWP.ViewModels
         }
 
         /// <summary>
+        /// Signals if a service call is pending.
+        /// </summary>
+        public bool UpdatePending
+        {
+            get { return updatePending; }
+            set
+            {
+                updatePending = value;
+                OnPropertyChanged(nameof(UpdatePending));
+            }
+        }
+        private bool updatePending;
+
+        /// <summary>
         /// Helper property for the status feedback on the daily level.
         /// </summary>
         public object DayStatus => this;
@@ -295,7 +309,8 @@ namespace MSHU.CarWash.UWP.ViewModels
             RequestServiceCommand.Execute(this);
 
             // Create the ActivateDetailsCommand.
-            ActivateDetailsCommand = new RelayCommand(ExecuteActivateDetailsCommand);
+            ActivateDetailsCommand = new RelayCommand(ExecuteActivateDetailsCommand,
+                (Func<object, bool>)CanExecuteActivateDetailsCommand);
 
             // Create the CreateReservationCommand.
             CreateReservationCommand = new RelayCommand(ExecuteCreateReservationCommand,
@@ -346,6 +361,25 @@ namespace MSHU.CarWash.UWP.ViewModels
             _initializing = true;
             _requestedDates = new ObservableCollection<DateTime>();
             _requestedDates.CollectionChanged += RequestedDatesCollectionChanged;
+        }
+
+        private bool CanExecuteActivateDetailsCommand(object arg)
+        {
+            DateTimeOffset selectedDate = (DateTimeOffset)arg;
+
+            // don't allow past dates
+            if (selectedDate.Date < DateTime.Now.Date)
+            {
+                return false;
+            }
+
+            // make sure there's no update
+            if (UpdatePending)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -447,8 +481,9 @@ namespace MSHU.CarWash.UWP.ViewModels
 
         private async Task GetFreeSlotNumberForTimeInterval(DateTime start, DateTime end)
         {
+            UpdatePending = true;
             List<int> availableSlots = await ServiceClient.ServiceClient.GetCapacityForTimeInterval(
-                start, 
+                start,
                 end,
                 App.AuthenticationManager.BearerAccessToken);
             DateTime key = start;
@@ -466,6 +501,7 @@ namespace MSHU.CarWash.UWP.ViewModels
                 // Increment the index
                 key = key.AddDays(1);
             }
+            UpdatePending = false;
             OnPropertyChanged(nameof(FreeSlots));
             OnPropertyChanged(nameof(DayStatus));
             _initializing = false;
@@ -545,11 +581,7 @@ namespace MSHU.CarWash.UWP.ViewModels
                 }
             }
 
-            // don't allow past dates
-            if (_currentDate.Date >= DateTime.Now.Date)
-            {
-                UseDetailsView = true;
-            }
+            UseDetailsView = true;
         }
 
         private static async Task CreateNewReservationIfPossible(
@@ -591,7 +623,7 @@ namespace MSHU.CarWash.UWP.ViewModels
         {
             var cr = new ReservationDayDetailViewModel();
             cr.VehiclePlateNumber = App.AuthenticationManager.CurrentEmployee.VehiclePlateNumber;
-            if(param is DateTime)
+            if (param is DateTime)
             {
                 var date = (DateTime)param;
                 _currentDate = new DateTimeOffset(date);
@@ -599,7 +631,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
             cr.IsDeletable = true;
             CurrentReservation = cr;
-            
+
             // re-fresh services based on date and free slots
             Services = GetAvailableServices(_currentDate.Date, Convert.ToInt32(_freeSlotsByDate[_currentDate.Date]));
             ServicesSource.Source = Services;
