@@ -44,20 +44,25 @@
                     </RelativePanel.Resources>
                     <ContentControl ContentTemplate="{StaticResource GlyphCaption}" Content="{StaticResource ComingUpCaption}"  x:Name="RegistrationBlock" DataContext="{StaticResource  AppBarBackgroundThemeBrush}">
                     </ContentControl>
-                    <TextBlock x:Name="MissingReservationTextBlock" Text="No reservation" 
+                    <ProgressRing IsActive="True" Margin="25"
+                                    Visibility="{Binding UpcomingReservationPending, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    RelativePanel.AlignHorizontalCenterWithPanel="True" RelativePanel.Below="RegistrationBlock"/>
+                    <RelativePanel RelativePanel.AlignHorizontalCenterWithPanel="True" RelativePanel.Below="RegistrationBlock"
+                                   Visibility="{Binding UpcomingReservationPending, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                        <TextBlock x:Name="MissingReservationTextBlock" Text="No reservation" RelativePanel.AlignHorizontalCenterWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True"
 					Style="{StaticResource TitleTextBlockStyle}" FontWeight="Bold" Visibility="{Binding ReservationAvailable, Converter={StaticResource InverseBooleanToVisibilityConverter}}" 
-                       RelativePanel.AlignLeftWith="RegistrationBlock" RelativePanel.Below="RegistrationBlock"/>
-
-                    <RelativePanel x:Name="DateBlock" RelativePanel.AlignLeftWith="RegistrationBlock" RelativePanel.Below="RegistrationBlock"
+                       />
+                        <RelativePanel x:Name="DateBlock" RelativePanel.AlignHorizontalCenterWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True"
                            Visibility="{Binding ReservationAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <TextBlock x:Name="DateTextBlock" Text="{Binding ReservationDateString}" 
+                            <TextBlock x:Name="DateTextBlock" Text="{Binding ReservationDateString}" 
 					Style="{StaticResource TitleTextBlockStyle}" FontWeight="Bold" />
-                        <Button Margin="12, 0" RelativePanel.RightOf="DateTextBlock" RelativePanel.AlignVerticalCenterWithPanel="True"
+                            <Button Margin="12, 0" RelativePanel.RightOf="DateTextBlock" RelativePanel.AlignVerticalCenterWithPanel="True"
                             Command="{Binding DeleteReservationCommand}">
-                            <FontIcon x:Name="TrashGlyph" FontSize="24" Glyph="&#xE107;" MirroredWhenRightToLeft="True" />
-                        </Button>
-                        <TextBlock Text="{Binding NumberPlate}" RelativePanel.Below="DateTextBlock" RelativePanel.AlignHorizontalCenterWith="DateTextBlock" />
+                                <FontIcon x:Name="TrashGlyph" FontSize="24" Glyph="&#xE107;" MirroredWhenRightToLeft="True" />
+                            </Button>
+                            <TextBlock Text="{Binding NumberPlate}" RelativePanel.Below="DateTextBlock" RelativePanel.AlignHorizontalCenterWith="DateTextBlock" />
 
+                        </RelativePanel>
                     </RelativePanel>
                 </RelativePanel>
                 <RelativePanel>
@@ -66,6 +71,10 @@
                     </RelativePanel.Resources>
                     <ContentControl ContentTemplate="{StaticResource GlyphCaption}" Content="{StaticResource NextFreeSlotCaption}" x:Name="NextFreeSlotBlock" 
                                 DataContext="{StaticResource  AppBarBackgroundThemeBrush}"/>
+                    <ProgressRing IsActive="True" Margin="25"
+                                    Visibility="{Binding NextFreeSlotPending, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    RelativePanel.AlignHorizontalCenterWithPanel="True" RelativePanel.Below="NextFreeSlotBlock" />
+
                     <RelativePanel x:Name="NextFreeDateBlock" RelativePanel.AlignLeftWith="NextFreeSlotBlock" RelativePanel.Below="NextFreeSlotBlock"
                                Visibility="{Binding ShowQuickReservationControls, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <TextBlock x:Name="NextFreeDateTextBlock" Text="{Binding NextFreeSlotDateString}" 

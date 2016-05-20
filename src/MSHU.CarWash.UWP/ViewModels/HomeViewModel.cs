@@ -68,6 +68,21 @@ namespace MSHU.CarWash.UWP.ViewModels
         private ReservationDayDetailViewModel upcomingReservation { get; set; }
 
         /// <summary>
+        /// Signals if upcoming reservation retreival is pending.
+        /// (Service call is in progress)
+        /// </summary>
+        public bool UpcomingReservationPending
+        {
+            get { return upcomingReservationPending; }
+            set
+            {
+                upcomingReservationPending = value;
+                OnPropertyChanged(nameof(UpcomingReservationPending));
+            }
+        }
+        private bool upcomingReservationPending;
+
+        /// <summary>
         /// Holds textual representation of next free slot's date
         /// </summary>
         public string NextFreeSlotDateString
@@ -103,6 +118,22 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
         }
         private bool nextFreeSlotAvailable;
+
+        /// <summary>
+        /// Signals if next free slot retreival is pending.
+        /// (Service call is in progress)
+        /// </summary>
+        public bool NextFreeSlotPending
+        {
+            get { return nextFreeSlotPending; }
+            set
+            {
+                nextFreeSlotPending = value;
+                OnPropertyChanged(nameof(NextFreeSlotPending));
+            }
+        }
+        private bool nextFreeSlotPending;
+
 
         /// <summary>
         /// Gets the given name of the user.
@@ -236,14 +267,15 @@ namespace MSHU.CarWash.UWP.ViewModels
                     PropertyChanged += (sender, args) =>
                     {
                         if (args.PropertyName == nameof(ShowReservationLimitReached) ||
-                            args.PropertyName == nameof(ShowReservationLimitReached))
+                            args.PropertyName == nameof(ShowReservationLimitReached) ||
+                            args.PropertyName == nameof(NextFreeSlotPending))
                         {
                             OnPropertyChanged(nameof(ShowQuickReservationControls));
                         }
                     };
                     showQuickReservationControlsSetup = true;
                 }
-                return !ShowReservationLimitReached && !ShowQuickReservationSuccess;
+                return !ShowReservationLimitReached && !ShowQuickReservationSuccess && !NextFreeSlotPending;
             }
         }
         private bool showQuickReservationControlsSetup;
@@ -273,6 +305,7 @@ namespace MSHU.CarWash.UWP.ViewModels
                 nextFreeSlotAvailable = true;
 
                 ShowQuickReservationSuccess = false;
+                UpcomingReservationPending = false;
                 return;
             }
             if (App.AuthenticationManager.IsUserAuthenticated)
@@ -301,6 +334,9 @@ namespace MSHU.CarWash.UWP.ViewModels
                     DeleteReservationCommand.RaiseCanExecuteChanged();
                 }
             };
+
+            UpcomingReservationPending = true;
+            NextFreeSlotPending = true;
         }
 
         private async void HandleDeleteReservationCommand(object obj)
@@ -344,6 +380,8 @@ namespace MSHU.CarWash.UWP.ViewModels
         private async void HandleGetNextFreeSlotCommand(object param)
         {
             nextFreeSlotDate = await ServiceClient.ServiceClient.GetNextFreeSlotDate(App.AuthenticationManager.BearerAccessToken);
+
+            NextFreeSlotPending = false;
             if (nextFreeSlotDate.HasValue)
             {
                 NextFreeSlotDateString = GetSmartDateString(nextFreeSlotDate.Value);
@@ -365,6 +403,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             ReservationViewModel result = await
                ServiceClient.ServiceClient.GetReservations(App.AuthenticationManager.BearerAccessToken);
 
+            UpcomingReservationPending = false;
             if (result != null)
             {
                 StringBuilder builder = new StringBuilder();
