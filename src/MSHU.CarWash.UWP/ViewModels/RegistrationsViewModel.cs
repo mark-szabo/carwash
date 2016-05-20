@@ -696,6 +696,7 @@ namespace MSHU.CarWash.UWP.ViewModels
                 OnPropertyChanged(nameof(FreeSlots));
                 OnPropertyChanged(nameof(DayStatus));
                 this.Feedback = string.Empty;
+                UseDetailsView = false;
             }
         }
 
