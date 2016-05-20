@@ -341,6 +341,7 @@ namespace MSHU.CarWash.UWP.ViewModels
 
         private async void HandleDeleteReservationCommand(object obj)
         {
+            UpcomingReservationPending = true;
             bool result = await ServiceClient.ServiceClient.DeleteReservation(upcomingReservation.ReservationId, App.AuthenticationManager.BearerAccessToken);
             ReservationAvailable = false;
             GetNextFreeSlotCommand.Execute(null);
@@ -368,19 +369,22 @@ namespace MSHU.CarWash.UWP.ViewModels
                 Date = nextFreeSlotDate.Value
             };
 
+            NextFreeSlotPending = true;
+            UpcomingReservationPending = true;
             bool result = await ServiceClient.ServiceClient.SaveReservation(reservation, App.AuthenticationManager.BearerAccessToken);
             if(result)
             {
                 ShowQuickReservationSuccess = true;
+                NextFreeSlotPending = false;
                 RequestServiceCommand.Execute(null);
-                GetNextFreeSlotCommand.Execute(null);
+                //GetNextFreeSlotCommand.Execute(null);
             }
         }
 
         private async void HandleGetNextFreeSlotCommand(object param)
         {
+            NextFreeSlotPending = true;
             nextFreeSlotDate = await ServiceClient.ServiceClient.GetNextFreeSlotDate(App.AuthenticationManager.BearerAccessToken);
-
             NextFreeSlotPending = false;
             if (nextFreeSlotDate.HasValue)
             {
