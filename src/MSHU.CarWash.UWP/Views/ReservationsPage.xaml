@@ -40,7 +40,7 @@
                                     <TextBlock x:Name="FreeSlotsTextBox" FontSize="9" Margin="4,0,0,0"
                                            />
                                     <!--Text="{Binding Converter={StaticResource dayItemConverter}, ConverterParameter={Binding}}"-->
-                                    <TextBlock Text=" free slot(s)" FontSize="9"/>
+                                    <TextBlock Text=" free" FontSize="9"/>
                                 </StackPanel>
                             </StackPanel>
                         </RelativePanel>
@@ -88,23 +88,22 @@
 
         <!-- Master view -->
         <RelativePanel x:Name="relativePanelMaster" Grid.Column="0" Grid.Row="1">
-            <Viewbox StretchDirection="Both" RelativePanel.AlignHorizontalCenterWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True" >
-                <controls:CWCalendarView Margin="12,12,12,12" 
-                          x:Name="MainCalendarView"
-                          DataContext="{Binding}"
-                          CalendarViewDayItemStyle="{StaticResource CalendarViewDayItemStyle1}"
-                          DisplayMode="Month"
-                          FirstDayOfWeek="Monday"
-                          BorderBrush="#FFF9F9F9"
-                          OutOfScopeBackground="Transparent"
-                          CalendarItemBackground="#FFDDEBF7"
-                          DayItemFontSize="11"
-                          CalendarViewDayItemChanging="CalendarView_CalendarViewDayItemChanging"
-                          SelectedDatesChanged="CalendarView_SelectedDatesChanged"
-                          RelativePanel.AlignLeftWithPanel="True"
-                          RelativePanel.AlignRightWithPanel="True"
-                          PreviousButtonCommand="{Binding PreviousPeriodCommand}"
-                          NextButtonCommand="{Binding NextPeriodCommand}" Background="#CCECECEC"
+            <Viewbox Margin="12,12,12,12" 
+        		HorizontalAlignment="Stretch" VerticalAlignment="Stretch" RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" >
+                <controls:CWCalendarView 
+        			x:Name="MainCalendarView"
+        			DataContext="{Binding}"
+        			CalendarViewDayItemStyle="{StaticResource CalendarViewDayItemStyle1}"
+        			DisplayMode="Month"
+        			FirstDayOfWeek="Monday"
+        			BorderBrush="#FFF9F9F9"
+        			OutOfScopeBackground="Transparent"
+        			CalendarItemBackground="#FFDDEBF7"
+        			DayItemFontSize="11"
+        			CalendarViewDayItemChanging="CalendarView_CalendarViewDayItemChanging"
+        			SelectedDatesChanged="CalendarView_SelectedDatesChanged"
+        			PreviousButtonCommand="{Binding PreviousPeriodCommand}"
+        			NextButtonCommand="{Binding NextPeriodCommand}" Background="#CCECECEC" RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                       />
             </Viewbox>
         </RelativePanel>
