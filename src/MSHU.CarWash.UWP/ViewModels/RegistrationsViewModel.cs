@@ -545,7 +545,11 @@ namespace MSHU.CarWash.UWP.ViewModels
                 }
             }
 
-            UseDetailsView = true;
+            // don't allow past dates
+            if (_currentDate.Date >= DateTime.Now.Date)
+            {
+                UseDetailsView = true;
+            }
         }
 
         private static async Task CreateNewReservationIfPossible(
