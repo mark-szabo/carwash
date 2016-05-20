@@ -14,9 +14,9 @@
         <VisualStateManager.VisualStateGroups>
 
             <VisualStateGroup x:Name="ResponsiveUI">
-                <VisualState x:Name="VisualStateMin640">
+                <VisualState x:Name="VisualStateMin350">
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="400"/>
+                        <AdaptiveTrigger MinWindowWidth="350"/>
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                     </VisualState.Setters>
