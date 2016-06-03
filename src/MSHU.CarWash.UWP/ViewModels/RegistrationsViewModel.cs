@@ -368,7 +368,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             DateTimeOffset selectedDate = (DateTimeOffset)arg;
 
             // don't allow past dates
-            if (selectedDate.Date < DateTime.Now.Date)
+            if (selectedDate.Date < DateTime.Now.Date || DateTime.Now.Date == selectedDate.Date && IsItTooLateForToday())
             {
                 return false;
             }
@@ -803,7 +803,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             StatusValue result = StatusValue.NotAvailable;
 
             // Check if the date is in the past.
-            if (date.Date < DateTimeOffset.Now.Date || date.Date == DateTimeOffset.Now.Date && DateTimeOffset.Now.Hour >= 14)
+            if (date.Date < DateTimeOffset.Now.Date || date.Date == DateTimeOffset.Now.Date && IsItTooLateForToday())
             {
                 result = StatusValue.NotAvailable;
             }
@@ -868,6 +868,11 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
 
             return result;
+        }
+
+        private static bool IsItTooLateForToday()
+        {
+            return DateTime.Now.Hour >= 14;
         }
     }
 }
