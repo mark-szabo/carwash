@@ -466,6 +466,7 @@ namespace MSHU.CarWash.Controllers
         public async Task<DateTime?> GetNextFreeSlotDate()
         {
             var now = DateTime.Now;
+            now = TimeZoneInfo.ConvertTime(now, TimeZoneInfo.Local, TimeZoneInfo.FindSystemTimeZoneById("Central Europe Standard Time"));
             var from = now.Hour >= 14 ? now.Date.AddDays(1) : now.Date;
             var until = from.AddDays(14);
 
