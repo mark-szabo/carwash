@@ -184,7 +184,8 @@ namespace MSHU.CarWash.UWP.Common
             if (authenticationResult.Status != AuthenticationStatus.Success)
             {
                 if (authenticationResult.Error == "authentication_canceled" || 
-                    (authenticationResult.Error == "user_interaction_required" && promptBehavior == PromptBehavior.Never))
+                    (authenticationResult.Error == "user_interaction_required" && promptBehavior == PromptBehavior.Never) ||
+                    (authenticationResult.Error.Contains("interaction_required") && promptBehavior == PromptBehavior.Never))
                 {
                     // The user cancelled the sign-in or we couldn't perform auto sign-in - no need to display a message.
                 }
