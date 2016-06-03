@@ -803,7 +803,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             StatusValue result = StatusValue.NotAvailable;
 
             // Check if the date is in the past.
-            if (date < DateTimeOffset.Now.Date)
+            if (date.Date < DateTimeOffset.Now.Date || date.Date == DateTimeOffset.Now.Date && DateTimeOffset.Now.Hour >= 14)
             {
                 result = StatusValue.NotAvailable;
             }

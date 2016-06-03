@@ -25,6 +25,10 @@ namespace MSHU.CarWash.UWP.Converters
                     {
                         return String.Empty;
                     }
+                    if (dt.Date == DateTime.Now.Date && DateTime.Now.Hour >= 14)
+                    {
+                        return "Too late";
+                    }
                     var freeCount = vm.GetReservationCountByDay(dt);
                     value = freeCount > 0 ? $"{freeCount} free" : "Taken";
                 }
