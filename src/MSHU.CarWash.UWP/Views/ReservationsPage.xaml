@@ -39,8 +39,6 @@
                                     Visibility="{Binding Path=IsBlackout, RelativeSource={RelativeSource Mode=TemplatedParent}, Converter={StaticResource inverseBool2VisibilityConverter}}">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                     <TextBlock x:Name="FreeSlotsTextBox" FontSize="9" Margin="4,0,0,0" Visibility="{Binding DataContext.UpdatePending, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
-                                    <!--Text="{Binding Converter={StaticResource dayItemConverter}, ConverterParameter={Binding}}"-->
-                                    <TextBlock Text=" free" FontSize="9" Visibility="{Binding DataContext.UpdatePending, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
                                 </StackPanel>
                             </StackPanel>
                         </RelativePanel>

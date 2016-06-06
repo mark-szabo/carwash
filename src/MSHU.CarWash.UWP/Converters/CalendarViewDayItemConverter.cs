@@ -21,7 +21,16 @@ namespace MSHU.CarWash.UWP.Converters
                 DateTimeOffset dt = (DateTimeOffset)parameter;
                 if (vm != null)
                 {
-                    value = vm.GetReservationCountByDay(dt);
+                    if (dt.Date < DateTime.Now.Date)
+                    {
+                        return String.Empty;
+                    }
+                    if (dt.Date == DateTime.Now.Date && DateTime.Now.Hour >= 14)
+                    {
+                        return "Too late";
+                    }
+                    var freeCount = vm.GetReservationCountByDay(dt);
+                    value = freeCount > 0 ? $"{freeCount} free" : "Taken";
                 }
             }
             return value;

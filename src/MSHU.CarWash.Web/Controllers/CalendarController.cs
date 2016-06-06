@@ -468,7 +468,8 @@ namespace MSHU.CarWash.Controllers
         public async Task<DateTime?> GetNextFreeSlotDate()
         {
             var now = DateTime.Now;
-            var from = now.Hour >= 14 ? now.Date.AddDays(1) : now.Date;
+
+            var from = now.Date;
             var until = from.AddDays(14);
 
             var currentUser = UserHelper.GetCurrentUser();
@@ -484,6 +485,15 @@ namespace MSHU.CarWash.Controllers
             }
 
             return null;
+        }
+
+        private bool IsItTooLateForToday()
+        {
+            var now = DateTime.Now;
+            // server time might be different than Budapest time
+            now = TimeZoneInfo.ConvertTime(now, TimeZoneInfo.Local, TimeZoneInfo.FindSystemTimeZoneById("Central Europe Standard Time"));
+
+            return now.Hour >= 14;
         }
 
         /// <summary>
@@ -776,6 +786,11 @@ namespace MSHU.CarWash.Controllers
             DateTime date,
             bool checkDuplicate = true)
         {
+            if(date.Date == DateTime.Now.Date && IsItTooLateForToday())
+            {
+                return new Tuple<int, int>(0, 0);
+            }
+
             var currentUser = UserHelper.GetCurrentUser();
             var availableSlots = GetConfiguredAvailableSlotsOnDate(date);
             var availableNormalSlots = availableSlots.Item1;

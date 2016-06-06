@@ -371,7 +371,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             DateTimeOffset selectedDate = (DateTimeOffset)arg;
 
             // don't allow past dates
-            if (selectedDate.Date < DateTime.Now.Date)
+            if (selectedDate.Date < DateTime.Now.Date || DateTime.Now.Date == selectedDate.Date && IsItTooLateForToday())
             {
                 return false;
             }
@@ -443,13 +443,11 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// </summary>
         /// <param name="date">The date the number of reservations requested for.</param>
         /// <returns>Number of reservations.</returns>
-        public string GetReservationCountByDay(DateTimeOffset date)
+        public int GetReservationCountByDay(DateTimeOffset date)
         {
-            string result = "?";
-
             if (_freeSlotsByDate.ContainsKey(date.Date))
             {
-                result = _freeSlotsByDate[date.Date];
+                return Int32.Parse(_freeSlotsByDate[date.Date]);
             }
             else
             {
@@ -459,7 +457,7 @@ namespace MSHU.CarWash.UWP.ViewModels
                 }
             }
 
-            return result;
+            return 0;
         }
 
         private int GetReservationCountFromList(DateTimeOffset date, List<ReservationDayDetailsViewModel> list)
@@ -809,7 +807,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             StatusValue result = StatusValue.NotAvailable;
 
             // Check if the date is in the past.
-            if (date < DateTimeOffset.Now.Date)
+            if (date.Date < DateTimeOffset.Now.Date || date.Date == DateTimeOffset.Now.Date && IsItTooLateForToday())
             {
                 result = StatusValue.NotAvailable;
             }
@@ -874,6 +872,11 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
 
             return result;
+        }
+
+        private static bool IsItTooLateForToday()
+        {
+            return DateTime.Now.Hour >= 14;
         }
     }
 }
