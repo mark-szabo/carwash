@@ -189,7 +189,10 @@ namespace MSHU.CarWash.UWP.ViewModels
                     }
                     else
                     {
-                        ServicesSource.View.MoveCurrentToFirst();
+                        ServicesSource.View.MoveCurrentTo(
+                            Services.Find(
+                                x => x.ServiceId == (int)ServiceEnum.KulsoMosasBelsoTakaritas)
+                                );
                     }
                     OnPropertyChanged("Services");
                     OnPropertyChanged(nameof(ServicesSource));
@@ -630,11 +633,12 @@ namespace MSHU.CarWash.UWP.ViewModels
                 await GetFreeSlotNumberForTimeInterval(date.Date, date.Date);
             }
             cr.IsDeletable = true;
-            CurrentReservation = cr;
 
             // re-fresh services based on date and free slots
             Services = GetAvailableServices(_currentDate.Date, Convert.ToInt32(_freeSlotsByDate[_currentDate.Date]));
             ServicesSource.Source = Services;
+
+            CurrentReservation = cr;
         }
 
         private void ExecuteCancelReservationChangesCommand(object param)
