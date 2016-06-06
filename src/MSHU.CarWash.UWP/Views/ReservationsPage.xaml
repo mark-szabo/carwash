@@ -116,8 +116,8 @@
                     <SolidColorBrush Color="#FFECECEC" Opacity="0.4"/>
                 </Grid.Background>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="auto" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto" />
@@ -125,15 +125,15 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <Button x:Name="GoToMasterViewButton" Margin="12"
-                         Style="{StaticResource CWButtonStyle}"
-                    Click="GoToMasterViewButton_Click" Grid.Row="0">
-                    <FontIcon x:Name="BackGlyph" FontSize="24" Glyph="&#xE0A6;" MirroredWhenRightToLeft="True" />
+                <Button x:Name="GoToMasterViewButton" Margin="12" Style="{StaticResource CWButtonStyle}"
+                    Click="GoToMasterViewButton_Click" Grid.Row="0" Grid.Column="1" >
+                    <FontIcon x:Name="BackGlyph" FontSize="24" Glyph="&#xE947;" MirroredWhenRightToLeft="True" />
                 </Button>
 
-                <TextBlock Grid.Row="1" Text="{Binding Path=SelectedDate}" Margin="12,0,12,12" />
+                <TextBlock Grid.Row="1" Text="{Binding Path=SelectedDate}" Margin="12,0,12,12"
+                           Grid.ColumnSpan="2"/>
 
-                <controls:ReservationDetailsView Grid.Row="2" Margin="12,0,12,12"
+                <controls:ReservationDetailsView Grid.Row="2" Grid.ColumnSpan="2" Margin="12,0,12,12"
                                                  Visibility="{Binding CurrentReservation, Converter={StaticResource reservationDetailsViewConverter}}"
                                                  SaveCommand="{Binding SaveReservationChangesCommand}"
                                                  CancelCommand="{Binding CancelReservationChangesCommand}"
@@ -142,7 +142,7 @@
                                                  DisplayMode="{Binding CurrentReservation, Converter={StaticResource buttonsDisplayModeConverter}}"
                                                  IsEnabled="{Binding IsEditable}"/>
 
-                <RelativePanel Grid.Row="2" Margin="12,0,12,12"
+                <RelativePanel Grid.Row="2" Grid.ColumnSpan="2" Margin="12,0,12,12"
                                Visibility="{Binding CurrentReservation, Converter={StaticResource inverseRef2VisConverter}}">
                     <TextBlock Text="{Binding Feedback}" Name="FeedbackTextBlock"
                                Visibility="{Binding Feedback, Converter={StaticResource stringToVisibilityConverter}}"/>

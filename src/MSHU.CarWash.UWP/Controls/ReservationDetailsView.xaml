@@ -13,16 +13,16 @@
     <UserControl.Resources>
         <Style TargetType="TextBlock">
             <Setter Property="Margin"
-                    Value="8,12,8,12" />
+                    Value="0,12,0,12" />
         </Style>
 
         <Style TargetType="TextBox">
             <Setter Property="Margin"
-                    Value="8,4,8,4" />
+                    Value="0,4,0,4" />
         </Style>
     </UserControl.Resources>
 
-    <RelativePanel Margin="8">
+    <RelativePanel Margin="0">
         <VisualStateManager.VisualStateGroups>
 
             <VisualStateGroup x:Name="ResponsiveUI">
@@ -73,7 +73,7 @@
                    MinWidth="120" />
         <TextBox x:Name="PlateBox"
                  Text="{Binding CurrentReservation.VehiclePlateNumber, Mode=TwoWay}"
-                 MinWidth="160"
+                 MinWidth="80"
                  RelativePanel.AlignLeftWith=""
                  RelativePanel.RightOf="PlateText" />
         <TextBlock x:Name="ServiceText"
@@ -82,7 +82,7 @@
                    MinWidth="120" />
         <ComboBox x:Name="ServiceBox"
                   ItemsSource="{Binding ServicesSource.View, Mode=TwoWay}"
-                  Margin="8,4,0,0"
+                  Margin="0,4,0,4"
                   MinWidth="230"
                   DisplayMemberPath="ServiceName"
                   SelectedValuePath="ServiceId"
@@ -97,12 +97,12 @@
                  MinWidth="160"
                  RelativePanel.RightOf="PlateText" />
         <RelativePanel RelativePanel.Below="CommentBox"
-                       RelativePanel.AlignHorizontalCenterWithPanel="True">
+                       RelativePanel.AlignRightWithPanel="True">
             <Button Content="Cancel"
                     x:Name="CancelButton"
                     Command="{Binding CancelCommand, ElementName=viewControl}"
                     RelativePanel.AlignRightWithPanel="True"
-                    Margin="0,4,8,4"
+                    Margin="0,4,0,4"
                     Padding="32,4,32,4"
                     Style="{StaticResource CWButtonStyle}" />
             <Button Content="Save"
@@ -117,7 +117,7 @@
                     Command="{Binding DeleteCommand, ElementName=viewControl}"
                     Style="{StaticResource CWButtonStyle}"
                     RelativePanel.AlignRightWithPanel="True"
-                    Margin="0,4,8,4"
+                    Margin="0,4,0,4"
                     Padding="32,4,32,4" />
             <Button Content="Update"
                     x:Name="UpdateButton"
