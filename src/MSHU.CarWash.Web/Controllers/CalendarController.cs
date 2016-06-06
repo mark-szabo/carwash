@@ -108,8 +108,8 @@ namespace MSHU.CarWash.Controllers
             var queryResult = await query.ToListAsync();
 
 
-            ret.AvailableNormalSlots = day < DateTime.Today ? 0 : GetAvailableSlots(queryResult, day).Item1;
-            ret.AvailableSteamSlots = day < DateTime.Today ? 0 : GetAvailableSlots(queryResult, day).Item2;
+            ret.AvailableNormalSlots = day < DateTime.Today ? 0 : GetAvailableSlots(queryResult, day, false).Item1;
+            ret.AvailableSteamSlots = day < DateTime.Today ? 0 : GetAvailableSlots(queryResult, day, false).Item2;
 
             ret.Reservations = queryResult
                                 .Select(s => new ReservationDetailViewModel
@@ -220,13 +220,13 @@ namespace MSHU.CarWash.Controllers
             var qResult = await q.ToListAsync();
 
             // consider only normal washing service
-            int availableSlots = GetAvailableSlots(qResult, day).Item1;
+            int availableSlots = GetAvailableSlots(qResult, day, false).Item1;
             while (availableSlots == 0)
             {
                 day = day.AddDays(1);
 
                 // consider only normal washing service
-                availableSlots = GetAvailableSlots(qResult, day).Item1;
+                availableSlots = GetAvailableSlots(qResult, day, false).Item1;
             }
 
             HomeViewModel retVal = await CreateHomeViewModelAsync(day, currentUser);
@@ -285,7 +285,9 @@ namespace MSHU.CarWash.Controllers
                                    where b.Date == newReservationViewModel.Date
                                    select b;
             var queryReservationResult = await queryReservation.ToListAsync();
-            var availableSlots = GetAvailableSlots(queryReservationResult, newReservationViewModel.Date);
+            // In case of saving a new reservation, it is necessary to check if the user already has a reservation
+            // for that day.
+            var availableSlots = GetAvailableSlots(queryReservationResult, newReservationViewModel.Date, true);
             if (newReservationViewModel.SelectedServiceId == (int)ServiceEnum.ExteriorInteriorCarpet)
             {
                 availableSlots = new Tuple<int, int>(availableSlots.Item1-2, availableSlots.Item2);
@@ -474,7 +476,8 @@ namespace MSHU.CarWash.Controllers
 
             for (var day = from; day < until; day = day.AddDays(1))
             {
-                if(GetAvailableSlots(nextReservations, day).Item1 >= 1)
+                // If we are looking the for next free slot, we have to consider if the user already has a reservation for the day.
+                if(GetAvailableSlots(nextReservations, day, true).Item1 >= 1)
                 {
                     return day;
                 }
@@ -503,7 +506,7 @@ namespace MSHU.CarWash.Controllers
                         select b;
             var queryResult = await query.ToListAsync();
             // Get the number of available slots.
-            var slots = GetAvailableSlots(queryResult, day);
+            var slots = GetAvailableSlots(queryResult, day, false);
             int availableSlots = day < DateTime.Today ? 0 : slots.Item1 + slots.Item2;
             // Return the number of available slots.
             return Json(availableSlots);
@@ -538,7 +541,7 @@ namespace MSHU.CarWash.Controllers
                             select b;
                 var queryResult = await query.ToListAsync();
                 // Get the number of available slots.
-                var slots = GetAvailableSlots(queryResult, current);
+                var slots = GetAvailableSlots(queryResult, current, false);
                 availableSlotsNr = current < DateTime.Today ? 0 : slots.Item1 + slots.Item2;
                 availableSlots.Add(availableSlotsNr);
                 current = current.AddDays(1);
@@ -728,8 +731,8 @@ namespace MSHU.CarWash.Controllers
                 var dayViewModel = new DayViewModel
                 {
                     Day = date,
-                    AvailableNormalSlots = date < DateTime.Today ? 0 : GetAvailableSlots(queryResult, date).Item1,
-                    AvailableSteamSlots = date < DateTime.Today ? 0 : GetAvailableSlots(queryResult, date).Item2,
+                    AvailableNormalSlots = date < DateTime.Today ? 0 : GetAvailableSlots(queryResult, date, false).Item1,
+                    AvailableSteamSlots = date < DateTime.Today ? 0 : GetAvailableSlots(queryResult, date, false).Item2,
                     IsToday = (date == DateTime.Today)
                 };
                 var maxAvailableSlotsOnDate = new Tuple<int, int>(0, 0);
