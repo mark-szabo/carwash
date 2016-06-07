@@ -511,7 +511,19 @@ namespace MSHU.CarWash.UWP.ViewModels
             if (availableSlots.HasValue)
             {
                 _freeSlotsByDate[day] = availableSlots.Value.ToString();
-                _calendarDayVMs[day].FreeSlots = availableSlots.Value;
+                if (_calendarDayVMs.ContainsKey(day))
+                {
+                    _calendarDayVMs[day].FreeSlots = availableSlots.Value;
+                }
+                else
+                {
+                    // If the user jumps directly from the HomePage to the details view
+                    // then the viewmodel is missing for the day on the calendar side.
+                    CalendarDayViewModel vm = new CalendarDayViewModel();
+                    vm.FreeSlots = availableSlots.Value;
+                    vm.UpdatePending = false;
+                    _calendarDayVMs.Add(day, vm);
+                }
             }
         }
 
@@ -640,9 +652,9 @@ namespace MSHU.CarWash.UWP.ViewModels
             if (param is DateTime)
             {
                 var date = (DateTime)param;
-                _currentDate = new DateTimeOffset(date);
+                _currentDate = new DateTimeOffset(date.Date);
                 //await GetFreeSlotNumberForTimeInterval(date.Date, date.Date);
-                await GetCapacityByDay(date);
+                await GetCapacityByDay(date.Date);
             }
             cr.IsDeletable = true;
 
