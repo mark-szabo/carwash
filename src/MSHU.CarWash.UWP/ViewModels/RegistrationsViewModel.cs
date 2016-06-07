@@ -371,7 +371,8 @@ namespace MSHU.CarWash.UWP.ViewModels
             }
 
             // make sure there's no update
-            if (UpdatePending)
+            CalendarDayViewModel dayVM = _calendarDayVMs[selectedDate.Date];
+            if (dayVM.UpdatePending)
             {
                 return false;
             }
