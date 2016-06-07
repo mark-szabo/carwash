@@ -69,6 +69,8 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// </summary>
         private ReservationDayDetailViewModel _currentReservation;
 
+        private Dictionary<DateTime, CalendarDayViewModel> _calendarDayVMs;
+
         /// <summary>
         /// Gets or sets the RequestServiceCommand.
         /// </summary>
@@ -332,12 +334,6 @@ namespace MSHU.CarWash.UWP.ViewModels
             // Create the UpdateReservationChangesCommand.
             UpdateReservationCommand = new RelayCommand(ExecuteUpdateReservationChangesCommand);
 
-            // Create the PreviousPeriodCommand.
-            PreviousPeriodCommand = new RelayCommand(ExecutePreviousPeriodCommand);
-
-            // Create the NextPeriodCommand.
-            NextPeriodCommand = new RelayCommand(ExecuteNextPeriodCommand);
-
             Services = GetAvailableServices();
 
             ServicesSource = new CollectionViewSource();
@@ -357,9 +353,7 @@ namespace MSHU.CarWash.UWP.ViewModels
 
             _freeSlotsByDate = new Dictionary<DateTime, string>();
 
-            DateTime now = DateTime.Now.Date;
-            _currentMonth = new DateTime(now.Year, now.Month, 1);
-            GetFreeSlotNumberForTimeInterval(now.AddDays(-7 * NUMBEROFWEEKS), now.AddDays(7 * 2 * NUMBEROFWEEKS));
+            _calendarDayVMs = new Dictionary<DateTime, CalendarDayViewModel>();
 
             _initializing = true;
             _requestedDates = new ObservableCollection<DateTime>();
@@ -390,14 +384,31 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// </summary>
         /// <param name="date">Date (optional)</param>
         /// <param name="freeNormalSlots">Free slots (optional)</param>
+        /// <param name="reservationExists">
+        /// Indicates if the user has a reservation for the given day.
+        /// 
+        /// If yes then we have to allow the 'ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas'
+        /// service if there's only one slot. Futhermore, we also have to allow this service in case if
+        /// the user has selected this service for the given day.
+        /// </param>
+        /// <param name="selectedServiceName">
+        /// The name of the selected service on the reservation made for the day for which 
+        /// we are looking for available services.
+        /// </param>
         /// <returns>Available services</returns>
-        private List<ServiceViewModel> GetAvailableServices(DateTime? date = null, int freeNormalSlots = 2)
+        private List<ServiceViewModel> GetAvailableServices(DateTime? date = null, int freeNormalSlots = 2,
+            bool reservationExists = false, string selectedServiceName = null)
         {
             var result = new List<ServiceViewModel>();
             result.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosas, ServiceName = ServiceEnum.KulsoMosas.GetDescription(), Selected = false });
             result.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.BelsoTakaritas, ServiceName = ServiceEnum.BelsoTakaritas.GetDescription(), Selected = false });
             result.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasBelsoTakaritas, ServiceName = ServiceEnum.KulsoMosasBelsoTakaritas.GetDescription(), Selected = false });
-            if (freeNormalSlots > 1)
+            bool specialServiceSelected = false;
+            if (selectedServiceName == ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas.GetDescription())
+            {
+                specialServiceSelected = true;
+            }
+            if (freeNormalSlots > 1 || (freeNormalSlots == 1 && reservationExists) || specialServiceSelected)
             {
                 result.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas, ServiceName = ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas.GetDescription(), Selected = false });
             }
@@ -413,7 +424,9 @@ namespace MSHU.CarWash.UWP.ViewModels
 
         private async void RequestedDatesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if (!_initializing && e.NewItems.Count == 1)
+            if (//!_initializing && 
+                e.Action == NotifyCollectionChangedAction.Add && 
+                e.NewItems.Count == 1)
             {
                 DateTime requestedDay = (DateTime)e.NewItems[0];
                 requestedDay = requestedDay.Date;
@@ -430,34 +443,43 @@ namespace MSHU.CarWash.UWP.ViewModels
                     {
                         _freeSlotsByDate.Add(requestedDay, slots.ToString());
                     }
+
+                    CalendarDayViewModel vm = _calendarDayVMs[requestedDay];
+                    vm.FreeSlots = slots.Value;
+                    vm.UpdatePending = false;
                 }
                 _requestedDates.Remove(requestedDay);
                 OnPropertyChanged(nameof(FreeSlots));
                 OnPropertyChanged(nameof(DayStatus));
+                //UpdatePending = false;
             }
         }
 
-
-        /// <summary>
-        /// Retrieves the number of reservations for the given date.
-        /// </summary>
-        /// <param name="date">The date the number of reservations requested for.</param>
-        /// <returns>Number of reservations.</returns>
-        public int GetReservationCountByDay(DateTimeOffset date)
+        public CalendarDayViewModel RequestSlotNrUpdate(DateTime date)
         {
-            if (_freeSlotsByDate.ContainsKey(date.Date))
+            CalendarDayViewModel vm;
+            if (_calendarDayVMs.ContainsKey(date))
             {
-                return Int32.Parse(_freeSlotsByDate[date.Date]);
+                vm = _calendarDayVMs[date];
+                if (!vm.UpdatePending)
+                {
+                    vm.UpdatePending = true;
+                    _requestedDates.Add(date);
+                }
+                else
+                {
+                    // If currently updating then don't add the date to the 
+                    // _requestedDates collection
+                }
             }
             else
             {
-                if (!_initializing)
-                {
-                    //_requestedDates.Add(date.Date);
-                }
+                vm = new CalendarDayViewModel();
+                vm.UpdatePending = true;
+                _calendarDayVMs.Add(date, vm);
+                _requestedDates.Add(date);
             }
-
-            return 0;
+            return vm;
         }
 
         private int GetReservationCountFromList(DateTimeOffset date, List<ReservationDayDetailsViewModel> list)
@@ -480,34 +502,6 @@ namespace MSHU.CarWash.UWP.ViewModels
             return number;
         }
 
-        private async Task GetFreeSlotNumberForTimeInterval(DateTime start, DateTime end)
-        {
-            UpdatePending = true;
-            List<int> availableSlots = await ServiceClient.ServiceClient.GetCapacityForTimeInterval(
-                start,
-                end,
-                App.AuthenticationManager.BearerAccessToken);
-            DateTime key = start;
-            for (int index = 0; index < availableSlots?.Count; index++)
-            {
-                // Update the dictionary
-                if (_freeSlotsByDate.ContainsKey(key))
-                {
-                    _freeSlotsByDate[key] = availableSlots[index].ToString();
-                }
-                else
-                {
-                    _freeSlotsByDate.Add(key, availableSlots[index].ToString());
-                }
-                // Increment the index
-                key = key.AddDays(1);
-            }
-            UpdatePending = false;
-            OnPropertyChanged(nameof(FreeSlots));
-            OnPropertyChanged(nameof(DayStatus));
-            _initializing = false;
-        }
-
         public async Task GetCapacityByDay(DateTime day)
         {
             int? availableSlots = await ServiceClient.ServiceClient.GetCapacityByDay(
@@ -515,7 +509,8 @@ namespace MSHU.CarWash.UWP.ViewModels
                 App.AuthenticationManager.BearerAccessToken);
             if (availableSlots.HasValue)
             {
-                _freeSlotsByDate[day] = availableSlots.ToString();
+                _freeSlotsByDate[day] = availableSlots.Value.ToString();
+                _calendarDayVMs[day].FreeSlots = availableSlots.Value;
             }
         }
 
@@ -563,8 +558,25 @@ namespace MSHU.CarWash.UWP.ViewModels
             if (SelectedDayDetails != null)
             {
                 // Check if the user has reservation for the selected date.
-                CurrentReservation = SelectedDayDetails.Reservations.Find(
+                ReservationDayDetailViewModel rddvm = SelectedDayDetails.Reservations.Find(
                     x => x.EmployeeId.Equals(App.AuthenticationManager.UserData.DisplayableId));
+
+                // If the user has a reservation for the given day then we have to reevaluate which
+                // services are available for selection.
+                if (rddvm != null)
+                {
+                    // re-fresh services based on date and free slots
+                    Services = GetAvailableServices(
+                        _currentDate.Date, 
+                        Convert.ToInt32(_freeSlotsByDate[_currentDate.Date]),
+                        true,
+                        rddvm.SelectedServiceName);
+                    ServicesSource.Source = Services;
+                }
+
+                // Set the current reservation to the newly found instance.
+                CurrentReservation = rddvm;
+
                 // If the user doesn't have reservation for the selected date then let's find out
                 // if the user can create a new one.
                 if (CurrentReservation == null)
@@ -628,7 +640,8 @@ namespace MSHU.CarWash.UWP.ViewModels
             {
                 var date = (DateTime)param;
                 _currentDate = new DateTimeOffset(date);
-                await GetFreeSlotNumberForTimeInterval(date.Date, date.Date);
+                //await GetFreeSlotNumberForTimeInterval(date.Date, date.Date);
+                await GetCapacityByDay(date);
             }
             cr.IsDeletable = true;
 
@@ -691,6 +704,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             if (count.HasValue)
             {
                 _freeSlotsByDate[date] = count.Value.ToString();
+                _calendarDayVMs[date].FreeSlots = count.Value;
             }
         }
 
@@ -774,32 +788,6 @@ namespace MSHU.CarWash.UWP.ViewModels
                     SmartGoBackRequested?.Invoke(this, null);
                 }
             }
-        }
-
-        /// <summary>
-        /// Handles the Executed event of the PreviousPeriodCommand.
-        /// Actually, it loads the number of free slots for the previous
-        /// time period.
-        /// </summary>
-        /// <param name="param"></param>
-        private void ExecutePreviousPeriodCommand(object param)
-        {
-            _currentMonth = _currentMonth.AddMonths(-1);
-            var lastDayOfMonth = _currentMonth.AddMonths(1).AddDays(-1);
-            GetFreeSlotNumberForTimeInterval(_currentMonth, lastDayOfMonth);
-        }
-
-        /// <summary>
-        /// Handles the Executed event of the NextPeriodCommand.
-        /// Actually, it loads the number of free slots for the previous
-        /// time period.
-        /// </summary>
-        /// <param name="param"></param>
-        private void ExecuteNextPeriodCommand(object param)
-        {
-            _currentMonth = _currentMonth.AddMonths(1);
-            var lastDayOfMonth = _currentMonth.AddMonths(1).AddDays(-1);
-            GetFreeSlotNumberForTimeInterval(_currentMonth, lastDayOfMonth);
         }
 
         public StatusValue GetStatus(DateTimeOffset date)

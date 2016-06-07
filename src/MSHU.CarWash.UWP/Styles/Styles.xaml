@@ -1159,8 +1159,20 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <Button x:Name="HeaderButton" Content="{Binding TemplateSettings.HeaderText, RelativeSource={RelativeSource Mode=TemplatedParent}}" Foreground="{TemplateBinding Foreground}" HorizontalContentAlignment="Left" IsEnabled="False" Padding="12,0,0,0" Style="{StaticResource NavigationButtonStyle}"/>
-                                <Button x:Name="PreviousButton" Content="&#xE0E4;" Grid.Column="1" Foreground="{TemplateBinding Foreground}" FontFamily="{ThemeResource SymbolThemeFontFamily}" HorizontalContentAlignment="Center" IsTabStop="False" IsEnabled="{Binding TemplateSettings.HasMoreContentBefore, RelativeSource={RelativeSource Mode=TemplatedParent}}" Padding="1" Style="{StaticResource NavigationButtonStyle}" Command="{Binding PreviousButtonCommand, RelativeSource={RelativeSource TemplatedParent}}"/>
-                                <Button x:Name="NextButton" Content="&#xE0E5;" Grid.Column="2" Foreground="{TemplateBinding Foreground}" FontFamily="{ThemeResource SymbolThemeFontFamily}" HorizontalContentAlignment="Center" IsTabStop="False" IsEnabled="{Binding TemplateSettings.HasMoreContentAfter, RelativeSource={RelativeSource Mode=TemplatedParent}}" Padding="1" Style="{StaticResource NavigationButtonStyle}" Command="{Binding NextButtonCommand, RelativeSource={RelativeSource TemplatedParent}}"/>
+                                <Button x:Name="PreviousButton" Content="&#xE0E4;" Grid.Column="1" 
+                                        Foreground="{TemplateBinding Foreground}" 
+                                        FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                                        HorizontalContentAlignment="Center" IsTabStop="False" 
+                                        IsEnabled="{Binding TemplateSettings.HasMoreContentBefore, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                                        Padding="1" Style="{StaticResource NavigationButtonStyle}" 
+                                        />
+                                <Button x:Name="NextButton" Content="&#xE0E5;" Grid.Column="2" 
+                                        Foreground="{TemplateBinding Foreground}" 
+                                        FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                                        HorizontalContentAlignment="Center" IsTabStop="False" 
+                                        IsEnabled="{Binding TemplateSettings.HasMoreContentAfter, RelativeSource={RelativeSource Mode=TemplatedParent}}" 
+                                        Padding="1" Style="{StaticResource NavigationButtonStyle}" 
+                                        />
                             </Grid>
                             <Grid x:Name="Views" Grid.Row="1">
                                 <Grid.Clip>

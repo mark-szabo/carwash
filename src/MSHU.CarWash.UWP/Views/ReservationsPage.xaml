@@ -100,8 +100,7 @@
         			DayItemFontSize="11"
         			CalendarViewDayItemChanging="CalendarView_CalendarViewDayItemChanging"
         			SelectedDatesChanged="CalendarView_SelectedDatesChanged"
-        			PreviousButtonCommand="{Binding PreviousPeriodCommand}"
-        			NextButtonCommand="{Binding NextPeriodCommand}" Background="#CCECECEC" RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+        			Background="#CCECECEC" RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                       />
             </Viewbox>
         </RelativePanel>

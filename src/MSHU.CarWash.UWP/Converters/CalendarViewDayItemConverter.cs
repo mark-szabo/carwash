@@ -17,21 +17,18 @@ namespace MSHU.CarWash.UWP.Converters
         {
             if (targetType.Equals(typeof(string)))
             {
-                RegistrationsViewModel vm = value as RegistrationsViewModel;
                 DateTimeOffset dt = (DateTimeOffset)parameter;
-                if (vm != null)
+
+                if (dt.Date < DateTime.Now.Date)
                 {
-                    if (dt.Date < DateTime.Now.Date)
-                    {
-                        return String.Empty;
-                    }
-                    if (dt.Date == DateTime.Now.Date && DateTime.Now.Hour >= 14)
-                    {
-                        return "Too late";
-                    }
-                    var freeCount = vm.GetReservationCountByDay(dt);
-                    value = freeCount > 0 ? $"{freeCount} free" : "Taken";
+                    return String.Empty;
                 }
+                if (dt.Date == DateTime.Now.Date && DateTime.Now.Hour >= 14)
+                {
+                    return "Too late";
+                }
+                var freeCount = (int)value;
+                value = $"{freeCount} free";
             }
             return value;
         }

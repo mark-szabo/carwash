@@ -72,9 +72,22 @@ namespace MSHU.CarWash.UWP.Views
             CalendarViewDayItem item = args.Item;
             DateTimeOffset date = item.Date;
 
+            // Workaround for the strange behavior: CalendarView calls this with the date
+            // 100 years age, for the first time.
+            if (date.Year < 2000)
+            {
+                return;
+            }
+
             if (item.DataContext == null)
             {
                 item.DataContext = this.ViewModel;
+            }
+
+            if (this.ViewModel != null)
+            {
+                item.DataContext = ((RegistrationsViewModel)ViewModel).RequestSlotNrUpdate(date.Date);
+                //((RegistrationsViewModel)ViewModel).UpdatePending = true;
             }
 
             if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
@@ -102,6 +115,7 @@ namespace MSHU.CarWash.UWP.Views
                 }
                 textBinding.Converter = _converter;
                 textBinding.ConverterParameter = item.Date;
+                textBinding.Mode = BindingMode.TwoWay;
                 tb.SetBinding(TextBlock.TextProperty, textBinding);
             }
 
@@ -109,6 +123,7 @@ namespace MSHU.CarWash.UWP.Views
                 item, NameProperty, "StatusControl");
             if (statusControl != null)
             {
+                statusControl.DataContext = this.ViewModel;
                 Binding fillBinding = new Binding();
                 if (statusControl.DataContext is CalendarViewDayItem)
                 {
@@ -124,6 +139,7 @@ namespace MSHU.CarWash.UWP.Views
                 }
                 fillBinding.Converter = _statusConverter;
                 fillBinding.ConverterParameter = item.Date;
+                fillBinding.Mode = BindingMode.TwoWay;
                 statusControl.SetBinding(Ellipse.FillProperty, fillBinding);
             }
 
