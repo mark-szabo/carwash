@@ -1,6 +1,5 @@
 ﻿using MSHU.CarWash.DomainModel;
 using MSHU.CarWash.DomainModel.Helpers;
-using MSHU.CarWash.UWP.Views;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -70,6 +69,11 @@ namespace MSHU.CarWash.UWP.ViewModels
         private ReservationDayDetailViewModel _currentReservation;
 
         private Dictionary<DateTime, CalendarDayViewModel> _calendarDayVMs;
+
+        /// <summary>
+        /// Helper field for the progress ring - shown until the view is initialized.
+        /// </summary>
+        private bool _initializingView;
 
         /// <summary>
         /// Gets or sets the RequestServiceCommand.
@@ -305,8 +309,23 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// </summary>
         public object DayStatus => this;
 
+        public bool InitializingView
+        {
+            get
+            {
+                return _initializingView;
+            }
+
+            set
+            {
+                _initializingView = value;
+                OnPropertyChanged(nameof(InitializingView));
+            }
+        }
+
         public RegistrationsViewModel()
         {
+            InitializingView = true;
             UseDetailsView = false;
 
             // Create and execute the RequestService command.
@@ -663,6 +682,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             ServicesSource.Source = Services;
 
             CurrentReservation = cr;
+            InitializingView = false;
         }
 
         private void ExecuteCancelReservationChangesCommand(object param)
