@@ -86,7 +86,7 @@
                             Visibility="{Binding NextFreeSlotAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <FontIcon x:Name="ReserveGlyph" FontSize="24" Glyph="&#xECC8;" MirroredWhenRightToLeft="True" />
                         </Button>
-                        <TextBlock TextWrapping="NoWrap" Name="ExtraText" Text="Extra wishes?" Style="{StaticResource TitleTextBlockStyle}" RelativePanel.AlignVerticalCenterWith="ExtraButton"
+                        <TextBlock TextWrapping="NoWrap" Name="ExtraText" Text="Customize" Style="{StaticResource TitleTextBlockStyle}" RelativePanel.AlignVerticalCenterWith="ExtraButton"
                                RelativePanel.AlignHorizontalCenterWith="QuickTextBlock" />
                         <Button Name="ExtraButton" Margin="12, 12" RelativePanel.Below="ReserveButton" RelativePanel.AlignHorizontalCenterWith="ReserveButton"
                             Command="{Binding QuickReserveExtraCommand}"
