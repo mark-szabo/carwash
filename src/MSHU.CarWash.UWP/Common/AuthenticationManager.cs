@@ -18,14 +18,14 @@ namespace MSHU.CarWash.UWP.Common
     /// </summary>
     public class AuthenticationManager
     {
-        //vadkertimobiletestnativeapp's properies in Azure AD
-        private string m_ClientId = "1d316939-3200-4b05-9072-a5c92ae8c5a0";
+        //mshucarwashuniversalapp's properies in Azure AD
+        private string m_ClientId = "c9349a86-5ab0-45db-a0d3-2f4a1ca89a1d";
         private Uri m_AppUri = new Uri("ms-app://s-1-15-2-348789351-3529148773-2918319933-3807175127-3638082815-3054471230-807679675/");
        
         //Session to Azure AD
         private const string s_TenantId = "microsoft.onmicrosoft.com";
         private const string s_Authority = "https://login.microsoftonline.com/"+ s_TenantId;
-        private const string backendAddress = "https://vadkertitestwebapp.azurewebsites.net";
+        public const string s_BackendAddress = "https://mshucarwash.azurewebsites.net";
         private AuthenticationContext m_AuthContext = new AuthenticationContext(s_Authority);
 
        
@@ -103,7 +103,7 @@ namespace MSHU.CarWash.UWP.Common
             }
 
             WebTokenRequest wtr = new WebTokenRequest(wap, string.Empty, m_ClientId);
-            wtr.Properties.Add("resource", backendAddress);
+            wtr.Properties.Add("resource", s_BackendAddress);
 
             WebTokenRequestResult wtrr = null;
 
@@ -162,7 +162,7 @@ namespace MSHU.CarWash.UWP.Common
         {
             bool result = false;
             var authenticationResult = await m_AuthContext.AcquireTokenAsync(
-                                backendAddress,
+                                s_BackendAddress,
                                 m_ClientId,
                                 m_AppUri,
                                 promptBehavior);
