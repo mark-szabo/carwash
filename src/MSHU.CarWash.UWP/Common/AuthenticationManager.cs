@@ -80,10 +80,11 @@ namespace MSHU.CarWash.UWP.Common
         {
             bool result = false;
             result = await TrySignInWithWebBrokerAsync(promptBehavior);
-            if (result == false)
-            {
-                result = await TrySignInWithADALAsync(promptBehavior);
-            }
+            // ADAL is commented out - should be removed later; Win10 SSO handles everything
+            //if (result == false)
+            //{
+            //    result = await TrySignInWithADALAsync(promptBehavior);
+            //}
             return result;
         }
 
