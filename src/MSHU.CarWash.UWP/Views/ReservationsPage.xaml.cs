@@ -35,18 +35,23 @@ namespace MSHU.CarWash.UWP.Views
         protected override void InitializePage()
         {
             ViewModel = new RegistrationsViewModel();
-
             base.InitializePage();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            base.OnNavigatedTo(e);
             (ViewModel as RegistrationsViewModel).SmartGoBackRequested += ReservationsPage_SmartGoBackRequested;
+            base.OnNavigatedTo(e);
             if (e.Parameter is DateTime)
             {
                 (ViewModel as RegistrationsViewModel).CreateReservationCommand.Execute(e.Parameter);
                 (ViewModel as RegistrationsViewModel).UseDetailsView = true;
+            }
+            else
+            {
+                // We are navigating through the menu, so the calendar view will be shown. Since
+                // its dayitem controls already have progress ring, we can deactivate the central ring.
+                (ViewModel as RegistrationsViewModel).InitializingView = false;
             }
         }
 

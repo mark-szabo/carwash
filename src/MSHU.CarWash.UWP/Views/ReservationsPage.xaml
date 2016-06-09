@@ -85,7 +85,8 @@
         <views:SignOutControl Grid.Row="0"/>
 
         <!-- Master view -->
-        <RelativePanel x:Name="relativePanelMaster" Grid.Column="0" Grid.Row="1">
+        <RelativePanel x:Name="relativePanelMaster" Grid.Column="0" Grid.Row="1"
+                       Visibility="{Binding InitializingView, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
             <Viewbox Margin="12,12,12,12" 
         		HorizontalAlignment="Stretch" VerticalAlignment="Stretch" RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" >
                 <controls:CWCalendarView 
@@ -106,7 +107,8 @@
         </RelativePanel>
 
         <!-- Details view -->
-        <RelativePanel x:Name="relativePanelDetails" Grid.Column="1" Grid.Row="1">
+        <RelativePanel x:Name="relativePanelDetails" Grid.Column="1" Grid.Row="1"
+                       Visibility="{Binding InitializingView, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
             <Grid RelativePanel.AlignHorizontalCenterWithPanel="True"
                   RelativePanel.AlignVerticalCenterWithPanel="True" Padding="12">
                 <Grid.Background>
@@ -152,6 +154,12 @@
                 
             </Grid>
         </RelativePanel>
+
+
+        <ProgressRing IsActive="True" Grid.Column="0" Grid.Row="1" Width="60" Height="60"
+                      Visibility="{Binding InitializingView, Converter={StaticResource BooleanToVisibilityConverter}}" 
+                      RelativePanel.AlignHorizontalCenterWithPanel="True" 
+                      RelativePanel.AlignVerticalCenterWithPanel="True" />
 
     </Grid>
 </views:BasePage>

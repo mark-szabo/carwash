@@ -208,6 +208,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="bundleconfig.json" />
+    <None Include="Properties\PublishProfiles\mshucarwash - Web Deploy %282%29.pubxml" />
+    <None Include="Properties\PublishProfiles\mshucarwash - Web Deploy %283%29.pubxml" />
+    <None Include="Properties\PublishProfiles\mshucarwash.pubxml" />
     <None Include="Properties\PublishProfiles\vadkertitestmobile - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\vadkertitestwebapp - FTP %282%29.pubxml" />
     <None Include="Properties\PublishProfiles\vadkertitestwebapp - FTP.pubxml" />

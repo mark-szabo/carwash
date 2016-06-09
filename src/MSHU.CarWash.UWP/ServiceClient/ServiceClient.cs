@@ -13,7 +13,7 @@ namespace MSHU.CarWash.UWP.ServiceClient
     // TODO: refactor this class to remove duplicates
     public class ServiceClient
     {
-        private const string s_BaseUrl = "https://vadkertitestwebapp.azurewebsites.net";
+        private const string s_BaseUrl = AuthenticationManager.s_BackendAddress;
 
         /// <summary>
         /// Get all reservations
