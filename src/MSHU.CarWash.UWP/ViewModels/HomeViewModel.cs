@@ -343,10 +343,14 @@ namespace MSHU.CarWash.UWP.ViewModels
         {
             UpcomingReservationPending = true;
             bool result = await ServiceClient.ServiceClient.DeleteReservation(upcomingReservation.ReservationId, App.AuthenticationManager.BearerAccessToken);
-            ReservationAvailable = false;
-            GetNextFreeSlotCommand.Execute(null);
-            RequestServiceCommand.Execute(null);
+            if (result)
+            {
+                ReservationAvailable = false;
+                GetNextFreeSlotCommand.Execute(null);
+                RequestServiceCommand.Execute(null);
 
+                await appointmentService.RemoveAppointmentAsync(upcomingReservation.ReservationId);
+            }
             // in case we still had the success feedback there - let's remove it to make
             // a new quick reservation possible
             ShowQuickReservationSuccess = false;
@@ -371,13 +375,16 @@ namespace MSHU.CarWash.UWP.ViewModels
 
             NextFreeSlotPending = true;
             UpcomingReservationPending = true;
-            bool result = await ServiceClient.ServiceClient.SaveReservation(reservation, App.AuthenticationManager.BearerAccessToken);
-            if(result)
+            var result = await ServiceClient.ServiceClient.SaveReservation(reservation, App.AuthenticationManager.BearerAccessToken);
+            if(result.HasValue)
             {
                 ShowQuickReservationSuccess = true;
                 NextFreeSlotPending = false;
                 RequestServiceCommand.Execute(null);
                 //GetNextFreeSlotCommand.Execute(null);
+
+                // add appointment
+                await appointmentService.CreateAppointmentAsync(CreateReservationFromViewModel(reservation, result.Value));
             }
         }
 

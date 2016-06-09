@@ -122,6 +122,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServiceClient\ServiceClient.cs" />
     <Compile Include="ServiceClient\UserInfo.cs" />
+    <Compile Include="Services\AppointmentInfo.cs" />
+    <Compile Include="Services\CalendarAppAppointmentService.cs" />
+    <Compile Include="Services\IAppointmentService.cs" />
     <Compile Include="ViewModels\AppShellViewModel.cs" />
     <Compile Include="ViewModels\AboutViewModel.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />

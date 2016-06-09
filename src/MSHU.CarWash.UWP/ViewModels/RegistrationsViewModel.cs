@@ -681,10 +681,10 @@ namespace MSHU.CarWash.UWP.ViewModels
             nrvm.Comment = CurrentReservation.Comment;
             //nrvm.SelectedServiceId = ServicesSource.View.CurrentPosition;
             nrvm.Date = _currentDate.Date;
-            bool result = await ServiceClient.ServiceClient.SaveReservation(
+            var result = await ServiceClient.ServiceClient.SaveReservation(
                 nrvm,
                 App.AuthenticationManager.BearerAccessToken);
-            if (result)
+            if (result.HasValue)
             {
                 // Update the slot number cache.
                 await UpdateSlotNumberCache(_currentDate.Date);
@@ -693,7 +693,7 @@ namespace MSHU.CarWash.UWP.ViewModels
                 // at the AuthenticationManager.
                 if (CurrentReservation.VehiclePlateNumber != App.AuthenticationManager.CurrentEmployee.VehiclePlateNumber)
                 {
-                    App.AuthenticationManager.RefreshCurrentUser();
+                    await App.AuthenticationManager.RefreshCurrentUser();
                 }
                 // Refresh the ReservationViewModel reference.
                 _rmv = await ServiceClient.ServiceClient.GetReservations(
@@ -706,6 +706,9 @@ namespace MSHU.CarWash.UWP.ViewModels
                     // request subscribing view to do a smart go back
                     SmartGoBackRequested?.Invoke(this, null);
                 }
+
+                // add to calendar
+                await appointmentService.CreateAppointmentAsync(CreateReservationFromViewModel(nrvm, result.Value));
             }
         }
 
@@ -749,6 +752,9 @@ namespace MSHU.CarWash.UWP.ViewModels
 
                 // Update the slot number cache.
                 await UpdateSlotNumberCache(_currentDate.Date);
+
+                // delete from calendar
+                await appointmentService.RemoveAppointmentAsync(_currentReservation.ReservationId);
 
                 // Reset the current reservation instance.
                 CurrentReservation = null;
@@ -800,6 +806,8 @@ namespace MSHU.CarWash.UWP.ViewModels
                     // request subscribing view to do a smart go back
                     SmartGoBackRequested?.Invoke(this, null);
                 }
+
+                await appointmentService.UpdateAppointmentAsync(updatedReservation);
             }
         }
 
