@@ -222,6 +222,10 @@ namespace MSHU.CarWash.UWP.Views
                     viewModel.ActivateDetailsCommand.Execute(selectedDate);
                 }
             }
+            else if (args.AddedDates.Count == 0 && args.RemovedDates.Count == 1)
+            {
+                MainCalendarView.SelectedDates.Add(args.RemovedDates[0]);
+            }
         }
 
         private void GoToMasterViewButton_Click(object sender, RoutedEventArgs e)
