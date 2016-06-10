@@ -4,7 +4,6 @@
     "Microsoft.IdentityModel.Clients.ActiveDirectory": "2.25.305061457",
     "Microsoft.NETCore.UniversalWindowsPlatform": "5.1.0",
     "Microsoft.NETNative.Analyzer": "1.0.0",
-    "Newtonsoft.Json": "8.0.3",
     "WindowsAzure.MobileServices": "1.3.2"
   },
   "frameworks": {
