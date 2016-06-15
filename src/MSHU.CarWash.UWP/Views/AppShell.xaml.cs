@@ -363,11 +363,18 @@ namespace MSHU.CarWash.UWP.Views
             base.InitializePage();
         }
 
-        private void NetworkInformation_NetworkStatusChanged(object sender)
+        private async void NetworkInformation_NetworkStatusChanged(object sender)
         {
-            Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                () => ((AppShellViewModel)ViewModel).InternetAvailable = NetworkInformation.GetInternetConnectionProfile()
-                .GetNetworkConnectivityLevel() == NetworkConnectivityLevel.InternetAccess);
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                () => 
+                {
+                    ConnectionProfile profile = NetworkInformation.GetInternetConnectionProfile();
+                    if (profile != null)
+                    {
+                        ((AppShellViewModel)ViewModel).InternetAvailable = profile.GetNetworkConnectivityLevel() == NetworkConnectivityLevel.InternetAccess;
+                    }
+                }
+            );
         }
 
         public bool IsMenuEnabled

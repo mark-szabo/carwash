@@ -1,4 +1,5 @@
 ﻿using MSHU.CarWash.UWP.ViewModels;
+using System;
 using System.Threading.Tasks;
 using Windows.Networking.Connectivity;
 using Windows.UI.Core;
@@ -34,11 +35,18 @@ namespace MSHU.CarWash.UWP.Views
             base.InitializePage();
         }
 
-        private void NetworkInformation_NetworkStatusChanged(object sender)
+        private async void NetworkInformation_NetworkStatusChanged(object sender)
         {
-            Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                () => ((MainViewModel)ViewModel).InternetAvailable = NetworkInformation.GetInternetConnectionProfile()
-                .GetNetworkConnectivityLevel() == NetworkConnectivityLevel.InternetAccess);
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                () =>
+                {
+                    ConnectionProfile profile = NetworkInformation.GetInternetConnectionProfile();
+                    if (profile != null)
+                    {
+                        ((AppShellViewModel)ViewModel).InternetAvailable = profile.GetNetworkConnectivityLevel() == NetworkConnectivityLevel.InternetAccess;
+                    }
+                }
+            );
         }
 
         private void ViewModel_UserAuthenticated(object sender, System.EventArgs e)
