@@ -43,7 +43,7 @@ namespace MSHU.CarWash.UWP.Views
                     ConnectionProfile profile = NetworkInformation.GetInternetConnectionProfile();
                     if (profile != null)
                     {
-                        ((AppShellViewModel)ViewModel).InternetAvailable = profile.GetNetworkConnectivityLevel() == NetworkConnectivityLevel.InternetAccess;
+                        ((MainViewModel)ViewModel).InternetAvailable = profile.GetNetworkConnectivityLevel() == NetworkConnectivityLevel.InternetAccess;
                     }
                 }
             );
