@@ -849,16 +849,28 @@ namespace MSHU.CarWash.UWP.ViewModels
                             _rmv.ReservationsByDayActive.Find(x => x.Day.Equals(date.Date));
                     if (selectedDayDetails != null)
                     {
-                        // Check if the user has reservation for the selected date.
-                        ReservationDayDetailViewModel currentReservation =
-                            selectedDayDetails.Reservations.Find(
-                                x => x.EmployeeId.Equals(App.AuthenticationManager.UserData.DisplayableId));
-                        // If the user has reservation for the selected date then we return
-                        // StatusValue.Reserved
-                        if (currentReservation != null)
+                        if (App.AuthenticationManager.IsUserAdmin)
                         {
-                            hasReservation = true;
-                            result = StatusValue.Reserved;
+                            // admins should see if any reservations have been made for that day
+                            if (selectedDayDetails.Reservations.Count > 0)
+                            {
+                                hasReservation = true;
+                                result = StatusValue.Reserved;
+                            }
+                        }
+                        else
+                        {
+                            // Check if the user has reservation for the selected date.
+                            ReservationDayDetailViewModel currentReservation =
+                                selectedDayDetails.Reservations.Find(
+                                    x => x.EmployeeId.Equals(App.AuthenticationManager.UserData.DisplayableId));
+                            // If the user has reservation for the selected date then we return
+                            // StatusValue.Reserved
+                            if (currentReservation != null)
+                            {
+                                hasReservation = true;
+                                result = StatusValue.Reserved;
+                            }
                         }
                     }
                 }
