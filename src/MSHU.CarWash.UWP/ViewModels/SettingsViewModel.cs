@@ -14,7 +14,15 @@ namespace MSHU.CarWash.UWP.ViewModels
     /// </summary>
     class SettingsViewModel : BaseViewModel
     {
-        Regex _validLPNumberFormat = new Regex("^[a-zA-Z]{3}-[0-9]{3}$", RegexOptions.Compiled);
+        // Following accepts all Hungarian number plate formats with optional hyphen and space
+        Regex _validHunLPNumberFormat = 
+            new Regex(@"^[EPVZ]-?[\d]{5}$|[A-Z]{3}-?[\d]{3}$|[A-Z]{4}-?[\d]{2}$|[A-Z]{5}-?[\d]{1}$|[M][\d]{2} ?[\d]{4}$|(CK|DT|HC|CD|HX|MA|OT|RX|RR) ?[\d]{2}-?[\d]{2}$|(C-X|X-A|X-B|X-C) ?[\d]{4}$",
+                RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // Following accepts common German number plate formats with optional hyphen and space
+        Regex _validDELPNumberFormat =
+            new Regex(@"^[A-Z]{1,3}-?[A-Z]{1,2} ?[0-9]{1,4}$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         private string INVALIDLPNUMBER = "Invalid license plate number. Please use the format 'ABC-123'!";
 
         /// <summary>
@@ -67,7 +75,7 @@ namespace MSHU.CarWash.UWP.ViewModels
 
         private async Task HandleSaveCommand()
         {
-            var result = await ServiceClient.ServiceClient.SaveSettings(new Settings { DefaultNumberPlate = this.DefaultNumberPlate },
+            var result = await ServiceClient.ServiceClient.SaveSettings(new Settings { DefaultNumberPlate = this.DefaultNumberPlate.ToUpper() },
                 App.AuthenticationManager.BearerAccessToken);
 
             if (result)
@@ -81,9 +89,11 @@ namespace MSHU.CarWash.UWP.ViewModels
         private bool CanExecuteSaveCommand(object param)
         {
             bool result = false;
+
             // If DefaultNumberPlate property has a string a value and it has the correct format
             // then the value can be saved. 
-            if (!string.IsNullOrEmpty(DefaultNumberPlate) && _validLPNumberFormat.IsMatch(DefaultNumberPlate))
+            if (!string.IsNullOrEmpty(DefaultNumberPlate) && 
+                (_validHunLPNumberFormat.IsMatch(DefaultNumberPlate) || _validDELPNumberFormat.IsMatch(DefaultNumberPlate)))
             {
                 result = true;
             }
