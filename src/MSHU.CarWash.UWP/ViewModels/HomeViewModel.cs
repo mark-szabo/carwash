@@ -416,7 +416,8 @@ namespace MSHU.CarWash.UWP.ViewModels
                     NumberPlate = result.ReservationsByDayActive[0].Reservations[0].VehiclePlateNumber;
                     ReservationDateString = GetSmartDateString(result.ReservationsByDayActive[0].Day);
                     upcomingReservation = result.ReservationsByDayActive[0].Reservations[0];
-                    if (result.ReservationsByDayActive.Count >= 2)
+                    // Admins don't have limits
+                    if (result.ReservationsByDayActive.Count >= 2 && !App.AuthenticationManager.IsUserAdmin)
                     {
                         ShowReservationLimitReached = true;
                     }
