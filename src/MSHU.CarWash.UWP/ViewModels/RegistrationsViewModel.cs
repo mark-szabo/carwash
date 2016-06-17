@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Data;
+using System.Linq;
 
 namespace MSHU.CarWash.UWP.ViewModels
 {
@@ -389,10 +390,19 @@ namespace MSHU.CarWash.UWP.ViewModels
                 return false;
             }
 
-            // don't allow fully booked dates
+            // don't allow fully booked dates...
             if(Convert.ToInt32(_freeSlotsByDate[selectedDate.Date]) <= 0)
             {
-                return false;
+                // ...unless user already has reservation that needs to be modified / deleted
+                var hasExistingReservation = _rmv.ReservationsByDayActive
+                    .Find(x => x.Day.Equals(selectedDate.Date))
+                    ?.Reservations
+                    .Any(x => x.EmployeeId.Equals(App.AuthenticationManager.UserData.DisplayableId));
+
+                if (!hasExistingReservation.HasValue || hasExistingReservation == false)
+                {
+                    return false;
+                }
             }
 
             // make sure there's no update
