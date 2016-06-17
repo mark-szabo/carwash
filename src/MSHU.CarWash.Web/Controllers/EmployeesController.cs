@@ -22,6 +22,7 @@ namespace MSHU.CarWash.Controllers
     {
         private MSHUCarWashContext _db = new MSHUCarWashContext();
 
+        [HttpGet]
         [ResponseType(typeof(Employee))]
         public async Task<IHttpActionResult> GetCurrentUser()
         {
@@ -83,6 +84,7 @@ namespace MSHU.CarWash.Controllers
             return Ok(employee);
         }
 
+        [HttpGet]
         [ResponseType(typeof(List<EmployeeViewModel>))]
         public async Task<IHttpActionResult> GetEmployees(string searchTerm)
         {
@@ -108,6 +110,7 @@ namespace MSHU.CarWash.Controllers
         /// </summary>
         /// <param name="settings">Settings to save</param>
         /// <returns>True if succeeded</returns>
+        [HttpPost]
         public async Task<IHttpActionResult> SaveSettings(MSHU.CarWash.DomainModel.Settings settings)
         {
             var currentUser = UserHelper.GetCurrentUser();
@@ -123,6 +126,17 @@ namespace MSHU.CarWash.Controllers
             await _db.SaveChangesAsync();
 
             return Ok();
+        }
+
+        /// <summary>
+        /// Tells if current user is an admin.
+        /// </summary>
+        /// <returns>True if current user is an admin</returns>
+        [HttpGet]
+        [ResponseType(typeof(bool))]
+        public IHttpActionResult IsCurrentUserAdmin()
+        {
+            return Ok(UserHelper.GetCurrentUser().IsAdmin);
         }
 
         protected override void Dispose(bool disposing)

@@ -49,6 +49,8 @@ namespace MSHU.CarWash.UWP.Common
         /// </summary>
         public Employee CurrentEmployee { get; private set; }
 
+        public bool IsUserAdmin { get; set; }
+
         /// <summary>
         /// Default constructor
         /// </summary>
@@ -143,6 +145,7 @@ namespace MSHU.CarWash.UWP.Common
                 try
                 {
                     CurrentEmployee = await ServiceClient.ServiceClient.GetCurrentUser(BearerAccessToken);
+                    IsUserAdmin = await ServiceClient.ServiceClient.IsCurrentUserAdmin(BearerAccessToken);
                     result = true;
                 }
                 catch (HttpRequestException)
@@ -180,6 +183,7 @@ namespace MSHU.CarWash.UWP.Common
                 BearerAccessToken = authenticationResult.AccessToken;
                 // Get the Employee instance assigned to the current user.
                 CurrentEmployee = await ServiceClient.ServiceClient.GetCurrentUser(BearerAccessToken);
+                IsUserAdmin = await ServiceClient.ServiceClient.IsCurrentUserAdmin(BearerAccessToken);
                 result = true;
             }
             if (authenticationResult.Status != AuthenticationStatus.Success)
@@ -230,9 +234,13 @@ namespace MSHU.CarWash.UWP.Common
             try
             {
                 var authResult = await WebAuthenticationBroker.AuthenticateAsync(WebAuthenticationOptions.None, new Uri(requestUrl));
-                if(authResult.ResponseStatus == WebAuthenticationStatus.UserCancel)
+                // cancel seems to represent here success as well
+                if (authResult.ResponseStatus == WebAuthenticationStatus.UserCancel || authResult.ResponseStatus == WebAuthenticationStatus.Success)
                 {
                     result = true;
+                    CurrentEmployee = null;
+                    IsUserAdmin = false;
+                    IsUserAuthenticated = false;
                 }
             }
             catch (Exception)
@@ -258,6 +266,7 @@ namespace MSHU.CarWash.UWP.Common
         {
             // Get the Employee instance assigned to the current user.
             CurrentEmployee = await ServiceClient.ServiceClient.GetCurrentUser(BearerAccessToken);
+            IsUserAdmin = await ServiceClient.ServiceClient.IsCurrentUserAdmin(BearerAccessToken);
         }
     }
 

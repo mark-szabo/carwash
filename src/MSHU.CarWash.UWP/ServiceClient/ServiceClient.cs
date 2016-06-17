@@ -47,6 +47,15 @@ namespace MSHU.CarWash.UWP.ServiceClient
         }
 
         /// <summary>
+        /// Tells if current user is an admin.
+        /// </summary>
+        /// <returns>True if current user is an admin</returns>
+        public static async Task<bool> IsCurrentUserAdmin(string token)
+        {
+            return await GetRestApiCall<bool>(token, "/api/Employees/IsCurrentUserAdmin");
+        }
+
+        /// <summary>
         /// Retrieves date of next free slot.
         /// </summary>
         /// <param name="token">Token used for authentication</param>
