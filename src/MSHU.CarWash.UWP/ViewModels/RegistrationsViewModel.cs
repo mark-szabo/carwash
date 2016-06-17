@@ -389,6 +389,12 @@ namespace MSHU.CarWash.UWP.ViewModels
                 return false;
             }
 
+            // don't allow fully booked dates
+            if(Convert.ToInt32(_freeSlotsByDate[selectedDate.Date]) <= 0)
+            {
+                return false;
+            }
+
             // make sure there's no update
             CalendarDayViewModel dayVM = _calendarDayVMs[selectedDate.Date];
             if (dayVM.UpdatePending)
