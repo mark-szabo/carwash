@@ -574,20 +574,23 @@ namespace MSHU.CarWash.Controllers
             var currentUser = UserHelper.GetCurrentUser();
             DateTime day = DateTime.Today;
 
-            if (!currentUser.IsAdmin)
+            // admins don't have reservation limit
+            if(currentUser.IsAdmin)
             {
-                #region  Check the number of open reservations
-                var query = from b in _db.Reservations.Include(i => i.Employee)
-                            where b.Date >= day && b.EmployeeId == currentUser.Id
-                            orderby b.Date
-                            select b;
-                var queryResult = await query.ToListAsync();
-                if (queryResult.Count < _reservationLimitPerPerson)
-                {
-                    result = true;
-                }
-                #endregion
+                return Json(true);
             }
+
+            #region  Check the number of open reservations
+            var query = from b in _db.Reservations.Include(i => i.Employee)
+                        where b.Date >= day && b.EmployeeId == currentUser.Id
+                        orderby b.Date
+                        select b;
+            var queryResult = await query.ToListAsync();
+            if (queryResult.Count < _reservationLimitPerPerson)
+            {
+                result = true;
+            }
+            #endregion
 
             // Return the number of available slots.
             return Json(result);
