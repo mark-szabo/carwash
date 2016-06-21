@@ -358,7 +358,7 @@ namespace MSHU.CarWash.Controllers
             }
             #endregion
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return Ok(reservation.ReservationId);
         }
 
         private bool CanUserReserve(User currentUser)

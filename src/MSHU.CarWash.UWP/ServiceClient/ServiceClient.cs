@@ -28,12 +28,17 @@ namespace MSHU.CarWash.UWP.ServiceClient
         /// <summary>
         /// Save Reservation
         /// </summary>
-        /// <param name="newReservation"></param>
-        /// <param name="token"></param>
-        /// <returns></returns>
-        public static async Task<bool> SaveReservation(NewReservationViewModel newReservation, string token)
+        /// <param name="newReservation">Details of reservation</param>
+        /// <param name="token">Auth token</param>
+        /// <returns>ID of the new reservation</returns>
+        public static async Task<int?> SaveReservation(NewReservationViewModel newReservation, string token)
         {
-            return await PostRestApi<NewReservationViewModel>(newReservation, token, "/api/Calendar/SaveReservation");
+            // we need the ID returned
+            var result = new int?();
+            var success = await PostRestApi<NewReservationViewModel>(newReservation, token, "/api/Calendar/SaveReservation", 
+                o => result = new int?(Convert.ToInt32(o)));    // result comes back as long due to JSonConvert...
+
+            return result;
         }
 
         /// <summary>
@@ -198,8 +203,9 @@ namespace MSHU.CarWash.UWP.ServiceClient
         /// <param name="postObject"></param>
         /// <param name="token"></param>
         /// <param name="relativeApiUrl"></param>
+        /// <param name="saveResponse">Delegate that can save the response if needed</param>
         /// <returns></returns>
-        private static async Task<bool> PostRestApi<T>(T postObject, string token, string relativeApiUrl)
+        private static async Task<bool> PostRestApi<T>(T postObject, string token, string relativeApiUrl, Action<object> saveResponse = null)
         {
             // Create an HTTP client and add the token to the Authorization header
             HttpClient httpClient = new HttpClient();
@@ -213,6 +219,8 @@ namespace MSHU.CarWash.UWP.ServiceClient
             HttpResponseMessage httpResponse = await httpClient.PostAsync(requestURI, content);
             if (httpResponse.IsSuccessStatusCode)
             {
+                // save the response if requested
+                saveResponse?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject(await httpResponse.Content.ReadAsStringAsync()));
                 return true;
             }
             else
@@ -225,7 +233,7 @@ namespace MSHU.CarWash.UWP.ServiceClient
                     if (authorized == true)
                     {
                         //call again the original method
-                        return await PostRestApi<T>(postObject, token, relativeApiUrl);
+                        return await PostRestApi<T>(postObject, token, relativeApiUrl, saveResponse);
                     }
                 }
                 else
