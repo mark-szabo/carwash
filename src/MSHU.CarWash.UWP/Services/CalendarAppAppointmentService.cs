@@ -134,7 +134,7 @@ namespace MSHU.CarWash.UWP.Services
         /// <returns>Start time</returns>
         private static DateTimeOffset GetStartTime(Reservation reservation)
         {
-            return new DateTimeOffset(reservation.Date).AddHours(8).AddMinutes(30);
+            return new DateTimeOffset(reservation.Date.Date).AddHours(8).AddMinutes(30);
         }
 
         private async Task StoreAppointmentInfoForReservationIDAsync(int reservationID, AppointmentInfo info)
