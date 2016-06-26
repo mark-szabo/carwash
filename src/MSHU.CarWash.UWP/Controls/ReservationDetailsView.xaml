@@ -94,6 +94,7 @@
         <TextBox x:Name="CommentBox"
                  Text="{Binding CurrentReservation.Comment, Mode=TwoWay}"
                  RelativePanel.AlignRightWithPanel="True"
+                 MaxLength="250"
                  MinWidth="160"
                  RelativePanel.RightOf="PlateText" />
         <RelativePanel RelativePanel.Below="CommentBox"
