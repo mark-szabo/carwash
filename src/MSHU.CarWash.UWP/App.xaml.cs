@@ -48,13 +48,18 @@ namespace MSHU.CarWash.UWP
         private async void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             e.Handled = true;
-            var message = string.Format("Unexpected error occured: {0}\n Application is closing.", e.Message);
+            var message = string.Format("Unexpected error occured: {0}\nError report is sent, application is closing.", e.Message);
+            
             //Report to HockeyApp
             Diagnostics.ReportError(message);
-            Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
-            await dialog.ShowAsync();
-             
-            base.Exit();
+            
+            // UI code must run on UI thread
+            await CoreWindow.GetForCurrentThread().Dispatcher.RunAsync(CoreDispatcherPriority.High, async () =>
+            {
+                Windows.UI.Popups.MessageDialog dialog = new Windows.UI.Popups.MessageDialog(message);
+                await dialog.ShowAsync();
+                App.Current.Exit();
+            });
         }
 
         /// <summary>
