@@ -124,6 +124,7 @@
     <Compile Include="ServiceClient\UserInfo.cs" />
     <Compile Include="Services\AppointmentInfo.cs" />
     <Compile Include="Services\CalendarAppAppointmentService.cs" />
+    <Compile Include="Services\DummyAppointmentService.cs" />
     <Compile Include="Services\IAppointmentService.cs" />
     <Compile Include="ViewModels\AppShellViewModel.cs" />
     <Compile Include="ViewModels\AboutViewModel.cs" />

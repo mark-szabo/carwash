@@ -21,7 +21,8 @@ namespace MSHU.CarWash.UWP.ViewModels
         /// </summary>
         public RelayCommand SignOutWithAADCommand { get; set; }
 
-        protected IAppointmentService appointmentService = new CalendarAppAppointmentService();
+        // Appointment management is disabled due to current platform issues with the built-in Calendar App
+        protected IAppointmentService appointmentService = new DummyAppointmentService();
 
         public BaseViewModel()
         {
