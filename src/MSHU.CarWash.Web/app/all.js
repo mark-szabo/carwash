@@ -26,7 +26,7 @@ angular.module('carwashApp', ['ngRoute', 'AdalAngular', 'ngMessages'])
     adalProvider.init(
         {
             tenant: 'microsoft.onmicrosoft.com',
-            clientId: '5d63f09b-56e3-4be2-8a58-a9af7ceb7c27',
+            clientId: '6c1c24aa-e699-43f3-8353-7163b25fd0dd',
         },
         $httpProvider
     );
@@ -149,7 +149,12 @@ angular.module('carwashApp')
     $scope.dataLoaded = false;
     $scope.vehiclePlateNumberFormat = /[a-zA-Z]{3}-[0-9]{3}$/;
     $scope.kulsoBelsoKarpitDisabled = function () {
-        return ($scope.dayDetailsViewModel != null && $scope.dayDetailsViewModel.AvailableSlots != null && $scope.dayDetailsViewModel.AvailableSlots < 2);
+        return ($scope.dayDetailsViewModel != null && $scope.dayDetailsViewModel.AvailableNormalSlots != null && $scope.dayDetailsViewModel.AvailableNormalSlots < 2);
+    }
+
+    // Disable steam if no slots
+    $scope.steamDisabled = function () {
+        return ($scope.dayDetailsViewModel != null && $scope.dayDetailsViewModel.AvailableSteamSlots != null && $scope.dayDetailsViewModel.AvailableSteamSlots == 0);
     }
 
     $scope.init = function () {

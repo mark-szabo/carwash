@@ -22,6 +22,7 @@ namespace MSHU.CarWash.Controllers
     {
         private MSHUCarWashContext _db = new MSHUCarWashContext();
 
+        [HttpGet]
         [ResponseType(typeof(Employee))]
         public async Task<IHttpActionResult> GetCurrentUser()
         {
@@ -83,6 +84,7 @@ namespace MSHU.CarWash.Controllers
             return Ok(employee);
         }
 
+        [HttpGet]
         [ResponseType(typeof(List<EmployeeViewModel>))]
         public async Task<IHttpActionResult> GetEmployees(string searchTerm)
         {
@@ -101,6 +103,40 @@ namespace MSHU.CarWash.Controllers
             .ToList<EmployeeViewModel>();
 
             return Ok(ret);
+        }
+
+        /// <summary>
+        /// Saves settings for the current user.
+        /// </summary>
+        /// <param name="settings">Settings to save</param>
+        /// <returns>True if succeeded</returns>
+        [HttpPost]
+        public async Task<IHttpActionResult> SaveSettings(MSHU.CarWash.DomainModel.Settings settings)
+        {
+            var currentUser = UserHelper.GetCurrentUser();
+
+            Employee employee = await _db.Employees.FindAsync(currentUser.Id);
+
+            if (employee == null)
+                return NotFound();
+
+            // apply settings
+            employee.VehiclePlateNumber = settings.DefaultNumberPlate;
+
+            await _db.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// Tells if current user is an admin.
+        /// </summary>
+        /// <returns>True if current user is an admin</returns>
+        [HttpGet]
+        [ResponseType(typeof(bool))]
+        public IHttpActionResult IsCurrentUserAdmin()
+        {
+            return Ok(UserHelper.GetCurrentUser().IsAdmin);
         }
 
         protected override void Dispose(bool disposing)

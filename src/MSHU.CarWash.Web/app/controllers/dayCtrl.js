@@ -6,7 +6,12 @@ angular.module('carwashApp')
     $scope.dataLoaded = false;
     $scope.vehiclePlateNumberFormat = /[a-zA-Z]{3}-[0-9]{3}$/;
     $scope.kulsoBelsoKarpitDisabled = function () {
-        return ($scope.dayDetailsViewModel != null && $scope.dayDetailsViewModel.AvailableSlots != null && $scope.dayDetailsViewModel.AvailableSlots < 2);
+        return ($scope.dayDetailsViewModel != null && $scope.dayDetailsViewModel.AvailableNormalSlots != null && $scope.dayDetailsViewModel.AvailableNormalSlots < 2);
+    }
+
+    // Disable steam if no slots
+    $scope.steamDisabled = function () {
+        return ($scope.dayDetailsViewModel != null && $scope.dayDetailsViewModel.AvailableSteamSlots != null && $scope.dayDetailsViewModel.AvailableSteamSlots == 0);
     }
 
     $scope.init = function () {

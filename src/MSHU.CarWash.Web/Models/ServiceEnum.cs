@@ -9,16 +9,25 @@ namespace MSHU.CarWash.Models
 {
     public enum ServiceEnum
     {
-        [Description("KÜLSŐ MOSÁS")]
-        KulsoMosas = 0,
+        [Description("EXTERIOR")]
+        Exterior = 0,
 
-        [Description("BELSŐ TAKARÍTÁS")]
-        BelsoTakaritas = 1,
+        [Description("INTERIOR")]
+        Interior = 1,
 
-        [Description("KÜLSŐ MOSÁS + BELSŐ TAKARÍTÁS")]
-        KulsoMosasBelsoTakaritas = 2,
+        [Description("EXTERIOR + INTERIOR")]
+        ExteriorInterior = 2,
 
-        [Description("KÜLSŐ MOSÁS + BELSŐ TAKARÍTÁS + KÁRPITTISZTÍTÁS")]
-        KulsoMosasBelsoTakaritasKarpittisztitas = 3
+        [Description("EXTERIOR + INTERIOR + CARPET")]
+        ExteriorInteriorCarpet = 3,
+
+        [Description("EXTERIOR (STEAM)")]
+        ExteriorSteam = 4,
+
+        [Description("INTERIOR (STEAM)")]
+        InteriorSteam = 5,
+
+        [Description("EXTERIOR + INTERIOR (STEAM)")]
+        ExteriorInteriorSteam = 6
     }
 }

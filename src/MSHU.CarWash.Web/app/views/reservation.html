@@ -7,28 +7,30 @@
             <strong>OPPS!&nbsp;</strong>{{error}}
         </div>
     </div>
-    <div class="white">AKTUÁLIS<hr /></div>
-    <div data-ng-repeat="item in reservationViewModel.ReservationsByDayActive">
-        <div class="white">{{item.MonthName}} {{item.DayNumber}} - {{item.DayName}}</div><br />
-        <div class="list-group">
-            <div class="list-group-item" data-ng-repeat="item2 in item.Reservations">
-                <button class="pull-right btn btn-primary btn-sm" ng-show="item2.IsDeletable" ng-click="deleteReservation(item2.ReservationId);"><span class="glyphicon glyphicon-trash"></span>&nbsp;TÖRÖL</button>
-                <strong>{{item2.VehiclePlateNumber}}&nbsp;&nbsp;{{item2.EmployeeName}}</strong><br />
-                {{item2.SelectedServiceName}}<br />
-                {{item2.Comment}}&nbsp;
+    <div ng-show="(error == '')">
+        <div class="white">CURRENT<hr /></div>
+        <div data-ng-repeat="item in reservationViewModel.ReservationsByDayActive">
+            <div class="white">{{item.MonthName}} {{item.DayNumber}} - {{item.DayName}}</div><br />
+            <div class="list-group">
+                <div class="list-group-item" data-ng-repeat="item2 in item.Reservations">
+                    <button class="pull-right btn btn-primary btn-sm" ng-show="item2.IsDeletable" ng-click="deleteReservation(item2.ReservationId);"><span class="glyphicon glyphicon-trash"></span>&nbsp;REMOVE</button>
+                    <strong>{{item2.VehiclePlateNumber}}&nbsp;&nbsp;{{item2.EmployeeName}}</strong><br />
+                    {{item2.SelectedServiceName}}<br />
+                    {{item2.Comment}}&nbsp;
+                </div>
             </div>
         </div>
-    </div>
-    <br />
-    <div class="white">ELŐZMÉNYEK<hr /></div>
-    <div data-ng-repeat="item in reservationViewModel.ReservationsByDayHistory">
-        <div class="white">{{item.MonthName}} {{item.DayNumber}} - {{item.DayName}}</div><br />
-        <div class="list-group">
-            <div class="list-group-item" data-ng-repeat="item2 in item.Reservations">
-                <button class="pull-right btn btn-primary btn-sm" ng-show="item2.IsDeletable" ng-click="deleteReservation(item2.ReservationId);"><span class="glyphicon glyphicon-trash"></span>&nbsp;TÖRÖL</button>
-                <strong>{{item2.VehiclePlateNumber}}&nbsp;&nbsp;{{item2.EmployeeName}}</strong><br />
-                {{item2.SelectedServiceName}}<br />
-                {{item2.Comment}}&nbsp;
+        <br />
+        <div class="white">HISTORY<hr /></div>
+        <div data-ng-repeat="item in reservationViewModel.ReservationsByDayHistory">
+            <div class="white">{{item.MonthName}} {{item.DayNumber}} - {{item.DayName}}</div><br />
+            <div class="list-group">
+                <div class="list-group-item" data-ng-repeat="item2 in item.Reservations">
+                    <button class="pull-right btn btn-primary btn-sm" ng-show="item2.IsDeletable" ng-click="deleteReservation(item2.ReservationId);"><span class="glyphicon glyphicon-trash"></span>&nbsp;REMOVE</button>
+                    <strong>{{item2.VehiclePlateNumber}}&nbsp;&nbsp;{{item2.EmployeeName}}</strong><br />
+                    {{item2.SelectedServiceName}}<br />
+                    {{item2.Comment}}&nbsp;
+                </div>
             </div>
         </div>
     </div>

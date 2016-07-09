@@ -10,7 +10,7 @@
     <link href="content/css/site.min.css" rel="stylesheet" />
     <link href="content/css/font-awesome.min.css" rel="stylesheet" />
     <link href="https://code.jquery.com/ui/1.11.4/themes/start/jquery-ui.css" rel="stylesheet" />
-    <script type="text/javascript">  var appInsights=window.appInsights||function(config){    function r(config){t[config]=function(){var i=arguments;t.queue.push(function(){t[config].apply(t,i)})}}var t={config:config},u=document,e=window,o="script",s=u.createElement(o),i,f;for(s.src=config.url||"//az416426.vo.msecnd.net/scripts/a/ai.0.js",u.getElementsByTagName(o)[0].parentNode.appendChild(s),t.cookie=u.cookie,t.queue=[],i=["Event","Exception","Metric","PageView","Trace"];i.length;)r("track"+i.pop());return r("setAuthenticatedUserContext"),r("clearAuthenticatedUserContext"),config.disableExceptionTracking||(i="onerror",r("_"+i),f=e[i],e[i]=function(config,r,u,e,o){var s=f&&f(config,r,u,e,o);return s!==!0&&t["_"+i](config,r,u,e,o),s}),t    }({        instrumentationKey:"817a13fb-f2a1-4744-a484-c85c5785d2e1"    });           window.appInsights=appInsights;    appInsights.trackPageView();</script>
+    <script type="text/javascript">  var appInsights = window.appInsights || function (config) { function r(config) { t[config] = function () { var i = arguments; t.queue.push(function () { t[config].apply(t, i) }) } } var t = { config: config }, u = document, e = window, o = "script", s = u.createElement(o), i, f; for (s.src = config.url || "//az416426.vo.msecnd.net/scripts/a/ai.0.js", u.getElementsByTagName(o)[0].parentNode.appendChild(s), t.cookie = u.cookie, t.queue = [], i = ["Event", "Exception", "Metric", "PageView", "Trace"]; i.length;) r("track" + i.pop()); return r("setAuthenticatedUserContext"), r("clearAuthenticatedUserContext"), config.disableExceptionTracking || (i = "onerror", r("_" + i), f = e[i], e[i] = function (config, r, u, e, o) { var s = f && f(config, r, u, e, o); return s !== !0 && t["_" + i](config, r, u, e, o), s }), t }({ instrumentationKey: "84b78541-d81f-49e5-9e45-7295b3b0d38a" }); window.appInsights = appInsights; appInsights.trackPageView();</script>
 </head>
 <body ng-app="carwashApp" ng-controller="homeCtrl" role="document">
     <div class="loading-dialog" data-loading>
@@ -29,15 +29,15 @@
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li ng-class="{ active: isActive('/Calendar') }"><a href="#/Calendar">NAPTÁR</a></li>
-                    <li ng-class="{ active: isActive('/Reservation') }"><a href="#/Reservation">FOGLALÁSAIM</a></li>
+                    <li ng-class="{ active: isActive('/Calendar') }"><a href="#/Calendar">CALENDAR</a></li>
+                    <li ng-class="{ active: isActive('/Reservation') }"><a href="#/Reservation">RESERVATIONS</a></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <li ng-hide="userInfo.isAuthenticated" ng-click="login()"><a>BEJELENTKEZÉS</a></li>
+                    <li ng-hide="userInfo.isAuthenticated" ng-click="login()"><a href="">LOGIN</a></li>
                     <li class="dropdown" ng-show="userInfo.isAuthenticated">
-                        <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{userInfo.profile.family_name}} {{userInfo.profile.given_name}}</a>
+                        <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{userInfo.profile.given_name}} {{userInfo.profile.family_name}}</a>
                         <ul class="dropdown-menu">
-                            <li><a ng-click="logout()">KIJELENTKEZÉS</a></li>
+                            <li><a href="" ng-click="logout()">LOGOUT</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -60,9 +60,9 @@
                 <button type="button" class="close pull-right grey" aria-label="Close" onclick="toggler('footer');">
                     <span aria-hidden="true">&times;</span>
                 </button>
-                <a class="footer-link" href="http://www.microsoft.hu">© 2015 Microsoft</a>&nbsp;|&nbsp;
-                <a class="footer-link" href="http://go.microsoft.com/fwlink/?LinkId=521839">Adatvédelem és cookie-k</a>&nbsp;|&nbsp;
-                <a class="footer-link" href="http://www.microsoft.com/en-us/legal/intellectualproperty/copyright/default.aspx">Használati feltételek</a>&nbsp;
+                <a class="footer-link" href="http://www.microsoft.hu">© 2016 Microsoft</a>&nbsp;|&nbsp;
+                <a class="footer-link" href="http://go.microsoft.com/fwlink/?LinkId=521839">Privacy & Cookies</a>&nbsp;|&nbsp;
+                <a class="footer-link" href="http://www.microsoft.com/en-us/legal/intellectualproperty/copyright/default.aspx">Terms of Use</a>&nbsp;
             </div>
         </div>
     </footer>

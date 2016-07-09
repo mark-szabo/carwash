@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Http;
+using System.Web.Http.ExceptionHandling;
 
 namespace MSHU.CarWash.App_Start
 {
@@ -20,6 +21,8 @@ namespace MSHU.CarWash.App_Start
                 routeTemplate: "api/{controller}/{action}/{id}",
                 defaults: new { id = RouteParameter.Optional }
             );
+
+            config.Services.Add(typeof(IExceptionLogger), new AiExceptionLogger());
         }
     }
 }

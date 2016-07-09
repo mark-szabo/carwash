@@ -26,7 +26,7 @@ angular.module('carwashApp', ['ngRoute', 'AdalAngular', 'ngMessages'])
     adalProvider.init(
         {
             tenant: 'microsoft.onmicrosoft.com',
-            clientId: '5d63f09b-56e3-4be2-8a58-a9af7ceb7c27',
+            clientId: '6c1c24aa-e699-43f3-8353-7163b25fd0dd',
         },
         $httpProvider
     );

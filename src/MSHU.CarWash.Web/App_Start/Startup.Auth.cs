@@ -20,7 +20,7 @@ namespace MSHU.CarWash
                     Tenant = ConfigurationManager.AppSettings["ida:Tenant"],
                     TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidAudience = ConfigurationManager.AppSettings["ida:Audience"]
+                        ValidAudiences = ConfigurationManager.AppSettings["ida:Audiences"].Split(';')
                     },
                 });
         }
