@@ -8,7 +8,7 @@
         </div>
     </div>
     <div ng-show="(error == '')">
-        <div class="white">CURRENT<hr /></div>
+        <div class="white"><strong>CURRENT</strong><hr /></div>
         <div data-ng-repeat="item in reservationViewModel.ReservationsByDayActive">
             <div class="white">{{item.MonthName}} {{item.DayNumber}} - {{item.DayName}}</div><br />
             <div class="list-group">
@@ -21,7 +21,7 @@
             </div>
         </div>
         <br />
-        <div class="white">HISTORY<hr /></div>
+        <div class="white"><strong>PAST</strong><hr /></div>
         <div data-ng-repeat="item in reservationViewModel.ReservationsByDayHistory">
             <div class="white">{{item.MonthName}} {{item.DayNumber}} - {{item.DayName}}</div><br />
             <div class="list-group">

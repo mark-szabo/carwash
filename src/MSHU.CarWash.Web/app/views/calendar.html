@@ -19,11 +19,8 @@
         <div class="list-group">
             <a href="" class="list-group-item" data-ng-repeat="item in weekViewModel.Days" ng-click="showDay(item.Day, weekViewModel.Offset);">
                 <span ng-class="{'today-emphasize': item.IsToday}">{{item.DayName}} - {{item.DayNumber}}</span>
-                <span data-ng-repeat="r in item.ReservedSlotCount">
-                    <i class="fa fa-square red pull-right"></i>
-                </span>
-                <span data-ng-repeat="a in item.AvailableSlotCount">
-                    <i class="fa fa-square green pull-right"></i>
+                <span  ng-show="item.AvailableSlotCount.length > 0">
+                    <i class="fa fa-user-plus green pull-right"></i>
                 </span>
             </a>
         </div>

@@ -36,7 +36,6 @@ angular.module('carwashApp')
     $scope.saveReservation = function () {
         calendarSvc.saveReservation($scope.dayDetailsViewModel.NewReservation).then(function (response) {
             $scope.getDay(calendarSvc.getValue('day'), calendarSvc.getValue('offset'));
-            $('#collapseExample').collapse('hide');
         }, function (response) {
             $scope.error = getErrorMessage(response);
         });

@@ -15,20 +15,7 @@
             </a>
         </div>
         <hr />
-        <div class="list-group">
-            <div class="list-group-item" data-ng-repeat="item in dayDetailsViewModel.Reservations">
-                <button class="pull-right btn btn-primary btn-sm" ng-show="item.IsDeletable" ng-click="deleteReservation(item.ReservationId);"><span class="glyphicon glyphicon-trash"></span>&nbsp;REMOVE</button>
-                <strong>{{item.VehiclePlateNumber}}&nbsp;&nbsp;{{item.EmployeeName}}</strong><br />
-                {{item.SelectedServiceName}}<br />
-                {{item.Comment}}&nbsp;
-            </div>
-        </div>
-        <p ng-show="showReservation()">
-            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-                <span class="glyphicon glyphicon-plus"></span>&nbsp;RESERVE
-            </button>
-        </p>
-        <div class="collapse" id="collapseExample">
+        <div id="collapseExample" ng-show="showReservation()">
             <div class="list-group">
                 <div class="list-group-item">
                     <form name="newReservationForm">
@@ -43,7 +30,7 @@
                             <div class="col-sm-10">
                                 <input type="text" class="form-control" id="inputName" name="inputName" placeholder="NAME" ng-model="dayDetailsViewModel.NewReservation.EmployeeName" ng-readonly="!(dayDetailsViewModel.NewReservation.IsAdmin)" ng-keyup="autoCompleteEmployeeName()" required ng-maxlength="100">
                                 <div ng-messages="newReservationForm.inputName.$error">
-                                    <div ng-message="required" class="text-danger">THE FIELD IS REQUIRED</div>
+                                    <div ng-message="required" class="text-danger">THE NAME IS REQUIRED</div>
                                     <div ng-message="maxlength" class="text-danger">THE TEXT IS TOO LONG</div>
                                 </div>
                                 <div ng-messages="newReservationForm.inputEmployeeId.$error">
@@ -56,7 +43,7 @@
                             <div class="col-sm-10">
                                 <input type="text" class="form-control" id="inputVehicle" name="inputVehicle" placeholder="ABC-123" ng-model="dayDetailsViewModel.NewReservation.VehiclePlateNumber" required ng-pattern="vehiclePlateNumberFormat">
                                 <div ng-messages="newReservationForm.inputVehicle.$error">
-                                    <div ng-message="required" class="text-danger">THE FIELD IS REQUIRED</div>
+                                    <div ng-message="required" class="text-danger">THE PLATE NUMBER IS REQUIRED</div>
                                     <div ng-message="pattern" class="text-danger">WRONG FORMAT</div>
                                 </div>
                             </div>
@@ -107,7 +94,7 @@
                                     </label>
                                 </div>
                                 <div ng-messages="newReservationForm.gridRadios.$error">
-                                    <div ng-message="required" class="text-danger">THE FIELD IS REQUIRED</div>
+                                    <div ng-message="required" class="text-danger">THE SERVICE IS REQUIRED</div>
                                 </div>
                             </div>
                         </div>
@@ -127,6 +114,15 @@
                         </div>
                     </form>
                 </div>
+            </div>
+            <hr />
+        </div>
+        <div class="list-group">
+            <div class="list-group-item" data-ng-repeat="item in dayDetailsViewModel.Reservations">
+                <button class="pull-right btn btn-primary btn-sm" ng-show="item.IsDeletable" ng-click="deleteReservation(item.ReservationId);"><span class="glyphicon glyphicon-trash"></span>&nbsp;REMOVE</button>
+                <strong>{{item.VehiclePlateNumber}}&nbsp;&nbsp;{{item.EmployeeName}}</strong><br />
+                {{item.SelectedServiceName}}<br />
+                {{item.Comment}}&nbsp;
             </div>
         </div>
     </div>

@@ -1,6 +1,7 @@
 ﻿body {
     font-family: 'Segoe UI';
-    background-color: rgb(0, 120, 215);
+    overflow-x: hidden;
+    background-color: rgb(230, 230, 230);
 }
 
 hr {
@@ -8,7 +9,7 @@ hr {
 }
 
 .white {
-    color: white;
+    color: rgb(216,59,1);
 }
 
 .grey {
@@ -28,8 +29,10 @@ hr {
 }
 
 .jumbotron {
-    background-color: rgb(255, 255, 255);
+    background-color: rgba(255, 255, 255, .5);
+    padding-bottom: 0px;
 }
+
 
 .container .jumbotron,
 .container-fluid .jumbotron {
@@ -42,17 +45,24 @@ hr {
 
 .btn {
     border-radius: 0;
-    background-color: rgb(0,24,143);
+    background-color: rgb(216,59,1);
+    border-color: rgb(216,59,1);
 }
 
 .btn-primary {
-    background-color: rgb(0,24,143);
+    background-color: rgb(216,59,1);
     background-image: none;
+}
+
+.btn-primary[disabled] {
+    background-color: rgb(210,210,210);
+    border-color: rgb(210,210,210);
 }
 
     .btn-primary:hover,
     .btn-primary:focus {
-        background-color: rgb(0,32,80);
+        background-color: rgb(255,140,0);
+        border-color: rgb(216,59,1);
     }
 
 .form-control {
@@ -71,7 +81,7 @@ button.list-group-item:focus {
 }
 
 .today-emphasize {
-    color: rgb(255, 185,0);
+    color: rgb(216,59,1);
     font-weight: bold;
 }
 
@@ -116,7 +126,7 @@ a.footer-link {
 }
 
     a.footer-link:hover, a.footer-link:focus {
-        color: rgb(255, 255, 255);
+        color: rgb(34, 34, 34);
     }
 
 .loading-dialog {
@@ -131,6 +141,6 @@ a.footer-link {
 }
 
 .hidehover a {
-    color: #FFFFFF;
+    color: rgb(216,59,1);
     text-decoration: none;
 }
