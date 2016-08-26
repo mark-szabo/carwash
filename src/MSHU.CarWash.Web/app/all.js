@@ -26,7 +26,7 @@ angular.module('carwashApp', ['ngRoute', 'AdalAngular', 'ngMessages'])
     adalProvider.init(
         {
             tenant: 'microsoft.onmicrosoft.com',
-            clientId: '74a5dcad-a163-4b28-a9d2-c067ac3fedd5',
+            clientId: '6c1c24aa-e699-43f3-8353-7163b25fd0dd',
         },
         $httpProvider
     );
@@ -179,7 +179,6 @@ angular.module('carwashApp')
     $scope.saveReservation = function () {
         calendarSvc.saveReservation($scope.dayDetailsViewModel.NewReservation).then(function (response) {
             $scope.getDay(calendarSvc.getValue('day'), calendarSvc.getValue('offset'));
-            //$('#collapseExample').collapse('hide');
         }, function (response) {
             $scope.error = getErrorMessage(response);
         });
