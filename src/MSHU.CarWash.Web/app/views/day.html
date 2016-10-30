@@ -53,6 +53,13 @@
                             <div class="col-sm-10">
                                 <div class="radio">
                                     <label>
+                                        Monday, Tuesday - STEAM <br />
+                                        Wednesday, Thursday - NORMAL <br />
+                                        Friday - even week STEAM, odd week NORMAL
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
                                         <input type="radio" name="gridRadios" id="gridRadios1" value="0" ng-model="dayDetailsViewModel.NewReservation.SelectedServiceId" ng-required="!dayDetailsViewModel.NewReservation.SelectedServiceId">
                                         EXTERIOR
                                     </label>
@@ -74,25 +81,7 @@
                                         <input type="radio" name="gridRadios" id="gridRadios4" value="3" ng-model="dayDetailsViewModel.NewReservation.SelectedServiceId" ng-required="!dayDetailsViewModel.NewReservation.SelectedServiceId" ng-disabled="kulsoBelsoKarpitDisabled()">
                                         EXTERIOR + INTERIOR + CARPET
                                     </label>
-                                </div>
-                                <div class="radio">
-                                    <label>
-                                        <input type="radio" name="gridRadios" id="gridRadios4" value="4" ng-model="dayDetailsViewModel.NewReservation.SelectedServiceId" ng-required="!dayDetailsViewModel.NewReservation.SelectedServiceId" ng-disabled="steamDisabled()">
-                                        EXTERIOR (STEAM)
-                                    </label>
-                                </div>
-                                <div class="radio">
-                                    <label>
-                                        <input type="radio" name="gridRadios" id="gridRadios4" value="5" ng-model="dayDetailsViewModel.NewReservation.SelectedServiceId" ng-required="!dayDetailsViewModel.NewReservation.SelectedServiceId" ng-disabled="steamDisabled()">
-                                        INTERIOR (STEAM)
-                                    </label>
-                                </div>
-                                <div class="radio">
-                                    <label>
-                                        <input type="radio" name="gridRadios" id="gridRadios4" value="6" ng-model="dayDetailsViewModel.NewReservation.SelectedServiceId" ng-required="!dayDetailsViewModel.NewReservation.SelectedServiceId" ng-disabled="steamDisabled()">
-                                        EXTERIOR + INTERIOR (STEAM)
-                                    </label>
-                                </div>
+                                </div>                                                               
                                 <div ng-messages="newReservationForm.gridRadios.$error">
                                     <div ng-message="required" class="text-danger">THE SERVICE IS REQUIRED</div>
                                 </div>
