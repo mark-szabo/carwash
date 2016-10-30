@@ -293,12 +293,22 @@ namespace MSHU.CarWash.Controllers
             {
                 availableSlots = new Tuple<int, int>(availableSlots.Item1 - 2, availableSlots.Item2);
             }
-            /*else if (newReservationViewModel.SelectedServiceId == (int)ServiceEnum.InteriorSteam ||
-                newReservationViewModel.SelectedServiceId == (int)ServiceEnum.ExteriorSteam ||
-                newReservationViewModel.SelectedServiceId == (int)ServiceEnum.ExteriorInteriorSteam)
+            //Special handling of steam enums (converting them back to normal services)
+            else if (newReservationViewModel.SelectedServiceId == (int)ServiceEnum.InteriorSteam)
             {
-                availableSlots = new Tuple<int, int>(availableSlots.Item1, availableSlots.Item2 - 1);
-            }*/
+                newReservationViewModel.SelectedServiceId = (int)ServiceEnum.Interior;
+                availableSlots = new Tuple<int, int>(availableSlots.Item1 - 1, availableSlots.Item2);
+            }
+            else if (newReservationViewModel.SelectedServiceId == (int)ServiceEnum.ExteriorInteriorSteam)
+            {
+                newReservationViewModel.SelectedServiceId = (int)ServiceEnum.ExteriorInterior;
+                availableSlots = new Tuple<int, int>(availableSlots.Item1 - 1, availableSlots.Item2);
+            }
+            else if (newReservationViewModel.SelectedServiceId == (int)ServiceEnum.ExteriorSteam)
+            {
+                newReservationViewModel.SelectedServiceId = (int)ServiceEnum.Exterior;
+                availableSlots = new Tuple<int, int>(availableSlots.Item1 - 1, availableSlots.Item2);
+            }
             else
             {
                 availableSlots = new Tuple<int, int>(availableSlots.Item1 - 1, availableSlots.Item2);
