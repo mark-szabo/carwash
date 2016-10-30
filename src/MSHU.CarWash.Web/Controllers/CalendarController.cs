@@ -293,12 +293,12 @@ namespace MSHU.CarWash.Controllers
             {
                 availableSlots = new Tuple<int, int>(availableSlots.Item1 - 2, availableSlots.Item2);
             }
-            else if (newReservationViewModel.SelectedServiceId == (int)ServiceEnum.InteriorSteam ||
+            /*else if (newReservationViewModel.SelectedServiceId == (int)ServiceEnum.InteriorSteam ||
                 newReservationViewModel.SelectedServiceId == (int)ServiceEnum.ExteriorSteam ||
                 newReservationViewModel.SelectedServiceId == (int)ServiceEnum.ExteriorInteriorSteam)
             {
                 availableSlots = new Tuple<int, int>(availableSlots.Item1, availableSlots.Item2 - 1);
-            }
+            }*/
             else
             {
                 availableSlots = new Tuple<int, int>(availableSlots.Item1 - 1, availableSlots.Item2);
