@@ -448,13 +448,7 @@ namespace MSHU.CarWash.UWP.ViewModels
             {
                 result.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas, ServiceName = ServiceEnum.KulsoMosasBelsoTakaritasKarpittisztitas.GetDescription(), Selected = false });
             }
-
-            if (date == null || date?.DayOfWeek == DayOfWeek.Tuesday)
-            {
-                result.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasGozos, ServiceName = ServiceEnum.KulsoMosasGozos.GetDescription(), Selected = false });
-                result.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.BelsoTakaritasGozos, ServiceName = ServiceEnum.BelsoTakaritasGozos.GetDescription(), Selected = false });
-                result.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.KulsoMosasBelsoTakaritasGozos, ServiceName = ServiceEnum.KulsoMosasBelsoTakaritasGozos.GetDescription(), Selected = false });
-            }
+            
             return result;
         }
 
