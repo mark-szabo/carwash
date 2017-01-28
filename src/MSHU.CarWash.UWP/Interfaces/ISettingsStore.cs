@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MSHU.CarWash.UWP.Interfaces
 {
-    interface ISettingsStoreService
+    interface ISettingsStore
     {
         Task StoreSettingAsync<T>(string name, T setting);
         Task<T> RetriveSettingAsync<T>(string name);
