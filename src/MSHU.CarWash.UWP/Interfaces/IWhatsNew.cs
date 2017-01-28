@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MSHU.CarWash.UWP.Interfaces
 {
-    interface IWhatsNewService
+    interface IWhatsNew
     {
         Task FetchWhatsNewAsync();
         Task<bool> IsSomethingNewAsync();
