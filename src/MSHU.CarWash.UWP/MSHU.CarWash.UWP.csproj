@@ -129,6 +129,7 @@
     <Compile Include="Services\DummyAppointmentService.cs" />
     <Compile Include="Services\IAppointmentService.cs" />
     <Compile Include="Services\RoamingSettingsStoreService.cs" />
+    <Compile Include="Services\WhatsNewService.cs" />
     <Compile Include="ViewModels\AppShellViewModel.cs" />
     <Compile Include="ViewModels\AboutViewModel.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />

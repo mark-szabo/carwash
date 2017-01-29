@@ -19,7 +19,7 @@ namespace MSHU.CarWash.UWP.Services
 
         public Task StoreSettingAsync<T>(string name, T setting)
         {
-            ApplicationData.Current.RoamingSettings.Values.Add(name, setting);
+            ApplicationData.Current.RoamingSettings.Values[name] = setting;
             return Task.CompletedTask;
         }
     }
