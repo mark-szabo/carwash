@@ -57,7 +57,7 @@ namespace MSHU.CarWash.UWP.Services
             var changeList = new StringBuilder("Here's what's new:\r\n");
             foreach(var versionChange in changes)
             {
-                if(String.Compare(versionChange.version, version) > 0)
+                if(String.Compare(versionChange.version, value) > 0)
                 {
                     foreach(var change in versionChange.changes)
                     {
