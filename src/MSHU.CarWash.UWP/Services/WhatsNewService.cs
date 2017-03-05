@@ -66,25 +66,29 @@ namespace MSHU.CarWash.UWP.Services
                 }
             }
 
-            var dialog = new MessageDialog(changeList.ToString());
-            dialog.Title = "Carwash has just got updated!";
-            dialog.Commands.Add(new UICommand { Label = "Ok", Id = 0 });
+            var message = changeList.ToString();
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                var dialog = new MessageDialog(message);
+                dialog.Title = "Carwash has just got updated!";
+                dialog.Commands.Add(new UICommand { Label = "Ok", Id = 0 });
 
-            var dialogDisplayed = true;
-            try
-            {
-                var res = await dialog.ShowAsync();
-            }
-            catch(UnauthorizedAccessException)
-            {
-                // happens if a message dialog is already being displayed - not sure why it could happen
-                // let's postpone our dialog to the next time
-                dialogDisplayed = false;
-            }
+                var dialogDisplayed = true;
+                try
+                {
+                    var res = await dialog.ShowAsync();
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    // happens if a message dialog is already being displayed - not sure why it could happen
+                    // let's postpone our dialog to the next time
+                    dialogDisplayed = false;
+                }
 
-            if (dialogDisplayed)
-            {
-                await settingsStore.StoreSettingAsync(whatsNewKey, VersionToString(Package.Current.Id.Version));
+                if (dialogDisplayed)
+                {
+                    await settingsStore.StoreSettingAsync(whatsNewKey, VersionToString(Package.Current.Id.Version));
+                }
             }
         }
     }
