@@ -1,1 +1,1 @@
-C:\Docs\Projects\CarWash\src\MSHU.CarWash.UWP\AppPackages\MSHU.CarWash.UWP_1.4.8.0\MSHU.CarWash.UWP_1.4.8.0_x86_arm.appxbundle
+C:\Docs\Projects\CarWash\src\MSHU.CarWash.UWP\bin\ARM\Release\Upload\MSHU.CarWash.UWP_1.4.10.0\MSHU.CarWash.UWP_1.4.10.0_x86_arm.appxbundle
