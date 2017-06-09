@@ -25,48 +25,30 @@ namespace MSHU.CarWash.UWP.Services
 
         public async Task<bool> IsSomethingNewAsync()
         {
-            var value = await settingsStore.TryRetrieveSettingAsync<string>(whatsNewKey);
-            if (value != null)
+            var lastKnownVersion = await settingsStore.TryRetrieveSettingAsync<uint?>(whatsNewKey);
+            if (lastKnownVersion != null)
             {
                 var version = Package.Current.Id.Version;
-                return VersionToString(version) != value;
+                return VersionToUInt(version) > lastKnownVersion;
             }
 
             return true;
         }
 
-        private static string VersionToString(PackageVersion version)
+        private static uint VersionToUInt(PackageVersion version)
         {
-            return $"{version.Major}.{version.Minor}.{version.Build}";
+            return (uint)((version.Major << 8*3) + (version.Minor << 8*2) + (version.Build << 8*1) + version.Revision);
+        }
+
+        private static uint VersionToUInt(ushort Major, ushort Minor, ushort Build = 0, ushort Revision = 0)
+        {
+            return (uint)((Major << 8*3) + (Minor << 8*2) + (Build << 8*1) + Revision);
         }
 
         public async Task ShowWhatsNewAsync()
         {
-            var value = await settingsStore.TryRetrieveSettingAsync<string>(whatsNewKey);
-            if (value == null)
-            {
-                value = "0.0.0";
-            }
-            var version = VersionToString(Package.Current.Id.Version);
+            string message = await GetWhatsNewMessageAsync();
 
-            var changes = new[] 
-            {
-                new { version = "1.4.7", changes = new [] { "Support for managing car wash reservations in your calendar." } }
-            };
-
-            var changeList = new StringBuilder("Here's what's new:\r\n");
-            foreach(var versionChange in changes)
-            {
-                if(String.Compare(versionChange.version, value) > 0)
-                {
-                    foreach(var change in versionChange.changes)
-                    {
-                        changeList.AppendLine($"• {change}");
-                    }
-                }
-            }
-
-            var message = changeList.ToString();
             if (!string.IsNullOrWhiteSpace(message))
             {
                 var dialog = new MessageDialog(message);
@@ -87,9 +69,47 @@ namespace MSHU.CarWash.UWP.Services
 
                 if (dialogDisplayed)
                 {
-                    await settingsStore.StoreSettingAsync(whatsNewKey, VersionToString(Package.Current.Id.Version));
+                    await settingsStore.StoreSettingAsync(whatsNewKey, VersionToUInt(Package.Current.Id.Version));
                 }
             }
+        }
+
+        private async Task<string> GetWhatsNewMessageAsync()
+        {
+            var lastKnownVersion = await settingsStore.TryRetrieveSettingAsync<uint?>(whatsNewKey);
+            if (lastKnownVersion == null)
+            {
+                lastKnownVersion = 0;
+            }
+
+            var version = VersionToUInt(Package.Current.Id.Version);
+
+            var changes = new[]
+            {
+                new { version = VersionToUInt(1, 4, 7), changes = new [] { "Support for managing car wash reservations in your calendar." } },
+                new { version = VersionToUInt(1, 4, 8), changes = new [] { "Get informed about what's new in the app." } }
+            };
+
+            var changeList = new StringBuilder("Here's what's new:\r\n");
+            var changesAppended = false;
+            foreach (var versionChange in changes)
+            {
+                if (versionChange.version > lastKnownVersion)
+                {
+                    changesAppended = true;
+                    foreach (var change in versionChange.changes)
+                    {
+                        changeList.AppendLine($"• {change}");
+                    }
+                }
+            }
+
+            if(!changesAppended)
+            {
+                return null;
+            }
+            var message = changeList.ToString();
+            return message;
         }
     }
 }
