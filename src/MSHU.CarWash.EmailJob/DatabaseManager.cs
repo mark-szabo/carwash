@@ -43,15 +43,17 @@ namespace MSHU.CarWash.EmailJob
                 SqlDataReader reader = reservationQueryCommand.ExecuteReader();
 
                 resultBuilder.AppendLine("<table>");
-                resultBuilder.AppendLine("<tr><th>Név</th><th>Email</th><th>Dátum</th><th>Megjegyzés</th></tr>");
+                resultBuilder.AppendLine("<tr><th>Név</th><th>Rendszám</th><th>Email</th><th>Dátum</th><th>Megjegyzés</th></tr>");
                 // write each record
                 while (reader.Read())
                 {
                     resultBuilder.AppendLine("<tr>");
-                    resultBuilder.AppendLine(String.Format("<td>{0}</td> <td>{1}</td> <td>{2}</td> <td>{3}</td>",
+                    resultBuilder.AppendLine(String.Format("<td>{0}</td> <td>{1}</td> <td>{2}</td> <td>{3}</td> <td>{4}</td>",
                         reader["Name"],
+                        reader["VehiclePlateNumber"],
                         reader["EmployeeId"],
-                        reader["Date"], reader["Comment"]));
+                        reader["Date"], 
+                        reader["Comment"]));
                     resultBuilder.AppendLine("</tr>");
                 }
                 resultBuilder.AppendLine("</table>");

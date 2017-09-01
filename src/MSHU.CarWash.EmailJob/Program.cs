@@ -14,8 +14,8 @@ namespace MSHU.CarWash.EmailJob
             string message = DatabaseManager.GetReservation(DateTime.UtcNow.Date);
             EmailAddress address = new EmailAddress("jozsef.vadkerti@microsoft.com");
             EmailAddress addressOrg = new EmailAddress("a-libill@microsoft.com");
-            EmailAddress addressWash = new EmailAddress("@microsoft.com");
-            EmailManager.SendMessage(new List<EmailAddress>() {addressOrg, address}, "Mai foglalások", message, message).Wait();
+            EmailAddress addressWash = new EmailAddress("halasi.laszlo.ems@gmail.com");
+            EmailManager.SendMessage(new List<EmailAddress>() {addressOrg, addressWash, address}, "Mai foglalások", message, message).Wait();
 
             Console.WriteLine(message);
         }
