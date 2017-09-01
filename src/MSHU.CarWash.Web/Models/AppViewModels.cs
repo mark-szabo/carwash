@@ -132,9 +132,9 @@ namespace MSHU.CarWash.Models
             this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.Interior, ServiceName = ServiceEnum.Interior.GetDescription(), Selected = false });
             this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.ExteriorInterior, ServiceName = ServiceEnum.ExteriorInterior.GetDescription(), Selected = false });
             this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.ExteriorInteriorCarpet, ServiceName = ServiceEnum.ExteriorInteriorCarpet.GetDescription(), Selected = false });
-            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.ExteriorSteam, ServiceName = ServiceEnum.Exterior.GetDescription(), Selected = false });
-            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.InteriorSteam, ServiceName = ServiceEnum.Interior.GetDescription(), Selected = false });
-            this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.ExteriorInteriorSteam, ServiceName = ServiceEnum.ExteriorInterior.GetDescription(), Selected = false });
+            //this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.ExteriorSteam, ServiceName = ServiceEnum.Exterior.GetDescription(), Selected = false });
+            //this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.InteriorSteam, ServiceName = ServiceEnum.Interior.GetDescription(), Selected = false });
+            //this.Services.Add(new ServiceViewModel { ServiceId = (int)ServiceEnum.ExteriorInteriorSteam, ServiceName = ServiceEnum.ExteriorInterior.GetDescription(), Selected = false });
         }
         [Required]
         public DateTime Date { get; set; }
