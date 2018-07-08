@@ -7,6 +7,16 @@
     <IsPackable>false</IsPackable>
     <SpaRoot>ClientApp\</SpaRoot>
     <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
+    <Version>0.1.0</Version>
+    <PackageProjectUrl>https://jovadker.visualstudio.com/CarWash</PackageProjectUrl>
+    <Company>Microsoft</Company>
+    <Copyright>Copyright © 2018 Microsoft</Copyright>
+    <PackageTags>PWA, React, aspnetcore2.1</PackageTags>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://jovadker.visualstudio.com/_git/CarWash</RepositoryUrl>
+    <Product>CarWash</Product>
+    <Authors>Mark Szabo, Jozsef Vadkerti, Akos Szego, Tamas Veiland</Authors>
+    <Description>This app is intended to help employees working in Graphisoft park (Budapest, Hungary) reserve car washing services.</Description>
   </PropertyGroup>
 
   <ItemGroup>
