@@ -1,21 +1,49 @@
 import React, { Component } from 'react';
 import { Route } from 'react-router';
-import { Layout } from './components/Layout';
+import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
+import Layout from './components/Layout';
 import { Home } from './components/Home';
 import { FetchData } from './components/FetchData';
 import { Counter } from './components/Counter';
 
-export default class App extends Component {
-  displayName = App.name
+// A theme with custom primary and secondary color.
+const theme = createMuiTheme({
+    palette: {
+        primary: {
+            light: '#b5ffff',
+            main: '#80d8ff',
+            dark: '#49a7cc',
+        },
+        secondary: {
+            light: '#b5ffff',
+            main: '#80d8ff',
+            dark: '#49a7cc',
+        },
+    },
+    typography: {
+        fontFamily: [
+            '"Segoe UI"',
+            'Roboto',
+            '"Helvetica Neue"',
+            'Arial',
+            'sans-serif',
+        ].join(','),
+    },
+});
 
-  render() {
-    return (
-      <Layout>
-        <Route exact path='/' component={Home} />
-        <Route exact path='/index.html' component={Home} />
-        <Route path='/counter' component={Counter} />
-        <Route path='/fetchdata' component={FetchData} />
-      </Layout>
-    );
-  }
+export default class App extends Component {
+    displayName = App.name
+
+    render() {
+        return (
+            <MuiThemeProvider theme={theme}>
+                <Layout>
+                    <Route exact path='/' component={Home} />
+                    <Route exact path='/index.html' component={Home} />
+                    <Route path='/counter' component={Counter} />
+                    <Route path='/fetchdata' component={FetchData} />
+                </Layout>
+            </MuiThemeProvider>
+        );
+    }
 }
