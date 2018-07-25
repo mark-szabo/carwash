@@ -3,62 +3,80 @@ import { Link } from 'react-router-dom'
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
-import DraftsIcon from '@material-ui/icons/Drafts';
-import StarIcon from '@material-ui/icons/Star';
-import SendIcon from '@material-ui/icons/Send';
-import MailIcon from '@material-ui/icons/Mail';
-import DeleteIcon from '@material-ui/icons/Delete';
-import ReportIcon from '@material-ui/icons/Report';
+import Button from '@material-ui/core/Button';
+import AddIcon from '@material-ui/icons/Add';
+import ListIcon from '@material-ui/icons/List';
+import DirectionsCarIcon from '@material-ui/icons/DirectionsCar';
+import LocalCarWashIcon from '@material-ui/icons/LocalCarWash';
+import BuildIcon from '@material-ui/icons/Build';
+import SettingsIcon from '@material-ui/icons/Settings';
+import HelpIcon from '@material-ui/icons/Help';
+import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 
 export const drawerItems = (
     <div>
+        <Button component={Link} to="/reserve" variant="extendedFab" color="primary" aria-label="Reserve" style={{ margin: '8px 16px 16px 24px' }}>
+            <AddIcon style={{ marginRight: '8px' }}/>
+            Reserve
+        </Button>
         <ListItem button component={Link} to="/">
             <ListItemIcon>
-                <InboxIcon />
+                <ListIcon />
             </ListItemIcon>
-            <ListItemText primary="Home" />
+            <ListItemText primary="My reservations" />
         </ListItem>
         <ListItem button component={Link} to="/counter">
             <ListItemIcon>
-                <StarIcon />
+                <DirectionsCarIcon />
             </ListItemIcon>
-            <ListItemText primary="Counter" />
+            <ListItemText primary="My cars" />
         </ListItem>
-        <ListItem button component={Link} to="/fetchdata">
+        <ListItem button component={Link} to="/carwashadmin">
             <ListItemIcon>
-                <SendIcon />
+                <LocalCarWashIcon />
             </ListItemIcon>
-            <ListItemText primary="Fetch Data" />
+            <ListItemText primary="CarWash admin" />
         </ListItem>
-        <ListItem button>
+        <ListItem button component={Link} to="/admin">
             <ListItemIcon>
-                <DraftsIcon />
+                <BuildIcon />
             </ListItemIcon>
-            <ListItemText primary="Drafts" />
+            <ListItemText primary="Admin" />
         </ListItem>
     </div>
 );
 
 export const otherDrawerItems = (
     <div>
-        <ListItem button>
+        <ListItem button component={Link} to="/settings">
             <ListItemIcon>
-                <MailIcon />
+                <SettingsIcon />
             </ListItemIcon>
-            <ListItemText primary="All mail" />
+            <ListItemText primary="Settings" />
         </ListItem>
-        <ListItem button>
+        <ListItem button component={Link} to="/support">
             <ListItemIcon>
-                <DeleteIcon />
+                <HelpIcon />
             </ListItemIcon>
-            <ListItemText primary="Trash" />
+            <ListItemText primary="Contact support" />
         </ListItem>
-        <ListItem button>
+        <ListItem button component={Link} to="/signout">
             <ListItemIcon>
-                <ReportIcon />
+                <ExitToAppIcon />
             </ListItemIcon>
-            <ListItemText primary="Spam" />
+            <ListItemText primary="Sign out" />
+        </ListItem>
+        <ListItem button component={Link} to="/counter">
+            <ListItemIcon>
+                <DirectionsCarIcon />
+            </ListItemIcon>
+            <ListItemText primary="Counter" />
+        </ListItem>
+        <ListItem button component={Link} to="/fetchdata">
+            <ListItemIcon>
+                <LocalCarWashIcon />
+            </ListItemIcon>
+            <ListItemText primary="Fetch Data" />
         </ListItem>
     </div>
 );

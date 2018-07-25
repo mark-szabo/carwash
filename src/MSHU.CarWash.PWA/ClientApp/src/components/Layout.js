@@ -82,6 +82,17 @@ class Layout extends React.Component {
             </div>
         );
 
+        //function getTitle() {
+        //    var name;
+        //    this.props.routes.map((prop, key) => {
+        //        if (prop.path === props.location.pathname) {
+        //            name = prop.navbarName;
+        //        }
+        //        return null;
+        //    });
+        //    return name;
+        //}
+
         return (
             <div className={classes.root}>
                 <AppBar className={classes.appBar}>
@@ -96,7 +107,7 @@ class Layout extends React.Component {
                         </IconButton>
                         <Typography variant="title" color="inherit" noWrap>
                             Responsive drawer
-            </Typography>
+                        </Typography>
                     </Toolbar>
                 </AppBar>
                 <Hidden mdUp>
