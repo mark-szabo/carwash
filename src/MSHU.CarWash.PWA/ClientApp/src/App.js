@@ -38,10 +38,10 @@ export default class App extends Component {
         return (
             <MuiThemeProvider theme={theme}>
                 <Layout>
-                    <Route exact path='/' component={Home} />
-                    <Route exact path='/index.html' component={Home} />
-                    <Route path='/counter' component={Counter} />
-                    <Route path='/fetchdata' component={FetchData} />
+                    <Route exact path="/" component={Home} navbarName="My reservations" />
+                    <Route exact path="/index.html" component={Home} navbarName="My reservations" />
+                    <Route path="/counter" component={Counter} navbarName="Counter" />
+                    <Route path="/fetchdata" component={FetchData} navbarName="Fetch data" />
                 </Layout>
             </MuiThemeProvider>
         );

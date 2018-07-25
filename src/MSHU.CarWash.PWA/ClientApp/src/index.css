@@ -1,5 +1,11 @@
 body {
     margin: 0;
+    font-family: "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+
+a, a:active, a:focus, a:hover, a:visited {
+    color: inherit;
+    text-decoration: none;
 }
 
 .primary {

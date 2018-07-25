@@ -25,7 +25,7 @@ export const drawerItems = (
             </ListItemIcon>
             <ListItemText primary="My reservations" />
         </ListItem>
-        <ListItem button component={Link} to="/counter">
+        <ListItem button component={Link} to="/cars">
             <ListItemIcon>
                 <DirectionsCarIcon />
             </ListItemIcon>

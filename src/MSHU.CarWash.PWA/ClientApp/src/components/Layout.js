@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Link } from 'react-router-dom'
 import { withStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import AppBar from '@material-ui/core/AppBar';
@@ -65,15 +66,28 @@ class Layout extends React.Component {
         this.setState(state => ({ mobileOpen: !state.mobileOpen }));
     };
 
+    getNavbarName() {
+        var name;
+        this.props.children.map((prop) => {
+            if (prop.props.path === window.location.pathname) {
+                name = prop.props.navbarName;
+            }
+            return null;
+        });
+        return name;
+    }
+
     render() {
         const { classes, theme } = this.props;
 
         const drawer = (
             <div>
                 <div className={classes.toolbar} >
-                    <Typography variant="title" color="inherit" noWrap className={classes.appTitle}>
-                        <LocalCarWashIcon /> CarWash
-                    </Typography>
+                    <Link to="/">
+                        <Typography variant="title" color="inherit" noWrap className={classes.appTitle}>
+                            <LocalCarWashIcon /> CarWash
+                        </Typography>
+                    </Link>
                 </div>
                 <Divider />
                 <List>{drawerItems}</List>
@@ -81,17 +95,6 @@ class Layout extends React.Component {
                 <List>{otherDrawerItems}</List>
             </div>
         );
-
-        //function getTitle() {
-        //    var name;
-        //    this.props.routes.map((prop, key) => {
-        //        if (prop.path === props.location.pathname) {
-        //            name = prop.navbarName;
-        //        }
-        //        return null;
-        //    });
-        //    return name;
-        //}
 
         return (
             <div className={classes.root}>
@@ -106,7 +109,7 @@ class Layout extends React.Component {
                             <MenuIcon />
                         </IconButton>
                         <Typography variant="title" color="inherit" noWrap>
-                            Responsive drawer
+                            {this.getNavbarName()}
                         </Typography>
                     </Toolbar>
                 </AppBar>
@@ -149,6 +152,7 @@ class Layout extends React.Component {
 Layout.propTypes = {
     classes: PropTypes.object.isRequired,
     theme: PropTypes.object.isRequired,
+    location: PropTypes.object,
 };
 
 export default withStyles(styles, { withTheme: true })(Layout);
