@@ -4,7 +4,7 @@ import AuthenticationContext from 'adal-angular';
 const adalConfig = {
     clientId: '6e291d40-2613-4a74-9af5-790eb496a828',
     endpoints: {
-        api: 'aa1032d5-839c-4f0f-824a-6f8cf44f34ad',
+        api: '6e291d40-2613-4a74-9af5-790eb496a828',
     },
     cacheLocation: 'localStorage',
 };
@@ -51,8 +51,8 @@ export function runWithAdal(app) {
     }
 }
 
-function adalFetch(authContext, resourceGuiId, fetch, url, options) {
-    return adalGetToken(authContext, resourceGuiId).then((token) => {
+export function adalFetch(url, options) {
+    return adalGetToken(authContext, adalConfig.endpoints.api).then((token) => {
         const o = options || {};
         if (!o.headers) o.headers = {};
         o.headers.Authorization = `Bearer ${token}`;
@@ -97,8 +97,5 @@ const withAdalLogin = (authContext, resourceId) => {
 export const getToken = () => {
     return authContext.getCachedToken(authContext.config.clientId);
 };
-
-export const adalApiFetch = (fetch, url, options) =>
-    adalFetch(authContext, adalConfig.endpoints.api, fetch, url, options);
 
 export const withAdalLoginApi = withAdalLogin(authContext, adalConfig.endpoints.api);
