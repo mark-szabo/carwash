@@ -1,11 +1,13 @@
+using System;
 using System.Collections.Generic;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.EntityFrameworkCore;
@@ -73,18 +75,35 @@ namespace MSHU.CarWash.PWA
                             var user = await dbContext.Users.SingleOrDefaultAsync(u =>
                                 u.Email == context.Principal.FindFirstValue(ClaimTypes.Upn));
 
+
                             if (user == null)
                             {
                                 user = new User
                                 {
-                                    FirstName = context.Principal.FindFirstValue(ClaimTypes.Surname),
-                                    LastName = context.Principal.FindFirstValue(ClaimTypes.GivenName),
-                                    Email = context.Principal.FindFirstValue(ClaimTypes.Upn),
-                                    Company = _authorizedTenants.SingleOrDefault(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))?.Name
+                                    FirstName = context.Principal.FindFirstValue(ClaimTypes.GivenName) ?? throw new Exception("First name cannot be null!"),
+                                    LastName = context.Principal.FindFirstValue(ClaimTypes.Surname),
+                                    Email = context.Principal.FindFirstValue(ClaimTypes.Upn) ?? throw new Exception("Email cannot be null!"),
+                                    Company = _authorizedTenants.SingleOrDefault(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))?.Name ?? throw new Exception("Company cannot be null"),
+                                    IsAdmin = false,
+                                    IsCarwashAdmin = false
                                 };
                                 await dbContext.Users.AddAsync(user);
                                 await dbContext.SaveChangesAsync();
                             }
+
+                            var claims = new List<Claim>
+                            {
+                                new Claim("admin", user.IsAdmin.ToString()),
+                                new Claim("carwashadmin", user.IsCarwashAdmin.ToString())
+                            };
+                            context.Principal.AddIdentity(new ClaimsIdentity(claims));
+                        },
+                        OnAuthenticationFailed = context =>
+                        {
+                            context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                            context.Response.ContentType = "application/json";
+                            context.Response.Body = null;
+                            return Task.CompletedTask;
                         }
                     };
                 });

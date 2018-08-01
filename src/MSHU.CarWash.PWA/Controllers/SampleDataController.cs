@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MSHU.CarWash.ClassLibrary;
 
 namespace MSHU.CarWash.PWA.Controllers
 {
@@ -19,6 +20,7 @@ namespace MSHU.CarWash.PWA.Controllers
         [HttpGet("[action]")]
         public IEnumerable<WeatherForecast> WeatherForecasts()
         {
+            var admin = Helpers.IsAdmin(User.Claims);
             var rng = new Random();
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
