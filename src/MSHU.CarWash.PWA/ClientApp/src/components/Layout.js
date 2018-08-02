@@ -52,21 +52,6 @@ const styles = theme => ({
     },
     appTitle: {
         padding: '20px 24px',
-    },
-    appTitleLink: {
-        textDecoration: 'none',
-        '&:hover': {
-            textDecoration: 'none',
-        },
-        '&:focus': {
-            textDecoration: 'none',
-        },
-        '&:visited': {
-            textDecoration: 'none',
-        },
-        '&:active': {
-            textDecoration: 'none',
-        },
     }
 });
 
@@ -98,7 +83,7 @@ class Layout extends React.Component {
         const drawer = (
             <div>
                 <div className={classes.toolbar} >
-                    <Link to="/" className={classes.appTitleLink}>
+                    <Link to="/">
                         <Typography variant="title" color="inherit" noWrap className={classes.appTitle}>
                             <LocalCarWashIcon /> CarWash
                         </Typography>

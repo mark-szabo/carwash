@@ -5,8 +5,13 @@ body {
 
 a, a:active, a:focus, a:hover, a:visited {
     color: inherit;
+    text-decoration: none;
+}
+
+.underline {
     text-decoration: underline;
 }
+
 
 .primary {
     background-color: #80d8ff;

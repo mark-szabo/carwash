@@ -7,7 +7,7 @@ export class Support extends Component {
     render() {
         return (
             <div>
-                <p>If you experience any problem with the app, please contact support on <a href="mailto:carwashapp@microsoft.com">carwashapp@microsoft.com</a>!</p>
+                <p>If you experience any problem with the app, please contact support on <a href="mailto:carwashapp@microsoft.com" className="underline">carwashapp@microsoft.com</a>!</p>
                 <Button href="mailto:carwashapp@microsoft.com" variant="contained" color="primary">Contact support</Button>
             </div>
         );

@@ -42,7 +42,7 @@ namespace MSHU.CarWash.PWA
         {
             services.AddApplicationInsightsTelemetry(Configuration);
 
-            services.AddDbContextPool<ApplicationDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContextPool<ApplicationDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Database")));
 
             services.AddAuthentication(options =>
                 {
