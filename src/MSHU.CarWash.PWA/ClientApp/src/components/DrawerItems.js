@@ -12,6 +12,7 @@ import BuildIcon from '@material-ui/icons/Build';
 import SettingsIcon from '@material-ui/icons/Settings';
 import HelpIcon from '@material-ui/icons/Help';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+import { signOut } from '../Auth';
 
 export const drawerItems = (
     <div>
@@ -24,12 +25,6 @@ export const drawerItems = (
                 <ListIcon />
             </ListItemIcon>
             <ListItemText primary="My reservations" />
-        </ListItem>
-        <ListItem button component={Link} to="/cars">
-            <ListItemIcon>
-                <DirectionsCarIcon />
-            </ListItemIcon>
-            <ListItemText primary="My cars" />
         </ListItem>
         <ListItem button component={Link} to="/carwashadmin">
             <ListItemIcon>
@@ -60,7 +55,7 @@ export const otherDrawerItems = (
             </ListItemIcon>
             <ListItemText primary="Contact support" />
         </ListItem>
-        <ListItem button component={Link} to="/signout">
+        <ListItem button onClick={signOut}>
             <ListItemIcon>
                 <ExitToAppIcon />
             </ListItemIcon>

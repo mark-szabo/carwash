@@ -51,6 +51,10 @@ export function runWithAdal(app) {
     }
 }
 
+export function signOut() {
+    authContext.logOut();
+}
+
 export function adalFetch(url, options) {
     return adalGetToken(authContext, adalConfig.endpoints.api).then((token) => {
         const o = options || {};
