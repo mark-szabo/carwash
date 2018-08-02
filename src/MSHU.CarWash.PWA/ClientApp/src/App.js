@@ -3,6 +3,7 @@ import { Route } from 'react-router';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Layout from './components/Layout';
 import { Home } from './components/Home';
+import { Support } from './components/Support';
 import { FetchData } from './components/FetchData';
 import { Counter } from './components/Counter';
 
@@ -40,6 +41,7 @@ export default class App extends Component {
                 <Layout>
                     <Route exact path="/" component={Home} navbarName="My reservations" />
                     <Route exact path="/index.html" component={Home} navbarName="My reservations" />
+                    <Route path="/support" component={Support} navbarName="Support" />
                     <Route path="/counter" component={Counter} navbarName="Counter" />
                     <Route path="/fetchdata" component={FetchData} navbarName="Fetch data" />
                 </Layout>
