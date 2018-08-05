@@ -92,7 +92,7 @@ namespace MSHU.CarWash.PWA.Controllers
             // Defaults
             if (reservation.UserId == null) reservation.UserId = _user.Id;
             if (reservation.Private == null) reservation.Private = false;
-            reservation.State = State.NotStarted;
+            reservation.State = State.SubmittedNotActual;
             reservation.Mpv = false;
             reservation.CarwashComment = null;
             reservation.CreatedById = _user.Id;

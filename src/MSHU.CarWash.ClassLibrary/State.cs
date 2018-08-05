@@ -2,6 +2,11 @@
 {
     public enum State
     {
-        NotStarted = 0,
+        SubmittedNotActual = 0,
+        ReminderSentWaitingForKey = 1,
+        CarKeyLeftAndLocationConfirmed = 2,
+        WashInProgress = 3,
+        NotYetPaid = 4,
+        Done = 5
     }
 }
