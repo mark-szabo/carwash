@@ -11,7 +11,7 @@
             "preLaunchTask": "build",
             "program": "${workspaceRoot}/src/MSHU.CarWash.PWA/bin/Debug/netcoreapp2.1/MSHU.CarWash.PWA.dll",
             "args": [],
-            "cwd": "${workspaceRoot}",
+            "cwd": "${workspaceRoot}/src/MSHU.CarWash.PWA",
             "stopAtEntry": false,
             "launchBrowser": {
                 "enabled": true,
@@ -28,7 +28,8 @@
                 }
             },
             "env": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "NODE_PATH": "../node_modules/"
             },
             "sourceFileMap": {
                 "/Views": "${workspaceRoot}/Views"
