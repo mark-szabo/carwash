@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
@@ -9,12 +10,21 @@ namespace MSHU.CarWash.PWA.Extensions
 {
     public static class EmailExtension
     {
-        public static async Task Send(this Email email, IConfiguration configuration)
+        private static string _storageAccountConnectionString;
+
+        public static IServiceProvider ConfigureEmailProvider(this IServiceProvider serviceProvider, IConfiguration configuration)
+        {
+            _storageAccountConnectionString = configuration.GetConnectionString("StorageAccount");
+
+            return serviceProvider;
+        }
+
+        public static async Task Send(this Email email)
         {
             if (email == null) return;
 
             // Parse the connection string and return a reference to the storage account.
-            var storage = CloudStorageAccount.Parse(configuration.GetConnectionString("StorageAccount"));
+            var storage = CloudStorageAccount.Parse(_storageAccountConnectionString);
 
             // Create the queue client.
             var queueClient = storage.CreateCloudQueueClient();

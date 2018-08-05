@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +19,8 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using MSHU.CarWash.ClassLibrary;
+using MSHU.CarWash.PWA.Controllers;
+using MSHU.CarWash.PWA.Extensions;
 
 namespace MSHU.CarWash.PWA
 {
@@ -40,6 +44,11 @@ namespace MSHU.CarWash.PWA
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // Add application services
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddScoped<UsersController, UsersController>();
+
+            // Add framework services
             services.AddApplicationInsightsTelemetry(Configuration);
 
             services.AddDbContextPool<ApplicationDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Database")));
@@ -72,18 +81,19 @@ namespace MSHU.CarWash.PWA
                             //Get EF context
                             var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
 
-                            var user = await dbContext.Users.SingleOrDefaultAsync(u =>
-                                u.Email == context.Principal.FindFirstValue(ClaimTypes.Upn));
+                            var email = context.Principal.FindFirstValue(ClaimTypes.Upn).ToLower() ??
+                                        throw new Exception("Email ('upn') cannot be found in auth token.");
 
+                            var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
 
                             if (user == null)
                             {
                                 user = new User
                                 {
-                                    FirstName = context.Principal.FindFirstValue(ClaimTypes.GivenName) ?? throw new Exception("First name cannot be null!"),
+                                    FirstName = context.Principal.FindFirstValue(ClaimTypes.GivenName) ?? throw new Exception("First name ('givenname') cannot be found in auth token."),
                                     LastName = context.Principal.FindFirstValue(ClaimTypes.Surname),
-                                    Email = context.Principal.FindFirstValue(ClaimTypes.Upn) ?? throw new Exception("Email cannot be null!"),
-                                    Company = _authorizedTenants.SingleOrDefault(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))?.Name ?? throw new Exception("Company cannot be null"),
+                                    Email = email,
+                                    Company = _authorizedTenants.SingleOrDefault(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))?.Name ?? throw new Exception("Tenant ('tenantid') cannot be found in auth token."),
                                     IsAdmin = false,
                                     IsCarwashAdmin = false
                                 };
@@ -139,10 +149,16 @@ namespace MSHU.CarWash.PWA
                     "application/font-woff2"
                 };
             });
+
+            services.Configure<HstsOptions>(options =>
+            {
+                options.IncludeSubDomains = true;
+                options.MaxAge = TimeSpan.FromDays(365);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider serviceProvider)
         {
             if (env.IsDevelopment())
             {
@@ -157,6 +173,8 @@ namespace MSHU.CarWash.PWA
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
+
+            serviceProvider.ConfigureEmailProvider(Configuration);
 
             app.Use(async (context, next) =>
             {

@@ -9,8 +9,7 @@ namespace MSHU.CarWash.ClassLibrary
     public class Reservation : ApplicationDbContext.IEntity
     {
         public string Id { get; set; }
-
-        [Required]
+        
         [ForeignKey("User")]
         public string UserId { get; set; }
         public virtual User User { get; set; }
@@ -21,8 +20,7 @@ namespace MSHU.CarWash.ClassLibrary
 
         [Required]
         public string Location { get; set; }
-
-        [Required]
+    
         public State State { get; set; }
 
         [NotMapped]
@@ -31,17 +29,14 @@ namespace MSHU.CarWash.ClassLibrary
             get => ServicesJson == null ? null : JsonConvert.DeserializeObject<List<ServiceType>>(ServicesJson);
             set => ServicesJson = JsonConvert.SerializeObject(value);
         }
-
-        [Required]
+        
         public string ServicesJson { get; set; }
+        
+        public bool? Private { get; set; }
 
-        [Required]
-        public bool Private { get; set; }
-
-        public bool Mpv { get; set; }
-
-        [Required]
-        public int TimeRequirement { get; set; }
+        public bool? Mpv { get; set; }
+        
+        public int? TimeRequirement { get; set; }
 
         [Required]
         public DateTime DateFrom { get; set; }
@@ -52,11 +47,10 @@ namespace MSHU.CarWash.ClassLibrary
         public string Comment { get; set; }
         
         public string CarwashComment { get; set; }
-
-        [Required]
+        
         public string CreatedById { get; set; }
-
-        [Required]
+        
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime CreatedOn { get; set; }
     }
 }
