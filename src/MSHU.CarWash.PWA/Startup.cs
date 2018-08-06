@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -21,6 +23,7 @@ using Microsoft.Net.Http.Headers;
 using MSHU.CarWash.ClassLibrary;
 using MSHU.CarWash.PWA.Controllers;
 using MSHU.CarWash.PWA.Extensions;
+using Swashbuckle.AspNetCore.Swagger;
 
 namespace MSHU.CarWash.PWA
 {
@@ -155,6 +158,17 @@ namespace MSHU.CarWash.PWA
                 options.IncludeSubDomains = true;
                 options.MaxAge = TimeSpan.FromDays(365);
             });
+
+            // Swagger API Documentation generator
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v2", new Info { Title = "CarWash API", Version = "v2" });
+
+                // Set the comments path for the Swagger JSON and UI.
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                c.IncludeXmlComments(xmlPath);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -219,6 +233,16 @@ namespace MSHU.CarWash.PWA
                 {
                     spa.UseReactDevelopmentServer(npmScript: "start");
                 }
+            });
+
+            // Enable middleware to serve generated Swagger as a JSON endpoint.
+            app.UseSwagger();
+
+            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
+            // specifying the Swagger JSON endpoint.
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v2/swagger.json", "CarWash API");
             });
         }
     }
