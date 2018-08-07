@@ -12,6 +12,7 @@ namespace MSHU.CarWash.PWA.Controllers
     /// <summary>
     /// Managing reservations
     /// </summary>
+    [Produces("application/json")]
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
@@ -33,6 +34,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// </summary>
         /// <returns>List of <see cref="ReservationViewModel"/></returns>
         /// <response code="200">OK</response>
+        /// <response code="401">Unathorized</response>
+        [ProducesResponseType(typeof(IEnumerable<ReservationViewModel>), 200)]
         [HttpGet]
         public IEnumerable<object> GetReservation()
         {
@@ -50,9 +53,11 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <param name="id">reservation id</param>
         /// <returns><see cref="ReservationViewModel"/></returns>
         /// <response code="200">OK</response>
-        /// <response code="400">BadRequest if model not valid.</response>
+        /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formated.</response>
+        /// <response code="401">Unathorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to get another user's reservation.</response>
         /// <response code="404">NotFound if reservation not found.</response>
+        [ProducesResponseType(typeof(ReservationViewModel), 200)]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetReservation([FromRoute] string id)
         {
@@ -106,7 +111,9 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>The newly created <see cref="Reservation"/></returns>
         /// <response code="201">Created</response>
         /// <response code="400">BadRequest if no service choosen / DateFrom and DateTo isn't on the same day / a Date is in the past.</response>
+        /// <response code="401">Unathorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to reserve for another user.</response>
+        [ProducesResponseType(typeof(ReservationViewModel), 200)]
         [HttpPost]
         public async Task<IActionResult> PostReservation([FromBody] Reservation reservation)
         {
@@ -143,13 +150,15 @@ namespace MSHU.CarWash.PWA.Controllers
         // DELETE: api/Reservations/5
         /// <summary>
         /// Delete an existing reservation
-        /// Not actually deleting, only removing PII information.
         /// </summary>
         /// <param name="id">reservation id</param>
         /// <returns>The deleted <see cref="Reservation"/></returns>
         /// <response code="200">OK</response>
-        /// <response code="403">Forbidden if user is not admin but tries to delete another user.</response>
+        /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formated.</response>
+        /// <response code="401">Unathorized</response>
+        /// <response code="403">Forbidden if user is not admin but tries to delete another user's reservation.</response>
         /// <response code="404">NotFound if reservation not found.</response>
+        [ProducesResponseType(typeof(ReservationViewModel), 200)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteReservation([FromRoute] string id)
         {

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -10,6 +11,10 @@ using MSHU.CarWash.PWA.Extensions;
 
 namespace MSHU.CarWash.PWA.Controllers
 {
+    /// <summary>
+    /// Managing users
+    /// </summary>
+    [Produces("application/json")]
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
@@ -18,6 +23,7 @@ namespace MSHU.CarWash.PWA.Controllers
         private readonly ApplicationDbContext _context;
         private readonly User _user;
 
+        /// <inheritdoc />
         public UsersController(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
@@ -25,6 +31,14 @@ namespace MSHU.CarWash.PWA.Controllers
         }
 
         // GET: api/users
+        /// <summary>
+        /// Get users from my company
+        /// </summary>
+        /// <returns>List of <see cref="UserViewModel"/></returns>
+        /// <response code="200">OK</response>
+        /// <response code="401">Unathorized</response>
+        /// <response code="403">Forbidden if user is not admin.</response>
+        [ProducesResponseType(typeof(IEnumerable<UserViewModel>), 200)]
         [HttpGet]
         public IActionResult GetUsers()
         {
@@ -33,6 +47,17 @@ namespace MSHU.CarWash.PWA.Controllers
         }
 
         // GET: api/users/{id}
+        /// <summary>
+        /// Get a specific user by id
+        /// </summary>
+        /// <param name="id">user id</param>
+        /// <returns><see cref="UserViewModel"/></returns>
+        /// <response code="200">OK</response>
+        /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formated.</response>
+        /// <response code="401">Unathorized</response>
+        /// <response code="403">Forbidden if user is not admin but tries to get another user's information or user is admin but tries to get a user from another company.</response>
+        /// <response code="404">NotFound if user not found.</response>
+        [ProducesResponseType(typeof(UserViewModel), 200)]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUser([FromRoute] string id)
         {
@@ -53,6 +78,14 @@ namespace MSHU.CarWash.PWA.Controllers
         }
 
         // GET: api/users/me
+        /// <summary>
+        /// Get the authenticated user
+        /// </summary>
+        /// <returns><see cref="UserViewModel"/></returns>
+        /// <response code="200">OK</response>
+        /// <response code="401">Unathorized</response>
+        /// <response code="404">NotFound if user not found.</response>
+        [ProducesResponseType(typeof(UserViewModel), 200)]
         [HttpGet, Route("me")]
         public IActionResult GetMe()
         {
@@ -65,6 +98,20 @@ namespace MSHU.CarWash.PWA.Controllers
         }
 
         // DELETE: api/users/{id}
+        /// <summary>
+        /// Delete a user
+        /// </summary>
+        /// <remarks>
+        /// Not actually deleting, only removing PII information.
+        /// </remarks>
+        /// <param name="id">user id</param>
+        /// <returns>The deleted user (<see cref="UserViewModel"/>)</returns>
+        /// <response code="200">OK</response>
+        /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formated.</response>
+        /// <response code="401">Unathorized</response>
+        /// <response code="403">Forbidden if user is not admin but tries to delete another user or user is admin but tries to delete a user from another company.</response>
+        /// <response code="404">NotFound if user not found.</response>
+        [ProducesResponseType(typeof(UserViewModel), 200)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser([FromRoute] string id)
         {
@@ -113,7 +160,7 @@ Please keep in mind, that we are required to continue storing your previous rese
             return Ok(new UserViewModel(user));
         }
 
-        public User GetCurrentUser() => _user;
+        internal User GetCurrentUser() => _user;
     }
 
     internal class UserViewModel
