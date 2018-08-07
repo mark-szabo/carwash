@@ -42,8 +42,6 @@ export default class App extends Component {
                     <Route exact path="/" component={Home} navbarName="My reservations" />
                     <Route exact path="/index.html" component={Home} navbarName="My reservations" />
                     <Route path="/support" component={Support} navbarName="Support" />
-                    <Route path="/counter" component={Counter} navbarName="Counter" />
-                    <Route path="/fetchdata" component={FetchData} navbarName="Fetch data" />
                 </Layout>
             </MuiThemeProvider>
         );

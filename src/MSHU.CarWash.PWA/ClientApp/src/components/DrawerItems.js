@@ -61,17 +61,5 @@ export const otherDrawerItems = (
             </ListItemIcon>
             <ListItemText primary="Sign out" />
         </ListItem>
-        <ListItem button component={Link} to="/counter">
-            <ListItemIcon>
-                <DirectionsCarIcon />
-            </ListItemIcon>
-            <ListItemText primary="Counter" />
-        </ListItem>
-        <ListItem button component={Link} to="/fetchdata">
-            <ListItemIcon>
-                <LocalCarWashIcon />
-            </ListItemIcon>
-            <ListItemText primary="Fetch Data" />
-        </ListItem>
     </div>
 );
