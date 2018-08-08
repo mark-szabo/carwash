@@ -8,10 +8,19 @@ using MSHU.CarWash.ClassLibrary;
 
 namespace MSHU.CarWash.PWA.Extensions
 {
+    /// <summary>
+    /// Email sender service
+    /// </summary>
     public static class EmailExtension
     {
         private static string _storageAccountConnectionString;
 
+        /// <summary>
+        /// Pass the Storage account connection string to the service during Startup
+        /// </summary>
+        /// <param name="serviceProvider">services</param>
+        /// <param name="configuration">Configuration</param>
+        /// <returns>services</returns>
         public static IServiceProvider ConfigureEmailProvider(this IServiceProvider serviceProvider, IConfiguration configuration)
         {
             _storageAccountConnectionString = configuration.GetConnectionString("StorageAccount");
@@ -19,6 +28,11 @@ namespace MSHU.CarWash.PWA.Extensions
             return serviceProvider;
         }
 
+        /// <summary>
+        /// Schedule an email to be sent by Azure Logic App
+        /// </summary>
+        /// <param name="email">Email object containing the email to be sent</param>
+        /// <returns>void</returns>
         public static async Task Send(this Email email)
         {
             if (email == null) return;

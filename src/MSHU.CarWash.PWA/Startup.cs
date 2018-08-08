@@ -1,3 +1,4 @@
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -37,12 +38,14 @@ namespace MSHU.CarWash.PWA
             new Company(Company.Graphisoft, "")
         };
 
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IHostingEnvironment environment)
         {
             Configuration = configuration;
+            Environment = environment;
         }
 
         public IConfiguration Configuration { get; }
+        private IHostingEnvironment Environment { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -160,10 +163,10 @@ namespace MSHU.CarWash.PWA
             });
 
             // Swagger API Documentation generator
-            services.AddSwaggerGen(c =>
+            if (Environment.IsDevelopment()) services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v2", new Info { Title = "CarWash API", Version = "v2" });
-                
+
                 c.AddSecurityDefinition("Bearer", new ApiKeyScheme
                 {
                     Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
@@ -236,17 +239,20 @@ namespace MSHU.CarWash.PWA
                     template: "{controller}/{action=Index}/{id?}");
             });
 
-            // Enable middleware to serve generated Swagger as a JSON endpoint.
-            app.UseSwagger();
-
-            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
-            // specifying the Swagger JSON endpoint.
-            app.UseSwaggerUI(c =>
+            if (env.IsDevelopment())
             {
-                c.SwaggerEndpoint("/swagger/v2/swagger.json", "CarWash API");
-                c.EnableDeepLinking();
-                c.DocumentTitle = "CarWash API";
-            });
+                // Enable middleware to serve generated Swagger as a JSON endpoint.
+                app.UseSwagger();
+
+                // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
+                // specifying the Swagger JSON endpoint.
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v2/swagger.json", "CarWash API");
+                    c.EnableDeepLinking();
+                    c.DocumentTitle = "CarWash API";
+                });
+            }
 
             app.UseSpa(spa =>
             {
