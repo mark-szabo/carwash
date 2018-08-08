@@ -6,7 +6,6 @@ import ListItemText from '@material-ui/core/ListItemText';
 import Button from '@material-ui/core/Button';
 import AddIcon from '@material-ui/icons/Add';
 import ListIcon from '@material-ui/icons/List';
-import DirectionsCarIcon from '@material-ui/icons/DirectionsCar';
 import LocalCarWashIcon from '@material-ui/icons/LocalCarWash';
 import BuildIcon from '@material-ui/icons/Build';
 import SettingsIcon from '@material-ui/icons/Settings';
@@ -16,8 +15,8 @@ import { signOut } from '../Auth';
 
 export const drawerItems = (
     <div>
-        <Button component={Link} to="/reserve" variant="extendedFab" color="primary" aria-label="Reserve" style={{ margin: '8px 16px 16px 24px' }}>
-            <AddIcon style={{ marginRight: '8px' }}/>
+        <Button component={Link} to="/reserve" variant="extendedFab" color="primary" aria-label="Reserve" style={{ margin: '8px 16px 16px 24px', padding: '0 24px 0 16px' }}>
+            <AddIcon style={{ marginRight: '16px' }}/>
             Reserve
         </Button>
         <ListItem button component={Link} to="/">

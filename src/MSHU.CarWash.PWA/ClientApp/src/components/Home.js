@@ -2,8 +2,23 @@ import React, { Component } from 'react';
 import { adalFetch } from '../Auth';
 import ReservationCard from './ReservationCard';
 import Grid from '@material-ui/core/Grid';
+import PropTypes from 'prop-types';
+import { withStyles } from '@material-ui/core/styles';
 
-export class Home extends Component {
+const styles = theme => ({
+    card: {
+        [theme.breakpoints.down('sm')]: {
+            minWidth: '100%',
+            maxWidth: '100%',
+        },
+        [theme.breakpoints.up('md')]: {
+            minWidth: 'inherit',
+            maxWidth: 'inherit',
+        },
+    },
+});
+
+class Home extends Component {
     displayName = Home.name
 
     constructor(props) {
@@ -20,6 +35,7 @@ export class Home extends Component {
     }
 
     render() {
+        const { classes } = this.props;
         if (this.state.loading) {
             return (<p>Loading...</p>);
         } else {
@@ -33,7 +49,7 @@ export class Home extends Component {
                     style={{ maxHeight: 'calc(100% - 24px - 16px)', overflow: 'auto' }}
                 >
                     {this.state.reservations.map(reservation =>
-                        <Grid item key={reservation.id} >
+                        <Grid item key={reservation.id} className={classes.card} >
                             <ReservationCard reservation={reservation}/>
                         </Grid>
                     )}
@@ -42,3 +58,9 @@ export class Home extends Component {
         }
     }
 }
+
+Home.propTypes = {
+    classes: PropTypes.object.isRequired,
+};
+
+export default withStyles(styles)(Home);

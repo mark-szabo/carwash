@@ -2,10 +2,8 @@ import React, { Component } from 'react';
 import { Route } from 'react-router';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Layout from './components/Layout';
-import { Home } from './components/Home';
+import Home from './components/Home';
 import { Support } from './components/Support';
-import { FetchData } from './components/FetchData';
-import { Counter } from './components/Counter';
 
 // A theme with custom primary and secondary color.
 const theme = createMuiTheme({
