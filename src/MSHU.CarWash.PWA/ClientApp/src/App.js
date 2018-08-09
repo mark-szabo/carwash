@@ -3,6 +3,7 @@ import { Route } from 'react-router';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Layout from './components/Layout';
 import Home from './components/Home';
+import Reserve from './components/Reserve';
 import { Support } from './components/Support';
 
 // A theme with custom primary and secondary color.
@@ -39,6 +40,7 @@ export default class App extends Component {
                 <Layout>
                     <Route exact path="/" component={Home} navbarName="My reservations" />
                     <Route exact path="/index.html" component={Home} navbarName="My reservations" />
+                    <Route exact path="/reserve" component={Reserve} navbarName="Reserve" />
                     <Route path="/support" component={Support} navbarName="Support" />
                 </Layout>
             </MuiThemeProvider>
