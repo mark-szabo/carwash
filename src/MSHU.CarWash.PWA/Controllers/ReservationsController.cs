@@ -43,7 +43,7 @@ namespace MSHU.CarWash.PWA.Controllers
                 _context.Reservation.Where(r => r.UserId == _user.Id || r.CreatedById == _user.Id) :
                 _context.Reservation.Where(r => r.UserId == _user.Id);
 
-            return query.Select(reservation => new ReservationViewModel(reservation));
+            return query.OrderByDescending(r => r.DateFrom).Select(reservation => new ReservationViewModel(reservation));
         }
 
         // GET: api/reservations/{id}
@@ -174,10 +174,37 @@ namespace MSHU.CarWash.PWA.Controllers
 
             return Ok(new ReservationViewModel(reservation));
         }
+
+        // GET: api/reservations/obfuscated
+        /// <summary>
+        /// Get my reservations
+        /// </summary>
+        /// <returns>List of <see cref="ReservationViewModel"/></returns>
+        /// <response code="200">OK</response>
+        /// <response code="401">Unathorized</response>
+        [ProducesResponseType(typeof(IEnumerable<ObfuscatedReservationViewModel>), 200)]
+        [HttpGet, Route("obfuscated")]
+        public IEnumerable<object> GetObfuscatedReservations(int daysAhead = 365)
+        {
+            return _context.Reservation
+                .Where(r => r.DateTo >= DateTime.Now && r.DateFrom <= DateTime.Now.AddDays(daysAhead))
+                .Include(r => r.User)
+                .OrderBy(r => r.DateFrom)
+                .Select(reservation => new ObfuscatedReservationViewModel
+                {
+                    Company = reservation.User.Company,
+                    Services = reservation.Services,
+                    TimeRequirement = reservation.TimeRequirement,
+                    DateFrom = reservation.DateFrom,
+                    DateTo = reservation.DateTo,
+                });
+        }
     }
 
     internal class ReservationViewModel
     {
+        public ReservationViewModel() { }
+
         public ReservationViewModel(Reservation reservation)
         {
             Id = reservation.Id;
@@ -210,6 +237,8 @@ namespace MSHU.CarWash.PWA.Controllers
 
     internal class ObfuscatedReservationViewModel
     {
+        public ObfuscatedReservationViewModel() { }
+
         public ObfuscatedReservationViewModel(Reservation reservation)
         {
             Company = reservation.User.Company;

@@ -105,9 +105,25 @@ function getServiceName(service) {
         case 3:
             return 'spot cleaning';
         case 4:
-            return 'bug removal';
+            return 'vignette removal';
         case 5:
+            return 'polishing';
+        case 6:
+            return 'AC cleaning \'ozon\'';
+        case 7:
+            return 'AC cleaning \'bomba\'';
+        case 8:
+            return 'bug removal';
+        case 9:
             return 'wheel cleaning';
+        case 10:
+            return 'tire care';
+        case 11:
+            return 'leather care';
+        case 12:
+            return 'plastic care';
+        case 13:
+            return 'prewash';
         default:
             return 'no info';
     }
