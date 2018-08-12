@@ -16,6 +16,13 @@ const styles = theme => ({
             maxWidth: 'inherit',
         },
     },
+    grid: {
+        maxHeight: 'calc(100% - 8px)',
+        width: 'calc(100% + 48px)',
+        margin: '-24px',
+        padding: '8px',
+        overflow: 'auto',
+    },
 });
 
 class Home extends Component {
@@ -46,11 +53,11 @@ class Home extends Component {
                     justify="flex-start"
                     alignItems="flex-start"
                     spacing={16}
-                    style={{ maxHeight: 'calc(100% - 24px - 16px)', overflow: 'auto' }}
+                    className={classes.grid}
                 >
                     {this.state.reservations.map(reservation =>
                         <Grid item key={reservation.id} className={classes.card} >
-                            <ReservationCard reservation={reservation}/>
+                            <ReservationCard reservation={reservation} />
                         </Grid>
                     )}
                 </Grid>
