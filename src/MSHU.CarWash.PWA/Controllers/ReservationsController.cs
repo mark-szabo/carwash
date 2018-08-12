@@ -25,7 +25,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// Wash time unit in minutes
         /// </summary>
         private const int TimeUnit = 12;
-        
+
         /// <summary>
         /// Daily limits per company
         /// </summary>
@@ -161,9 +161,10 @@ namespace MSHU.CarWash.PWA.Controllers
             if (reservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin)) return Forbid();
             if (reservation.Services == null) return BadRequest("No service choosen.");
             if (reservation.DateFrom.Date != reservation.DateTo.Date)
-                return BadRequest("Reservation data range should be located entirely on the same day.");
+                return BadRequest("Reservation date range should be located entirely on the same day.");
             if (reservation.DateFrom < DateTime.Now || reservation.DateTo < DateTime.Now)
                 return BadRequest("Cannot reserve in the past.");
+            if (Slots.All(s => s.StartTime != reservation.DateFrom.Hour)) return BadRequest("Reservation can be made to slots only.");
 
             // Time requirement calculation
             reservation.TimeRequirement = reservation.Services.Contains(ServiceType.Carpet) ? 2 * TimeUnit : TimeUnit;
@@ -239,10 +240,14 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>List of <see cref="DateTime"/></returns>
         /// <response code="200">OK</response>
         /// <response code="401">Unathorized</response>
-        [ProducesResponseType(typeof(IEnumerable<DateTime>), 200)]
+        [ProducesResponseType(typeof(NotAvailableDatesAndTimesViewModel), 200)]
         [HttpGet, Route("notavailabledates")]
-        public async Task<IEnumerable<DateTime>> GetNotAvailableDates(int daysAhead = 365)
+        public async Task<object> GetNotAvailableDatesAndTimes(int daysAhead = 365)
         {
+            /*
+             * Get not available dates
+             */
+
             var userCompanyLimit = CompanyLimit.Find(c => c.Name == _user.Company).DailyLimit;
 
             // Must be separated to force client evaluation because of this EF issue:
@@ -274,7 +279,26 @@ namespace MSHU.CarWash.PWA.Controllers
                 if (toBeDoneTodayTime >= GetRemainingSlotCapacityToday() * TimeUnit) notAvailableDates.Add(DateTime.Today);
             }
 
-            return notAvailableDates;
+            /*
+             * Get not available times
+             */
+
+            var slotReservationAggregate = await _context.Reservation
+                .Where(r => r.DateTo >= DateTime.Now && r.DateFrom <= DateTime.Now.AddDays(daysAhead))
+                .GroupBy(r => r.DateFrom)
+                .Select(g => new
+                {
+                    DateTime = g.Key,
+                    TimeSum = g.Sum(r => r.TimeRequirement)
+                })
+                .ToListAsync();
+
+            var notAvailableTimes = slotReservationAggregate
+                .Where(d => d.TimeSum >= Slots.Find(s => s.StartTime == d.DateTime.Hour)?.Capacity * TimeUnit)
+                .Select(d => d.DateTime)
+                .ToList();
+
+            return new NotAvailableDatesAndTimesViewModel { Dates = notAvailableDates, Times = notAvailableTimes};
         }
 
         /// <summary>
@@ -353,6 +377,12 @@ namespace MSHU.CarWash.PWA.Controllers
         public int? TimeRequirement { get; set; }
         public DateTime DateFrom { get; set; }
         public DateTime DateTo { get; set; }
+    }
+
+    internal class NotAvailableDatesAndTimesViewModel
+    {
+        public IEnumerable<DateTime> Dates { get; set; }
+        public IEnumerable<DateTime> Times { get; set; }
     }
 
     internal class Slot

@@ -67,6 +67,7 @@ class Reserve extends Component {
         this.state = {
             activeStep: 0,
             notAvailableDates: [],
+            notAvailableTimes: [],
             loading: true,
             services: [
                 { id: 0, name: 'exterior', selected: false },
@@ -149,7 +150,11 @@ class Reserve extends Component {
         adalFetch('api/reservations/notavailabledates')
             .then(response => response.json())
             .then(data => {
-                this.setState({ notAvailableDates: data, loading: false });
+                this.setState({
+                    notAvailableDates: data.dates,
+                    notAvailableTimes: data.times,
+                    loading: false
+                });
             });
     }
 
