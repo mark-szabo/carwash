@@ -27,6 +27,11 @@ namespace MSHU.CarWash.PWA.Controllers
         private const int TimeUnit = 12;
 
         /// <summary>
+        /// Number of concurrent active reservations permitted
+        /// </summary>
+        private const int UserConcurrentReservationLimit = 2;
+
+        /// <summary>
         /// Daily limits per company
         /// </summary>
         private static readonly List<Company> CompanyLimit = new List<Company>
@@ -153,6 +158,7 @@ namespace MSHU.CarWash.PWA.Controllers
             if (reservation.Private == null) reservation.Private = false;
             reservation.State = State.SubmittedNotActual;
             reservation.Mpv = false;
+            reservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper();
             reservation.CarwashComment = null;
             reservation.CreatedById = _user.Id;
             reservation.CreatedOn = DateTime.Now;
@@ -169,9 +175,19 @@ namespace MSHU.CarWash.PWA.Controllers
             // Time requirement calculation
             reservation.TimeRequirement = reservation.Services.Contains(ServiceType.Carpet) ? 2 * TimeUnit : TimeUnit;
 
-            // TODO Check if there is enough time on that day
+            #region Business logic
+            // Checks whether user has met the active concurrent reservation limit
+            if (await IsUserConcurrentReservationLimitMetAsync())
+                return BadRequest($"Cannot have more than {UserConcurrentReservationLimit} concurrent active reservations.");
 
-            // TODO Check if there is enough time in that slot
+            // Check if there is enough time on that day
+            if (!await IsEnoughTimeOnDateAsync(reservation.DateFrom, (int)reservation.TimeRequirement))
+                return BadRequest("Company limit has been met for this day or there is not enough time at all.");
+
+            // Check if there is enough time in that slot
+            if (!await IsEnoughTimeInSlotAsync(reservation.DateFrom, (int) reservation.TimeRequirement))
+                return BadRequest("There is not enough time in that slot.");
+            #endregion
 
             _context.Reservation.Add(reservation);
             await _context.SaveChangesAsync();
@@ -298,7 +314,7 @@ namespace MSHU.CarWash.PWA.Controllers
                 .Select(d => d.DateTime)
                 .ToList();
 
-            return new NotAvailableDatesAndTimesViewModel { Dates = notAvailableDates, Times = notAvailableTimes};
+            return new NotAvailableDatesAndTimesViewModel { Dates = notAvailableDates, Times = notAvailableTimes };
         }
 
         /// <summary>
@@ -322,6 +338,70 @@ namespace MSHU.CarWash.PWA.Controllers
             }
 
             return capacity;
+        }
+
+        /// <summary>
+        /// Checks whether user has met the active concurrent reservation limit: <see cref="UserConcurrentReservationLimit"/>
+        /// </summary>
+        /// <returns>true if user has met the limit and is not admin</returns>
+        private async Task<bool> IsUserConcurrentReservationLimitMetAsync()
+        {
+            if (_user.IsAdmin || _user.IsCarwashAdmin) return false;
+
+            var activeReservationCount = await _context.Reservation.Where(r => r.UserId == _user.Id && r.State != State.Done).CountAsync();
+
+            return activeReservationCount >= UserConcurrentReservationLimit;
+        }
+
+        /// <summary>
+        /// Checks if there is enough time on that day
+        /// </summary>
+        /// <param name="date">Date of reservation</param>
+        /// <param name="timeRequirement">time requirement of the reservation in minutes</param>
+        /// <returns>true if there is enough time left or user is carwash admin</returns>
+        private async Task<bool> IsEnoughTimeOnDateAsync(DateTime date, int timeRequirement)
+        {
+            if (_user.IsCarwashAdmin) return true;
+
+            var userCompanyLimit = CompanyLimit.Find(c => c.Name == _user.Company).DailyLimit;
+            var reservedTimeOnDate = await _context.Reservation
+                .Where(r => r.DateFrom.Date == date.Date)
+                .Include(r => r.User)
+                .Where(r => r.User.Company == _user.Company)
+                .SumAsync(r => r.TimeRequirement);
+
+            if (reservedTimeOnDate + timeRequirement > userCompanyLimit * TimeUnit) return false;
+
+            if (date.Date == DateTime.Today)
+            {
+                // Cannot use SumAsync because of this EF issue:
+                // https://github.com/aspnet/EntityFrameworkCore/issues/12314
+                // Current milestone to be fixed is EF 2.1.3
+                var toBeDoneTodayTime = _context.Reservation
+                    .Where(r => r.DateFrom >= DateTime.Now && r.DateFrom.Date == DateTime.Today)
+                    .Sum(r => r.TimeRequirement);
+                if (toBeDoneTodayTime + timeRequirement > GetRemainingSlotCapacityToday() * TimeUnit) return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Check if there is enough time in that slot
+        /// </summary>
+        /// <param name="dateTime">Date and time of reservation</param>
+        /// <param name="timeRequirement">time requirement of the reservation in minutes</param>
+        /// <returns>true if there is enough time left or user is carwash admin</returns>
+        private async Task<bool> IsEnoughTimeInSlotAsync(DateTime dateTime, int timeRequirement)
+        {
+            if (_user.IsCarwashAdmin) return true;
+
+            var reservedTimeInSlot = await _context.Reservation
+                .Where(r => r.DateFrom == dateTime)
+                .SumAsync(r => r.TimeRequirement);
+
+            return reservedTimeInSlot + timeRequirement <=
+                   Slots.Find(s => s.StartTime == dateTime.Hour)?.Capacity * TimeUnit;
         }
     }
 
