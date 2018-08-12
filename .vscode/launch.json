@@ -13,12 +13,13 @@
             "args": [],
             "cwd": "${workspaceRoot}/src/MSHU.CarWash.PWA",
             "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart",
             "launchBrowser": {
                 "enabled": true,
                 "args": "${auto-detect-url}",
                 "windows": {
                     "command": "cmd.exe",
-                    "args": "/C start ${auto-detect-url}"
+                    "args": "/C start \"\" \"C:/Program Files (x86)/Google/Chrome/Application/chrome.exe\" ${auto-detect-url}"
                 },
                 "osx": {
                     "command": "open"
