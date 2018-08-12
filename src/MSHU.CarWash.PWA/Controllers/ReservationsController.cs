@@ -21,6 +21,32 @@ namespace MSHU.CarWash.PWA.Controllers
         private readonly ApplicationDbContext _context;
         private readonly User _user;
 
+        /// <summary>
+        /// Wash time unit in minutes
+        /// </summary>
+        private const int TimeUnit = 12;
+        
+        /// <summary>
+        /// Daily limits per company
+        /// </summary>
+        private static readonly List<Company> CompanyLimit = new List<Company>
+        {
+            new Company(Company.Carwash, 0),
+            new Company(Company.Microsoft, 14),
+            new Company(Company.Sap, 16),
+            new Company(Company.Graphisoft, 5)
+        };
+
+        /// <summary>
+        /// Bookable slots and their capacity (in washes and not in minutes!)
+        /// </summary>
+        private static readonly List<Slot> Slots = new List<Slot>
+        {
+            new Slot {StartTime = 8, Capacity = 12},
+            new Slot {StartTime = 11, Capacity = 12},
+            new Slot {StartTime = 14, Capacity = 11}
+        };
+
         /// <inheritdoc />
         public ReservationsController(ApplicationDbContext context, UsersController usersController)
         {
@@ -139,7 +165,12 @@ namespace MSHU.CarWash.PWA.Controllers
             if (reservation.DateFrom < DateTime.Now || reservation.DateTo < DateTime.Now)
                 return BadRequest("Cannot reserve in the past.");
 
-            // TODO: Calculate time requirement
+            // Time requirement calculation
+            reservation.TimeRequirement = reservation.Services.Contains(ServiceType.Carpet) ? 2 * TimeUnit : TimeUnit;
+
+            // TODO Check if there is enough time on that day
+
+            // TODO Check if there is enough time in that slot
 
             _context.Reservation.Add(reservation);
             await _context.SaveChangesAsync();
@@ -177,8 +208,9 @@ namespace MSHU.CarWash.PWA.Controllers
 
         // GET: api/reservations/obfuscated
         /// <summary>
-        /// Get my reservations
+        /// Get all future reservation data for the next <paramref name="daysAhead"/> days
         /// </summary>
+        /// <param name="daysAhead">Days ahead to return reservation data</param>
         /// <returns>List of <see cref="ReservationViewModel"/></returns>
         /// <response code="200">OK</response>
         /// <response code="401">Unathorized</response>
@@ -198,6 +230,74 @@ namespace MSHU.CarWash.PWA.Controllers
                     DateFrom = reservation.DateFrom,
                     DateTo = reservation.DateTo,
                 });
+        }
+
+        // GET: api/reservations/notavailabledates
+        /// <summary>
+        /// Get the list of future dates that are not available
+        /// </summary>
+        /// <returns>List of <see cref="DateTime"/></returns>
+        /// <response code="200">OK</response>
+        /// <response code="401">Unathorized</response>
+        [ProducesResponseType(typeof(IEnumerable<DateTime>), 200)]
+        [HttpGet, Route("notavailabledates")]
+        public async Task<IEnumerable<DateTime>> GetNotAvailableDates(int daysAhead = 365)
+        {
+            var userCompanyLimit = CompanyLimit.Find(c => c.Name == _user.Company).DailyLimit;
+
+            // Must be separated to force client evaluation because of this EF issue:
+            // https://github.com/aspnet/EntityFrameworkCore/issues/11453
+            // Current milestone to be fixed is EF 3.0.0
+            var queryResult = await _context.Reservation
+                .Where(r => r.DateTo >= DateTime.Now && r.DateFrom <= DateTime.Now.AddDays(daysAhead))
+                .Include(r => r.User)
+                .Where(r => r.User.Company == _user.Company)
+                .GroupBy(r => r.DateFrom.Date)
+                .Select(g => new
+                {
+                    g.Key.Date,
+                    TimeSum = g.Sum(r => r.TimeRequirement)
+                })
+                .Where(d => d.TimeSum >= userCompanyLimit * TimeUnit)
+                .ToListAsync();
+
+            var notAvailableDates = queryResult.Select(d => d.Date).ToList();
+
+            if (!notAvailableDates.Contains(DateTime.Today))
+            {
+                // Cannot use SumAsync because of this EF issue:
+                // https://github.com/aspnet/EntityFrameworkCore/issues/12314
+                // Current milestone to be fixed is EF 2.1.3
+                var toBeDoneTodayTime = _context.Reservation
+                    .Where(r => r.DateFrom >= DateTime.Now && r.DateFrom.Date == DateTime.Today)
+                    .Sum(r => r.TimeRequirement);
+                if (toBeDoneTodayTime >= GetRemainingSlotCapacityToday() * TimeUnit) notAvailableDates.Add(DateTime.Today);
+            }
+
+            return notAvailableDates;
+        }
+
+        /// <summary>
+        /// Sums the capacity of all not started slots, what are left from the day
+        /// </summary>
+        /// <remarks>
+        /// eg. It is 9:00 AM.
+        /// The slot 8-11 has already started.
+        /// The slot 11-14 is not yet started, so add the capacity (eg. 12) to the sum.
+        /// The slot 14-17 is not yet started, so add the capacity (eg. 11) to the sum.
+        /// Sum will be 23.
+        /// </remarks>
+        /// <returns>Capacity of slots (not time in minutes!)</returns>
+        private static int GetRemainingSlotCapacityToday()
+        {
+            var capacity = 0;
+
+            foreach (var slot in Slots)
+            {
+                if (DateTime.Now.Hour < slot.StartTime) capacity += slot.Capacity;
+            }
+
+            return capacity;
         }
     }
 
@@ -253,5 +353,11 @@ namespace MSHU.CarWash.PWA.Controllers
         public int? TimeRequirement { get; set; }
         public DateTime DateFrom { get; set; }
         public DateTime DateTo { get; set; }
+    }
+
+    internal class Slot
+    {
+        public int StartTime { get; set; }
+        public int Capacity { get; set; }
     }
 }

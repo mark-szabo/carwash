@@ -13,8 +13,16 @@
             TenantId = tenantId;
         }
 
+        public Company(string name, int dailyLimit)
+        {
+            Name = name;
+            DailyLimit = dailyLimit;
+        }
+
         public string Name { get; set; }
 
         public string TenantId { get; set; }
+
+        public int DailyLimit { get; set; }
     }
 }

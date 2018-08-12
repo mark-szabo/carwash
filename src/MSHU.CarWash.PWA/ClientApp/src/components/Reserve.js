@@ -9,6 +9,9 @@ import StepContent from '@material-ui/core/StepContent';
 import Button from '@material-ui/core/Button';
 import Chip from '@material-ui/core/Chip';
 import Typography from '@material-ui/core/Typography';
+import InfiniteCalendar from 'react-infinite-calendar';
+import 'react-infinite-calendar/styles.css';
+import './Reserve.css';
 
 const styles = theme => ({
     stepper: {
@@ -41,8 +44,20 @@ const styles = theme => ({
         '&:hover:focus': {
             backgroundColor: theme.palette.primary.dark,
         },
-    }
+    },
+    chipGroupTitle: {
+        marginTop: theme.spacing.unit / 2,
+    },
+    calendar: {
+        maxWidth: '400px',
+    },
 });
+
+function addDays(date, days) {
+    var newDate = new Date(date);
+    newDate.setDate(newDate.getDate() + days);
+    return newDate;
+}
 
 class Reserve extends Component {
     displayName = Reserve.name
@@ -51,7 +66,7 @@ class Reserve extends Component {
         super(props);
         this.state = {
             activeStep: 0,
-            obfuscatedReservations: [],
+            notAvailableDates: [],
             loading: true,
             services: [
                 { id: 0, name: 'exterior', selected: false },
@@ -63,6 +78,7 @@ class Reserve extends Component {
                 { id: 6, name: 'AC cleaning \'ozon\'', selected: false },
                 { id: 7, name: 'AC cleaning \'bomba\'', selected: false }
             ],
+            selectedDate: new Date(),
             garages: {
                 M: [
                     '-1',
@@ -115,17 +131,33 @@ class Reserve extends Component {
         });
     };
 
+    handleServiceSelectionComplete = () => {
+        this.setState(state => ({
+            activeStep: state.activeStep + 1,
+        }));
+    };
+
+    handleDateSelectionComplete = (date) => {
+        if (date == null) return;
+        this.setState(state => ({
+            activeStep: state.activeStep + 1,
+            selectedDate: date,
+        }));
+    };
+
     componentDidMount() {
-        adalFetch('api/reservations/obfuscated')
+        adalFetch('api/reservations/notavailabledates')
             .then(response => response.json())
             .then(data => {
-                this.setState({ obfuscatedReservations: data, loading: false });
+                this.setState({ notAvailableDates: data, loading: false });
             });
     }
 
     render() {
         const { classes } = this.props;
-        const { activeStep } = this.state;
+        const { activeStep, loading, notAvailableDates } = this.state;
+
+        const today = new Date();
 
         return (
             <Stepper activeStep={activeStep} orientation="vertical" className={classes.stepper}>
@@ -133,19 +165,19 @@ class Reserve extends Component {
                     <StepLabel>Select services</StepLabel>
                     <StepContent>
                         {this.state.services.map(service =>
-                            <div>
-                                {service.id === 0 && (<Typography variant="body2" gutterBottom>Basic</Typography>)}
-                                {service.id === 3 && (<Typography variant="body2" gutterBottom>Extras</Typography>)}
-                                {service.id === 6 && (<Typography variant="body2" gutterBottom>AC</Typography>)}
+                            <span key={service.id}>
+                                {service.id === 0 && (<Typography variant="body2">Basic</Typography>)}
+                                {service.id === 3 && (<Typography variant="body2">Extras</Typography>)}
+                                {service.id === 6 && (<Typography variant="body2">AC</Typography>)}
                                 <Chip
                                     key={service.id}
                                     label={service.name}
                                     onClick={this.handleServiceChipClick(service)}
                                     className={service.selected ? classes.selectedChip : classes.chip}
                                 />
-                                {service.id === 2 && (<br/>)}
-                                {service.id === 5 && (<br/>)}
-                            </div>
+                                {service.id === 2 && (<br />)}
+                                {service.id === 5 && (<br />)}
+                            </span>
                         )}
                         <div className={classes.actionsContainer}>
                             <div>
@@ -156,9 +188,9 @@ class Reserve extends Component {
                                 <Button
                                     variant="contained"
                                     color="primary"
-                                    onClick={this.handleNext}
+                                    onClick={this.handleServiceSelectionComplete}
                                     className={classes.button}
-                                    disabled={this.state.services.filter(service => service.selected === true).length > 0}
+                                    disabled={this.state.services.filter(service => service.selected === true).length <= 0}
                                 >Next</Button>
                             </div>
                         </div>
@@ -166,6 +198,45 @@ class Reserve extends Component {
                 </Step>
                 <Step>
                     <StepLabel>Choose date</StepLabel>
+                    <StepContent>
+                        {loading ? (<p>Loading...</p>) : (
+                            <InfiniteCalendar
+                                onSelect={(date) => this.handleDateSelectionComplete(date)}
+                                selected={null}
+                                min={today}
+                                minDate={today}
+                                max={addDays(today, 365)}
+                                locale={{ weekStartsOn: 1 }}
+                                disabledDays={[0, 6, 7]}
+                                disabledDates={notAvailableDates}
+                                displayOptions={{ showHeader: false, showTodayHelper: false }}
+                                width={'100%'}
+                                height={350}
+                                className={classes.calendar}
+                                theme={{
+                                    selectionColor: '#80d8ff',
+                                    weekdayColor: '#80d8ff',
+                                }}
+                            />
+                        )}
+                        <div className={classes.actionsContainer}>
+                            <div>
+                                <Button
+                                    onClick={this.handleBack}
+                                    className={classes.button}
+                                >Back</Button>
+                                <Button
+                                    disabled={true}
+                                    variant="contained"
+                                    color="primary"
+                                    className={classes.button}
+                                >Next</Button>
+                            </div>
+                        </div>
+                    </StepContent>
+                </Step>
+                <Step>
+                    <StepLabel>Choose time</StepLabel>
                     <StepContent>
                         <div className={classes.actionsContainer}>
                             <div>
