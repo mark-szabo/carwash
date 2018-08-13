@@ -9,6 +9,10 @@ import StepContent from '@material-ui/core/StepContent';
 import Button from '@material-ui/core/Button';
 import Chip from '@material-ui/core/Chip';
 import Typography from '@material-ui/core/Typography';
+import Radio from '@material-ui/core/Radio';
+import RadioGroup from '@material-ui/core/RadioGroup';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormControl from '@material-ui/core/FormControl';
 import InfiniteCalendar from 'react-infinite-calendar';
 import 'react-infinite-calendar/styles.css';
 import './Reserve.css';
@@ -51,6 +55,9 @@ const styles = theme => ({
     calendar: {
         maxWidth: '400px',
     },
+    radioGroup: {
+        margin: `${theme.spacing.unit}px 0`,
+    },
 });
 
 function addDays(date, days) {
@@ -80,6 +87,7 @@ class Reserve extends Component {
                 { id: 7, name: 'AC cleaning \'bomba\'', selected: false }
             ],
             selectedDate: new Date(),
+            disabledSlots: [],
             garages: {
                 M: [
                     '-1',
@@ -140,16 +148,48 @@ class Reserve extends Component {
 
     handleDateSelectionComplete = (date) => {
         if (date == null) return;
+
         this.setState(state => ({
             activeStep: state.activeStep + 1,
             selectedDate: date,
+            disabledSlots: [
+                this.isTimeNotAvailable(date, 8),
+                this.isTimeNotAvailable(date, 11),
+                this.isTimeNotAvailable(date, 14)
+            ]
         }));
+    };
+
+    handleTimeSelectionComplete = event => {
+        const time = event.target.value;
+        const dateTime = new Date(this.state.selectedDate);
+        dateTime.setHours(time);
+        this.setState(state => ({
+            activeStep: state.activeStep + 1,
+            selectedDate: dateTime,
+        }));
+    };
+
+    isTimeNotAvailable = (date, time) => {
+        const dateTime = new Date(date);
+        dateTime.setHours(time);
+        return this.state.notAvailableTimes.filter(notAvailableTime => notAvailableTime.getTime() === dateTime.getTime()).length > 0;
     };
 
     componentDidMount() {
         adalFetch('api/reservations/notavailabledates')
             .then(response => response.json())
             .then(data => {
+                for (let i in data.dates) {
+                    if (data.dates.hasOwnProperty(i)) {
+                        data.dates[i] = new Date(data.dates[i]);
+                    }
+                }
+                for (let i in data.times) {
+                    if (data.times.hasOwnProperty(i)) {
+                        data.times[i] = new Date(data.times[i]);
+                    }
+                }
                 this.setState({
                     notAvailableDates: data.dates,
                     notAvailableTimes: data.times,
@@ -243,6 +283,18 @@ class Reserve extends Component {
                 <Step>
                     <StepLabel>Choose time</StepLabel>
                     <StepContent>
+                        <FormControl component="fieldset">
+                            <RadioGroup
+                                aria-label="Time"
+                                name="time"
+                                className={classes.radioGroup}
+                                onChange={this.handleTimeSelectionComplete}
+                            >
+                                <FormControlLabel value="8" control={<Radio />} label="8:00 AM - 11:00 AM" disabled={this.state.disabledSlots[0]} />
+                                <FormControlLabel value="11" control={<Radio />} label="11:00 AM - 2:00 PM" disabled={this.state.disabledSlots[1]} />
+                                <FormControlLabel value="14" control={<Radio />} label="2:00 PM - 5:00 PM" disabled={this.state.disabledSlots[2]} />
+                            </RadioGroup>
+                        </FormControl>
                         <div className={classes.actionsContainer}>
                             <div>
                                 <Button
@@ -250,9 +302,9 @@ class Reserve extends Component {
                                     className={classes.button}
                                 >Back</Button>
                                 <Button
+                                    disabled={true}
                                     variant="contained"
                                     color="primary"
-                                    onClick={this.handleNext}
                                     className={classes.button}
                                 >Next</Button>
                             </div>

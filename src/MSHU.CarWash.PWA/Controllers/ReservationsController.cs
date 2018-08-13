@@ -47,9 +47,9 @@ namespace MSHU.CarWash.PWA.Controllers
         /// </summary>
         private static readonly List<Slot> Slots = new List<Slot>
         {
-            new Slot {StartTime = 8, Capacity = 12},
-            new Slot {StartTime = 11, Capacity = 12},
-            new Slot {StartTime = 14, Capacity = 11}
+            new Slot {StartTime = 8, EndTime = 11, Capacity = 12},
+            new Slot {StartTime = 11, EndTime = 14, Capacity = 12},
+            new Slot {StartTime = 14, EndTime = 17, Capacity = 11}
         };
 
         /// <inheritdoc />
@@ -170,7 +170,8 @@ namespace MSHU.CarWash.PWA.Controllers
                 return BadRequest("Reservation date range should be located entirely on the same day.");
             if (reservation.DateFrom < DateTime.Now || reservation.DateTo < DateTime.Now)
                 return BadRequest("Cannot reserve in the past.");
-            if (Slots.All(s => s.StartTime != reservation.DateFrom.Hour)) return BadRequest("Reservation can be made to slots only.");
+            if (!Slots.Any(s => s.StartTime == reservation.DateFrom.Hour && s.EndTime == reservation.DateTo.Hour))
+                return BadRequest("Reservation can be made to slots only.");
 
             // Time requirement calculation
             reservation.TimeRequirement = reservation.Services.Contains(ServiceType.Carpet) ? 2 * TimeUnit : TimeUnit;
@@ -185,7 +186,7 @@ namespace MSHU.CarWash.PWA.Controllers
                 return BadRequest("Company limit has been met for this day or there is not enough time at all.");
 
             // Check if there is enough time in that slot
-            if (!await IsEnoughTimeInSlotAsync(reservation.DateFrom, (int) reservation.TimeRequirement))
+            if (!await IsEnoughTimeInSlotAsync(reservation.DateFrom, (int)reservation.TimeRequirement))
                 return BadRequest("There is not enough time in that slot.");
             #endregion
 
@@ -468,6 +469,7 @@ namespace MSHU.CarWash.PWA.Controllers
     internal class Slot
     {
         public int StartTime { get; set; }
+        public int EndTime { get; set; }
         public int Capacity { get; set; }
     }
 }
