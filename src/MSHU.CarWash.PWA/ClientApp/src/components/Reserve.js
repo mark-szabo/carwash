@@ -20,7 +20,7 @@ import TextField from '@material-ui/core/TextField';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
-
+import Snackbar from '@material-ui/core/Snackbar';
 import InfiniteCalendar from 'react-infinite-calendar';
 import 'react-infinite-calendar/styles.css';
 import './Reserve.css';
@@ -104,6 +104,8 @@ class Reserve extends Component {
             notAvailableDates: [],
             notAvailableTimes: [],
             loading: true,
+            snackbarOpen: false,
+            snackbarMessage: '',
             services: [
                 { id: 0, name: 'exterior', selected: false },
                 { id: 1, name: 'interior', selected: false },
@@ -114,7 +116,11 @@ class Reserve extends Component {
                 { id: 6, name: 'AC cleaning \'ozon\'', selected: false },
                 { id: 7, name: 'AC cleaning \'bomba\'', selected: false }
             ],
-
+            validationErrors: {
+                vehiclePlateNumber: false,
+                garage: false,
+                floor: false,
+            },
             selectedDate: new Date(),
             vehiclePlateNumber: '',
             garage: '',
@@ -123,11 +129,18 @@ class Reserve extends Component {
             private: false,
             comment: '',
             disabledSlots: [],
+            reservationPrecentage: [],
             servicesStepLabel: 'Select services',
             dateStepLabel: 'Choose date',
             timeStepLabel: 'Choose time',
         };
     }
+    
+    handleSnackbarClose = () => {
+        this.setState({
+            snackbarOpen: false,
+        });
+    };
 
     handleNext = () => {
         this.setState(state => ({
@@ -161,7 +174,7 @@ class Reserve extends Component {
 
     handleServiceSelectionComplete = () => {
         this.setState(state => ({
-            activeStep: state.activeStep + 1,
+            activeStep: 1,
             servicesStepLabel: state.services.filter((service) => { return service.selected }).map((service) => { return service.name }).join(', '),
         }));
     };
@@ -170,8 +183,8 @@ class Reserve extends Component {
         if (date == null) return;
         const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-        this.setState(state => ({
-            activeStep: state.activeStep + 1,
+        this.setState({
+            activeStep: 2,
             selectedDate: date,
             disabledSlots: [
                 this.isTimeNotAvailable(date, 8),
@@ -179,18 +192,18 @@ class Reserve extends Component {
                 this.isTimeNotAvailable(date, 14)
             ],
             dateStepLabel: `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`,
-        }));
+        });
     };
 
     handleTimeSelectionComplete = event => {
         const time = event.target.value;
         const dateTime = new Date(this.state.selectedDate);
         dateTime.setHours(time);
-        this.setState(state => ({
-            activeStep: state.activeStep + 1,
+        this.setState({
+            activeStep: 3,
             selectedDate: dateTime,
             timeStepLabel: `${dateTime.getHours()}:00`,
-        }));
+        });
     };
 
     isTimeNotAvailable = (date, time) => {
@@ -237,8 +250,59 @@ class Reserve extends Component {
 
     handleReserve = () => {
         this.setState(state => ({
-            activeStep: state.activeStep + 1,
+            validationErrors: {
+                vehiclePlateNumber: (state.vehiclePlateNumber === ''),
+                garage: (state.garage === ''),
+                floor: (state.floor === ''),
+                loading: true,
+            },
         }));
+
+        const { vehiclePlateNumber, garage, floor } = this.state.validationErrors;
+        if (vehiclePlateNumber || garage || floor) return;
+
+        const payload = {
+            vehiclePlateNumber: this.state.vehiclePlateNumber,
+            location: `${this.state.garage}/${this.state.floor}/${this.state.seat}`,
+            services: this.state.services.filter(s => { return s.selected; }).map(s => { return s.id; }),
+            private: this.state.private,
+            dateFrom: this.state.selectedDate,
+            comment: this.state.comment
+        };
+
+        adalFetch('api/reservations',
+            {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+            })
+            .then(
+                (response) => {
+                    if (response.status === 201) {
+                        this.setState({
+                            snackbarOpen: true,
+                            snackbarMessage: 'Reservation successfully saved.',
+                            loading: false
+                        });
+                        window.location.replace('/');
+                    } else {
+                        this.setState({
+                            snackbarOpen: true,
+                            snackbarMessage: 'An error has occured.',
+                            loading: false
+                        });
+                    }
+                },
+                (error) => {
+                    this.setState({
+                        snackbarOpen: true,
+                        snackbarMessage: `An error has occured: ${error.message}`,
+                        loading: false
+                    });
+                });
     };
 
     componentDidMount() {
@@ -261,6 +325,7 @@ class Reserve extends Component {
                     loading: false
                 });
             });
+
         adalFetch('api/reservations/lastsettings')
             .then(response => response.json())
             .then(data => {
@@ -271,11 +336,19 @@ class Reserve extends Component {
                     floor,
                 });
             });
+
+        adalFetch('api/reservations/reservationprecentage')
+            .then(response => response.json())
+            .then(data => {
+                this.setState({
+                    reservationPrecentage: data,
+                });
+            });
     }
 
     render() {
         const { classes, user } = this.props;
-        const { activeStep, loading, notAvailableDates, disabledSlots, vehiclePlateNumber, comment, servicesStepLabel, dateStepLabel, timeStepLabel, garage, floor, seat } = this.state;
+        const { activeStep, loading, validationErrors, notAvailableDates, disabledSlots, vehiclePlateNumber, comment, servicesStepLabel, dateStepLabel, timeStepLabel, garage, floor, seat } = this.state;
         console.log(user);
         const today = new Date();
 
@@ -300,226 +373,241 @@ class Reserve extends Component {
         };
 
         return (
-            <Stepper activeStep={activeStep} orientation="vertical" className={classes.stepper}>
-                <Step>
-                    <StepLabel>{servicesStepLabel}</StepLabel>
-                    <StepContent>
-                        {this.state.services.map(service =>
-                            <span key={service.id}>
-                                {service.id === 0 && (<Typography variant="body2">Basic</Typography>)}
-                                {service.id === 3 && (<Typography variant="body2">Extras</Typography>)}
-                                {service.id === 6 && (<Typography variant="body2">AC</Typography>)}
-                                <Chip
-                                    key={service.id}
-                                    label={service.name}
-                                    onClick={this.handleServiceChipClick(service)}
-                                    className={service.selected ? classes.selectedChip : classes.chip}
+            <React.Fragment>
+                <Snackbar
+                    anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'left',
+                    }}
+                    open={this.state.snackbarOpen}
+                    autoHideDuration={6000}
+                    onClose={this.handleSnackbarClose}
+                    ContentProps={{
+                        'aria-describedby': 'message-id',
+                    }}
+                    message={<span id="message-id">{this.state.snackbarMessage}</span>}
+                />
+                <Stepper activeStep={activeStep} orientation="vertical" className={classes.stepper}>
+                    <Step>
+                        <StepLabel>{servicesStepLabel}</StepLabel>
+                        <StepContent>
+                            {this.state.services.map(service =>
+                                <span key={service.id}>
+                                    {service.id === 0 && (<Typography variant="body2">Basic</Typography>)}
+                                    {service.id === 3 && (<Typography variant="body2">Extras</Typography>)}
+                                    {service.id === 6 && (<Typography variant="body2">AC</Typography>)}
+                                    <Chip
+                                        key={service.id}
+                                        label={service.name}
+                                        onClick={this.handleServiceChipClick(service)}
+                                        className={service.selected ? classes.selectedChip : classes.chip}
+                                    />
+                                    {service.id === 2 && (<br />)}
+                                    {service.id === 5 && (<br />)}
+                                </span>
+                            )}
+                            <div className={classes.actionsContainer}>
+                                <div>
+                                    <Button
+                                        disabled={true}
+                                        className={classes.button}
+                                    >Back</Button>
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        onClick={this.handleServiceSelectionComplete}
+                                        className={classes.button}
+                                        disabled={this.state.services.filter(service => service.selected === true).length <= 0}
+                                    >Next</Button>
+                                </div>
+                            </div>
+                        </StepContent>
+                    </Step>
+                    <Step>
+                        <StepLabel>{dateStepLabel}</StepLabel>
+                        <StepContent>
+                            {loading ? (<CircularProgress className={classes.progress} size={50} />) : (
+                                <InfiniteCalendar
+                                    onSelect={(date) => this.handleDateSelectionComplete(date)}
+                                    selected={null}
+                                    min={today}
+                                    minDate={today}
+                                    max={addDays(today, 365)}
+                                    locale={{ weekStartsOn: 1 }}
+                                    disabledDays={[0, 6, 7]}
+                                    disabledDates={notAvailableDates}
+                                    displayOptions={{ showHeader: false, showTodayHelper: false }}
+                                    width={'100%'}
+                                    height={350}
+                                    className={classes.calendar}
+                                    theme={{
+                                        selectionColor: '#80d8ff',
+                                        weekdayColor: '#80d8ff',
+                                    }}
                                 />
-                                {service.id === 2 && (<br />)}
-                                {service.id === 5 && (<br />)}
-                            </span>
-                        )}
-                        <div className={classes.actionsContainer}>
-                            <div>
-                                <Button
-                                    disabled={true}
-                                    className={classes.button}
-                                >Back</Button>
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    onClick={this.handleServiceSelectionComplete}
-                                    className={classes.button}
-                                    disabled={this.state.services.filter(service => service.selected === true).length <= 0}
-                                >Next</Button>
+                            )}
+                            <div className={classes.actionsContainer}>
+                                <div>
+                                    <Button
+                                        onClick={this.handleBack}
+                                        className={classes.button}
+                                    >Back</Button>
+                                    <Button
+                                        disabled={true}
+                                        variant="contained"
+                                        color="primary"
+                                        className={classes.button}
+                                    >Next</Button>
+                                </div>
                             </div>
-                        </div>
-                    </StepContent>
-                </Step>
-                <Step>
-                    <StepLabel>{dateStepLabel}</StepLabel>
-                    <StepContent>
-                        {loading ? (<CircularProgress className={classes.progress} size={50} />) : (
-                            <InfiniteCalendar
-                                onSelect={(date) => this.handleDateSelectionComplete(date)}
-                                selected={null}
-                                min={today}
-                                minDate={today}
-                                max={addDays(today, 365)}
-                                locale={{ weekStartsOn: 1 }}
-                                disabledDays={[0, 6, 7]}
-                                disabledDates={notAvailableDates}
-                                displayOptions={{ showHeader: false, showTodayHelper: false }}
-                                width={'100%'}
-                                height={350}
-                                className={classes.calendar}
-                                theme={{
-                                    selectionColor: '#80d8ff',
-                                    weekdayColor: '#80d8ff',
-                                }}
-                            />
-                        )}
-                        <div className={classes.actionsContainer}>
-                            <div>
-                                <Button
-                                    onClick={this.handleBack}
-                                    className={classes.button}
-                                >Back</Button>
-                                <Button
-                                    disabled={true}
-                                    variant="contained"
-                                    color="primary"
-                                    className={classes.button}
-                                >Next</Button>
+                        </StepContent>
+                    </Step>
+                    <Step>
+                        <StepLabel>{timeStepLabel}</StepLabel>
+                        <StepContent>
+                            <FormControl component="fieldset">
+                                <RadioGroup
+                                    aria-label="Time"
+                                    name="time"
+                                    className={classes.radioGroup}
+                                    onChange={this.handleTimeSelectionComplete}
+                                >
+                                    <FormControlLabel value="8" control={<Radio />} label="8:00 AM - 11:00 AM" disabled={disabledSlots[0]} />
+                                    <FormControlLabel value="11" control={<Radio />} label="11:00 AM - 2:00 PM" disabled={disabledSlots[1]} />
+                                    <FormControlLabel value="14" control={<Radio />} label="2:00 PM - 5:00 PM" disabled={disabledSlots[2]} />
+                                </RadioGroup>
+                            </FormControl>
+                            <div className={classes.actionsContainer}>
+                                <div>
+                                    <Button
+                                        onClick={this.handleBack}
+                                        className={classes.button}
+                                    >Back</Button>
+                                    <Button
+                                        disabled={true}
+                                        variant="contained"
+                                        color="primary"
+                                        className={classes.button}
+                                    >Next</Button>
+                                </div>
                             </div>
-                        </div>
-                    </StepContent>
-                </Step>
-                <Step>
-                    <StepLabel>{timeStepLabel}</StepLabel>
-                    <StepContent>
-                        <FormControl component="fieldset">
-                            <RadioGroup
-                                aria-label="Time"
-                                name="time"
-                                className={classes.radioGroup}
-                                onChange={this.handleTimeSelectionComplete}
-                            >
-                                <FormControlLabel value="8" control={<Radio />} label="8:00 AM - 11:00 AM" disabled={disabledSlots[0]} />
-                                <FormControlLabel value="11" control={<Radio />} label="11:00 AM - 2:00 PM" disabled={disabledSlots[1]} />
-                                <FormControlLabel value="14" control={<Radio />} label="2:00 PM - 5:00 PM" disabled={disabledSlots[2]} />
-                            </RadioGroup>
-                        </FormControl>
-                        <div className={classes.actionsContainer}>
+                        </StepContent>
+                    </Step>
+                    <Step>
+                        <StepLabel>Reserve</StepLabel>
+                        <StepContent>
                             <div>
-                                <Button
-                                    onClick={this.handleBack}
-                                    className={classes.button}
-                                >Back</Button>
-                                <Button
-                                    disabled={true}
-                                    variant="contained"
-                                    color="primary"
-                                    className={classes.button}
-                                >Next</Button>
+                                <FormGroup className={classes.checkbox}>
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                onChange={this.handlePrivateChange}
+                                                value="private"
+                                            />
+                                        }
+                                        label="Private"
+                                    />
+                                </FormGroup>
                             </div>
-                        </div>
-                    </StepContent>
-                </Step>
-                <Step>
-                    <StepLabel>Reserve</StepLabel>
-                    <StepContent>
-                        <div>
-                            <FormGroup className={classes.checkbox}>
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            onChange={this.handlePrivateChange}
-                                            value="private"
-                                        />
-                                    }
-                                    label="Private"
+                            <div>
+                                <TextField
+                                    required
+                                    error={validationErrors.vehiclePlateNumber}
+                                    id="vehiclePlateNumber"
+                                    label="Plate number"
+                                    value={vehiclePlateNumber}
+                                    className={classes.textField}
+                                    margin="normal"
+                                    onChange={this.handlePlateNumberChange}
                                 />
-                            </FormGroup>
-                        </div>
-                        <div>
-                            <TextField
-                                required
-                                id="vehiclePlateNumber"
-                                label="Plate number"
-                                value={vehiclePlateNumber}
-                                className={classes.textField}
-                                margin="normal"
-                                onChange={this.handlePlateNumberChange}
-                            />
-                        </div>
-                        <FormControl className={classes.formControl}>
-                            <InputLabel htmlFor="garage">Garage</InputLabel>
-                            <Select
-                                required
-                                value={garage}
-                                onChange={this.handleGarageChange}
-                                inputProps={{
-                                    name: 'garage',
-                                    id: 'garage',
-                                }}
+                            </div>
+                            <FormControl
+                                className={classes.formControl}
+                                error={validationErrors.garage}
                             >
-                                <MenuItem value="M">M</MenuItem>
-                                <MenuItem value="G">G</MenuItem>
-                                <MenuItem value="S1">S1</MenuItem>
-                            </Select>
-                        </FormControl>
-                        {garage !== '' && (
-                            <FormControl className={classes.formControl}>
-                                <InputLabel htmlFor="floor">Floor</InputLabel>
+                                <InputLabel htmlFor="garage">Garage</InputLabel>
                                 <Select
                                     required
-                                    value={floor}
-                                    onChange={this.handleFloorChange}
+                                    value={garage}
+                                    onChange={this.handleGarageChange}
                                     inputProps={{
-                                        name: 'floor',
-                                        id: 'floor',
+                                        name: 'garage',
+                                        id: 'garage',
                                     }}
                                 >
-                                    {garages[garage].map((item) => (
-                                        <MenuItem value={item} key={item}>{item}</MenuItem>
-                                    ))}
+                                    <MenuItem value="M">M</MenuItem>
+                                    <MenuItem value="G">G</MenuItem>
+                                    <MenuItem value="S1">S1</MenuItem>
                                 </Select>
                             </FormControl>
-                        )}
-                        {floor !== '' && (
-                            <TextField
-                                id="seat"
-                                label="Seat (optional)"
-                                value={seat}
-                                className={classes.textField}
-                                margin="normal"
-                                onChange={this.handleSeatChange}
-                            />
-                        )}
-                        <div>
-                            <TextField
-                                id="comment"
-                                label="Comment"
-                                multiline
-                                rowsMax="4"
-                                value={comment}
-                                onChange={this.handleCommentChange}
-                                className={classes.textField}
-                                margin="normal"
-                            />
-                        </div>
-                        <div className={classes.actionsContainer}>
+                            {garage !== '' && (
+                                <FormControl
+                                    className={classes.formControl}
+                                    error={validationErrors.floor}
+                                >
+                                    <InputLabel htmlFor="floor">Floor</InputLabel>
+                                    <Select
+                                        required
+                                        value={floor}
+                                        onChange={this.handleFloorChange}
+                                        inputProps={{
+                                            name: 'floor',
+                                            id: 'floor',
+                                        }}
+                                    >
+                                        {garages[garage].map((item) => (
+                                            <MenuItem value={item} key={item}>{item}</MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            )}
+                            {floor !== '' && (
+                                <TextField
+                                    id="seat"
+                                    label="Seat (optional)"
+                                    value={seat}
+                                    className={classes.textField}
+                                    margin="normal"
+                                    onChange={this.handleSeatChange}
+                                />
+                            )}
                             <div>
-                                <Button
-                                    onClick={this.handleBack}
-                                    className={classes.button}
-                                >Back</Button>
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    onClick={this.handleReserve}
-                                    className={classes.button}
-                                >Reserve</Button>
+                                <TextField
+                                    id="comment"
+                                    label="Comment"
+                                    multiline
+                                    rowsMax="4"
+                                    value={comment}
+                                    onChange={this.handleCommentChange}
+                                    className={classes.textField}
+                                    margin="normal"
+                                />
                             </div>
-                        </div>
-                    </StepContent>
-                </Step>
-            </Stepper>
-            //activeStep === steps.length && (
-            //    <Paper square elevation={0} className={classes.resetContainer}>
-            //        <Typography>All steps completed - you&quot;re finished</Typography>
-            //        <Button onClick={this.handleReset} className={classes.button}>
-            //            Reset
-            //        </Button>
-            //    </Paper>
-            //)
+                            <div className={classes.actionsContainer}>
+                                <div>
+                                    <Button
+                                        onClick={this.handleBack}
+                                        className={classes.button}
+                                    >Back</Button>
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        onClick={this.handleReserve}
+                                        className={classes.button}
+                                    >Reserve</Button>
+                                </div>
+                            </div>
+                        </StepContent>
+                    </Step>
+                </Stepper>
+            </React.Fragment>
         );
     }
 }
 
 Reserve.propTypes = {
     classes: PropTypes.object.isRequired,
+    user: PropTypes.object.isRequired,
 };
 
 export default withStyles(styles)(Reserve);

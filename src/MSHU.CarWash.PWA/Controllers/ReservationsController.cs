@@ -163,15 +163,26 @@ namespace MSHU.CarWash.PWA.Controllers
             reservation.CarwashComment = null;
             reservation.CreatedById = _user.Id;
             reservation.CreatedOn = DateTime.Now;
+            reservation.DateFrom = reservation.DateFrom.ToLocalTime();
+
+            if (!Slots.Any(s => s.StartTime == reservation.DateFrom.Hour))
+                return BadRequest("Reservation can be made to slots only.");
+            if (reservation.DateTo == null)
+                reservation.DateTo = new DateTime(
+                    reservation.DateFrom.Year,
+                    reservation.DateFrom.Month,
+                    reservation.DateFrom.Day,
+                    Slots.Find(s => s.StartTime == reservation.DateFrom.Hour).EndTime,
+                    0, 0);
 
             // Validation
             if (reservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin)) return Forbid();
             if (reservation.Services == null) return BadRequest("No service choosen.");
-            if (reservation.DateFrom.Date != reservation.DateTo.Date)
+            if (reservation.DateFrom.Date != ((DateTime)reservation.DateTo).Date)
                 return BadRequest("Reservation date range should be located entirely on the same day.");
             if (reservation.DateFrom < DateTime.Now || reservation.DateTo < DateTime.Now)
                 return BadRequest("Cannot reserve in the past.");
-            if (!Slots.Any(s => s.StartTime == reservation.DateFrom.Hour && s.EndTime == reservation.DateTo.Hour))
+            if (!Slots.Any(s => s.StartTime == reservation.DateFrom.Hour && s.EndTime == ((DateTime)reservation.DateTo).Hour))
                 return BadRequest("Reservation can be made to slots only.");
 
             // Time requirement calculation
@@ -247,7 +258,7 @@ namespace MSHU.CarWash.PWA.Controllers
                     Services = reservation.Services,
                     TimeRequirement = reservation.TimeRequirement,
                     DateFrom = reservation.DateFrom,
-                    DateTo = reservation.DateTo,
+                    DateTo = ((DateTime)reservation.DateTo),
                 });
         }
 
@@ -483,7 +494,7 @@ namespace MSHU.CarWash.PWA.Controllers
             Private = reservation.Private;
             Mpv = reservation.Mpv;
             DateFrom = reservation.DateFrom;
-            DateTo = reservation.DateTo;
+            if (reservation.DateTo != null) DateTo = (DateTime) reservation.DateTo;
             Comment = reservation.Comment;
             CarwashComment = reservation.CarwashComment;
         }
@@ -512,7 +523,7 @@ namespace MSHU.CarWash.PWA.Controllers
             Services = reservation.Services;
             TimeRequirement = reservation.TimeRequirement;
             DateFrom = reservation.DateFrom;
-            DateTo = reservation.DateTo;
+            if (reservation.DateTo != null) DateTo = (DateTime)reservation.DateTo;
         }
 
         public string Company { get; set; }

@@ -41,8 +41,7 @@ namespace MSHU.CarWash.ClassLibrary
         [Required]
         public DateTime DateFrom { get; set; }
 
-        [Required]
-        public DateTime DateTo { get; set; }
+        public DateTime? DateTo { get; set; }
         
         public string Comment { get; set; }
         
