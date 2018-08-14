@@ -11,8 +11,16 @@ import Chip from '@material-ui/core/Chip';
 import Typography from '@material-ui/core/Typography';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
+import FormGroup from '@material-ui/core/FormGroup';
+import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormControl from '@material-ui/core/FormControl';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import TextField from '@material-ui/core/TextField';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import Select from '@material-ui/core/Select';
+
 import InfiniteCalendar from 'react-infinite-calendar';
 import 'react-infinite-calendar/styles.css';
 import './Reserve.css';
@@ -58,6 +66,26 @@ const styles = theme => ({
     radioGroup: {
         margin: `${theme.spacing.unit}px 0`,
     },
+    container: {
+        display: 'flex',
+        flexWrap: 'wrap',
+    },
+    textField: {
+        marginLeft: theme.spacing.unit,
+        marginRight: theme.spacing.unit,
+        width: 200,
+    },
+    checkbox: {
+        marginLeft: theme.spacing.unit,
+        marginRight: theme.spacing.unit,
+    },
+    formControl: {
+        margin: theme.spacing.unit,
+        minWidth: 200,
+    },
+    progress: {
+        margin: theme.spacing.unit * 2,
+    },
 });
 
 function addDays(date, days) {
@@ -86,27 +114,18 @@ class Reserve extends Component {
                 { id: 6, name: 'AC cleaning \'ozon\'', selected: false },
                 { id: 7, name: 'AC cleaning \'bomba\'', selected: false }
             ],
+
             selectedDate: new Date(),
+            vehiclePlateNumber: '',
+            garage: '',
+            floor: '',
+            seat: '',
+            private: false,
+            comment: '',
             disabledSlots: [],
-            garages: {
-                M: [
-                    '-1',
-                    '-2',
-                    '-2.5',
-                    '-3',
-                    '-3.5',
-                    'outdoor'
-                ],
-                G: [
-                    '-1',
-                    'outdoor'
-                ],
-                S1: [
-                    '-1',
-                    '-2',
-                    '-3'
-                ]
-            }
+            servicesStepLabel: 'Select services',
+            dateStepLabel: 'Choose date',
+            timeStepLabel: 'Choose time',
         };
     }
 
@@ -143,11 +162,13 @@ class Reserve extends Component {
     handleServiceSelectionComplete = () => {
         this.setState(state => ({
             activeStep: state.activeStep + 1,
+            servicesStepLabel: state.services.filter((service) => { return service.selected }).map((service) => { return service.name }).join(', '),
         }));
     };
 
     handleDateSelectionComplete = (date) => {
         if (date == null) return;
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
         this.setState(state => ({
             activeStep: state.activeStep + 1,
@@ -156,7 +177,8 @@ class Reserve extends Component {
                 this.isTimeNotAvailable(date, 8),
                 this.isTimeNotAvailable(date, 11),
                 this.isTimeNotAvailable(date, 14)
-            ]
+            ],
+            dateStepLabel: `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`,
         }));
     };
 
@@ -167,6 +189,7 @@ class Reserve extends Component {
         this.setState(state => ({
             activeStep: state.activeStep + 1,
             selectedDate: dateTime,
+            timeStepLabel: `${dateTime.getHours()}:00`,
         }));
     };
 
@@ -174,6 +197,48 @@ class Reserve extends Component {
         const dateTime = new Date(date);
         dateTime.setHours(time);
         return this.state.notAvailableTimes.filter(notAvailableTime => notAvailableTime.getTime() === dateTime.getTime()).length > 0;
+    };
+
+    handlePlateNumberChange = (event) => {
+        this.setState({
+            vehiclePlateNumber: event.target.value.toUpperCase(),
+        });
+    };
+
+    handlePrivateChange = () => {
+        this.setState(state => ({
+            private: !state.private,
+        }));
+    };
+
+    handleCommentChange = (event) => {
+        this.setState({
+            comment: event.target.value,
+        });
+    };
+
+    handleGarageChange = (event) => {
+        this.setState({
+            garage: event.target.value,
+        });
+    };
+
+    handleFloorChange = (event) => {
+        this.setState({
+            floor: event.target.value,
+        });
+    };
+
+    handleSeatChange = (event) => {
+        this.setState({
+            seat: event.target.value,
+        });
+    };
+
+    handleReserve = () => {
+        this.setState(state => ({
+            activeStep: state.activeStep + 1,
+        }));
     };
 
     componentDidMount() {
@@ -196,18 +261,48 @@ class Reserve extends Component {
                     loading: false
                 });
             });
+        adalFetch('api/reservations/lastsettings')
+            .then(response => response.json())
+            .then(data => {
+                const [garage, floor] = data.location.split('/');
+                this.setState({
+                    vehiclePlateNumber: data.vehiclePlateNumber,
+                    garage,
+                    floor,
+                });
+            });
     }
 
     render() {
-        const { classes } = this.props;
-        const { activeStep, loading, notAvailableDates } = this.state;
-
+        const { classes, user } = this.props;
+        const { activeStep, loading, notAvailableDates, disabledSlots, vehiclePlateNumber, comment, servicesStepLabel, dateStepLabel, timeStepLabel, garage, floor, seat } = this.state;
+        console.log(user);
         const today = new Date();
+
+        const garages = {
+            M: [
+                '-1',
+                '-2',
+                '-2.5',
+                '-3',
+                '-3.5',
+                'outdoor'
+            ],
+            G: [
+                '-1',
+                'outdoor'
+            ],
+            S1: [
+                '-1',
+                '-2',
+                '-3'
+            ]
+        };
 
         return (
             <Stepper activeStep={activeStep} orientation="vertical" className={classes.stepper}>
                 <Step>
-                    <StepLabel>Select services</StepLabel>
+                    <StepLabel>{servicesStepLabel}</StepLabel>
                     <StepContent>
                         {this.state.services.map(service =>
                             <span key={service.id}>
@@ -242,9 +337,9 @@ class Reserve extends Component {
                     </StepContent>
                 </Step>
                 <Step>
-                    <StepLabel>Choose date</StepLabel>
+                    <StepLabel>{dateStepLabel}</StepLabel>
                     <StepContent>
-                        {loading ? (<p>Loading...</p>) : (
+                        {loading ? (<CircularProgress className={classes.progress} size={50} />) : (
                             <InfiniteCalendar
                                 onSelect={(date) => this.handleDateSelectionComplete(date)}
                                 selected={null}
@@ -281,7 +376,7 @@ class Reserve extends Component {
                     </StepContent>
                 </Step>
                 <Step>
-                    <StepLabel>Choose time</StepLabel>
+                    <StepLabel>{timeStepLabel}</StepLabel>
                     <StepContent>
                         <FormControl component="fieldset">
                             <RadioGroup
@@ -290,9 +385,9 @@ class Reserve extends Component {
                                 className={classes.radioGroup}
                                 onChange={this.handleTimeSelectionComplete}
                             >
-                                <FormControlLabel value="8" control={<Radio />} label="8:00 AM - 11:00 AM" disabled={this.state.disabledSlots[0]} />
-                                <FormControlLabel value="11" control={<Radio />} label="11:00 AM - 2:00 PM" disabled={this.state.disabledSlots[1]} />
-                                <FormControlLabel value="14" control={<Radio />} label="2:00 PM - 5:00 PM" disabled={this.state.disabledSlots[2]} />
+                                <FormControlLabel value="8" control={<Radio />} label="8:00 AM - 11:00 AM" disabled={disabledSlots[0]} />
+                                <FormControlLabel value="11" control={<Radio />} label="11:00 AM - 2:00 PM" disabled={disabledSlots[1]} />
+                                <FormControlLabel value="14" control={<Radio />} label="2:00 PM - 5:00 PM" disabled={disabledSlots[2]} />
                             </RadioGroup>
                         </FormControl>
                         <div className={classes.actionsContainer}>
@@ -314,6 +409,86 @@ class Reserve extends Component {
                 <Step>
                     <StepLabel>Reserve</StepLabel>
                     <StepContent>
+                        <div>
+                            <FormGroup className={classes.checkbox}>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            onChange={this.handlePrivateChange}
+                                            value="private"
+                                        />
+                                    }
+                                    label="Private"
+                                />
+                            </FormGroup>
+                        </div>
+                        <div>
+                            <TextField
+                                required
+                                id="vehiclePlateNumber"
+                                label="Plate number"
+                                value={vehiclePlateNumber}
+                                className={classes.textField}
+                                margin="normal"
+                                onChange={this.handlePlateNumberChange}
+                            />
+                        </div>
+                        <FormControl className={classes.formControl}>
+                            <InputLabel htmlFor="garage">Garage</InputLabel>
+                            <Select
+                                required
+                                value={garage}
+                                onChange={this.handleGarageChange}
+                                inputProps={{
+                                    name: 'garage',
+                                    id: 'garage',
+                                }}
+                            >
+                                <MenuItem value="M">M</MenuItem>
+                                <MenuItem value="G">G</MenuItem>
+                                <MenuItem value="S1">S1</MenuItem>
+                            </Select>
+                        </FormControl>
+                        {garage !== '' && (
+                            <FormControl className={classes.formControl}>
+                                <InputLabel htmlFor="floor">Floor</InputLabel>
+                                <Select
+                                    required
+                                    value={floor}
+                                    onChange={this.handleFloorChange}
+                                    inputProps={{
+                                        name: 'floor',
+                                        id: 'floor',
+                                    }}
+                                >
+                                    {garages[garage].map((item) => (
+                                        <MenuItem value={item} key={item}>{item}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        )}
+                        {floor !== '' && (
+                            <TextField
+                                id="seat"
+                                label="Seat (optional)"
+                                value={seat}
+                                className={classes.textField}
+                                margin="normal"
+                                onChange={this.handleSeatChange}
+                            />
+                        )}
+                        <div>
+                            <TextField
+                                id="comment"
+                                label="Comment"
+                                multiline
+                                rowsMax="4"
+                                value={comment}
+                                onChange={this.handleCommentChange}
+                                className={classes.textField}
+                                margin="normal"
+                            />
+                        </div>
                         <div className={classes.actionsContainer}>
                             <div>
                                 <Button
@@ -323,9 +498,9 @@ class Reserve extends Component {
                                 <Button
                                     variant="contained"
                                     color="primary"
-                                    onClick={this.handleNext}
+                                    onClick={this.handleReserve}
                                     className={classes.button}
-                                >Finish</Button>
+                                >Reserve</Button>
                             </div>
                         </div>
                     </StepContent>

@@ -1,12 +1,13 @@
 ﻿import React from 'react';
 import AuthenticationContext from 'adal-angular';
 
-const adalConfig = {
+var adalConfig = {
     clientId: '6e291d40-2613-4a74-9af5-790eb496a828',
     endpoints: {
         api: '6e291d40-2613-4a74-9af5-790eb496a828',
     },
     cacheLocation: 'localStorage',
+    extraQueryParameter: '',
 };
 
 const authorizedTenantIds = [
@@ -18,7 +19,7 @@ const authorizedTenantIds = [
 
 //https://github.com/salvoravida/react-adal
 
-const authContext = new AuthenticationContext(adalConfig);
+var authContext = new AuthenticationContext(adalConfig);
 
 function adalGetToken(authContext, resourceGuiId) {
     return new Promise((resolve, reject) => {
@@ -37,12 +38,17 @@ export function runWithAdal(app) {
     if (window === window.parent) {
         if (!authContext.isCallback(window.location.hash)) {
             if (!authContext.getCachedToken(authContext.config.clientId) || !authContext.getCachedUser()) {
+                if (authContext.getCachedUser()) {
+                    const user = authContext.getCachedUser();
+                    adalConfig.extraQueryParameter = `login_hint=${user.profile.upn}`;
+                    authContext = new AuthenticationContext(adalConfig);
+                }
                 authContext.login();
             } else {
                 const user = authContext.getCachedUser();
-                console.log(user);
+                //console.log(user);
                 if (authorizedTenantIds.filter(id => id === user.profile.tid).length > 0) {
-                    app();
+                    app(user);
                 } else {
                     console.log(`Tenant ${user.profile.tid} is not athorized to use this application!`);
                 }

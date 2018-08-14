@@ -35,13 +35,28 @@ export default class App extends Component {
     displayName = App.name
 
     render() {
+        const { user } = this.props;
         return (
             <MuiThemeProvider theme={theme}>
-                <Layout>
-                    <Route exact path="/" component={Home} navbarName="My reservations" />
-                    <Route exact path="/index.html" component={Home} navbarName="My reservations" />
-                    <Route exact path="/reserve" component={Reserve} navbarName="Reserve" />
-                    <Route path="/support" component={Support} navbarName="Support" />
+                <Layout user={user}>
+                        <Route
+                            exact
+                            path="/"
+                            navbarName="My reservations"
+                            render={props => <Home user={user} {...props} />}
+                        />
+                        <Route
+                            exact
+                            path="/reserve"
+                            navbarName="Reserve"
+                            render={props => <Reserve user={user} {...props} />}
+                        />
+                        <Route
+                            exact
+                            path="/support"
+                            navbarName="Support"
+                            component={Support}
+                        />
                 </Layout>
             </MuiThemeProvider>
         );

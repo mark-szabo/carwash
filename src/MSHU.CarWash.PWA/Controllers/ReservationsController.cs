@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -318,6 +319,67 @@ namespace MSHU.CarWash.PWA.Controllers
             return new NotAvailableDatesAndTimesViewModel { Dates = notAvailableDates, Times = notAvailableTimes };
         }
 
+        // GET: api/reservations/lastsettings
+        /// <summary>
+        /// Get some settings from the last reservation made by the user to be used as defaults for a new reservation
+        /// </summary>
+        /// <returns>an object containing the plate number and location last used</returns>
+        /// <response code="200">OK</response>
+        /// <response code="401">Unathorized</response>
+        /// <response code="404">NotFound if user has no reservation yet.</response>
+        [ProducesResponseType(typeof(LastSettingsViewModel), 200)]
+        [HttpGet, Route("lastsettings")]
+        public async Task<IActionResult> GetLastSettings()
+        {
+            var lastReservation = await _context.Reservation
+                .Where(r => r.UserId == _user.Id)
+                .OrderByDescending(r => r.CreatedOn)
+                .FirstAsync();
+
+            if (lastReservation == null) return NotFound();
+
+            return Ok(new LastSettingsViewModel
+            {
+                VehiclePlateNumber = lastReservation.VehiclePlateNumber,
+                Location = lastReservation.Location
+            });
+        }
+
+        // GET: api/reservations/reservationprecentage
+        /// <summary>
+        /// Gets a list of slots and their reservation precentage on a given date
+        /// </summary>
+        /// <param name="date">the date to filter on</param>
+        /// <returns>List of <see cref="ReservationPrecentageViewModel"/></returns>
+        [ProducesResponseType(typeof(List<ReservationPrecentageViewModel>), 200)]
+        [HttpGet, Route("reservationprecentage")]
+        public async Task<IActionResult> GetReservationPrecentage(DateTime date)
+        {
+            var slotReservationAggregate = await _context.Reservation
+                .Where(r => r.DateFrom.Date == date.Date)
+                .GroupBy(r => r.DateFrom)
+                .Select(g => new
+                {
+                    DateTime = g.Key,
+                    TimeSum = g.Sum(r => r.TimeRequirement)
+                })
+                .ToListAsync();
+
+            var slotReservationPrecentage = new List<ReservationPrecentageViewModel>();
+            foreach (var a in slotReservationAggregate)
+            {
+                var slotCapacity = Slots.Find(s => s.StartTime == a.DateTime.Hour)?.Capacity;
+                if (slotCapacity == null) continue;
+                slotReservationPrecentage.Add(new ReservationPrecentageViewModel
+                {
+                    StartTime = a.DateTime,
+                    Precentage = a.TimeSum == null || a.TimeSum == 0 ? 0 : (double)a.TimeSum / (double)(slotCapacity * TimeUnit)
+                });
+            }
+
+            return Ok(slotReservationPrecentage);
+        }
+
         /// <summary>
         /// Sums the capacity of all not started slots, what are left from the day
         /// </summary>
@@ -464,6 +526,18 @@ namespace MSHU.CarWash.PWA.Controllers
     {
         public IEnumerable<DateTime> Dates { get; set; }
         public IEnumerable<DateTime> Times { get; set; }
+    }
+
+    internal class LastSettingsViewModel
+    {
+        public string VehiclePlateNumber { get; set; }
+        public string Location { get; set; }
+    }
+
+    internal class ReservationPrecentageViewModel
+    {
+        public DateTime StartTime { get; set; }
+        public double Precentage { get; set; }
     }
 
     internal class Slot
