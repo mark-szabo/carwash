@@ -10,7 +10,6 @@ import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import Grow from '@material-ui/core/Grow';
 import LockIcon from '@material-ui/icons/Lock';
-import Tooltip from '@material-ui/core/Tooltip';
 import Chip from '@material-ui/core/Chip';
 import Divider from '@material-ui/core/Divider';
 
@@ -41,7 +40,7 @@ const styles = theme => ({
         borderTopRightRadius: '1.3em',
         borderTopLeftRadius: '1.3em',
         borderBottomLeftRadius: '1.3em',
-        backgroundColor: '#0084ff',
+        backgroundColor: theme.palette.primary.dark,
         color: '#fff',
         padding: '6px 12px',
         margin: '1px 0',
@@ -61,7 +60,7 @@ const styles = theme => ({
         borderTopRightRadius: '1.3em',
         borderTopLeftRadius: '1.3em',
         borderBottomRightRadius: '1.3em',
-        backgroundColor: '#f1f0f0',
+        backgroundColor: '#e0e0e0',
         padding: '6px 12px',
         margin: '1px 0',
     },
@@ -157,7 +156,7 @@ function getButtons(state) {
 }
 
 function getComment(comment, classes) {
-    if (comment == null) return (null);
+    if (!comment) return null;
     return (
         <div>
             <Divider className={classes.divider} />
@@ -170,7 +169,7 @@ function getComment(comment, classes) {
 }
 
 function getCarwashComment(comment, classes) {
-    if (comment == null) return (null);
+    if (!comment) return null;
     return (
         <div>
             <Typography component="h5" className={classes.carwashName}>
@@ -213,7 +212,7 @@ class ReservationCard extends Component {
                     />
                     <CardHeader
                         action={
-                            reservation.private ? <Tooltip title="Private"><LockIcon style={{ margin: '8px 16px 0 0' }} /></Tooltip> : null
+                            reservation.private ? <LockIcon alt="Private" style={{ margin: '8px 16px 0 0' }} /> : null
                         }
                         title={getStateName(reservation.state)}
                         subheader={getDate(reservation)}

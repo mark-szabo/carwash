@@ -1,4 +1,5 @@
 ﻿import React, { Component } from 'react';
+import { Redirect } from 'react-router';
 import { adalFetch } from '../Auth';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
@@ -104,6 +105,7 @@ class Reserve extends Component {
             notAvailableDates: [],
             notAvailableTimes: [],
             loading: true,
+            reservationCompleteRedirect: false,
             snackbarOpen: false,
             snackbarMessage: '',
             services: [
@@ -135,7 +137,40 @@ class Reserve extends Component {
             timeStepLabel: 'Choose time',
         };
     }
-    
+
+    componentDidMount() {
+        adalFetch('api/reservations/notavailabledates')
+            .then(response => response.json())
+            .then(data => {
+                for (let i in data.dates) {
+                    if (data.dates.hasOwnProperty(i)) {
+                        data.dates[i] = new Date(data.dates[i]);
+                    }
+                }
+                for (let i in data.times) {
+                    if (data.times.hasOwnProperty(i)) {
+                        data.times[i] = new Date(data.times[i]);
+                    }
+                }
+                this.setState({
+                    notAvailableDates: data.dates,
+                    notAvailableTimes: data.times,
+                    loading: false
+                });
+            });
+
+        adalFetch('api/reservations/lastsettings')
+            .then(response => response.json())
+            .then(data => {
+                const [garage, floor] = data.location.split('/');
+                this.setState({
+                    vehiclePlateNumber: data.vehiclePlateNumber,
+                    garage,
+                    floor,
+                });
+            });
+    }
+
     handleSnackbarClose = () => {
         this.setState({
             snackbarOpen: false,
@@ -180,7 +215,7 @@ class Reserve extends Component {
     };
 
     handleDateSelectionComplete = (date) => {
-        if (date == null) return;
+        if (!date) return;
         const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
         this.setState({
@@ -193,6 +228,20 @@ class Reserve extends Component {
             ],
             dateStepLabel: `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`,
         });
+        
+        adalFetch(`api/reservations/reservationprecentage?date=${date.toJSON()}`)
+            .then(response => response.json())
+            .then(data => {
+                this.setState({
+                    reservationPrecentage: data,
+                });
+            });
+    };
+
+    getSlotReservationPrecentage = (slot) => {
+        if (!this.state.reservationPrecentage[slot]) return null;
+        if (!this.state.reservationPrecentage[slot].precentage) return '(0%)';
+        return `(${this.state.reservationPrecentage[slot].precentage * 100}%)`;
     };
 
     handleTimeSelectionComplete = event => {
@@ -249,17 +298,21 @@ class Reserve extends Component {
     };
 
     handleReserve = () => {
-        this.setState(state => ({
-            validationErrors: {
-                vehiclePlateNumber: (state.vehiclePlateNumber === ''),
-                garage: (state.garage === ''),
-                floor: (state.floor === ''),
-                loading: true,
-            },
-        }));
+        const validationErrors = {
+            vehiclePlateNumber: this.state.vehiclePlateNumber === '',
+            garage: this.state.garage === '',
+            floor: this.state.floor === ''
+        };
 
-        const { vehiclePlateNumber, garage, floor } = this.state.validationErrors;
-        if (vehiclePlateNumber || garage || floor) return;
+        this.setState({
+            validationErrors: validationErrors
+        });
+
+        if (validationErrors.vehiclePlateNumber || validationErrors.garage || validationErrors.floor) return;
+
+        this.setState({
+            loading: true
+        });
 
         const payload = {
             vehiclePlateNumber: this.state.vehiclePlateNumber,
@@ -285,9 +338,9 @@ class Reserve extends Component {
                         this.setState({
                             snackbarOpen: true,
                             snackbarMessage: 'Reservation successfully saved.',
-                            loading: false
+                            loading: false,
+                            reservationCompleteRedirect: true
                         });
-                        window.location.replace('/');
                     } else {
                         this.setState({
                             snackbarOpen: true,
@@ -305,53 +358,11 @@ class Reserve extends Component {
                 });
     };
 
-    componentDidMount() {
-        adalFetch('api/reservations/notavailabledates')
-            .then(response => response.json())
-            .then(data => {
-                for (let i in data.dates) {
-                    if (data.dates.hasOwnProperty(i)) {
-                        data.dates[i] = new Date(data.dates[i]);
-                    }
-                }
-                for (let i in data.times) {
-                    if (data.times.hasOwnProperty(i)) {
-                        data.times[i] = new Date(data.times[i]);
-                    }
-                }
-                this.setState({
-                    notAvailableDates: data.dates,
-                    notAvailableTimes: data.times,
-                    loading: false
-                });
-            });
-
-        adalFetch('api/reservations/lastsettings')
-            .then(response => response.json())
-            .then(data => {
-                const [garage, floor] = data.location.split('/');
-                this.setState({
-                    vehiclePlateNumber: data.vehiclePlateNumber,
-                    garage,
-                    floor,
-                });
-            });
-
-        adalFetch('api/reservations/reservationprecentage')
-            .then(response => response.json())
-            .then(data => {
-                this.setState({
-                    reservationPrecentage: data,
-                });
-            });
-    }
-
     render() {
         const { classes, user } = this.props;
         const { activeStep, loading, validationErrors, notAvailableDates, disabledSlots, vehiclePlateNumber, comment, servicesStepLabel, dateStepLabel, timeStepLabel, garage, floor, seat } = this.state;
         console.log(user);
         const today = new Date();
-
         const garages = {
             M: [
                 '-1',
@@ -372,6 +383,10 @@ class Reserve extends Component {
             ]
         };
 
+        if (this.state.reservationCompleteRedirect) {
+            return <Redirect to="/" />;
+        }
+
         return (
             <React.Fragment>
                 <Snackbar
@@ -391,25 +406,25 @@ class Reserve extends Component {
                     <Step>
                         <StepLabel>{servicesStepLabel}</StepLabel>
                         <StepContent>
-                            {this.state.services.map(service =>
+                            {this.state.services.map(service => (
                                 <span key={service.id}>
-                                    {service.id === 0 && (<Typography variant="body2">Basic</Typography>)}
-                                    {service.id === 3 && (<Typography variant="body2">Extras</Typography>)}
-                                    {service.id === 6 && (<Typography variant="body2">AC</Typography>)}
+                                    {service.id === 0 && <Typography variant="body2">Basic</Typography>}
+                                    {service.id === 3 && <Typography variant="body2">Extras</Typography>}
+                                    {service.id === 6 && <Typography variant="body2">AC</Typography>}
                                     <Chip
                                         key={service.id}
                                         label={service.name}
                                         onClick={this.handleServiceChipClick(service)}
                                         className={service.selected ? classes.selectedChip : classes.chip}
                                     />
-                                    {service.id === 2 && (<br />)}
-                                    {service.id === 5 && (<br />)}
+                                    {service.id === 2 && <br />}
+                                    {service.id === 5 && <br />}
                                 </span>
-                            )}
+                            ))}
                             <div className={classes.actionsContainer}>
                                 <div>
                                     <Button
-                                        disabled={true}
+                                        disabled
                                         className={classes.button}
                                     >Back</Button>
                                     <Button
@@ -453,7 +468,7 @@ class Reserve extends Component {
                                         className={classes.button}
                                     >Back</Button>
                                     <Button
-                                        disabled={true}
+                                        disabled
                                         variant="contained"
                                         color="primary"
                                         className={classes.button}
@@ -472,9 +487,9 @@ class Reserve extends Component {
                                     className={classes.radioGroup}
                                     onChange={this.handleTimeSelectionComplete}
                                 >
-                                    <FormControlLabel value="8" control={<Radio />} label="8:00 AM - 11:00 AM" disabled={disabledSlots[0]} />
-                                    <FormControlLabel value="11" control={<Radio />} label="11:00 AM - 2:00 PM" disabled={disabledSlots[1]} />
-                                    <FormControlLabel value="14" control={<Radio />} label="2:00 PM - 5:00 PM" disabled={disabledSlots[2]} />
+                                    <FormControlLabel value="8" control={<Radio />} label={`8:00 AM - 11:00 AM ${this.getSlotReservationPrecentage(0)}`} disabled={disabledSlots[0]} />
+                                    <FormControlLabel value="11" control={<Radio />} label={`11:00 AM - 2:00 PM ${this.getSlotReservationPrecentage(1)}`} disabled={disabledSlots[1]} />
+                                    <FormControlLabel value="14" control={<Radio />} label={`2:00 PM - 5:00 PM ${this.getSlotReservationPrecentage(2)}`} disabled={disabledSlots[2]} />
                                 </RadioGroup>
                             </FormControl>
                             <div className={classes.actionsContainer}>
@@ -484,7 +499,7 @@ class Reserve extends Component {
                                         className={classes.button}
                                     >Back</Button>
                                     <Button
-                                        disabled={true}
+                                        disabled
                                         variant="contained"
                                         color="primary"
                                         className={classes.button}
@@ -496,107 +511,111 @@ class Reserve extends Component {
                     <Step>
                         <StepLabel>Reserve</StepLabel>
                         <StepContent>
-                            <div>
-                                <FormGroup className={classes.checkbox}>
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                onChange={this.handlePrivateChange}
-                                                value="private"
-                                            />
-                                        }
-                                        label="Private"
-                                    />
-                                </FormGroup>
-                            </div>
-                            <div>
-                                <TextField
-                                    required
-                                    error={validationErrors.vehiclePlateNumber}
-                                    id="vehiclePlateNumber"
-                                    label="Plate number"
-                                    value={vehiclePlateNumber}
-                                    className={classes.textField}
-                                    margin="normal"
-                                    onChange={this.handlePlateNumberChange}
-                                />
-                            </div>
-                            <FormControl
-                                className={classes.formControl}
-                                error={validationErrors.garage}
-                            >
-                                <InputLabel htmlFor="garage">Garage</InputLabel>
-                                <Select
-                                    required
-                                    value={garage}
-                                    onChange={this.handleGarageChange}
-                                    inputProps={{
-                                        name: 'garage',
-                                        id: 'garage',
-                                    }}
-                                >
-                                    <MenuItem value="M">M</MenuItem>
-                                    <MenuItem value="G">G</MenuItem>
-                                    <MenuItem value="S1">S1</MenuItem>
-                                </Select>
-                            </FormControl>
-                            {garage !== '' && (
-                                <FormControl
-                                    className={classes.formControl}
-                                    error={validationErrors.floor}
-                                >
-                                    <InputLabel htmlFor="floor">Floor</InputLabel>
-                                    <Select
-                                        required
-                                        value={floor}
-                                        onChange={this.handleFloorChange}
-                                        inputProps={{
-                                            name: 'floor',
-                                            id: 'floor',
-                                        }}
-                                    >
-                                        {garages[garage].map((item) => (
-                                            <MenuItem value={item} key={item}>{item}</MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            )}
-                            {floor !== '' && (
-                                <TextField
-                                    id="seat"
-                                    label="Seat (optional)"
-                                    value={seat}
-                                    className={classes.textField}
-                                    margin="normal"
-                                    onChange={this.handleSeatChange}
-                                />
-                            )}
-                            <div>
-                                <TextField
-                                    id="comment"
-                                    label="Comment"
-                                    multiline
-                                    rowsMax="4"
-                                    value={comment}
-                                    onChange={this.handleCommentChange}
-                                    className={classes.textField}
-                                    margin="normal"
-                                />
-                            </div>
-                            <div className={classes.actionsContainer}>
+                            {loading ? <CircularProgress className={classes.progress} size={50} /> :
                                 <div>
-                                    <Button
-                                        onClick={this.handleBack}
-                                        className={classes.button}
-                                    >Back</Button>
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        onClick={this.handleReserve}
-                                        className={classes.button}
-                                    >Reserve</Button>
+                                    <div>
+                                        <FormGroup className={classes.checkbox}>
+                                            <FormControlLabel
+                                                control={
+                                                    <Checkbox
+                                                        onChange={this.handlePrivateChange}
+                                                        value="private"
+                                                    />
+                                                }
+                                                label="Private"
+                                            />
+                                        </FormGroup>
+                                    </div>
+                                    <div>
+                                        <TextField
+                                            required
+                                            error={validationErrors.vehiclePlateNumber}
+                                            id="vehiclePlateNumber"
+                                            label="Plate number"
+                                            value={vehiclePlateNumber}
+                                            className={classes.textField}
+                                            margin="normal"
+                                            onChange={this.handlePlateNumberChange}
+                                        />
+                                    </div>
+                                    <FormControl
+                                        className={classes.formControl}
+                                        error={validationErrors.garage}
+                                    >
+                                        <InputLabel htmlFor="garage">Garage</InputLabel>
+                                        <Select
+                                            required
+                                            value={garage}
+                                            onChange={this.handleGarageChange}
+                                            inputProps={{
+                                                name: 'garage',
+                                                id: 'garage',
+                                            }}
+                                        >
+                                            <MenuItem value="M">M</MenuItem>
+                                            <MenuItem value="G">G</MenuItem>
+                                            <MenuItem value="S1">S1</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                    {garage !== '' && (
+                                        <FormControl
+                                            className={classes.formControl}
+                                            error={validationErrors.floor}
+                                        >
+                                            <InputLabel htmlFor="floor">Floor</InputLabel>
+                                            <Select
+                                                required
+                                                value={floor}
+                                                onChange={this.handleFloorChange}
+                                                inputProps={{
+                                                    name: 'floor',
+                                                    id: 'floor',
+                                                }}
+                                            >
+                                                {garages[garage].map((item) => (
+                                                    <MenuItem value={item} key={item}>{item}</MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    )}
+                                    {floor !== '' && (
+                                        <TextField
+                                            id="seat"
+                                            label="Seat (optional)"
+                                            value={seat}
+                                            className={classes.textField}
+                                            margin="normal"
+                                            onChange={this.handleSeatChange}
+                                        />
+                                    )}
+                                    <div>
+                                        <TextField
+                                            id="comment"
+                                            label="Comment"
+                                            multiline
+                                            rowsMax="4"
+                                            value={comment}
+                                            onChange={this.handleCommentChange}
+                                            className={classes.textField}
+                                            margin="normal"
+                                        />
+                                    </div>
+                                    <div className={classes.actionsContainer}>
+                                        <div>
+                                            <Button
+                                                onClick={this.handleBack}
+                                                className={classes.button}
+                                            >Back</Button>
+                                            <Button
+                                                variant="contained"
+                                                color="primary"
+                                                onClick={this.handleReserve}
+                                                className={classes.button}
+                                            >Reserve</Button>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            }
                         </StepContent>
                     </Step>
                 </Stepper>

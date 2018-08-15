@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MSHU.CarWash.ClassLibrary;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace MSHU.CarWash.PWA.Controllers
 {
@@ -105,16 +104,75 @@ namespace MSHU.CarWash.PWA.Controllers
         }
 
         // PUT: api/reservations/{id}
+        /// <summary>
+        /// Update an existing reservation
+        /// </summary>
+        /// <param name="id">Reservation id</param>
+        /// <param name="reservation"><see cref="Reservation"/></param>
+        /// <returns>No content</returns>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if no service choosen / DateFrom and DateTo isn't on the same day / a Date is in the past / DateFrom and DateTo are not valid slot start/end times / user/company limit has been met / there is no more time in that slot.</response>
+        /// <response code="401">Unathorized</response>
+        /// <response code="403">Forbidden if user is not admin but tries to update another user's reservation.</response>
+        [ProducesResponseType(typeof(NoContentResult), 200)]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutReservation([FromRoute] string id, [FromBody] Reservation reservation)
         {
-            throw new NotImplementedException();
-
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             if (id != reservation.Id) return BadRequest();
 
-            _context.Entry(reservation).State = EntityState.Modified;
+            var dbReservation = await _context.Reservation.FindAsync(id);
+
+            if (dbReservation == null) return NotFound();
+
+            if (dbReservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin)) return Forbid();
+            if (reservation.UserId == null) reservation.UserId = _user.Id;
+            if (reservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin)) return Forbid();
+
+            dbReservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper();
+            dbReservation.Location = reservation.Location;
+            dbReservation.Services = reservation.Services;
+            dbReservation.Private = reservation.Private ?? false;
+            dbReservation.DateFrom = reservation.DateFrom.ToLocalTime();
+            dbReservation.Comment = reservation.Comment;
+
+            if (!Slots.Any(s => s.StartTime == reservation.DateFrom.Hour))
+                return BadRequest("Reservation can be made to slots only.");
+            if (reservation.DateTo == null)
+                dbReservation.DateTo = new DateTime(
+                    reservation.DateFrom.Year,
+                    reservation.DateFrom.Month,
+                    reservation.DateFrom.Day,
+                    Slots.Find(s => s.StartTime == reservation.DateFrom.Hour).EndTime,
+                    0, 0);
+            else dbReservation.DateTo = ((DateTime)reservation.DateTo).ToLocalTime();
+
+            // Validation
+            if (dbReservation.Services == null) return BadRequest("No service choosen.");
+            if (dbReservation.DateFrom.Date != ((DateTime)dbReservation.DateTo).Date)
+                return BadRequest("Reservation date range should be located entirely on the same day.");
+            if (dbReservation.DateFrom < DateTime.Now || dbReservation.DateTo < DateTime.Now)
+                return BadRequest("Cannot reserve in the past.");
+            if (!Slots.Any(s => s.StartTime == dbReservation.DateFrom.Hour && s.EndTime == ((DateTime)dbReservation.DateTo).Hour))
+                return BadRequest("Reservation can be made to slots only.");
+
+            // Time requirement calculation
+            dbReservation.TimeRequirement = dbReservation.Services.Contains(ServiceType.Carpet) ? 2 * TimeUnit : TimeUnit;
+
+            #region Business logic
+            // Checks whether user has met the active concurrent reservation limit
+            if (await IsUserConcurrentReservationLimitMetAsync())
+                return BadRequest($"Cannot have more than {UserConcurrentReservationLimit} concurrent active reservations.");
+
+            // Check if there is enough time on that day
+            if (!await IsEnoughTimeOnDateAsync(dbReservation.DateFrom, (int)dbReservation.TimeRequirement))
+                return BadRequest("Company limit has been met for this day or there is not enough time at all.");
+
+            // Check if there is enough time in that slot
+            if (!await IsEnoughTimeInSlotAsync(dbReservation.DateFrom, (int)dbReservation.TimeRequirement))
+                return BadRequest("There is not enough time in that slot.");
+            #endregion
 
             try
             {
@@ -142,17 +200,14 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <param name="reservation"><see cref="Reservation"/></param>
         /// <returns>The newly created <see cref="Reservation"/></returns>
         /// <response code="201">Created</response>
-        /// <response code="400">BadRequest if no service choosen / DateFrom and DateTo isn't on the same day / a Date is in the past.</response>
+        /// <response code="400">BadRequest if no service choosen / DateFrom and DateTo isn't on the same day / a Date is in the past / DateFrom and DateTo are not valid slot start/end times / user/company limit has been met / there is no more time in that slot.</response>
         /// <response code="401">Unathorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to reserve for another user.</response>
         [ProducesResponseType(typeof(ReservationViewModel), 200)]
         [HttpPost]
         public async Task<IActionResult> PostReservation([FromBody] Reservation reservation)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             // Defaults
             if (reservation.UserId == null) reservation.UserId = _user.Id;
@@ -174,6 +229,7 @@ namespace MSHU.CarWash.PWA.Controllers
                     reservation.DateFrom.Day,
                     Slots.Find(s => s.StartTime == reservation.DateFrom.Hour).EndTime,
                     0, 0);
+            else reservation.DateTo = ((DateTime)reservation.DateTo).ToLocalTime();
 
             // Validation
             if (reservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin)) return Forbid();
@@ -384,7 +440,7 @@ namespace MSHU.CarWash.PWA.Controllers
                 slotReservationPrecentage.Add(new ReservationPrecentageViewModel
                 {
                     StartTime = a.DateTime,
-                    Precentage = a.TimeSum == null || a.TimeSum == 0 ? 0 : (double)a.TimeSum / (double)(slotCapacity * TimeUnit)
+                    Precentage = a.TimeSum == null || a.TimeSum == 0 ? 0 : Math.Round((double)a.TimeSum / (double)(slotCapacity * TimeUnit), 2)
                 });
             }
 
@@ -494,7 +550,7 @@ namespace MSHU.CarWash.PWA.Controllers
             Private = reservation.Private;
             Mpv = reservation.Mpv;
             DateFrom = reservation.DateFrom;
-            if (reservation.DateTo != null) DateTo = (DateTime) reservation.DateTo;
+            if (reservation.DateTo != null) DateTo = (DateTime)reservation.DateTo;
             Comment = reservation.Comment;
             CarwashComment = reservation.CarwashComment;
         }

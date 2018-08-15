@@ -206,8 +206,8 @@ namespace MSHU.CarWash.PWA
 
             app.Use(async (context, next) =>
             {
-                context.Response.Headers.Add("X-Frame-Options", new[] { "DENY" });
-                //context.Response.Headers.Add("Strict-Transport-Security", new[] { "max-age=31536000; includeSubDomains; preload" });
+                context.Response.Headers.Add("X-Frame-Options", new[] { "SAMEORIGIN" });
+                //context.Response.Headers.Add("Strict-Transport-Security", new[] { "max-age=31536000; includeSubDomains" });
                 context.Response.Headers.Add("Expect-CT", new[] { "expect-ct: max-age=604800, report-uri=https://markszabo.report-uri.com/r/d/ct/enforce" });
                 context.Response.Headers.Add("X-XSS-Protection", new[] { "1; mode=block; report=https://markszabo.report-uri.com/r/d/xss/enforce" });
                 context.Response.Headers.Add("X-Content-Type-Options", new[] { "nosniff" });

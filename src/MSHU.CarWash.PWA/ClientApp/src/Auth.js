@@ -40,7 +40,7 @@ export function runWithAdal(app) {
             if (!authContext.getCachedToken(authContext.config.clientId) || !authContext.getCachedUser()) {
                 if (authContext.getCachedUser()) {
                     const user = authContext.getCachedUser();
-                    adalConfig.extraQueryParameter = `login_hint=${user.profile.upn}`;
+                    adalConfig.extraQueryParameter = `login_hint=${encodeURIComponent(user.profile.upn)}`;
                     authContext = new AuthenticationContext(adalConfig);
                 }
                 authContext.login();
