@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { adalFetch } from '../Auth';
+import apiFetch from '../Auth';
 import ReservationCard from './ReservationCard';
 import Grid from '@material-ui/core/Grid';
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -37,14 +37,24 @@ class Home extends Component {
 
     constructor(props) {
         super(props);
-        this.state = { reservations: [], loading: true };
+        this.state = {
+            snackbarOpen: false,
+            snackbarMessage: '',
+            loading: true,
+            reservations: []
+        };
     }
 
     componentDidMount() {
-        adalFetch('api/reservations')
-            .then(response => response.json())
-            .then(data => {
+        apiFetch('api/reservations')
+            .then((data) => {
                 this.setState({ reservations: data, loading: false });
+            }, (error) => {
+                //this.setState({
+                //    snackbarOpen: true,
+                //    snackbarMessage: error,
+                //    loading: false
+                //});
             });
     }
 

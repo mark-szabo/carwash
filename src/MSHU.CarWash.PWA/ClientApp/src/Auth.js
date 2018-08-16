@@ -61,6 +61,9 @@ export function signOut() {
     authContext.logOut();
 }
 
+/**
+ * @deprecated Use apiFetch()
+ */
 export function adalFetch(url, options) {
     return adalGetToken(authContext, adalConfig.endpoints.api).then((token) => {
         const o = options || {};
@@ -68,6 +71,76 @@ export function adalFetch(url, options) {
         o.headers.Authorization = `Bearer ${token}`;
         return fetch(url, o);
     });
+}
+
+/**
+ * Parses the JSON returned by a network request
+ * @param {object} response A response from a network request
+ * @return {object} The parsed JSON, status from the response
+ */
+function parseJson(response) {
+    return new window.Promise((resolve, reject) => response.json()
+        .then((json) => resolve({
+            status: response.status,
+            ok: response.ok,
+            json,
+        }))
+        .catch((error) => {
+            return reject(error.message);
+        }));
+}
+
+/**
+ * Requests a URL, returning a promise
+ * @param {string} url The URL we want to request
+ * @param {object} options The options we want to pass to "fetch"
+ * @return {Promise} The request promise
+ */
+export default function apiFetch(url, options) {
+    return adalGetToken(authContext, adalConfig.endpoints.api)
+        .then((token) => {
+            const o = options || {};
+            if (!o.headers) o.headers = {};
+            o.headers.Authorization = `Bearer ${token}`;
+
+            return new window.Promise((resolve, reject) => {
+                window.fetch(url, o)
+                    .then(parseJson)
+                    .then((response) => {
+                        if (response.ok) {
+                            return resolve(response.json);
+                        }
+                        // extract the error from the server's json
+                        switch (response.status) {
+                            case 400:
+                                console.error(`BAD REQUEST: ${response.json}`);
+                                return reject(`An error has occured: ${response.json}`);
+                            case 401:
+                                console.error(`UNAUTHORIZED: ${response.json}`);
+                                return reject(`You are not authorized. Please refresh the page!`);
+                            case 403:
+                                console.error(`UNAUTHORIZED: ${response.json}`);
+                                return reject(`You don't have permission!`);
+                            case 404:
+                                console.error(`NOT FOUND: ${response.json}`);
+                                return reject(`Not found.`);
+                            case 500:
+                                console.error(`SERVER ERROR: ${response.json}`);
+                                return reject(`A server error has occured.`);
+                            default:
+                                console.error(`UNKNOWN ERROR: ${response.json}`);
+                                return reject(`An error has occured. ${response.json}`);
+                        }
+                    }, (error) => {
+                        console.error(`JSON PARSING ERROR: ${error}`);
+                        return reject(`A server error has occured.`);
+                    })
+                    .catch((error) => {
+                        console.error(`NETWORK ERROR: ${error.message}`);
+                        return reject(`Network error. Are you offline?`);
+                    });
+            });
+        });
 }
 
 const withAdalLogin = (authContext, resourceId) => {

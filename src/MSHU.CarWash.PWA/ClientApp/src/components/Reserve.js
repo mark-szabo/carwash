@@ -1,6 +1,6 @@
 ﻿import React, { Component } from 'react';
 import { Redirect } from 'react-router';
-import { adalFetch } from '../Auth';
+import apiFetch from '../Auth';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Stepper from '@material-ui/core/Stepper';
@@ -167,9 +167,8 @@ class Reserve extends Component {
             this.setState({
                 loadingReservation: true
             });
-            adalFetch(`api/reservations/${this.props.match.params.id}`)
-                .then(response => response.json())
-                .then(data => {
+            apiFetch(`api/reservations/${this.props.match.params.id}`)
+                .then((data) => {
                     let services = this.state.services;
                     data.services.forEach(s => {
                         services[s].selected = true;
@@ -190,6 +189,12 @@ class Reserve extends Component {
                         timeStepLabel: timeFormat.format(date),
                         loadingReservation: false,
                     });
+                }, (error) => {
+                    this.setState({
+                        snackbarOpen: true,
+                        snackbarMessage: error,
+                        loading: false
+                    });
                 });
         }
 
@@ -198,9 +203,8 @@ class Reserve extends Component {
                 loading: false
             });
         }
-        else adalFetch('api/reservations/notavailabledates')
-            .then(response => response.json())
-            .then(data => {
+        else apiFetch('api/reservations/notavailabledates')
+            .then((data) => {
                 for (let i in data.dates) {
                     if (data.dates.hasOwnProperty(i)) {
                         data.dates[i] = new Date(data.dates[i]);
@@ -216,25 +220,41 @@ class Reserve extends Component {
                     notAvailableTimes: data.times,
                     loading: false
                 });
+            }, (error) => {
+                this.setState({
+                    snackbarOpen: true,
+                    snackbarMessage: error,
+                    loading: false
+                });
             });
 
-        adalFetch('api/reservations/lastsettings')
-            .then(response => response.json())
-            .then(data => {
+        apiFetch('api/reservations/lastsettings')
+            .then((data) => {
                 const [garage, floor] = data.location.split('/');
                 this.setState({
                     vehiclePlateNumber: data.vehiclePlateNumber,
                     garage,
                     floor,
                 });
+            }, (error) => {
+                this.setState({
+                    snackbarOpen: true,
+                    snackbarMessage: error,
+                    loading: false
+                });
             });
 
         if (this.props.user.isAdmin || this.props.user.isCarwashAdmin) {
-            adalFetch('api/users')
-                .then(response => response.json())
-                .then(data => {
+            apiFetch('api/users')
+                .then((data) => {
                     this.setState({
                         users: data
+                    });
+                }, (error) => {
+                    this.setState({
+                        snackbarOpen: true,
+                        snackbarMessage: error,
+                        loading: false
                     });
                 });
         }
@@ -297,11 +317,16 @@ class Reserve extends Component {
             dateStepLabel: dateFormat.format(date),
         });
 
-        adalFetch(`api/reservations/reservationprecentage?date=${date.toJSON()}`)
-            .then(response => response.json())
-            .then(data => {
+        apiFetch(`api/reservations/reservationprecentage?date=${date.toJSON()}`)
+            .then((data) => {
                 this.setState({
                     reservationPrecentage: data,
+                });
+            }, (error) => {
+                this.setState({
+                    snackbarOpen: true,
+                    snackbarMessage: error,
+                    loading: false
                 });
             });
     };
@@ -406,39 +431,26 @@ class Reserve extends Component {
             apiMethod = 'PUT';
         }
 
-        adalFetch(apiUrl,
-            {
-                method: apiMethod,
-                body: JSON.stringify(payload),
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-            })
-            .then(
-                (response) => {
-                    if (response.status === 201 || response.status === 204) {
-                        this.setState({
-                            snackbarOpen: true,
-                            snackbarMessage: 'Reservation successfully saved.',
-                            loading: false,
-                            reservationCompleteRedirect: true
-                        });
-                    } else {
-                        this.setState({
-                            snackbarOpen: true,
-                            snackbarMessage: 'An error has occured.',
-                            loading: false
-                        });
-                        console.log(response.json());
-                    }
-                },
-                (error) => {
-                    this.setState({
-                        snackbarOpen: true,
-                        snackbarMessage: `An error has occured: ${error.message}`,
-                        loading: false
-                    });
-                });
+        apiFetch(apiUrl, {
+            method: apiMethod,
+            body: JSON.stringify(payload),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        }).then(() => {
+            this.setState({
+                snackbarOpen: true,
+                snackbarMessage: 'Reservation successfully saved.',
+                loading: false,
+                reservationCompleteRedirect: true
+            });
+        }, (error) => {
+            this.setState({
+                snackbarOpen: true,
+                snackbarMessage: error,
+                loading: false
+            });
+        });
     };
 
     render() {
@@ -626,10 +638,10 @@ class Reserve extends Component {
                                                     name: 'user',
                                                     id: 'user',
                                                 }}
-                                        >
-                                            {users.map(u => (
-                                                <MenuItem value={u.id} key={u.id}>{u.firstName} {u.lastName}</MenuItem>
-                                            ))}
+                                            >
+                                                {users.map(u => (
+                                                    <MenuItem value={u.id} key={u.id}>{u.firstName} {u.lastName}</MenuItem>
+                                                ))}
                                             </Select>
                                         </FormControl>
                                     }

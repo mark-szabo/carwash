@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Route } from 'react-router';
-import { adalFetch } from './Auth';
+import apiFetch from './Auth';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Layout from './components/Layout';
 import Home from './components/Home';
@@ -40,9 +40,8 @@ export default class App extends Component {
     };
 
     componentDidMount() {
-        adalFetch('api/users/me')
-            .then(response => response.json())
-            .then(data => {
+        apiFetch('api/users/me')
+            .then((data) => {
                 this.setState({ user: data });
             });
     }
