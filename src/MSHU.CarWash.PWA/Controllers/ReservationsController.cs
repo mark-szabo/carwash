@@ -137,14 +137,14 @@ namespace MSHU.CarWash.PWA.Controllers
             dbReservation.DateFrom = reservation.DateFrom.ToLocalTime();
             dbReservation.Comment = reservation.Comment;
 
-            if (!Slots.Any(s => s.StartTime == reservation.DateFrom.Hour))
+            if (!Slots.Any(s => s.StartTime == dbReservation.DateFrom.Hour))
                 return BadRequest("Reservation can be made to slots only.");
             if (reservation.DateTo == null)
                 dbReservation.DateTo = new DateTime(
-                    reservation.DateFrom.Year,
-                    reservation.DateFrom.Month,
-                    reservation.DateFrom.Day,
-                    Slots.Find(s => s.StartTime == reservation.DateFrom.Hour).EndTime,
+                    dbReservation.DateFrom.Year,
+                    dbReservation.DateFrom.Month,
+                    dbReservation.DateFrom.Day,
+                    Slots.Find(s => s.StartTime == dbReservation.DateFrom.Hour).EndTime,
                     0, 0);
             else dbReservation.DateTo = ((DateTime)reservation.DateTo).ToLocalTime();
 

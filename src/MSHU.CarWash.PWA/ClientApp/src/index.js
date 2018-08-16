@@ -9,11 +9,11 @@ import { runWithAdal } from './Auth';
 const baseUrl = document.getElementsByTagName('base')[0].getAttribute('href');
 const rootElement = document.getElementById('root');
 
-runWithAdal((user) => {
+runWithAdal(() => {
 
     ReactDOM.render(
         <BrowserRouter basename={baseUrl}>
-            <App user={user}/>
+            <App />
         </BrowserRouter>,
         rootElement);
 

@@ -43,7 +43,7 @@ namespace MSHU.CarWash.PWA.Controllers
         public IActionResult GetUsers()
         {
             if (!_user.IsAdmin) return Forbid();
-            return Ok(_context.Users.Where(u => u.Company == _user.Company).Select(u => new UserViewModel(u)));
+            return Ok(_context.Users.Where(u => u.Company == _user.Company && u.FirstName != "[deleted user]").Select(u => new UserViewModel(u)));
         }
 
         // GET: api/users/{id}

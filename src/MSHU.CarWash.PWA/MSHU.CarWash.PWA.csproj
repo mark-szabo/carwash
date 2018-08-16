@@ -19,6 +19,7 @@
     <Description>This app is intended to help employees working in Graphisoft park (Budapest, Hungary) reserve car washing services.</Description>
     <ApplicationInsightsResourceId>/subscriptions/a984fd43-e460-42c7-957c-a023cf7f8241/resourcegroups/carwash/providers/microsoft.insights/components/mshucarwash-dev</ApplicationInsightsResourceId>
     <ApplicationInsightsAnnotationResourceId>/subscriptions/a984fd43-e460-42c7-957c-a023cf7f8241/resourcegroups/carwash/providers/microsoft.insights/components/mshucarwash-dev</ApplicationInsightsAnnotationResourceId>
+    <UserSecretsId>648c0d03-e4b5-4097-8360-49e5a0ced1ab</UserSecretsId>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

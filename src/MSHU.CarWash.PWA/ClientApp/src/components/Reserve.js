@@ -74,7 +74,12 @@ const styles = theme => ({
     textField: {
         marginLeft: theme.spacing.unit,
         marginRight: theme.spacing.unit,
-        width: 200,
+        [theme.breakpoints.down('sm')]: {
+            width: '100%',
+        },
+        [theme.breakpoints.up('md')]: {
+            width: 200,
+        },
     },
     checkbox: {
         marginLeft: theme.spacing.unit,
@@ -82,12 +87,28 @@ const styles = theme => ({
     },
     formControl: {
         margin: theme.spacing.unit,
-        minWidth: 200,
+        [theme.breakpoints.down('sm')]: {
+            width: '100%',
+        },
+        [theme.breakpoints.up('md')]: {
+            width: 200,
+        },
     },
     progress: {
         margin: theme.spacing.unit * 2,
     },
 });
+const timeFormat = new Intl.DateTimeFormat('en-US',
+    {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+const dateFormat = new Intl.DateTimeFormat('en-US',
+    {
+        year: 'numeric',
+        month: 'long',
+        day: '2-digit'
+    });
 
 function addDays(date, days) {
     var newDate = new Date(date);
@@ -105,6 +126,7 @@ class Reserve extends Component {
             notAvailableDates: [],
             notAvailableTimes: [],
             loading: true,
+            loadingReservation: false,
             reservationCompleteRedirect: false,
             snackbarOpen: false,
             snackbarMessage: '',
@@ -132,6 +154,8 @@ class Reserve extends Component {
             comment: '',
             disabledSlots: [],
             reservationPrecentage: [],
+            users: [],
+            userId: this.props.user.id,
             servicesStepLabel: 'Select services',
             dateStepLabel: 'Choose date',
             timeStepLabel: 'Choose time',
@@ -139,7 +163,42 @@ class Reserve extends Component {
     }
 
     componentDidMount() {
-        adalFetch('api/reservations/notavailabledates')
+        if (this.props.match.params.id) {
+            this.setState({
+                loadingReservation: true
+            });
+            adalFetch(`api/reservations/${this.props.match.params.id}`)
+                .then(response => response.json())
+                .then(data => {
+                    let services = this.state.services;
+                    data.services.forEach(s => {
+                        services[s].selected = true;
+                    });
+                    const [garage, floor, seat] = data.location.split('/');
+                    const date = new Date(data.dateFrom);
+                    this.setState({
+                        services,
+                        selectedDate: date,
+                        vehiclePlateNumber: data.vehiclePlateNumber,
+                        garage,
+                        floor,
+                        seat,
+                        private: data.private,
+                        comment: data.comment,
+                        servicesStepLabel: services.filter(s => { return s.selected }).map(s => { return s.name }).join(', '),
+                        dateStepLabel: dateFormat.format(date),
+                        timeStepLabel: timeFormat.format(date),
+                        loadingReservation: false,
+                    });
+                });
+        }
+
+        if (this.props.user.isCarwashAdmin) {
+            this.setState({
+                loading: false
+            });
+        }
+        else adalFetch('api/reservations/notavailabledates')
             .then(response => response.json())
             .then(data => {
                 for (let i in data.dates) {
@@ -169,6 +228,16 @@ class Reserve extends Component {
                     floor,
                 });
             });
+
+        if (this.props.user.isAdmin || this.props.user.isCarwashAdmin) {
+            adalFetch('api/users')
+                .then(response => response.json())
+                .then(data => {
+                    this.setState({
+                        users: data
+                    });
+                });
+        }
     }
 
     handleSnackbarClose = () => {
@@ -216,7 +285,6 @@ class Reserve extends Component {
 
     handleDateSelectionComplete = (date) => {
         if (!date) return;
-        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
         this.setState({
             activeStep: 2,
@@ -226,9 +294,9 @@ class Reserve extends Component {
                 this.isTimeNotAvailable(date, 11),
                 this.isTimeNotAvailable(date, 14)
             ],
-            dateStepLabel: `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`,
+            dateStepLabel: dateFormat.format(date),
         });
-        
+
         adalFetch(`api/reservations/reservationprecentage?date=${date.toJSON()}`)
             .then(response => response.json())
             .then(data => {
@@ -239,8 +307,8 @@ class Reserve extends Component {
     };
 
     getSlotReservationPrecentage = (slot) => {
-        if (!this.state.reservationPrecentage[slot]) return null;
-        if (!this.state.reservationPrecentage[slot].precentage) return '(0%)';
+        if (!this.state.reservationPrecentage) return '';
+        if (!this.state.reservationPrecentage[slot]) return '(0%)';
         return `(${this.state.reservationPrecentage[slot].precentage * 100}%)`;
     };
 
@@ -251,7 +319,7 @@ class Reserve extends Component {
         this.setState({
             activeStep: 3,
             selectedDate: dateTime,
-            timeStepLabel: `${dateTime.getHours()}:00`,
+            timeStepLabel: timeFormat.format(dateTime),
         });
     };
 
@@ -297,6 +365,12 @@ class Reserve extends Component {
         });
     };
 
+    handleUserChange = (event) => {
+        this.setState({
+            userId: event.target.value,
+        });
+    };
+
     handleReserve = () => {
         const validationErrors = {
             vehiclePlateNumber: this.state.vehiclePlateNumber === '',
@@ -315,6 +389,8 @@ class Reserve extends Component {
         });
 
         const payload = {
+            id: this.props.match.params.id,
+            userId: this.state.userId,
             vehiclePlateNumber: this.state.vehiclePlateNumber,
             location: `${this.state.garage}/${this.state.floor}/${this.state.seat}`,
             services: this.state.services.filter(s => { return s.selected; }).map(s => { return s.id; }),
@@ -323,18 +399,24 @@ class Reserve extends Component {
             comment: this.state.comment
         };
 
-        adalFetch('api/reservations',
+        let apiUrl = 'api/reservations';
+        let apiMethod = 'POST';
+        if (payload.id) {
+            apiUrl = `api/reservations/${payload.id}`;
+            apiMethod = 'PUT';
+        }
+
+        adalFetch(apiUrl,
             {
-                method: 'POST',
+                method: apiMethod,
                 body: JSON.stringify(payload),
                 headers: {
                     'Content-Type': 'application/json'
                 },
-
             })
             .then(
                 (response) => {
-                    if (response.status === 201) {
+                    if (response.status === 201 || response.status === 204) {
                         this.setState({
                             snackbarOpen: true,
                             snackbarMessage: 'Reservation successfully saved.',
@@ -347,6 +429,7 @@ class Reserve extends Component {
                             snackbarMessage: 'An error has occured.',
                             loading: false
                         });
+                        console.log(response.json());
                     }
                 },
                 (error) => {
@@ -360,8 +443,7 @@ class Reserve extends Component {
 
     render() {
         const { classes, user } = this.props;
-        const { activeStep, loading, validationErrors, notAvailableDates, disabledSlots, vehiclePlateNumber, comment, servicesStepLabel, dateStepLabel, timeStepLabel, garage, floor, seat } = this.state;
-        console.log(user);
+        const { activeStep, loading, loadingReservation, validationErrors, notAvailableDates, disabledSlots, users, userId, vehiclePlateNumber, comment, servicesStepLabel, dateStepLabel, timeStepLabel, garage, floor, seat } = this.state;
         const today = new Date();
         const garages = {
             M: [
@@ -406,36 +488,40 @@ class Reserve extends Component {
                     <Step>
                         <StepLabel>{servicesStepLabel}</StepLabel>
                         <StepContent>
-                            {this.state.services.map(service => (
-                                <span key={service.id}>
-                                    {service.id === 0 && <Typography variant="body2">Basic</Typography>}
-                                    {service.id === 3 && <Typography variant="body2">Extras</Typography>}
-                                    {service.id === 6 && <Typography variant="body2">AC</Typography>}
-                                    <Chip
-                                        key={service.id}
-                                        label={service.name}
-                                        onClick={this.handleServiceChipClick(service)}
-                                        className={service.selected ? classes.selectedChip : classes.chip}
-                                    />
-                                    {service.id === 2 && <br />}
-                                    {service.id === 5 && <br />}
-                                </span>
-                            ))}
-                            <div className={classes.actionsContainer}>
-                                <div>
-                                    <Button
-                                        disabled
-                                        className={classes.button}
-                                    >Back</Button>
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        onClick={this.handleServiceSelectionComplete}
-                                        className={classes.button}
-                                        disabled={this.state.services.filter(service => service.selected === true).length <= 0}
-                                    >Next</Button>
-                                </div>
-                            </div>
+                            {loadingReservation ? <CircularProgress className={classes.progress} size={50} /> :
+                                <React.Fragment>
+                                    {this.state.services.map(service => (
+                                        <span key={service.id}>
+                                            {service.id === 0 && <Typography variant="body2">Basic</Typography>}
+                                            {service.id === 3 && <Typography variant="body2">Extras</Typography>}
+                                            {service.id === 6 && <Typography variant="body2">AC</Typography>}
+                                            <Chip
+                                                key={service.id}
+                                                label={service.name}
+                                                onClick={this.handleServiceChipClick(service)}
+                                                className={service.selected ? classes.selectedChip : classes.chip}
+                                            />
+                                            {service.id === 2 && <br />}
+                                            {service.id === 5 && <br />}
+                                        </span>
+                                    ))}
+                                    <div className={classes.actionsContainer}>
+                                        <div>
+                                            <Button
+                                                disabled
+                                                className={classes.button}
+                                            >Back</Button>
+                                            <Button
+                                                variant="contained"
+                                                color="primary"
+                                                onClick={this.handleServiceSelectionComplete}
+                                                className={classes.button}
+                                                disabled={this.state.services.filter(service => service.selected === true).length <= 0}
+                                            >Next</Button>
+                                        </div>
+                                    </div>
+                                </React.Fragment>
+                            }
                         </StepContent>
                     </Step>
                     <Step>
@@ -518,6 +604,7 @@ class Reserve extends Component {
                                             <FormControlLabel
                                                 control={
                                                     <Checkbox
+                                                        checked={this.state.private}
                                                         onChange={this.handlePrivateChange}
                                                         value="private"
                                                     />
@@ -526,6 +613,26 @@ class Reserve extends Component {
                                             />
                                         </FormGroup>
                                     </div>
+                                    {(user.isAdmin || user.isCarwashAdmin) &&
+                                        <FormControl
+                                            className={classes.formControl}
+                                        >
+                                            <InputLabel htmlFor="user">User</InputLabel>
+                                            <Select
+                                                required
+                                                value={userId}
+                                                onChange={this.handleUserChange}
+                                                inputProps={{
+                                                    name: 'user',
+                                                    id: 'user',
+                                                }}
+                                        >
+                                            {users.map(u => (
+                                                <MenuItem value={u.id} key={u.id}>{u.firstName} {u.lastName}</MenuItem>
+                                            ))}
+                                            </Select>
+                                        </FormControl>
+                                    }
                                     <div>
                                         <TextField
                                             required

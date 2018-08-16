@@ -52,6 +52,7 @@ const styles = theme => ({
     },
     appTitle: {
         padding: '20px 24px',
+        color: 'initial',
     }
 });
 
@@ -78,7 +79,7 @@ class Layout extends React.Component {
     }
 
     render() {
-        const { classes, theme } = this.props;
+        const { classes, theme, user } = this.props;
 
         const drawer = (
             <div>
@@ -90,7 +91,7 @@ class Layout extends React.Component {
                     </Link>
                 </div>
                 <Divider />
-                <List>{drawerItems}</List>
+                <List>{drawerItems(user)}</List>
                 <Divider />
                 <List>{otherDrawerItems}</List>
             </div>
@@ -153,6 +154,7 @@ Layout.propTypes = {
     classes: PropTypes.object.isRequired,
     theme: PropTypes.object.isRequired,
     location: PropTypes.object,
+    user: PropTypes.object,
 };
 
 export default withStyles(styles, { withTheme: true })(Layout);

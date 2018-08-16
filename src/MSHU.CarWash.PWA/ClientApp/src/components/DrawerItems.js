@@ -13,32 +13,38 @@ import HelpIcon from '@material-ui/icons/Help';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import { signOut } from '../Auth';
 
-export const drawerItems = (
-    <div>
-        <Button component={Link} to="/reserve" variant="extendedFab" color="primary" aria-label="Reserve" style={{ margin: '8px 16px 16px 24px', padding: '0 24px 0 16px' }}>
-            <AddIcon style={{ marginRight: '16px' }}/>
-            Reserve
+export function drawerItems(user) {
+    return (
+        <div>
+            <Button component={Link} to="/reserve" variant="extendedFab" color="primary" aria-label="Reserve" style={{ margin: '8px 16px 16px 24px', padding: '0 24px 0 16px' }}>
+                <AddIcon style={{ marginRight: '16px' }} />
+                Reserve
         </Button>
-        <ListItem button component={Link} to="/">
-            <ListItemIcon>
-                <ListIcon />
-            </ListItemIcon>
-            <ListItemText primary="My reservations" />
-        </ListItem>
-        <ListItem button component={Link} to="/carwashadmin">
-            <ListItemIcon>
-                <LocalCarWashIcon />
-            </ListItemIcon>
-            <ListItemText primary="CarWash admin" />
-        </ListItem>
-        <ListItem button component={Link} to="/admin">
-            <ListItemIcon>
-                <BuildIcon />
-            </ListItemIcon>
-            <ListItemText primary="Admin" />
-        </ListItem>
-    </div>
-);
+            <ListItem button component={Link} to="/">
+                <ListItemIcon>
+                    <ListIcon />
+                </ListItemIcon>
+                <ListItemText primary="My reservations" />
+            </ListItem>
+            {user.isCarwashAdmin &&
+                <ListItem button component={Link} to="/carwashadmin">
+                    <ListItemIcon>
+                        <LocalCarWashIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="CarWash admin" />
+                </ListItem>
+            }
+            {user.isAdmin &&
+                <ListItem button component={Link} to="/admin">
+                    <ListItemIcon>
+                        <BuildIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Admin" />
+                </ListItem>
+            }
+        </div>
+    );
+}
 
 export const otherDrawerItems = (
     <div>

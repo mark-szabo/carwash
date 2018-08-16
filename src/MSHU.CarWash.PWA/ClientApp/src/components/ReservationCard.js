@@ -1,5 +1,6 @@
 ﻿import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { Link } from 'react-router-dom'
 import { withStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
@@ -12,10 +13,11 @@ import Grow from '@material-ui/core/Grow';
 import LockIcon from '@material-ui/icons/Lock';
 import Chip from '@material-ui/core/Chip';
 import Divider from '@material-ui/core/Divider';
+import red from '@material-ui/core/colors/red';
 
 const styles = theme => ({
     chip: {
-        margin: '0 8px 0 0',
+        margin: '8px 8px 0 0',
     },
     divider: {
         margin: '24px 0',
@@ -71,7 +73,13 @@ const styles = theme => ({
         height: 0,
         lineHeight: 0,
         visibility: 'hidden',
-    }
+    },
+    dangerButton: {
+        color: red[300],
+        '&:hover': {
+            backgroundColor: 'rgba(229,115,115,0.08)',
+        },
+    },
 });
 
 function getStateName(state) {
@@ -128,13 +136,22 @@ function getServiceName(service) {
     }
 }
 
-function getButtons(state) {
-    switch (state) {
+function getButtons(reservation, classes) {
+    switch (reservation.state) {
         case 0:
             return (
                 <CardActions>
-                    <Button size="small" color="primary">Edit</Button>
-                    <Button size="small" color="secondary">Cancel</Button>
+                    <Button
+                        component={Link}
+                        to={`/reserve/${reservation.id}`}
+                        size="small"
+                        color="primary"
+                    >Edit</Button>
+                    <Button
+                        size="small"
+                        color="secondary"
+                        className={classes.dangerButton}
+                    >Cancel</Button>
                 </CardActions>
             );
         case 1:
@@ -227,14 +244,14 @@ class ReservationCard extends Component {
                         {getComment(reservation.comment, classes)}
                         {getCarwashComment(reservation.carwashComment, classes)}
                         <Divider className={classes.divider} />
-                        <Typography variant="subheading" gutterBottom>
+                        <Typography variant="subheading">
                             Selected services
                         </Typography>
                         {reservation.services.map(service =>
                             <Chip label={getServiceName(service)} className={classes.chip} key={service} />
                         )}
                     </CardContent>
-                    {getButtons(reservation.state)}
+                    {getButtons(reservation, classes)}
                 </Card>
             </Grow>
         );

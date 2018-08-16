@@ -4,7 +4,6 @@ body {
 }
 
 a, a:active, a:focus, a:hover, a:visited {
-    color: inherit;
     text-decoration: none;
 }
 
@@ -12,6 +11,9 @@ a, a:active, a:focus, a:hover, a:visited {
     text-decoration: underline;
 }
 
+iframe {
+    border: 0;
+}
 
 .primary {
     background-color: #80d8ff;

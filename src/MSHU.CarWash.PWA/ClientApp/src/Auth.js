@@ -48,7 +48,7 @@ export function runWithAdal(app) {
                 const user = authContext.getCachedUser();
                 //console.log(user);
                 if (authorizedTenantIds.filter(id => id === user.profile.tid).length > 0) {
-                    app(user);
+                    app();
                 } else {
                     console.log(`Tenant ${user.profile.tid} is not athorized to use this application!`);
                 }
