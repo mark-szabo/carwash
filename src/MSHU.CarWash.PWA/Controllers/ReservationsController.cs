@@ -166,11 +166,11 @@ namespace MSHU.CarWash.PWA.Controllers
                 return BadRequest($"Cannot have more than {UserConcurrentReservationLimit} concurrent active reservations.");
 
             // Check if there is enough time on that day
-            if (!await IsEnoughTimeOnDateAsync(dbReservation.DateFrom, (int)dbReservation.TimeRequirement))
+            if (!IsEnoughTimeOnDate(dbReservation.DateFrom, (int)dbReservation.TimeRequirement))
                 return BadRequest("Company limit has been met for this day or there is not enough time at all.");
 
             // Check if there is enough time in that slot
-            if (!await IsEnoughTimeInSlotAsync(dbReservation.DateFrom, (int)dbReservation.TimeRequirement))
+            if (!IsEnoughTimeInSlot(dbReservation.DateFrom, (int)dbReservation.TimeRequirement))
                 return BadRequest("There is not enough time in that slot.");
             #endregion
 
@@ -250,11 +250,11 @@ namespace MSHU.CarWash.PWA.Controllers
                 return BadRequest($"Cannot have more than {UserConcurrentReservationLimit} concurrent active reservations.");
 
             // Check if there is enough time on that day
-            if (!await IsEnoughTimeOnDateAsync(reservation.DateFrom, (int)reservation.TimeRequirement))
+            if (!IsEnoughTimeOnDate(reservation.DateFrom, (int)reservation.TimeRequirement))
                 return BadRequest("Company limit has been met for this day or there is not enough time at all.");
 
             // Check if there is enough time in that slot
-            if (!await IsEnoughTimeInSlotAsync(reservation.DateFrom, (int)reservation.TimeRequirement))
+            if (!IsEnoughTimeInSlot(reservation.DateFrom, (int)reservation.TimeRequirement))
                 return BadRequest("There is not enough time in that slot.");
             #endregion
 
@@ -489,16 +489,18 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <param name="date">Date of reservation</param>
         /// <param name="timeRequirement">time requirement of the reservation in minutes</param>
         /// <returns>true if there is enough time left or user is carwash admin</returns>
-        private async Task<bool> IsEnoughTimeOnDateAsync(DateTime date, int timeRequirement)
+        private bool IsEnoughTimeOnDate(DateTime date, int timeRequirement)
         {
             if (_user.IsCarwashAdmin) return true;
 
             var userCompanyLimit = CompanyLimit.Find(c => c.Name == _user.Company).DailyLimit;
-            var reservedTimeOnDate = await _context.Reservation
-                .Where(r => r.DateFrom.Date == date.Date)
-                .Include(r => r.User)
-                .Where(r => r.User.Company == _user.Company)
-                .SumAsync(r => r.TimeRequirement);
+
+            // Cannot use SumAsync because of this EF issue:
+            // https://github.com/aspnet/EntityFrameworkCore/issues/12314
+            // Current milestone to be fixed is EF 2.1.3
+            var reservedTimeOnDate = _context.Reservation
+                .Where(r => r.DateFrom.Date == date.Date && r.User.Company == _user.Company)
+                .Sum(r => r.TimeRequirement);
 
             if (reservedTimeOnDate + timeRequirement > userCompanyLimit * TimeUnit) return false;
 
@@ -522,13 +524,16 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <param name="dateTime">Date and time of reservation</param>
         /// <param name="timeRequirement">time requirement of the reservation in minutes</param>
         /// <returns>true if there is enough time left or user is carwash admin</returns>
-        private async Task<bool> IsEnoughTimeInSlotAsync(DateTime dateTime, int timeRequirement)
+        private bool IsEnoughTimeInSlot(DateTime dateTime, int timeRequirement)
         {
             if (_user.IsCarwashAdmin) return true;
 
-            var reservedTimeInSlot = await _context.Reservation
+            // Cannot use SumAsync because of this EF issue:
+            // https://github.com/aspnet/EntityFrameworkCore/issues/12314
+            // Current milestone to be fixed is EF 2.1.3
+            var reservedTimeInSlot = _context.Reservation
                 .Where(r => r.DateFrom == dateTime)
-                .SumAsync(r => r.TimeRequirement);
+                .Sum(r => r.TimeRequirement);
 
             return reservedTimeInSlot + timeRequirement <=
                    Slots.Find(s => s.StartTime == dateTime.Hour)?.Capacity * TimeUnit;

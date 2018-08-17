@@ -730,7 +730,7 @@ class Reserve extends Component {
                                                 color="primary"
                                                 onClick={this.handleReserve}
                                                 className={classes.button}
-                                            >Reserve</Button>
+                                            >{!this.props.match.params.id ? 'Reserve' : 'Update'}</Button>
                                         </div>
                                     </div>
                                 </div>

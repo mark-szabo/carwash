@@ -46,6 +46,7 @@ const styles = theme => ({
         color: '#fff',
         padding: '6px 12px',
         margin: '1px 0',
+        maxWidth: '85%',
     },
     carwashName: {
         color: 'rgba(0, 0, 0, .40)',
@@ -65,6 +66,9 @@ const styles = theme => ({
         backgroundColor: '#e0e0e0',
         padding: '6px 12px',
         margin: '1px 0',
+        clear: 'left',
+        float: 'left',
+        maxWidth: '85%',
     },
     after: {
         clear: 'both',
@@ -195,6 +199,7 @@ function getCarwashComment(comment, classes) {
             <Typography component="p" className={classes.carwashComment}>
                 {comment}
             </Typography>
+            <div className={classes.after}>.</div>
         </div>
     );
 }
