@@ -1,5 +1,6 @@
 ﻿import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import apiFetch from '../Auth';
 import { Link } from 'react-router-dom'
 import { withStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
@@ -13,6 +14,9 @@ import Grow from '@material-ui/core/Grow';
 import LockIcon from '@material-ui/icons/Lock';
 import Chip from '@material-ui/core/Chip';
 import Divider from '@material-ui/core/Divider';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogTitle from '@material-ui/core/DialogTitle';
 import red from '@material-ui/core/colors/red';
 
 const styles = theme => ({
@@ -140,7 +144,7 @@ function getServiceName(service) {
     }
 }
 
-function getButtons(reservation, classes) {
+function getButtons(reservation, classes, handleCancelDialogOpen) {
     switch (reservation.state) {
         case 0:
             return (
@@ -155,6 +159,7 @@ function getButtons(reservation, classes) {
                         size="small"
                         color="secondary"
                         className={classes.dangerButton}
+                        onClick={handleCancelDialogOpen}
                     >Cancel</Button>
                 </CardActions>
             );
@@ -223,42 +228,90 @@ function getDate(reservation) {
 }
 
 class ReservationCard extends Component {
+    state = {
+        cancelDialogOpen: false,
+    };
+
+    handleCancelDialogOpen = () => {
+        this.setState({ cancelDialogOpen: true });
+    };
+
+    handleCancelDialogClose = () => {
+        this.setState({ cancelDialogOpen: false });
+    };
+
+    handleCancelConfirmed = () => {
+        this.setState({ cancelDialogOpen: false });
+        
+        apiFetch(`api/reservations/${this.props.reservation.id}`, {
+            method: 'DELETE',
+        }).then(() => {
+            //this.setState({
+            //    snackbarOpen: true,
+            //    snackbarMessage: 'Reservation successfully canceled.'
+            //});
+        }, (error) => {
+            //this.setState({
+            //    snackbarOpen: true,
+            //    snackbarMessage: error
+            //});
+        });
+    };
+
     render() {
         const { classes, reservation } = this.props;
         return (
-            <Grow in={true}>
-                <Card className={classes.card}>
-                    <CardMedia
-                        className={classes.media}
-                        image={`/images/state${reservation.state}.png`}
-                    />
-                    <CardHeader
-                        action={
-                            reservation.private ? <LockIcon alt="Private" style={{ margin: '8px 16px 0 0' }} /> : null
-                        }
-                        title={getStateName(reservation.state)}
-                        subheader={getDate(reservation)}
-                    />
-                    <CardContent>
-                        <Typography variant="caption" gutterBottom>
-                            Vehicle plate number
+            <React.Fragment>
+                <Grow in={true}>
+                    <Card className={classes.card}>
+                        <CardMedia
+                            className={classes.media}
+                            image={`/images/state${reservation.state}.png`}
+                        />
+                        <CardHeader
+                            action={
+                                reservation.private ? <LockIcon alt="Private" style={{ margin: '8px 16px 0 0' }} /> : null
+                            }
+                            title={getStateName(reservation.state)}
+                            subheader={getDate(reservation)}
+                        />
+                        <CardContent>
+                            <Typography variant="caption" gutterBottom>
+                                Vehicle plate number
                         </Typography>
-                        <Typography variant="body1" gutterBottom>
-                            {reservation.vehiclePlateNumber}
+                            <Typography variant="body1" gutterBottom>
+                                {reservation.vehiclePlateNumber}
+                            </Typography>
+                            {getComment(reservation.comment, classes)}
+                            {getCarwashComment(reservation.carwashComment, classes)}
+                            <Divider className={classes.divider} />
+                            <Typography variant="subheading">
+                                Selected services
                         </Typography>
-                        {getComment(reservation.comment, classes)}
-                        {getCarwashComment(reservation.carwashComment, classes)}
-                        <Divider className={classes.divider} />
-                        <Typography variant="subheading">
-                            Selected services
-                        </Typography>
-                        {reservation.services.map(service =>
-                            <Chip label={getServiceName(service)} className={classes.chip} key={service} />
-                        )}
-                    </CardContent>
-                    {getButtons(reservation, classes)}
-                </Card>
-            </Grow>
+                            {reservation.services.map(service =>
+                                <Chip label={getServiceName(service)} className={classes.chip} key={service} />
+                            )}
+                        </CardContent>
+                        {getButtons(reservation, classes, this.handleCancelDialogOpen)}
+                    </Card>
+                </Grow>
+                <Dialog
+                    open={this.state.cancelDialogOpen}
+                    onClose={this.handleCancelDialogClose}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-title"
+                >
+                    <DialogTitle id="alert-dialog-title">Cancel this reservation?</DialogTitle>
+                    <DialogActions>
+                        <Button onClick={this.handleCancelDialogClose} color="primary">
+                            Don't cancel
+                        </Button>
+                        <Button onClick={this.handleCancelConfirmed} color="primary" className={classes.dangerButton} autoFocus>
+                            Cancel
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            </React.Fragment>
         );
     }
 }
