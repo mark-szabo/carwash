@@ -1,4 +1,4 @@
-// In production, we register a service worker to serve assets from local cache.
+﻿// In production, we register a service worker to serve assets from local cache.
 
 // This lets the app load faster on subsequent visits in production, and gives
 // it offline capabilities. However, it also means that developers (and users)
@@ -19,6 +19,11 @@
 //);
 
 export default function register() {
+    if (!('serviceWorker' in navigator)) {
+        console.log(`Boo! This browser doesn't support Service Workers 😬`);
+        return;
+    }
+
     if (navigator.serviceWorker.controller) {
         console.log('Active service worker found, no need to register.');
     } else {

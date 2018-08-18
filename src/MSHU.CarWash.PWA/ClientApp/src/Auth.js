@@ -105,6 +105,14 @@ export default function apiFetch(url, options) {
 
             return new window.Promise((resolve, reject) => {
                 window.fetch(url, o)
+                    .catch((error) => {
+                        if (!navigator.onLine) {
+                            console.error(`NETWORK ERROR: Disconnected from network.`);
+                            return reject(`You are offline.`);
+                        }
+                        console.error(`NETWORK ERROR: ${error.message}`);
+                        return reject(`Network error. Are you offline?`);
+                    })
                     .then(parseJson)
                     .then((response) => {
                         if (response.ok) {

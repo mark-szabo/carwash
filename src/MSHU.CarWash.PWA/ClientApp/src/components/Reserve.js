@@ -23,6 +23,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import Snackbar from '@material-ui/core/Snackbar';
 import InfiniteCalendar from 'react-infinite-calendar';
+import CloudOffIcon from '@material-ui/icons/CloudOff';
 import 'react-infinite-calendar/styles.css';
 import './Reserve.css';
 
@@ -97,6 +98,21 @@ const styles = theme => ({
     progress: {
         margin: theme.spacing.unit * 2,
     },
+    center: {
+        display: 'grid',
+        placeItems: 'center',
+        textAlign: 'center',
+        height: '80%',
+    },
+    errorIcon: {
+        margin: theme.spacing.unit,
+        color: '#BDBDBD',
+        width: '100px',
+        height: '100px',
+    },
+    errorText: {
+        color: '#9E9E9E',
+    }
 });
 const timeFormat = new Intl.DateTimeFormat('en-US',
     {
@@ -154,6 +170,7 @@ class Reserve extends Component {
             comment: '',
             disabledSlots: [],
             reservationPrecentage: [],
+            reservationPrecentageDataArrived: false,
             users: [],
             userId: this.props.user.id,
             servicesStepLabel: 'Select services',
@@ -275,6 +292,7 @@ class Reserve extends Component {
     handleBack = () => {
         this.setState(state => ({
             activeStep: state.activeStep - 1,
+            reservationPrecentageDataArrived: false,
         }));
     };
 
@@ -321,6 +339,7 @@ class Reserve extends Component {
             .then((data) => {
                 this.setState({
                     reservationPrecentage: data,
+                    reservationPrecentageDataArrived: true,
                 });
             }, (error) => {
                 this.setState({
@@ -332,7 +351,7 @@ class Reserve extends Component {
     };
 
     getSlotReservationPrecentage = (slot) => {
-        if (!this.state.reservationPrecentage) return '';
+        if (!this.state.reservationPrecentageDataArrived) return '';
         if (!this.state.reservationPrecentage[slot]) return '(0%)';
         return `(${this.state.reservationPrecentage[slot].precentage * 100}%)`;
     };
@@ -479,6 +498,18 @@ class Reserve extends Component {
 
         if (this.state.reservationCompleteRedirect) {
             return <Redirect to="/" />;
+        }
+
+        if (!navigator.onLine) {
+            return (
+                <div className={classes.center}>
+                    <div>
+                        <CloudOffIcon className={classes.errorIcon} />
+                        <Typography variant="title" gutterBottom className={classes.errorText}>Connect to the Internet</Typography>
+                        <Typography className={classes.errorText}>You must be connected to make a new reservation.</Typography>
+                    </div>
+                </div>
+            );
         }
 
         return (

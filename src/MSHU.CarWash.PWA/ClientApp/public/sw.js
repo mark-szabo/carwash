@@ -1,73 +1,78 @@
-﻿// This is the service worker with the Cache-first network
+﻿importScripts('https://storage.googleapis.com/workbox-cdn/releases/3.4.1/workbox-sw.js');
 
-var CACHE = 'carwash-precache';
-var precacheFiles = [
-    /* Add an array of files to precache for your app */
-    '/',
-    'index.css',
-    'bundle.js',
-    'images/favicon-32x32.png',
-    'images/favicon-16x16.png'
-];
-
-// Install stage sets up the cache-array to configure pre-cache content
-self.addEventListener('install', function (evt) {
-    console.log('The service worker is being installed.');
-    evt.waitUntil(precache().then(function () {
-        console.log('Skip waiting on install');
-        return self.skipWaiting();
-    }));
-});
-
-
-// Allow sw to control of current page
-self.addEventListener('activate', function (event) {
-    console.log('Claiming clients for current page');
-    return self.clients.claim();
-});
-
-self.addEventListener('fetch', function (event) {
-    console.log('The service worker is serving the asset: ' + event.request.url);
-
-    // Handle only GET requests
-    if (event.request.method !== 'GET') {
-        return;
-    }
-
-    // This prevents some weird issue with Chrome DevTools and 'only-if-cached'
-    // Fixes issue #385, also ref to:
-    // - https://github.com/paulirish/caltrainschedule.io/issues/49
-    // - https://bugs.chromium.org/p/chromium/issues/detail?id=823392
-    if (event.request.cache === 'only-if-cached' && event.request.mode !== 'same-origin') {
-        return;
-    }
-
-    // We pull files from the cache first thing so we can show them fast
-    event.respondWith(
-        caches.open(CACHE).then(function (cache) {
-            return cache.match(event.request).then(function (matching) {
-                return matching || fetch(event.request).catch(() => {
-                     console.log('No internet connection found. App is running in offline mode.');
-                }); // This is the fallback if it is not in the cache to go to the server and get it
-            });
-        })
-    );
-    
-    // This is where we call the server to get the newest version of the file to use the next time we show view
-    event.waitUntil(update(event.request));
-});
-
-
-function precache() {
-    return caches.open(CACHE).then(function (cache) {
-        return cache.addAll(precacheFiles);
-    });
+if (workbox) {
+    console.log(`Yay! Workbox is loaded 🎉`);
+} else {
+    console.log(`Boo! Workbox didn't load 😬`);
 }
 
-function update(request) {
-    return caches.open(CACHE).then(function (cache) {
-        return fetch(request).then(function (response) {
-            return cache.put(request, response);
-        });
-    });
-}
+workbox.precaching.precacheAndRoute([
+    { url: '/', revision: '1' },
+    { url: 'manifest.json', revision: '1' },
+    { url: 'images/favicon-32x32.png', revision: '1' },
+    { url: 'images/favicon-16x16.png', revision: '1' },
+    { url: 'images/state0.png', revision: '1' },
+    { url: 'images/state1.png', revision: '1' },
+    { url: 'images/state2.png', revision: '1' },
+    { url: 'images/state3.png', revision: '1' },
+    { url: 'images/state4.png', revision: '1' },
+    { url: 'images/state5.png', revision: '1' }
+]);
+
+const bgSyncPlugin = new workbox.backgroundSync.Plugin('bgSyncQueue');
+
+// [NETWORK FIRST] Cache reservation list from 'GET /api/reservations' 
+workbox.routing.registerRoute(
+    ({ url }) => url.pathname === '/api/reservations',
+    workbox.strategies.networkFirst({
+        plugins: [bgSyncPlugin],
+    }),
+);
+
+// [CACHE FIRST] Cache current user from 'GET /api/users/me'
+workbox.routing.registerRoute(
+    ({ url }) => url.pathname === '/api/users/me',
+    workbox.strategies.cacheFirst(),
+);
+
+
+// [CACHE FIRST] Cache Google Fonts
+workbox.routing.registerRoute(
+    new RegExp('https://fonts.(?:googleapis|gstatic).com/(.*)'),
+    workbox.strategies.cacheFirst({
+        cacheName: 'fonts-cache',
+        plugins: [
+            new workbox.expiration.Plugin({
+                maxEntries: 30,
+            }),
+            new workbox.cacheableResponse.Plugin({
+                statuses: [0, 200]
+            }),
+        ],
+    }),
+);
+
+// [STALE WHILE REVALIDATE] Cache CSS and JS files
+workbox.routing.registerRoute(
+    /\.(?:js|css)$/,
+    workbox.strategies.staleWhileRevalidate({
+        cacheName: 'static-cache',
+    }),
+);
+
+// [CACHE FIRST] Cache image files
+workbox.routing.registerRoute(
+    /.*\.(?:png|jpg|jpeg|svg|gif)/,
+    workbox.strategies.cacheFirst({
+        cacheName: 'image-cache',
+        plugins: [
+            new workbox.expiration.Plugin({
+                maxEntries: 60,
+                maxAgeSeconds: 30 * 24 * 60 * 60, //30 Days
+            }),
+        ],
+    }),
+);
+
+workbox.skipWaiting();
+workbox.clientsClaim();

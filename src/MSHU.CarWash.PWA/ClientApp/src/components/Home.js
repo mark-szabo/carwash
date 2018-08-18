@@ -61,7 +61,7 @@ class Home extends Component {
     render() {
         const { classes } = this.props;
         if (this.state.loading) {
-            return (<CircularProgress className={classes.progress} size={50} />);
+            return (<div className={classes.progress}><CircularProgress size={50} /></div>);
         } else {
             return (
                 <Grid
