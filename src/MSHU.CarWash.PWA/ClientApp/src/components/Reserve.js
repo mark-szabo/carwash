@@ -21,9 +21,9 @@ import TextField from '@material-ui/core/TextField';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
-import Snackbar from '@material-ui/core/Snackbar';
 import InfiniteCalendar from 'react-infinite-calendar';
 import CloudOffIcon from '@material-ui/icons/CloudOff';
+import ErrorOutlineIcon from '@material-ui/icons/ErrorOutline';
 import 'react-infinite-calendar/styles.css';
 import './Reserve.css';
 
@@ -144,8 +144,6 @@ class Reserve extends Component {
             loading: true,
             loadingReservation: false,
             reservationCompleteRedirect: false,
-            snackbarOpen: false,
-            snackbarMessage: '',
             services: [
                 { id: 0, name: 'exterior', selected: false },
                 { id: 1, name: 'interior', selected: false },
@@ -207,11 +205,8 @@ class Reserve extends Component {
                         loadingReservation: false,
                     });
                 }, (error) => {
-                    this.setState({
-                        snackbarOpen: true,
-                        snackbarMessage: error,
-                        loading: false
-                    });
+                    this.setState({ loading: false });
+                    this.props.openSnackbar(error);
                 });
         }
 
@@ -238,11 +233,8 @@ class Reserve extends Component {
                     loading: false
                 });
             }, (error) => {
-                this.setState({
-                    snackbarOpen: true,
-                    snackbarMessage: error,
-                    loading: false
-                });
+                this.setState({ loading: false });
+                this.props.openSnackbar(error);
             });
 
         apiFetch('api/reservations/lastsettings')
@@ -254,11 +246,8 @@ class Reserve extends Component {
                     floor,
                 });
             }, (error) => {
-                this.setState({
-                    snackbarOpen: true,
-                    snackbarMessage: error,
-                    loading: false
-                });
+                this.setState({ loading: false });
+                this.props.openSnackbar(error);
             });
 
         if (this.props.user.isAdmin || this.props.user.isCarwashAdmin) {
@@ -268,20 +257,11 @@ class Reserve extends Component {
                         users: data
                     });
                 }, (error) => {
-                    this.setState({
-                        snackbarOpen: true,
-                        snackbarMessage: error,
-                        loading: false
-                    });
+                    this.setState({ loading: false });
+                    this.props.openSnackbar(error);
                 });
         }
     }
-
-    handleSnackbarClose = () => {
-        this.setState({
-            snackbarOpen: false,
-        });
-    };
 
     handleNext = () => {
         this.setState(state => ({
@@ -342,11 +322,8 @@ class Reserve extends Component {
                     reservationPrecentageDataArrived: true,
                 });
             }, (error) => {
-                this.setState({
-                    snackbarOpen: true,
-                    snackbarMessage: error,
-                    loading: false
-                });
+                this.setState({ loading: false });
+                this.props.openSnackbar(error);
             });
     };
 
@@ -458,22 +435,19 @@ class Reserve extends Component {
             },
         }).then(() => {
             this.setState({
-                snackbarOpen: true,
-                snackbarMessage: 'Reservation successfully saved.',
                 loading: false,
                 reservationCompleteRedirect: true
             });
+            this.props.openSnackbar('Reservation successfully saved.');
+            // TODO if POST add new reservation to reservations
         }, (error) => {
-            this.setState({
-                snackbarOpen: true,
-                snackbarMessage: error,
-                loading: false
-            });
+            this.setState({ loading: false });
+            this.props.openSnackbar(error);
         });
     };
 
     render() {
-        const { classes, user } = this.props;
+        const { classes, user, reservations } = this.props;
         const { activeStep, loading, loadingReservation, validationErrors, notAvailableDates, disabledSlots, users, userId, vehiclePlateNumber, comment, servicesStepLabel, dateStepLabel, timeStepLabel, garage, floor, seat } = this.state;
         const today = new Date();
         const garages = {
@@ -512,21 +486,20 @@ class Reserve extends Component {
             );
         }
 
+        if (reservations.filter(r => { return r.state !== 5 }).length >= 2) {
+            return (
+                <div className={classes.center}>
+                    <div>
+                        <ErrorOutlineIcon className={classes.errorIcon} />
+                        <Typography variant="title" gutterBottom className={classes.errorText}>Limit reached</Typography>
+                        <Typography className={classes.errorText}>You cannot have more than two concurrent active reservations.</Typography>
+                    </div>
+                </div>
+            );
+        }
+
         return (
             <React.Fragment>
-                <Snackbar
-                    anchorOrigin={{
-                        vertical: 'bottom',
-                        horizontal: 'left',
-                    }}
-                    open={this.state.snackbarOpen}
-                    autoHideDuration={6000}
-                    onClose={this.handleSnackbarClose}
-                    ContentProps={{
-                        'aria-describedby': 'message-id',
-                    }}
-                    message={<span id="message-id">{this.state.snackbarMessage}</span>}
-                />
                 <Stepper activeStep={activeStep} orientation="vertical" className={classes.stepper}>
                     <Step>
                         <StepLabel>{servicesStepLabel}</StepLabel>
@@ -777,6 +750,8 @@ class Reserve extends Component {
 Reserve.propTypes = {
     classes: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
+    reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
+    openSnackbar: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(Reserve);

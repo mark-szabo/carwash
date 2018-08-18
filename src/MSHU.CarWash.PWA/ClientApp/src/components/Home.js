@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import apiFetch from '../Auth';
 import ReservationCard from './ReservationCard';
 import Grid from '@material-ui/core/Grid';
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -34,33 +33,11 @@ const styles = theme => ({
 
 class Home extends Component {
     displayName = Home.name
-
-    constructor(props) {
-        super(props);
-        this.state = {
-            snackbarOpen: false,
-            snackbarMessage: '',
-            loading: true,
-            reservations: []
-        };
-    }
-
-    componentDidMount() {
-        apiFetch('api/reservations')
-            .then((data) => {
-                this.setState({ reservations: data, loading: false });
-            }, (error) => {
-                //this.setState({
-                //    snackbarOpen: true,
-                //    snackbarMessage: error,
-                //    loading: false
-                //});
-            });
-    }
-
+    
     render() {
-        const { classes } = this.props;
-        if (this.state.loading) {
+        const { classes, reservations, reservationsLoading, openSnackbar } = this.props;
+
+        if (reservationsLoading) {
             return (<div className={classes.progress}><CircularProgress size={50} /></div>);
         } else {
             return (
@@ -72,9 +49,13 @@ class Home extends Component {
                     spacing={16}
                     className={classes.grid}
                 >
-                    {this.state.reservations.map(reservation =>
+                    {reservations.map(reservation =>
                         <Grid item key={reservation.id} className={classes.card} >
-                            <ReservationCard reservation={reservation} />
+                            <ReservationCard
+                                reservation={reservation}
+                                reservations={reservations}
+                                openSnackbar={openSnackbar}
+                            />
                         </Grid>
                     )}
                 </Grid>
@@ -85,6 +66,9 @@ class Home extends Component {
 
 Home.propTypes = {
     classes: PropTypes.object.isRequired,
+    reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
+    reservationsLoading: PropTypes.bool.isRequired,
+    openSnackbar: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(Home);

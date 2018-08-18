@@ -2,10 +2,11 @@ import React, { Component } from 'react';
 import { Route } from 'react-router';
 import apiFetch from './Auth';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
+import Snackbar from '@material-ui/core/Snackbar';
 import Layout from './components/Layout';
 import Home from './components/Home';
 import Reserve from './components/Reserve';
-import { Support } from './components/Support';
+import Support from './components/Support';
 
 // A theme with custom primary and secondary color.
 const theme = createMuiTheme({
@@ -36,18 +37,48 @@ export default class App extends Component {
     displayName = App.name
 
     state = {
-        user: {}
+        user: {},
+        reservations: [],
+        reservationsLoading: true,
+        snackbarOpen: false,
+        snackbarMessage: '',
     };
 
     componentDidMount() {
         apiFetch('api/users/me')
             .then((data) => {
                 this.setState({ user: data });
+            }, (error) => {
+                this.openSnackbar(error);
+            });
+
+        apiFetch('api/reservations')
+            .then((data) => {
+                this.setState({
+                    reservations: data,
+                    reservationsLoading: false
+                });
+            }, (error) => {
+                this.setState({ reservationsLoading: false });
+                this.openSnackbar(error);
             });
     }
 
+    openSnackbar = (message) => {
+        this.setState({
+            snackbarOpen: true,
+            snackbarMessage: message,
+        });
+    }
+
+    handleSnackbarClose = () => {
+        this.setState({
+            snackbarOpen: false,
+        });
+    };
+
     render() {
-        const { user } = this.state;
+        const { user, reservations, reservationsLoading } = this.state;
         return (
             <MuiThemeProvider theme={theme}>
                 <Layout user={user}>
@@ -55,18 +86,36 @@ export default class App extends Component {
                         exact
                         path="/"
                         navbarName="My reservations"
-                        render={props => <Home user={user} {...props} />}
+                        render={props =>
+                            <Home
+                                reservations={reservations}
+                                reservationsLoading={reservationsLoading}
+                                openSnackbar={this.openSnackbar}
+                                {...props}
+                            />}
                     />
                     <Route
                         exact
                         path="/reserve"
                         navbarName="Reserve"
-                        render={props => <Reserve user={user} {...props} />}
+                        render={props =>
+                            <Reserve
+                                user={user}
+                                reservations={reservations}
+                                openSnackbar={this.openSnackbar}
+                                {...props}
+                            />}
                     />
                     <Route
                         path="/reserve/:id"
                         navbarName="Reserve"
-                        render={props => <Reserve user={user} {...props} />}
+                        render={props =>
+                            <Reserve
+                                user={user}
+                                reservations={reservations}
+                                openSnackbar={this.openSnackbar}
+                                {...props}
+                            />}
                     />
                     <Route
                         exact
@@ -75,6 +124,19 @@ export default class App extends Component {
                         component={Support}
                     />
                 </Layout>
+                <Snackbar
+                    anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'left',
+                    }}
+                    open={this.state.snackbarOpen}
+                    autoHideDuration={6000}
+                    onClose={this.handleSnackbarClose}
+                    ContentProps={{
+                        'aria-describedby': 'message-id',
+                    }}
+                    message={<span id="message-id">{this.state.snackbarMessage}</span>}
+                />
             </MuiThemeProvider>
         );
     }

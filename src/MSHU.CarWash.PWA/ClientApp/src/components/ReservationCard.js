@@ -246,15 +246,10 @@ class ReservationCard extends Component {
         apiFetch(`api/reservations/${this.props.reservation.id}`, {
             method: 'DELETE',
         }).then(() => {
-            //this.setState({
-            //    snackbarOpen: true,
-            //    snackbarMessage: 'Reservation successfully canceled.'
-            //});
+            this.props.openSnackbar('Reservation successfully canceled.');
+            // TODO remove deleted reservation from reservations
         }, (error) => {
-            //this.setState({
-            //    snackbarOpen: true,
-            //    snackbarMessage: error
-            //});
+            this.props.openSnackbar(error);
         });
     };
 
@@ -318,6 +313,8 @@ class ReservationCard extends Component {
 
 ReservationCard.propTypes = {
     classes: PropTypes.object.isRequired,
+    reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
+    openSnackbar: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(ReservationCard);

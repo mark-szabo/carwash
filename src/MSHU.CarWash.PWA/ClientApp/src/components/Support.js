@@ -1,7 +1,7 @@
 ﻿import React, { Component } from 'react';
 import Button from '@material-ui/core/Button';
 
-export class Support extends Component {
+export default class Support extends Component {
     displayName = Support.name
 
     render() {

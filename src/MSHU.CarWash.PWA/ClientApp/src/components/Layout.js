@@ -70,7 +70,7 @@ class Layout extends React.Component {
     getNavbarName() {
         var name;
         this.props.children.map((prop) => {
-            if (prop.props.path === window.location.pathname) {
+            if (prop.props.path.includes(window.location.pathname)) {
                 name = prop.props.navbarName;
             }
             return null;
