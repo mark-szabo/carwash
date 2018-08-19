@@ -1,7 +1,7 @@
 ﻿import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import apiFetch from '../Auth';
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
 import { withStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
@@ -215,13 +215,13 @@ function getDate(reservation) {
             month: 'long',
             day: '2-digit',
             hour: '2-digit',
-            minute: '2-digit'
+            minute: '2-digit',
         }).format(new Date(reservation.dateFrom));
 
     const to = new Intl.DateTimeFormat('en-US',
         {
             hour: '2-digit',
-            minute: '2-digit'
+            minute: '2-digit',
         }).format(new Date(reservation.dateTo));
 
     return `${from} - ${to}`;
@@ -259,7 +259,7 @@ class ReservationCard extends Component {
         const { classes, reservation } = this.props;
         return (
             <React.Fragment>
-                <Grow in={true}>
+                <Grow in>
                     <Card className={classes.card}>
                         <CardMedia
                             className={classes.media}
@@ -275,7 +275,7 @@ class ReservationCard extends Component {
                         <CardContent>
                             <Typography variant="caption" gutterBottom>
                                 Vehicle plate number
-                        </Typography>
+                            </Typography>
                             <Typography variant="body1" gutterBottom>
                                 {reservation.vehiclePlateNumber}
                             </Typography>
@@ -284,7 +284,7 @@ class ReservationCard extends Component {
                             <Divider className={classes.divider} />
                             <Typography variant="subheading">
                                 Selected services
-                        </Typography>
+                            </Typography>
                             {reservation.services.map(service =>
                                 <Chip label={getServiceName(service)} className={classes.chip} key={service} />
                             )}

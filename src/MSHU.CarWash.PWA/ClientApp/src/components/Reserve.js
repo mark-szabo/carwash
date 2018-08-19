@@ -112,28 +112,26 @@ const styles = theme => ({
     },
     errorText: {
         color: '#9E9E9E',
-    }
+    },
 });
-const timeFormat = new Intl.DateTimeFormat('en-US',
-    {
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-const dateFormat = new Intl.DateTimeFormat('en-US',
-    {
-        year: 'numeric',
-        month: 'long',
-        day: '2-digit'
-    });
+const timeFormat = new Intl.DateTimeFormat('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+});
+const dateFormat = new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: '2-digit',
+});
 
 function addDays(date, days) {
-    var newDate = new Date(date);
+    const newDate = new Date(date);
     newDate.setDate(newDate.getDate() + days);
     return newDate;
 }
 
 class Reserve extends Component {
-    displayName = Reserve.name
+    displayName = Reserve.name;
 
     constructor(props) {
         super(props);
@@ -151,8 +149,8 @@ class Reserve extends Component {
                 { id: 3, name: 'spot cleaning', selected: false },
                 { id: 4, name: 'vignette removal', selected: false },
                 { id: 5, name: 'polishing', selected: false },
-                { id: 6, name: 'AC cleaning \'ozon\'', selected: false },
-                { id: 7, name: 'AC cleaning \'bomba\'', selected: false }
+                { id: 6, name: "AC cleaning 'ozon'", selected: false },
+                { id: 7, name: "AC cleaning 'bomba'", selected: false },
             ],
             validationErrors: {
                 vehiclePlateNumber: false,
@@ -180,11 +178,11 @@ class Reserve extends Component {
     componentDidMount() {
         if (this.props.match.params.id) {
             this.setState({
-                loadingReservation: true
+                loadingReservation: true,
             });
-            apiFetch(`api/reservations/${this.props.match.params.id}`)
-                .then((data) => {
-                    let services = this.state.services;
+            apiFetch(`api/reservations/${this.props.match.params.id}`).then(
+                data => {
+                    const services = this.state.services;
                     data.services.forEach(s => {
                         services[s].selected = true;
                     });
@@ -199,67 +197,80 @@ class Reserve extends Component {
                         seat,
                         private: data.private,
                         comment: data.comment,
-                        servicesStepLabel: services.filter(s => { return s.selected }).map(s => { return s.name }).join(', '),
+                        servicesStepLabel: services
+                            .filter(s => s.selected)
+                            .map(s => s.name)
+                            .join(', '),
                         dateStepLabel: dateFormat.format(date),
                         timeStepLabel: timeFormat.format(date),
                         loadingReservation: false,
                     });
-                }, (error) => {
+                },
+                error => {
                     this.setState({ loading: false });
                     this.props.openSnackbar(error);
-                });
+                }
+            );
         }
 
         if (this.props.user.isCarwashAdmin) {
             this.setState({
-                loading: false
+                loading: false,
             });
+        } else {
+            apiFetch('api/reservations/notavailabledates').then(
+                data => {
+                    const { dates, times } = data;
+                    for (const i in dates) {
+                        if (dates.hasOwnProperty(i)) {
+                            dates[i] = new Date(dates[i]);
+                        }
+                    }
+                    for (const i in times) {
+                        if (times.hasOwnProperty(i)) {
+                            times[i] = new Date(times[i]);
+                        }
+                    }
+                    this.setState({
+                        notAvailableDates: dates,
+                        notAvailableTimes: times,
+                        loading: false,
+                    });
+                },
+                error => {
+                    this.setState({ loading: false });
+                    this.props.openSnackbar(error);
+                }
+            );
         }
-        else apiFetch('api/reservations/notavailabledates')
-            .then((data) => {
-                for (let i in data.dates) {
-                    if (data.dates.hasOwnProperty(i)) {
-                        data.dates[i] = new Date(data.dates[i]);
-                    }
-                }
-                for (let i in data.times) {
-                    if (data.times.hasOwnProperty(i)) {
-                        data.times[i] = new Date(data.times[i]);
-                    }
-                }
-                this.setState({
-                    notAvailableDates: data.dates,
-                    notAvailableTimes: data.times,
-                    loading: false
-                });
-            }, (error) => {
-                this.setState({ loading: false });
-                this.props.openSnackbar(error);
-            });
 
-        apiFetch('api/reservations/lastsettings')
-            .then((data) => {
+        apiFetch('api/reservations/lastsettings').then(
+            data => {
                 const [garage, floor] = data.location.split('/');
                 this.setState({
                     vehiclePlateNumber: data.vehiclePlateNumber,
                     garage,
                     floor,
                 });
-            }, (error) => {
+            },
+            error => {
                 this.setState({ loading: false });
                 this.props.openSnackbar(error);
-            });
+            }
+        );
 
         if (this.props.user.isAdmin || this.props.user.isCarwashAdmin) {
-            apiFetch('api/users')
-                .then((data) => {
+            apiFetch('api/users').then(
+                data => {
                     this.setState({
-                        users: data
+                        users: data,
                     });
-                }, (error) => {
+                },
+                error => {
                     this.setState({ loading: false });
                     this.props.openSnackbar(error);
-                });
+                }
+            );
         }
     }
 
@@ -297,37 +308,38 @@ class Reserve extends Component {
     handleServiceSelectionComplete = () => {
         this.setState(state => ({
             activeStep: 1,
-            servicesStepLabel: state.services.filter((service) => { return service.selected }).map((service) => { return service.name }).join(', '),
+            servicesStepLabel: state.services
+                .filter(service => service.selected)
+                .map(service => service.name)
+                .join(', '),
         }));
     };
 
-    handleDateSelectionComplete = (date) => {
+    handleDateSelectionComplete = date => {
         if (!date) return;
 
         this.setState({
             activeStep: 2,
             selectedDate: date,
-            disabledSlots: [
-                this.isTimeNotAvailable(date, 8),
-                this.isTimeNotAvailable(date, 11),
-                this.isTimeNotAvailable(date, 14)
-            ],
+            disabledSlots: [this.isTimeNotAvailable(date, 8), this.isTimeNotAvailable(date, 11), this.isTimeNotAvailable(date, 14)],
             dateStepLabel: dateFormat.format(date),
         });
 
-        apiFetch(`api/reservations/reservationprecentage?date=${date.toJSON()}`)
-            .then((data) => {
+        apiFetch(`api/reservations/reservationprecentage?date=${date.toJSON()}`).then(
+            data => {
                 this.setState({
                     reservationPrecentage: data,
                     reservationPrecentageDataArrived: true,
                 });
-            }, (error) => {
+            },
+            error => {
                 this.setState({ loading: false });
                 this.props.openSnackbar(error);
-            });
+            }
+        );
     };
 
-    getSlotReservationPrecentage = (slot) => {
+    getSlotReservationPrecentage = slot => {
         if (!this.state.reservationPrecentageDataArrived) return '';
         if (!this.state.reservationPrecentage[slot]) return '(0%)';
         return `(${this.state.reservationPrecentage[slot].precentage * 100}%)`;
@@ -350,7 +362,7 @@ class Reserve extends Component {
         return this.state.notAvailableTimes.filter(notAvailableTime => notAvailableTime.getTime() === dateTime.getTime()).length > 0;
     };
 
-    handlePlateNumberChange = (event) => {
+    handlePlateNumberChange = event => {
         this.setState({
             vehiclePlateNumber: event.target.value.toUpperCase(),
         });
@@ -362,31 +374,31 @@ class Reserve extends Component {
         }));
     };
 
-    handleCommentChange = (event) => {
+    handleCommentChange = event => {
         this.setState({
             comment: event.target.value,
         });
     };
 
-    handleGarageChange = (event) => {
+    handleGarageChange = event => {
         this.setState({
             garage: event.target.value,
         });
     };
 
-    handleFloorChange = (event) => {
+    handleFloorChange = event => {
         this.setState({
             floor: event.target.value,
         });
     };
 
-    handleSeatChange = (event) => {
+    handleSeatChange = event => {
         this.setState({
             seat: event.target.value,
         });
     };
 
-    handleUserChange = (event) => {
+    handleUserChange = event => {
         this.setState({
             userId: event.target.value,
         });
@@ -396,17 +408,17 @@ class Reserve extends Component {
         const validationErrors = {
             vehiclePlateNumber: this.state.vehiclePlateNumber === '',
             garage: this.state.garage === '',
-            floor: this.state.floor === ''
+            floor: this.state.floor === '',
         };
 
         this.setState({
-            validationErrors: validationErrors
+            validationErrors,
         });
 
         if (validationErrors.vehiclePlateNumber || validationErrors.garage || validationErrors.floor) return;
 
         this.setState({
-            loading: true
+            loading: true,
         });
 
         const payload = {
@@ -414,10 +426,10 @@ class Reserve extends Component {
             userId: this.state.userId,
             vehiclePlateNumber: this.state.vehiclePlateNumber,
             location: `${this.state.garage}/${this.state.floor}/${this.state.seat}`,
-            services: this.state.services.filter(s => { return s.selected; }).map(s => { return s.id; }),
+            services: this.state.services.filter(s => s.selected).map(s => s.id),
             private: this.state.private,
             dateFrom: this.state.selectedDate,
-            comment: this.state.comment
+            comment: this.state.comment,
         };
 
         let apiUrl = 'api/reservations';
@@ -431,46 +443,52 @@ class Reserve extends Component {
             method: apiMethod,
             body: JSON.stringify(payload),
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
-        }).then((data) => {
-            this.setState({
-                loading: false,
-                reservationCompleteRedirect: true
-            });
-            this.props.openSnackbar('Reservation successfully saved.');
+        }).then(
+            data => {
+                this.setState({
+                    loading: false,
+                    reservationCompleteRedirect: true,
+                });
+                this.props.openSnackbar('Reservation successfully saved.');
 
-            // Add new / update reservation to reservations
-            if (apiMethod === 'PUT') this.props.removeReservation(data.id);
-            this.props.addReservation(data);
-        }, (error) => {
-            this.setState({ loading: false });
-            this.props.openSnackbar(error);
-        });
+                // Add new / update reservation to reservations
+                if (apiMethod === 'PUT') this.props.removeReservation(data.id);
+                this.props.addReservation(data);
+            },
+            error => {
+                this.setState({ loading: false });
+                this.props.openSnackbar(error);
+            }
+        );
     };
 
     render() {
         const { classes, user, reservations } = this.props;
-        const { activeStep, loading, loadingReservation, validationErrors, notAvailableDates, disabledSlots, users, userId, vehiclePlateNumber, comment, servicesStepLabel, dateStepLabel, timeStepLabel, garage, floor, seat } = this.state;
+        const {
+            activeStep,
+            servicesStepLabel,
+            dateStepLabel,
+            timeStepLabel,
+            validationErrors,
+            loading,
+            loadingReservation,
+            notAvailableDates,
+            disabledSlots,
+            users,
+            userId,
+            vehiclePlateNumber,
+            comment,
+            garage,
+            floor,
+            seat,
+        } = this.state;
         const today = new Date();
         const garages = {
-            M: [
-                '-1',
-                '-2',
-                '-2.5',
-                '-3',
-                '-3.5',
-                'outdoor'
-            ],
-            G: [
-                '-1',
-                'outdoor'
-            ],
-            S1: [
-                '-1',
-                '-2',
-                '-3'
-            ]
+            M: ['-1', '-2', '-2.5', '-3', '-3.5', 'outdoor'],
+            G: ['-1', 'outdoor'],
+            S1: ['-1', '-2', '-3'],
         };
 
         if (this.state.reservationCompleteRedirect) {
@@ -482,19 +500,23 @@ class Reserve extends Component {
                 <div className={classes.center}>
                     <div>
                         <CloudOffIcon className={classes.errorIcon} />
-                        <Typography variant="title" gutterBottom className={classes.errorText}>Connect to the Internet</Typography>
+                        <Typography variant="title" gutterBottom className={classes.errorText}>
+                            Connect to the Internet
+                        </Typography>
                         <Typography className={classes.errorText}>You must be connected to make a new reservation.</Typography>
                     </div>
                 </div>
             );
         }
 
-        if (!this.props.match.params.id && reservations.filter(r => { return r.state !== 5 }).length >= 2) {
+        if (!this.props.match.params.id && reservations.filter(r => r.state !== 5).length >= 2) {
             return (
                 <div className={classes.center}>
                     <div>
                         <ErrorOutlineIcon className={classes.errorIcon} />
-                        <Typography variant="title" gutterBottom className={classes.errorText}>Limit reached</Typography>
+                        <Typography variant="title" gutterBottom className={classes.errorText}>
+                            Limit reached
+                        </Typography>
                         <Typography className={classes.errorText}>You cannot have more than two concurrent active reservations.</Typography>
                     </div>
                 </div>
@@ -506,7 +528,9 @@ class Reserve extends Component {
                 <Step>
                     <StepLabel>{servicesStepLabel}</StepLabel>
                     <StepContent>
-                        {loadingReservation ? <CircularProgress className={classes.progress} size={50} /> :
+                        {loadingReservation ? (
+                            <CircularProgress className={classes.progress} size={50} />
+                        ) : (
                             <React.Fragment>
                                 {this.state.services.map(service => (
                                     <span key={service.id}>
@@ -525,29 +549,32 @@ class Reserve extends Component {
                                 ))}
                                 <div className={classes.actionsContainer}>
                                     <div>
-                                        <Button
-                                            disabled
-                                            className={classes.button}
-                                        >Back</Button>
+                                        <Button disabled className={classes.button}>
+                                            Back
+                                        </Button>
                                         <Button
                                             variant="contained"
                                             color="primary"
                                             onClick={this.handleServiceSelectionComplete}
                                             className={classes.button}
                                             disabled={this.state.services.filter(service => service.selected === true).length <= 0}
-                                        >Next</Button>
+                                        >
+                                            Next
+                                        </Button>
                                     </div>
                                 </div>
                             </React.Fragment>
-                        }
+                        )}
                     </StepContent>
                 </Step>
                 <Step>
                     <StepLabel>{dateStepLabel}</StepLabel>
                     <StepContent>
-                        {loading ? (<CircularProgress className={classes.progress} size={50} />) : (
+                        {loading ? (
+                            <CircularProgress className={classes.progress} size={50} />
+                        ) : (
                             <InfiniteCalendar
-                                onSelect={(date) => this.handleDateSelectionComplete(date)}
+                                onSelect={date => this.handleDateSelectionComplete(date)}
                                 selected={null}
                                 min={today}
                                 minDate={today}
@@ -567,16 +594,12 @@ class Reserve extends Component {
                         )}
                         <div className={classes.actionsContainer}>
                             <div>
-                                <Button
-                                    onClick={this.handleBack}
-                                    className={classes.button}
-                                >Back</Button>
-                                <Button
-                                    disabled
-                                    variant="contained"
-                                    color="primary"
-                                    className={classes.button}
-                                >Next</Button>
+                                <Button onClick={this.handleBack} className={classes.button}>
+                                    Back
+                                </Button>
+                                <Button disabled variant="contained" color="primary" className={classes.button}>
+                                    Next
+                                </Button>
                             </div>
                         </div>
                     </StepContent>
@@ -585,29 +608,35 @@ class Reserve extends Component {
                     <StepLabel>{timeStepLabel}</StepLabel>
                     <StepContent>
                         <FormControl component="fieldset">
-                            <RadioGroup
-                                aria-label="Time"
-                                name="time"
-                                className={classes.radioGroup}
-                                onChange={this.handleTimeSelectionComplete}
-                            >
-                                <FormControlLabel value="8" control={<Radio />} label={`8:00 AM - 11:00 AM ${this.getSlotReservationPrecentage(0)}`} disabled={disabledSlots[0]} />
-                                <FormControlLabel value="11" control={<Radio />} label={`11:00 AM - 2:00 PM ${this.getSlotReservationPrecentage(1)}`} disabled={disabledSlots[1]} />
-                                <FormControlLabel value="14" control={<Radio />} label={`2:00 PM - 5:00 PM ${this.getSlotReservationPrecentage(2)}`} disabled={disabledSlots[2]} />
+                            <RadioGroup aria-label="Time" name="time" className={classes.radioGroup} onChange={this.handleTimeSelectionComplete}>
+                                <FormControlLabel
+                                    value="8"
+                                    control={<Radio />}
+                                    label={`8:00 AM - 11:00 AM ${this.getSlotReservationPrecentage(0)}`}
+                                    disabled={disabledSlots[0]}
+                                />
+                                <FormControlLabel
+                                    value="11"
+                                    control={<Radio />}
+                                    label={`11:00 AM - 2:00 PM ${this.getSlotReservationPrecentage(1)}`}
+                                    disabled={disabledSlots[1]}
+                                />
+                                <FormControlLabel
+                                    value="14"
+                                    control={<Radio />}
+                                    label={`2:00 PM - 5:00 PM ${this.getSlotReservationPrecentage(2)}`}
+                                    disabled={disabledSlots[2]}
+                                />
                             </RadioGroup>
                         </FormControl>
                         <div className={classes.actionsContainer}>
                             <div>
-                                <Button
-                                    onClick={this.handleBack}
-                                    className={classes.button}
-                                >Back</Button>
-                                <Button
-                                    disabled
-                                    variant="contained"
-                                    color="primary"
-                                    className={classes.button}
-                                >Next</Button>
+                                <Button onClick={this.handleBack} className={classes.button}>
+                                    Back
+                                </Button>
+                                <Button disabled variant="contained" color="primary" className={classes.button}>
+                                    Next
+                                </Button>
                             </div>
                         </div>
                     </StepContent>
@@ -615,26 +644,20 @@ class Reserve extends Component {
                 <Step>
                     <StepLabel>Reserve</StepLabel>
                     <StepContent>
-                        {loading ? <CircularProgress className={classes.progress} size={50} /> :
+                        {loading ? (
+                            <CircularProgress className={classes.progress} size={50} />
+                        ) : (
                             <div>
                                 <div>
                                     <FormGroup className={classes.checkbox}>
                                         <FormControlLabel
-                                            control={
-                                                <Checkbox
-                                                    checked={this.state.private}
-                                                    onChange={this.handlePrivateChange}
-                                                    value="private"
-                                                />
-                                            }
+                                            control={<Checkbox checked={this.state.private} onChange={this.handlePrivateChange} value="private" />}
                                             label="Private"
                                         />
                                     </FormGroup>
                                 </div>
-                                {(user.isAdmin || user.isCarwashAdmin) &&
-                                    <FormControl
-                                        className={classes.formControl}
-                                    >
+                                {(user.isAdmin || user.isCarwashAdmin) && (
+                                    <FormControl className={classes.formControl}>
                                         <InputLabel htmlFor="user">User</InputLabel>
                                         <Select
                                             required
@@ -646,11 +669,13 @@ class Reserve extends Component {
                                             }}
                                         >
                                             {users.map(u => (
-                                                <MenuItem value={u.id} key={u.id}>{u.firstName} {u.lastName}</MenuItem>
+                                                <MenuItem value={u.id} key={u.id}>
+                                                    {u.firstName} {u.lastName}
+                                                </MenuItem>
                                             ))}
                                         </Select>
                                     </FormControl>
-                                }
+                                )}
                                 <div>
                                     <TextField
                                         required
@@ -663,10 +688,7 @@ class Reserve extends Component {
                                         onChange={this.handlePlateNumberChange}
                                     />
                                 </div>
-                                <FormControl
-                                    className={classes.formControl}
-                                    error={validationErrors.garage}
-                                >
+                                <FormControl className={classes.formControl} error={validationErrors.garage}>
                                     <InputLabel htmlFor="garage">Garage</InputLabel>
                                     <Select
                                         required
@@ -683,10 +705,7 @@ class Reserve extends Component {
                                     </Select>
                                 </FormControl>
                                 {garage !== '' && (
-                                    <FormControl
-                                        className={classes.formControl}
-                                        error={validationErrors.floor}
-                                    >
+                                    <FormControl className={classes.formControl} error={validationErrors.floor}>
                                         <InputLabel htmlFor="floor">Floor</InputLabel>
                                         <Select
                                             required
@@ -697,8 +716,10 @@ class Reserve extends Component {
                                                 id: 'floor',
                                             }}
                                         >
-                                            {garages[garage].map((item) => (
-                                                <MenuItem value={item} key={item}>{item}</MenuItem>
+                                            {garages[garage].map(item => (
+                                                <MenuItem value={item} key={item}>
+                                                    {item}
+                                                </MenuItem>
                                             ))}
                                         </Select>
                                     </FormControl>
@@ -727,20 +748,16 @@ class Reserve extends Component {
                                 </div>
                                 <div className={classes.actionsContainer}>
                                     <div>
-                                        <Button
-                                            onClick={this.handleBack}
-                                            className={classes.button}
-                                        >Back</Button>
-                                        <Button
-                                            variant="contained"
-                                            color="primary"
-                                            onClick={this.handleReserve}
-                                            className={classes.button}
-                                        >{!this.props.match.params.id ? 'Reserve' : 'Update'}</Button>
+                                        <Button onClick={this.handleBack} className={classes.button}>
+                                            Back
+                                        </Button>
+                                        <Button variant="contained" color="primary" onClick={this.handleReserve} className={classes.button}>
+                                            {!this.props.match.params.id ? 'Reserve' : 'Update'}
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
-                        }
+                        )}
                     </StepContent>
                 </Step>
             </Stepper>

@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
 import { withStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import AppBar from '@material-ui/core/AppBar';
@@ -53,7 +53,7 @@ const styles = theme => ({
     appTitle: {
         padding: '20px 24px',
         color: 'initial',
-    }
+    },
 });
 
 class Layout extends React.Component {
@@ -68,7 +68,7 @@ class Layout extends React.Component {
     };
 
     getNavbarName() {
-        var name;
+        let name;
         this.props.children.map((prop) => {
             if (prop.props.path.includes(window.location.pathname)) {
                 name = prop.props.navbarName;

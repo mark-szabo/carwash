@@ -10,14 +10,12 @@ const baseUrl = document.getElementsByTagName('base')[0].getAttribute('href');
 const rootElement = document.getElementById('root');
 
 runWithAdal(() => {
-
     ReactDOM.render(
         <BrowserRouter basename={baseUrl}>
             <App />
         </BrowserRouter>,
-        rootElement);
-
+        rootElement
+    );
 });
-
 
 registerServiceWorker();

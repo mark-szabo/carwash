@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
@@ -16,10 +16,17 @@ import { signOut } from '../Auth';
 export function drawerItems(user) {
     return (
         <div>
-            <Button component={Link} to="/reserve" variant="extendedFab" color="primary" aria-label="Reserve" style={{ margin: '8px 16px 16px 24px', padding: '0 24px 0 16px' }}>
+            <Button
+                component={Link}
+                to="/reserve"
+                variant="extendedFab"
+                color="primary"
+                aria-label="Reserve"
+                style={{ margin: '8px 16px 16px 24px', padding: '0 24px 0 16px' }}
+            >
                 <AddIcon style={{ marginRight: '16px' }} />
                 Reserve
-        </Button>
+            </Button>
             <ListItem button component={Link} to="/">
                 <ListItemIcon>
                     <ListIcon />

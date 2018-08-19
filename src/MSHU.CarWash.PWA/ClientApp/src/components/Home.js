@@ -33,35 +33,35 @@ const styles = theme => ({
 
 class Home extends Component {
     displayName = Home.name
-    
+
     render() {
         const { classes, reservations, reservationsLoading, removeReservation, openSnackbar } = this.props;
 
         if (reservationsLoading) {
             return (<div className={classes.progress}><CircularProgress size={50} /></div>);
-        } else {
-            return (
-                <Grid
-                    container
-                    direction="row"
-                    justify="flex-start"
-                    alignItems="flex-start"
-                    spacing={16}
-                    className={classes.grid}
-                >
-                    {reservations.map(reservation =>
-                        <Grid item key={reservation.id} className={classes.card} >
-                            <ReservationCard
-                                reservation={reservation}
-                                reservations={reservations}
-                                removeReservation={removeReservation}
-                                openSnackbar={openSnackbar}
-                            />
-                        </Grid>
-                    )}
-                </Grid>
-            );
         }
+
+        return (
+            <Grid
+                container
+                direction="row"
+                justify="flex-start"
+                alignItems="flex-start"
+                spacing={16}
+                className={classes.grid}
+            >
+                {reservations.map(reservation => (
+                    <Grid item key={reservation.id} className={classes.card} >
+                        <ReservationCard
+                            reservation={reservation}
+                            reservations={reservations}
+                            removeReservation={removeReservation}
+                            openSnackbar={openSnackbar}
+                        />
+                    </Grid>
+                ))}
+            </Grid>
+        );
     }
 }
 

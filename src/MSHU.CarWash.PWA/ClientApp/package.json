@@ -48,6 +48,6 @@
   "devDependencies": {
     "eslint": "^5.3.0",
     "eslint-config-defaults": "^9.0.0",
-    "eslint-config-google": "^0.9.1"
+    "prettier-eslint": "^8.8.2"
   }
 }

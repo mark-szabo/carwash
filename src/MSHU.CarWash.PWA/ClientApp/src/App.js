@@ -23,18 +23,12 @@ const theme = createMuiTheme({
         },
     },
     typography: {
-        fontFamily: [
-            '"Segoe UI"',
-            'Roboto',
-            '"Helvetica Neue"',
-            'Arial',
-            'sans-serif'
-        ].join(','),
+        fontFamily: ['"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'].join(','),
     },
 });
 
 export default class App extends Component {
-    displayName = App.name
+    displayName = App.name;
 
     state = {
         user: {},
@@ -45,49 +39,53 @@ export default class App extends Component {
     };
 
     componentDidMount() {
-        apiFetch('api/users/me')
-            .then((data) => {
+        apiFetch('api/users/me').then(
+            data => {
                 this.setState({ user: data });
-            }, (error) => {
+            },
+            error => {
                 this.openSnackbar(error);
-            });
+            }
+        );
 
-        apiFetch('api/reservations')
-            .then((data) => {
+        apiFetch('api/reservations').then(
+            data => {
                 this.setState({
                     reservations: data,
-                    reservationsLoading: false
+                    reservationsLoading: false,
                 });
-            }, (error) => {
+            },
+            error => {
                 this.setState({ reservationsLoading: false });
                 this.openSnackbar(error);
-            });
+            }
+        );
     }
 
-    openSnackbar = (message) => {
+    openSnackbar = message => {
         this.setState({
             snackbarOpen: true,
             snackbarMessage: message,
         });
-    }
+    };
 
-    addReservation = (reservation) => {
+    addReservation = reservation => {
         this.setState(state => {
-            let reservations = [...state.reservations];
+            const reservations = [...state.reservations];
             reservations.unshift(reservation);
 
             return { reservations };
         });
-    }
+    };
 
-    removeReservation = (reservationId) => {
+    removeReservation = reservationId => {
         this.setState(state => {
             let reservations = [...state.reservations];
             reservations = reservations.filter(r => r.id !== reservationId);
 
             return { reservations };
         });
-    }
+    };
 
     handleSnackbarClose = () => {
         this.setState({
@@ -111,20 +109,16 @@ export default class App extends Component {
                                 removeReservation={this.removeReservation}
                                 openSnackbar={this.openSnackbar}
                                 {...props}
-                            />)}
+                            />
+                        )}
                     />
                     <Route
                         exact
                         path="/reserve"
                         navbarName="Reserve"
                         render={props => (
-                            <Reserve
-                                user={user}
-                                reservations={reservations}
-                                addReservation={this.addReservation}
-                                openSnackbar={this.openSnackbar}
-                                {...props}
-                            />)}
+                            <Reserve user={user} reservations={reservations} addReservation={this.addReservation} openSnackbar={this.openSnackbar} {...props} />
+                        )}
                     />
                     <Route
                         path="/reserve/:id"
@@ -137,14 +131,10 @@ export default class App extends Component {
                                 removeReservation={this.removeReservation}
                                 openSnackbar={this.openSnackbar}
                                 {...props}
-                            />)}
+                            />
+                        )}
                     />
-                    <Route
-                        exact
-                        path="/support"
-                        navbarName="Support"
-                        component={Support}
-                    />
+                    <Route exact path="/support" navbarName="Support" component={Support} />
                 </Layout>
                 <Snackbar
                     anchorOrigin={{
