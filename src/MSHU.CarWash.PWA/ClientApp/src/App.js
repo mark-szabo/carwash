@@ -71,6 +71,24 @@ export default class App extends Component {
         });
     }
 
+    addReservation = (reservation) => {
+        this.setState(state => {
+            let reservations = [...state.reservations];
+            reservations.unshift(reservation);
+
+            return { reservations };
+        });
+    }
+
+    removeReservation = (reservationId) => {
+        this.setState(state => {
+            let reservations = [...state.reservations];
+            reservations = reservations.filter(r => r.id !== reservationId);
+
+            return { reservations };
+        });
+    }
+
     handleSnackbarClose = () => {
         this.setState({
             snackbarOpen: false,
@@ -86,36 +104,40 @@ export default class App extends Component {
                         exact
                         path="/"
                         navbarName="My reservations"
-                        render={props =>
+                        render={props => (
                             <Home
                                 reservations={reservations}
                                 reservationsLoading={reservationsLoading}
+                                removeReservation={this.removeReservation}
                                 openSnackbar={this.openSnackbar}
                                 {...props}
-                            />}
+                            />)}
                     />
                     <Route
                         exact
                         path="/reserve"
                         navbarName="Reserve"
-                        render={props =>
+                        render={props => (
                             <Reserve
                                 user={user}
                                 reservations={reservations}
+                                addReservation={this.addReservation}
                                 openSnackbar={this.openSnackbar}
                                 {...props}
-                            />}
+                            />)}
                     />
                     <Route
                         path="/reserve/:id"
                         navbarName="Reserve"
-                        render={props =>
+                        render={props => (
                             <Reserve
                                 user={user}
                                 reservations={reservations}
+                                addReservation={this.addReservation}
+                                removeReservation={this.removeReservation}
                                 openSnackbar={this.openSnackbar}
                                 {...props}
-                            />}
+                            />)}
                     />
                     <Route
                         exact

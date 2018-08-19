@@ -224,7 +224,7 @@ function getDate(reservation) {
             minute: '2-digit'
         }).format(new Date(reservation.dateTo));
 
-    return from + ' - ' + to;
+    return `${from} - ${to}`;
 }
 
 class ReservationCard extends Component {
@@ -242,12 +242,14 @@ class ReservationCard extends Component {
 
     handleCancelConfirmed = () => {
         this.setState({ cancelDialogOpen: false });
-        
+
         apiFetch(`api/reservations/${this.props.reservation.id}`, {
             method: 'DELETE',
         }).then(() => {
             this.props.openSnackbar('Reservation successfully canceled.');
-            // TODO remove deleted reservation from reservations
+
+            // Remove deleted reservation from reservations
+            this.props.removeReservation(this.props.reservation.id);
         }, (error) => {
             this.props.openSnackbar(error);
         });
@@ -314,6 +316,7 @@ class ReservationCard extends Component {
 ReservationCard.propTypes = {
     classes: PropTypes.object.isRequired,
     reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
+    removeReservation: PropTypes.func.isRequired,
     openSnackbar: PropTypes.func.isRequired,
 };
 

@@ -35,7 +35,7 @@ class Home extends Component {
     displayName = Home.name
     
     render() {
-        const { classes, reservations, reservationsLoading, openSnackbar } = this.props;
+        const { classes, reservations, reservationsLoading, removeReservation, openSnackbar } = this.props;
 
         if (reservationsLoading) {
             return (<div className={classes.progress}><CircularProgress size={50} /></div>);
@@ -54,6 +54,7 @@ class Home extends Component {
                             <ReservationCard
                                 reservation={reservation}
                                 reservations={reservations}
+                                removeReservation={removeReservation}
                                 openSnackbar={openSnackbar}
                             />
                         </Grid>
@@ -68,6 +69,7 @@ Home.propTypes = {
     classes: PropTypes.object.isRequired,
     reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
     reservationsLoading: PropTypes.bool.isRequired,
+    removeReservation: PropTypes.func.isRequired,
     openSnackbar: PropTypes.func.isRequired,
 };
 

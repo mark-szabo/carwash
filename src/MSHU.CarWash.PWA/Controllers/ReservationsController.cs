@@ -110,11 +110,11 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <param name="id">Reservation id</param>
         /// <param name="reservation"><see cref="Reservation"/></param>
         /// <returns>No content</returns>
-        /// <response code="204">NoContent</response>
+        /// <response code="200">OK</response>
         /// <response code="400">BadRequest if no service choosen / DateFrom and DateTo isn't on the same day / a Date is in the past / DateFrom and DateTo are not valid slot start/end times / user/company limit has been met / there is no more time in that slot.</response>
         /// <response code="401">Unathorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to update another user's reservation.</response>
-        [ProducesResponseType(typeof(NoContentResult), 200)]
+        [ProducesResponseType(typeof(ReservationViewModel), 200)]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutReservation([FromRoute] string id, [FromBody] Reservation reservation)
         {
@@ -161,10 +161,6 @@ namespace MSHU.CarWash.PWA.Controllers
             dbReservation.TimeRequirement = dbReservation.Services.Contains(ServiceType.Carpet) ? 2 * TimeUnit : TimeUnit;
 
             #region Business logic
-            // Checks whether user has met the active concurrent reservation limit
-            if (await IsUserConcurrentReservationLimitMetAsync())
-                return BadRequest($"Cannot have more than {UserConcurrentReservationLimit} concurrent active reservations.");
-
             // Check if there is enough time on that day
             if (!IsEnoughTimeOnDate(dbReservation.DateFrom, (int)dbReservation.TimeRequirement))
                 return BadRequest("Company limit has been met for this day or there is not enough time at all.");
@@ -190,7 +186,7 @@ namespace MSHU.CarWash.PWA.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok(new ReservationViewModel(dbReservation));
         }
 
         // POST: api/Reservations
@@ -203,7 +199,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="400">BadRequest if no service choosen / DateFrom and DateTo isn't on the same day / a Date is in the past / DateFrom and DateTo are not valid slot start/end times / user/company limit has been met / there is no more time in that slot.</response>
         /// <response code="401">Unathorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to reserve for another user.</response>
-        [ProducesResponseType(typeof(ReservationViewModel), 200)]
+        [ProducesResponseType(typeof(ReservationViewModel), 201)]
         [HttpPost]
         public async Task<IActionResult> PostReservation([FromBody] Reservation reservation)
         {

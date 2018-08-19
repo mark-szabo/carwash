@@ -433,13 +433,16 @@ class Reserve extends Component {
             headers: {
                 'Content-Type': 'application/json'
             },
-        }).then(() => {
+        }).then((data) => {
             this.setState({
                 loading: false,
                 reservationCompleteRedirect: true
             });
             this.props.openSnackbar('Reservation successfully saved.');
-            // TODO if POST add new reservation to reservations
+
+            // Add new / update reservation to reservations
+            if (apiMethod === 'PUT') this.props.removeReservation(data.id);
+            this.props.addReservation(data);
         }, (error) => {
             this.setState({ loading: false });
             this.props.openSnackbar(error);
@@ -486,7 +489,7 @@ class Reserve extends Component {
             );
         }
 
-        if (reservations.filter(r => { return r.state !== 5 }).length >= 2) {
+        if (!this.props.match.params.id && reservations.filter(r => { return r.state !== 5 }).length >= 2) {
             return (
                 <div className={classes.center}>
                     <div>
@@ -499,250 +502,248 @@ class Reserve extends Component {
         }
 
         return (
-            <React.Fragment>
-                <Stepper activeStep={activeStep} orientation="vertical" className={classes.stepper}>
-                    <Step>
-                        <StepLabel>{servicesStepLabel}</StepLabel>
-                        <StepContent>
-                            {loadingReservation ? <CircularProgress className={classes.progress} size={50} /> :
-                                <React.Fragment>
-                                    {this.state.services.map(service => (
-                                        <span key={service.id}>
-                                            {service.id === 0 && <Typography variant="body2">Basic</Typography>}
-                                            {service.id === 3 && <Typography variant="body2">Extras</Typography>}
-                                            {service.id === 6 && <Typography variant="body2">AC</Typography>}
-                                            <Chip
-                                                key={service.id}
-                                                label={service.name}
-                                                onClick={this.handleServiceChipClick(service)}
-                                                className={service.selected ? classes.selectedChip : classes.chip}
-                                            />
-                                            {service.id === 2 && <br />}
-                                            {service.id === 5 && <br />}
-                                        </span>
-                                    ))}
-                                    <div className={classes.actionsContainer}>
-                                        <div>
-                                            <Button
-                                                disabled
-                                                className={classes.button}
-                                            >Back</Button>
-                                            <Button
-                                                variant="contained"
-                                                color="primary"
-                                                onClick={this.handleServiceSelectionComplete}
-                                                className={classes.button}
-                                                disabled={this.state.services.filter(service => service.selected === true).length <= 0}
-                                            >Next</Button>
-                                        </div>
-                                    </div>
-                                </React.Fragment>
-                            }
-                        </StepContent>
-                    </Step>
-                    <Step>
-                        <StepLabel>{dateStepLabel}</StepLabel>
-                        <StepContent>
-                            {loading ? (<CircularProgress className={classes.progress} size={50} />) : (
-                                <InfiniteCalendar
-                                    onSelect={(date) => this.handleDateSelectionComplete(date)}
-                                    selected={null}
-                                    min={today}
-                                    minDate={today}
-                                    max={addDays(today, 365)}
-                                    locale={{ weekStartsOn: 1 }}
-                                    disabledDays={[0, 6, 7]}
-                                    disabledDates={notAvailableDates}
-                                    displayOptions={{ showHeader: false, showTodayHelper: false }}
-                                    width={'100%'}
-                                    height={350}
-                                    className={classes.calendar}
-                                    theme={{
-                                        selectionColor: '#80d8ff',
-                                        weekdayColor: '#80d8ff',
-                                    }}
-                                />
-                            )}
-                            <div className={classes.actionsContainer}>
-                                <div>
-                                    <Button
-                                        onClick={this.handleBack}
-                                        className={classes.button}
-                                    >Back</Button>
-                                    <Button
-                                        disabled
-                                        variant="contained"
-                                        color="primary"
-                                        className={classes.button}
-                                    >Next</Button>
-                                </div>
-                            </div>
-                        </StepContent>
-                    </Step>
-                    <Step>
-                        <StepLabel>{timeStepLabel}</StepLabel>
-                        <StepContent>
-                            <FormControl component="fieldset">
-                                <RadioGroup
-                                    aria-label="Time"
-                                    name="time"
-                                    className={classes.radioGroup}
-                                    onChange={this.handleTimeSelectionComplete}
-                                >
-                                    <FormControlLabel value="8" control={<Radio />} label={`8:00 AM - 11:00 AM ${this.getSlotReservationPrecentage(0)}`} disabled={disabledSlots[0]} />
-                                    <FormControlLabel value="11" control={<Radio />} label={`11:00 AM - 2:00 PM ${this.getSlotReservationPrecentage(1)}`} disabled={disabledSlots[1]} />
-                                    <FormControlLabel value="14" control={<Radio />} label={`2:00 PM - 5:00 PM ${this.getSlotReservationPrecentage(2)}`} disabled={disabledSlots[2]} />
-                                </RadioGroup>
-                            </FormControl>
-                            <div className={classes.actionsContainer}>
-                                <div>
-                                    <Button
-                                        onClick={this.handleBack}
-                                        className={classes.button}
-                                    >Back</Button>
-                                    <Button
-                                        disabled
-                                        variant="contained"
-                                        color="primary"
-                                        className={classes.button}
-                                    >Next</Button>
-                                </div>
-                            </div>
-                        </StepContent>
-                    </Step>
-                    <Step>
-                        <StepLabel>Reserve</StepLabel>
-                        <StepContent>
-                            {loading ? <CircularProgress className={classes.progress} size={50} /> :
-                                <div>
-                                    <div>
-                                        <FormGroup className={classes.checkbox}>
-                                            <FormControlLabel
-                                                control={
-                                                    <Checkbox
-                                                        checked={this.state.private}
-                                                        onChange={this.handlePrivateChange}
-                                                        value="private"
-                                                    />
-                                                }
-                                                label="Private"
-                                            />
-                                        </FormGroup>
-                                    </div>
-                                    {(user.isAdmin || user.isCarwashAdmin) &&
-                                        <FormControl
-                                            className={classes.formControl}
-                                        >
-                                            <InputLabel htmlFor="user">User</InputLabel>
-                                            <Select
-                                                required
-                                                value={userId}
-                                                onChange={this.handleUserChange}
-                                                inputProps={{
-                                                    name: 'user',
-                                                    id: 'user',
-                                                }}
-                                            >
-                                                {users.map(u => (
-                                                    <MenuItem value={u.id} key={u.id}>{u.firstName} {u.lastName}</MenuItem>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
-                                    }
-                                    <div>
-                                        <TextField
-                                            required
-                                            error={validationErrors.vehiclePlateNumber}
-                                            id="vehiclePlateNumber"
-                                            label="Plate number"
-                                            value={vehiclePlateNumber}
-                                            className={classes.textField}
-                                            margin="normal"
-                                            onChange={this.handlePlateNumberChange}
+            <Stepper activeStep={activeStep} orientation="vertical" className={classes.stepper}>
+                <Step>
+                    <StepLabel>{servicesStepLabel}</StepLabel>
+                    <StepContent>
+                        {loadingReservation ? <CircularProgress className={classes.progress} size={50} /> :
+                            <React.Fragment>
+                                {this.state.services.map(service => (
+                                    <span key={service.id}>
+                                        {service.id === 0 && <Typography variant="body2">Basic</Typography>}
+                                        {service.id === 3 && <Typography variant="body2">Extras</Typography>}
+                                        {service.id === 6 && <Typography variant="body2">AC</Typography>}
+                                        <Chip
+                                            key={service.id}
+                                            label={service.name}
+                                            onClick={this.handleServiceChipClick(service)}
+                                            className={service.selected ? classes.selectedChip : classes.chip}
                                         />
+                                        {service.id === 2 && <br />}
+                                        {service.id === 5 && <br />}
+                                    </span>
+                                ))}
+                                <div className={classes.actionsContainer}>
+                                    <div>
+                                        <Button
+                                            disabled
+                                            className={classes.button}
+                                        >Back</Button>
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={this.handleServiceSelectionComplete}
+                                            className={classes.button}
+                                            disabled={this.state.services.filter(service => service.selected === true).length <= 0}
+                                        >Next</Button>
                                     </div>
+                                </div>
+                            </React.Fragment>
+                        }
+                    </StepContent>
+                </Step>
+                <Step>
+                    <StepLabel>{dateStepLabel}</StepLabel>
+                    <StepContent>
+                        {loading ? (<CircularProgress className={classes.progress} size={50} />) : (
+                            <InfiniteCalendar
+                                onSelect={(date) => this.handleDateSelectionComplete(date)}
+                                selected={null}
+                                min={today}
+                                minDate={today}
+                                max={addDays(today, 365)}
+                                locale={{ weekStartsOn: 1 }}
+                                disabledDays={[0, 6, 7]}
+                                disabledDates={notAvailableDates}
+                                displayOptions={{ showHeader: false, showTodayHelper: false }}
+                                width={'100%'}
+                                height={350}
+                                className={classes.calendar}
+                                theme={{
+                                    selectionColor: '#80d8ff',
+                                    weekdayColor: '#80d8ff',
+                                }}
+                            />
+                        )}
+                        <div className={classes.actionsContainer}>
+                            <div>
+                                <Button
+                                    onClick={this.handleBack}
+                                    className={classes.button}
+                                >Back</Button>
+                                <Button
+                                    disabled
+                                    variant="contained"
+                                    color="primary"
+                                    className={classes.button}
+                                >Next</Button>
+                            </div>
+                        </div>
+                    </StepContent>
+                </Step>
+                <Step>
+                    <StepLabel>{timeStepLabel}</StepLabel>
+                    <StepContent>
+                        <FormControl component="fieldset">
+                            <RadioGroup
+                                aria-label="Time"
+                                name="time"
+                                className={classes.radioGroup}
+                                onChange={this.handleTimeSelectionComplete}
+                            >
+                                <FormControlLabel value="8" control={<Radio />} label={`8:00 AM - 11:00 AM ${this.getSlotReservationPrecentage(0)}`} disabled={disabledSlots[0]} />
+                                <FormControlLabel value="11" control={<Radio />} label={`11:00 AM - 2:00 PM ${this.getSlotReservationPrecentage(1)}`} disabled={disabledSlots[1]} />
+                                <FormControlLabel value="14" control={<Radio />} label={`2:00 PM - 5:00 PM ${this.getSlotReservationPrecentage(2)}`} disabled={disabledSlots[2]} />
+                            </RadioGroup>
+                        </FormControl>
+                        <div className={classes.actionsContainer}>
+                            <div>
+                                <Button
+                                    onClick={this.handleBack}
+                                    className={classes.button}
+                                >Back</Button>
+                                <Button
+                                    disabled
+                                    variant="contained"
+                                    color="primary"
+                                    className={classes.button}
+                                >Next</Button>
+                            </div>
+                        </div>
+                    </StepContent>
+                </Step>
+                <Step>
+                    <StepLabel>Reserve</StepLabel>
+                    <StepContent>
+                        {loading ? <CircularProgress className={classes.progress} size={50} /> :
+                            <div>
+                                <div>
+                                    <FormGroup className={classes.checkbox}>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={this.state.private}
+                                                    onChange={this.handlePrivateChange}
+                                                    value="private"
+                                                />
+                                            }
+                                            label="Private"
+                                        />
+                                    </FormGroup>
+                                </div>
+                                {(user.isAdmin || user.isCarwashAdmin) &&
                                     <FormControl
                                         className={classes.formControl}
-                                        error={validationErrors.garage}
                                     >
-                                        <InputLabel htmlFor="garage">Garage</InputLabel>
+                                        <InputLabel htmlFor="user">User</InputLabel>
                                         <Select
                                             required
-                                            value={garage}
-                                            onChange={this.handleGarageChange}
+                                            value={userId}
+                                            onChange={this.handleUserChange}
                                             inputProps={{
-                                                name: 'garage',
-                                                id: 'garage',
+                                                name: 'user',
+                                                id: 'user',
                                             }}
                                         >
-                                            <MenuItem value="M">M</MenuItem>
-                                            <MenuItem value="G">G</MenuItem>
-                                            <MenuItem value="S1">S1</MenuItem>
+                                            {users.map(u => (
+                                                <MenuItem value={u.id} key={u.id}>{u.firstName} {u.lastName}</MenuItem>
+                                            ))}
                                         </Select>
                                     </FormControl>
-                                    {garage !== '' && (
-                                        <FormControl
-                                            className={classes.formControl}
-                                            error={validationErrors.floor}
+                                }
+                                <div>
+                                    <TextField
+                                        required
+                                        error={validationErrors.vehiclePlateNumber}
+                                        id="vehiclePlateNumber"
+                                        label="Plate number"
+                                        value={vehiclePlateNumber}
+                                        className={classes.textField}
+                                        margin="normal"
+                                        onChange={this.handlePlateNumberChange}
+                                    />
+                                </div>
+                                <FormControl
+                                    className={classes.formControl}
+                                    error={validationErrors.garage}
+                                >
+                                    <InputLabel htmlFor="garage">Garage</InputLabel>
+                                    <Select
+                                        required
+                                        value={garage}
+                                        onChange={this.handleGarageChange}
+                                        inputProps={{
+                                            name: 'garage',
+                                            id: 'garage',
+                                        }}
+                                    >
+                                        <MenuItem value="M">M</MenuItem>
+                                        <MenuItem value="G">G</MenuItem>
+                                        <MenuItem value="S1">S1</MenuItem>
+                                    </Select>
+                                </FormControl>
+                                {garage !== '' && (
+                                    <FormControl
+                                        className={classes.formControl}
+                                        error={validationErrors.floor}
+                                    >
+                                        <InputLabel htmlFor="floor">Floor</InputLabel>
+                                        <Select
+                                            required
+                                            value={floor}
+                                            onChange={this.handleFloorChange}
+                                            inputProps={{
+                                                name: 'floor',
+                                                id: 'floor',
+                                            }}
                                         >
-                                            <InputLabel htmlFor="floor">Floor</InputLabel>
-                                            <Select
-                                                required
-                                                value={floor}
-                                                onChange={this.handleFloorChange}
-                                                inputProps={{
-                                                    name: 'floor',
-                                                    id: 'floor',
-                                                }}
-                                            >
-                                                {garages[garage].map((item) => (
-                                                    <MenuItem value={item} key={item}>{item}</MenuItem>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
-                                    )}
-                                    {floor !== '' && (
-                                        <TextField
-                                            id="seat"
-                                            label="Seat (optional)"
-                                            value={seat}
-                                            className={classes.textField}
-                                            margin="normal"
-                                            onChange={this.handleSeatChange}
-                                        />
-                                    )}
+                                            {garages[garage].map((item) => (
+                                                <MenuItem value={item} key={item}>{item}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                )}
+                                {floor !== '' && (
+                                    <TextField
+                                        id="seat"
+                                        label="Seat (optional)"
+                                        value={seat}
+                                        className={classes.textField}
+                                        margin="normal"
+                                        onChange={this.handleSeatChange}
+                                    />
+                                )}
+                                <div>
+                                    <TextField
+                                        id="comment"
+                                        label="Comment"
+                                        multiline
+                                        rowsMax="4"
+                                        value={comment}
+                                        onChange={this.handleCommentChange}
+                                        className={classes.textField}
+                                        margin="normal"
+                                    />
+                                </div>
+                                <div className={classes.actionsContainer}>
                                     <div>
-                                        <TextField
-                                            id="comment"
-                                            label="Comment"
-                                            multiline
-                                            rowsMax="4"
-                                            value={comment}
-                                            onChange={this.handleCommentChange}
-                                            className={classes.textField}
-                                            margin="normal"
-                                        />
-                                    </div>
-                                    <div className={classes.actionsContainer}>
-                                        <div>
-                                            <Button
-                                                onClick={this.handleBack}
-                                                className={classes.button}
-                                            >Back</Button>
-                                            <Button
-                                                variant="contained"
-                                                color="primary"
-                                                onClick={this.handleReserve}
-                                                className={classes.button}
-                                            >{!this.props.match.params.id ? 'Reserve' : 'Update'}</Button>
-                                        </div>
+                                        <Button
+                                            onClick={this.handleBack}
+                                            className={classes.button}
+                                        >Back</Button>
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={this.handleReserve}
+                                            className={classes.button}
+                                        >{!this.props.match.params.id ? 'Reserve' : 'Update'}</Button>
                                     </div>
                                 </div>
-                            }
-                        </StepContent>
-                    </Step>
-                </Stepper>
-            </React.Fragment>
+                            </div>
+                        }
+                    </StepContent>
+                </Step>
+            </Stepper>
         );
     }
 }
@@ -751,6 +752,8 @@ Reserve.propTypes = {
     classes: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
+    addReservation: PropTypes.func.isRequired,
+    removeReservation: PropTypes.func,
     openSnackbar: PropTypes.func.isRequired,
 };
 
