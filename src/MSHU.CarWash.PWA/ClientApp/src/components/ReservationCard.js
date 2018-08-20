@@ -124,9 +124,9 @@ function getServiceName(service) {
         case 5:
             return 'polishing';
         case 6:
-            return 'AC cleaning \'ozon\'';
+            return "AC cleaning 'ozon'";
         case 7:
-            return 'AC cleaning \'bomba\'';
+            return "AC cleaning 'bomba'";
         case 8:
             return 'bug removal';
         case 9:
@@ -149,35 +149,35 @@ function getButtons(reservation, classes, handleCancelDialogOpen) {
         case 0:
             return (
                 <CardActions>
-                    <Button
-                        component={Link}
-                        to={`/reserve/${reservation.id}`}
-                        size="small"
-                        color="primary"
-                    >Edit</Button>
-                    <Button
-                        size="small"
-                        color="secondary"
-                        className={classes.dangerButton}
-                        onClick={handleCancelDialogOpen}
-                    >Cancel</Button>
+                    <Button component={Link} to={`/reserve/${reservation.id}`} size="small" color="primary">
+                        Edit
+                    </Button>
+                    <Button size="small" color="secondary" className={classes.dangerButton} onClick={handleCancelDialogOpen}>
+                        Cancel
+                    </Button>
                 </CardActions>
             );
         case 1:
             return (
                 <CardActions>
-                    <Button size="small" color="primary">Confirm drop off and location</Button>
-                    <Button size="small" color="secondary">Cancel</Button>
+                    <Button size="small" color="primary">
+                        Confirm drop off and location
+                    </Button>
+                    <Button size="small" color="secondary">
+                        Cancel
+                    </Button>
                 </CardActions>
             );
         case 4:
             return (
                 <CardActions>
-                    <Button size="small" color="primary">I have already paid</Button>
+                    <Button size="small" color="primary">
+                        I have already paid
+                    </Button>
                 </CardActions>
             );
         default:
-            return (null);
+            return null;
     }
 }
 
@@ -210,19 +210,17 @@ function getCarwashComment(comment, classes) {
 }
 
 function getDate(reservation) {
-    const from = new Intl.DateTimeFormat('en-US',
-        {
-            month: 'long',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-        }).format(new Date(reservation.dateFrom));
+    const from = new Intl.DateTimeFormat('en-US', {
+        month: 'long',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(new Date(reservation.dateFrom));
 
-    const to = new Intl.DateTimeFormat('en-US',
-        {
-            hour: '2-digit',
-            minute: '2-digit',
-        }).format(new Date(reservation.dateTo));
+    const to = new Intl.DateTimeFormat('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(new Date(reservation.dateTo));
 
     return `${from} - ${to}`;
 }
@@ -245,30 +243,28 @@ class ReservationCard extends Component {
 
         apiFetch(`api/reservations/${this.props.reservation.id}`, {
             method: 'DELETE',
-        }).then(() => {
-            this.props.openSnackbar('Reservation successfully canceled.');
+        }).then(
+            () => {
+                this.props.openSnackbar('Reservation successfully canceled.');
 
-            // Remove deleted reservation from reservations
-            this.props.removeReservation(this.props.reservation.id);
-        }, (error) => {
-            this.props.openSnackbar(error);
-        });
+                // Remove deleted reservation from reservations
+                this.props.removeReservation(this.props.reservation.id);
+            },
+            error => {
+                this.props.openSnackbar(error);
+            }
+        );
     };
 
     render() {
-        const { classes, reservation } = this.props;
+        const { classes, reservation, admin } = this.props;
         return (
             <React.Fragment>
                 <Grow in>
                     <Card className={classes.card}>
-                        <CardMedia
-                            className={classes.media}
-                            image={`/images/state${reservation.state}.png`}
-                        />
+                        <CardMedia className={classes.media} image={`/images/state${reservation.state}.png`} />
                         <CardHeader
-                            action={
-                                reservation.private ? <LockIcon alt="Private" style={{ margin: '8px 16px 0 0' }} /> : null
-                            }
+                            action={reservation.private ? <LockIcon alt="Private" style={{ margin: '8px 16px 0 0' }} /> : null}
                             title={getStateName(reservation.state)}
                             subheader={getDate(reservation)}
                         />
@@ -279,15 +275,23 @@ class ReservationCard extends Component {
                             <Typography variant="body1" gutterBottom>
                                 {reservation.vehiclePlateNumber}
                             </Typography>
+                            {admin && (
+                                <React.Fragment>
+                                    <Typography variant="caption" gutterBottom style={{ marginTop: '8px' }}>
+                                        Name
+                                    </Typography>
+                                    <Typography variant="body1" gutterBottom>
+                                        {reservation.user.firstName} {reservation.user.lastName}
+                                    </Typography>
+                                </React.Fragment>
+                            )}
                             {getComment(reservation.comment, classes)}
                             {getCarwashComment(reservation.carwashComment, classes)}
                             <Divider className={classes.divider} />
-                            <Typography variant="subheading">
-                                Selected services
-                            </Typography>
-                            {reservation.services.map(service =>
+                            <Typography variant="subheading">Selected services</Typography>
+                            {reservation.services.map(service => (
                                 <Chip label={getServiceName(service)} className={classes.chip} key={service} />
-                            )}
+                            ))}
                         </CardContent>
                         {getButtons(reservation, classes, this.handleCancelDialogOpen)}
                     </Card>
@@ -318,6 +322,7 @@ ReservationCard.propTypes = {
     reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
     removeReservation: PropTypes.func.isRequired,
     openSnackbar: PropTypes.func.isRequired,
+    admin: PropTypes.bool,
 };
 
 export default withStyles(styles)(ReservationCard);

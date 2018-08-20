@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import ReservationGrid from './ReservationGrid';
 
-export default class Home extends Component {
-    displayName = Home.name;
+export default class Admin extends Component {
+    displayName = Admin.name;
 
     render() {
         const { reservations, reservationsLoading, removeReservation, openSnackbar } = this.props;
@@ -14,12 +14,13 @@ export default class Home extends Component {
                 reservationsLoading={reservationsLoading}
                 removeReservation={removeReservation}
                 openSnackbar={openSnackbar}
+                admin
             />
         );
     }
 }
 
-Home.propTypes = {
+Admin.propTypes = {
     reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
     reservationsLoading: PropTypes.bool.isRequired,
     removeReservation: PropTypes.func.isRequired,

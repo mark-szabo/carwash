@@ -70,11 +70,10 @@ namespace MSHU.CarWash.PWA.Controllers
         [HttpGet]
         public IEnumerable<object> GetReservation()
         {
-            var query = _user.IsAdmin || _user.IsCarwashAdmin ?
-                _context.Reservation.Where(r => r.UserId == _user.Id || r.CreatedById == _user.Id) :
-                _context.Reservation.Where(r => r.UserId == _user.Id);
-
-            return query.OrderByDescending(r => r.DateFrom).Select(reservation => new ReservationViewModel(reservation));
+            return _context.Reservation
+                .Where(r => r.UserId == _user.Id)
+                .OrderByDescending(r => r.DateFrom)
+                .Select(reservation => new ReservationViewModel(reservation));
         }
 
         // GET: api/reservations/{id}
@@ -286,6 +285,53 @@ namespace MSHU.CarWash.PWA.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new ReservationViewModel(reservation));
+        }
+
+        // GET: api/reservations/company
+        /// <summary>
+        /// Get reservations in my company
+        /// </summary>
+        /// <returns>List of <see cref="AdminReservationViewModel"/></returns>
+        /// <response code="200">OK</response>
+        /// <response code="401">Unathorized</response>
+        /// <response code="403">Forbidden if user is not admin.</response>
+        [ProducesResponseType(typeof(IEnumerable<AdminReservationViewModel>), 200)]
+        [HttpGet, Route("company")]
+        public async Task<IActionResult> GetCompanyReservations()
+        {
+            if (!_user.IsAdmin) return Forbid();
+
+            var reservations = await _context.Reservation
+                .Include(r => r.User)
+                .Where(r => r.User.Company == _user.Company && r.UserId != _user.Id)
+                .OrderByDescending(r => r.DateFrom)
+                .Select(reservation => new AdminReservationViewModel
+                {
+                    Id = reservation.Id,
+                    UserId = reservation.UserId,
+                    VehiclePlateNumber = reservation.VehiclePlateNumber,
+                    Location = reservation.Location,
+                    State = reservation.State,
+                    Services = reservation.Services,
+                    Private = reservation.Private,
+                    Mpv = reservation.Mpv,
+                    DateFrom = reservation.DateFrom,
+                    DateTo = (DateTime)reservation.DateTo,
+                    Comment = reservation.Comment,
+                    CarwashComment = reservation.CarwashComment,
+                    User = new UserViewModel
+                    {
+                        Id = reservation.User.Id,
+                        FirstName = reservation.User.FirstName,
+                        LastName = reservation.User.LastName,
+                        Company = reservation.User.Company,
+                        IsAdmin = reservation.User.IsAdmin,
+                        IsCarwashAdmin = reservation.User.IsCarwashAdmin
+                    }
+                })
+                .ToListAsync();
+
+            return Ok(reservations);
         }
 
         // GET: api/reservations/obfuscated
@@ -558,6 +604,25 @@ namespace MSHU.CarWash.PWA.Controllers
 
         public string Id { get; set; }
         public string UserId { get; set; }
+        public string VehiclePlateNumber { get; set; }
+        public string Location { get; set; }
+        public State State { get; set; }
+        public List<ServiceType> Services { get; set; }
+        public bool? Private { get; set; }
+        public bool? Mpv { get; set; }
+        public DateTime DateFrom { get; set; }
+        public DateTime DateTo { get; set; }
+        public string Comment { get; set; }
+        public string CarwashComment { get; set; }
+    }
+
+    internal class AdminReservationViewModel
+    {
+        public AdminReservationViewModel() { }
+
+        public string Id { get; set; }
+        public string UserId { get; set; }
+        public UserViewModel User { get; set; }
         public string VehiclePlateNumber { get; set; }
         public string Location { get; set; }
         public State State { get; set; }

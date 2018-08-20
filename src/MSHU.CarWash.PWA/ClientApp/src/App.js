@@ -7,6 +7,7 @@ import Layout from './components/Layout';
 import Home from './components/Home';
 import Reserve from './components/Reserve';
 import Support from './components/Support';
+import Admin from './components/Admin';
 
 // A theme with custom primary and secondary color.
 const theme = createMuiTheme({
@@ -34,6 +35,8 @@ export default class App extends Component {
         user: {},
         reservations: [],
         reservationsLoading: true,
+        companyReservations: [],
+        companyReservationsLoading: true,
         snackbarOpen: false,
         snackbarMessage: '',
     };
@@ -42,6 +45,10 @@ export default class App extends Component {
         apiFetch('api/users/me').then(
             data => {
                 this.setState({ user: data });
+
+                if (data.isAdmin) {
+                    this.loadCompanyReservations();
+                }
             },
             error => {
                 this.openSnackbar(error);
@@ -70,12 +77,19 @@ export default class App extends Component {
     };
 
     addReservation = reservation => {
-        this.setState(state => {
-            const reservations = [...state.reservations];
-            reservations.unshift(reservation);
+        if (reservation.userId === this.state.user.id) {
+            this.setState(state => {
+                const reservations = [...state.reservations];
+                reservations.unshift(reservation);
 
-            return { reservations };
-        });
+                return { reservations };
+            });
+        } else {
+            this.setState({
+                companyReservationsLoading: true,
+            });
+            this.loadCompanyReservations();
+        }
     };
 
     removeReservation = reservationId => {
@@ -87,6 +101,26 @@ export default class App extends Component {
         });
     };
 
+    removeReservationFromCompanyReservations = reservationId => {
+        this.setState(state => {
+            let companyReservations = [...state.companyReservations];
+            companyReservations = companyReservations.filter(r => r.id !== reservationId);
+
+            return { companyReservations };
+        });
+    };
+
+    loadCompanyReservations = () => {
+        apiFetch('api/reservations/company').then(
+            data => {
+                this.setState({ companyReservations: data, companyReservationsLoading: false });
+            },
+            error => {
+                this.openSnackbar(error);
+            }
+        );
+    };
+
     handleSnackbarClose = () => {
         this.setState({
             snackbarOpen: false,
@@ -94,7 +128,7 @@ export default class App extends Component {
     };
 
     render() {
-        const { user, reservations, reservationsLoading } = this.state;
+        const { user, reservations, reservationsLoading, companyReservations, companyReservationsLoading } = this.state;
         return (
             <MuiThemeProvider theme={theme}>
                 <Layout user={user}>
@@ -129,6 +163,20 @@ export default class App extends Component {
                                 reservations={reservations}
                                 addReservation={this.addReservation}
                                 removeReservation={this.removeReservation}
+                                openSnackbar={this.openSnackbar}
+                                {...props}
+                            />
+                        )}
+                    />
+                    <Route
+                        exact
+                        path="/admin"
+                        navbarName="Admin"
+                        render={props => (
+                            <Admin
+                                reservations={companyReservations}
+                                reservationsLoading={companyReservationsLoading}
+                                removeReservation={this.removeReservationFromCompanyReservations}
                                 openSnackbar={this.openSnackbar}
                                 {...props}
                             />

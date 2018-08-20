@@ -274,6 +274,12 @@ class Reserve extends Component {
         }
     }
 
+    isUserConcurrentReservationLimitMet = () => {
+        if (this.props.match.params.id) return false;
+        if (this.props.user.isAdmin || this.props.user.isCarwashAdmin) return false;
+        return this.props.reservations.filter(r => r.state !== 5).length >= 2;
+    }
+
     handleNext = () => {
         this.setState(state => ({
             activeStep: state.activeStep + 1,
@@ -465,7 +471,7 @@ class Reserve extends Component {
     };
 
     render() {
-        const { classes, user, reservations } = this.props;
+        const { classes, user } = this.props;
         const {
             activeStep,
             servicesStepLabel,
@@ -509,7 +515,7 @@ class Reserve extends Component {
             );
         }
 
-        if (!this.props.match.params.id && reservations.filter(r => r.state !== 5).length >= 2) {
+        if (this.isUserConcurrentReservationLimitMet()) {
             return (
                 <div className={classes.center}>
                     <div>

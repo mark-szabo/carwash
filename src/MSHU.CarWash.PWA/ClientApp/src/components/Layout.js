@@ -69,12 +69,13 @@ class Layout extends React.Component {
 
     getNavbarName() {
         let name;
-        this.props.children.map((prop) => {
-            if (prop.props.path.includes(window.location.pathname)) {
-                name = prop.props.navbarName;
+        this.props.children.map(child => {
+            if (window.location.pathname.includes(child.props.path)) {
+                name = child.props.navbarName;
             }
             return null;
         });
+
         return name;
     }
 
@@ -83,7 +84,7 @@ class Layout extends React.Component {
 
         const drawer = (
             <div>
-                <div className={classes.toolbar} >
+                <div className={classes.toolbar}>
                     <Link to="/">
                         <Typography variant="title" color="inherit" noWrap className={classes.appTitle}>
                             <LocalCarWashIcon /> CarWash
@@ -101,12 +102,7 @@ class Layout extends React.Component {
             <div className={classes.root}>
                 <AppBar className={classes.appBar}>
                     <Toolbar>
-                        <IconButton
-                            color="inherit"
-                            aria-label="open drawer"
-                            onClick={this.handleDrawerToggle}
-                            className={classes.navIconHide}
-                        >
+                        <IconButton color="inherit" aria-label="open drawer" onClick={this.handleDrawerToggle} className={classes.navIconHide}>
                             <MenuIcon />
                         </IconButton>
                         <Typography variant="title" color="inherit" noWrap>
