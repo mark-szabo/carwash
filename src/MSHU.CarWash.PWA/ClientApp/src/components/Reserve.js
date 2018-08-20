@@ -261,7 +261,7 @@ class Reserve extends Component {
             );
         }
 
-        if (this.props.user.isAdmin || this.props.user.isCarwashAdmin) {
+        if (this.props.user.isAdmin) {
             apiFetch('api/users').then(
                 data => {
                     this.setState({
@@ -664,7 +664,7 @@ class Reserve extends Component {
                                         />
                                     </FormGroup>
                                 </div>
-                                {(user.isAdmin || user.isCarwashAdmin) && (
+                                {user.isAdmin && (
                                     <FormControl className={classes.formControl}>
                                         <InputLabel htmlFor="user">User</InputLabel>
                                         <Select
