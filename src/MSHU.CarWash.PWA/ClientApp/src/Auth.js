@@ -66,6 +66,15 @@ export function signOut() {
  * @return {object} The parsed JSON, status from the response
  */
 function parseJson(response) {
+    // NoContent would throw a JSON parsing error
+    if (response.status === 204) {
+        return {
+            status: response.status,
+            ok: response.ok,
+            json: {},
+        };
+    }
+
     return new window.Promise((resolve, reject) =>
         response
             .json()

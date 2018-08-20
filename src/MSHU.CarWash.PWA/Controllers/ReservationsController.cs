@@ -434,8 +434,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// </summary>
         /// <returns>an object containing the plate number and location last used</returns>
         /// <response code="200">OK</response>
+        /// <response code="204">NoContent if user has no reservation yet.</response>
         /// <response code="401">Unathorized</response>
-        /// <response code="404">NotFound if user has no reservation yet.</response>
         [ProducesResponseType(typeof(LastSettingsViewModel), 200)]
         [HttpGet, Route("lastsettings")]
         public async Task<IActionResult> GetLastSettings()
@@ -443,9 +443,9 @@ namespace MSHU.CarWash.PWA.Controllers
             var lastReservation = await _context.Reservation
                 .Where(r => r.UserId == _user.Id)
                 .OrderByDescending(r => r.CreatedOn)
-                .FirstAsync();
+                .FirstOrDefaultAsync();
 
-            if (lastReservation == null) return NotFound();
+            if (lastReservation == null) return NoContent();
 
             return Ok(new LastSettingsViewModel
             {

@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
-import ReservationCard from './ReservationCard';
-import Grid from '@material-ui/core/Grid';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
+import Grid from '@material-ui/core/Grid';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Typography from '@material-ui/core/Typography';
+import ReservationCard from './ReservationCard';
+import RoadAnimation from './RoadAnimation';
 
 const styles = theme => ({
     card: {
@@ -29,6 +31,17 @@ const styles = theme => ({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    center: {
+        textAlign: 'center',
+        height: '80%',
+    },
+    lonelyText: {
+        color: '#9E9E9E',
+    },
+    lonelyTitle: {
+        color: '#9E9E9E',
+        marginTop: theme.spacing.unit * 4,
+    },
 });
 
 class ReservationGrid extends Component {
@@ -41,6 +54,18 @@ class ReservationGrid extends Component {
             return (
                 <div className={classes.progress}>
                     <CircularProgress size={50} />
+                </div>
+            );
+        }
+
+        if (reservations.length <= 0) {
+            return (
+                <div className={classes.center}>
+                    <Typography variant="title" gutterBottom className={classes.lonelyTitle}>
+                        It's lonely here...
+                    </Typography>
+                    <Typography className={classes.lonelyText}>Tap the Reserve button on the left to get started.</Typography>
+                    <RoadAnimation />
                 </div>
             );
         }

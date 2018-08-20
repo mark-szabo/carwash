@@ -1,0 +1,269 @@
+:root {
+  --acceleration-default: cubic-bezier(0.445, 0.05, 0.55, 0.95);
+  --acceleration-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --border-circular: 50%;
+  --border-mid: 33%;
+  --border-soft: 5%;
+  --color-land: rgb(250, 250, 250);
+  --color-sand: radial-gradient(
+    ellipse at 62%,
+    rgba(250, 250, 250, 0) 15%,
+    rgba(250, 250, 250, 1) 67%
+  );
+  --color-road: linear-gradient(to right, #3d3445 0%, #30243c 100%);
+  --color-stripe: linear-gradient(
+    -45deg,
+    rgba(250, 250, 250, 0.8) 0%,
+    rgba(250, 250, 250, 1) 100%
+  );
+  --color-car: linear-gradient(-45deg, #6d99ca 0%, #6d99ca 100%);
+  --color-car-top: linear-gradient(-45deg, #6d99ca 0%, #b8c5d0 100%);
+  --color-car-lights: linear-gradient(
+    to top,
+    rgba(187, 179, 122, 1) 0%,
+    rgba(187, 179, 122, 0) 80%
+  );
+  --color-plant: linear-gradient(to top, #2f7421 0%, #205315 100%);
+  --color-plant-accent: #2f7421;
+  --perspective: rotateX(47deg) rotateY(0deg) rotateZ(45deg);
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+.scene {
+  background: var(--color-land);
+  overflow: hidden;
+  width: 100%;
+  height: 70%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: animRevealScene ease-in 0.5s 1;
+}
+
+.inner-scene {
+  transform: var(--perspective);
+  overflow: hidden;
+  width: 360px;
+  height: 480px;
+  margin: 0 auto;
+}
+
+.inner-scene:after,
+.inner-scene:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 100%;
+  left: 0;
+  height: calc(100% + 2px);
+  background: var(--color-sand);
+}
+
+.road {
+  position: absolute;
+  height: 150%;
+  width: 40%;
+  left: 30%;
+  top: 0%;
+  outline: 1px solid transparent;
+  transition: transform 600ms ease;
+  transform-style: preserve3d;
+  -webkit-transform-origin: 50% 50%;
+  will-change: transform;
+  border-right: 1px solid rgba(0, 0, 0, 1);
+  animation: animFakeParalax 5s linear infinite;
+  background: var(--color-road);
+}
+
+.road:nth-of-type(2) {
+  top: calc(-150% + 2px);
+}
+
+.item {
+  position: absolute;
+  left: calc(50% - var(--item-half-width));
+  top: calc(50% - var(--item-half-height));
+  -webkit-backface-visibility: hidden;
+  -webkit-transform-style: preserve-3d;
+}
+
+.item:before,
+.item:after {
+  content: "";
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  --item-half-width: 50%;
+  --item-half-height: 50%;
+  outline: 1px solid transparent;
+}
+
+.stripe,
+.stripe:before,
+.stripe:after {
+  width: 18px;
+  height: 24px;
+  --item-half-width: 9px;
+  --item-half-height: 12px;
+  background: #fff;
+  border-radius: 3px;
+  background: var(--color-stripe);
+  transform: translateY(-120px);
+  z-index: 2;
+}
+
+.stripe:before {
+  transform: translateY(-212px);
+}
+
+.stripe:after {
+  transform: translateY(212px);
+}
+
+.car {
+  width: 10%;
+  height: 14%;
+  --item-half-width: 5%;
+  --item-half-height: 7%;
+  border-radius: 4px 4px 5px 5px;
+  background-image: var(--color-car);
+  animation: animDrive 3s var(--acceleration-bounce) infinite alternate;
+}
+
+.car:before {
+  border-radius: var(--border-soft);
+  background-image: var(--color-car-top);
+  width: 100%;
+  height: 100%;
+  transform: translate3d(-17%, 4%, 0) scale(0.6, 0.6);
+}
+
+.car:after {
+  border-radius: var(--border-mid);
+  background-image: var(--color-car-lights);
+  width: 100%;
+  height: 100%;
+  top: -100%;
+  animation: animLights 3s linear infinite alternate;
+  transform-origin: bottom center;
+  transform: skew(-3deg);
+}
+
+.plant {
+  width: 26px;
+  height: 26px;
+  --item-half-width: 13px;
+  --item-half-height: 13px;
+  border-radius: var(--border-mid);
+  background-image: var(--color-plant);
+  transform: translate3d(120px, -56px, 0) scale(1, 1);
+}
+
+.plant:after {
+  border-radius: var(--border-mid);
+  background-color: var(--color-plant-accent);
+  transform: translate3d(-33%, -33%, 0) scale(0.6, 0.6);
+}
+
+.plant:nth-of-type(2) {
+  width: 19px;
+  height: 19px;
+  --item-half-width: 10px;
+  --item-half-height: 10px;
+  transform: translate3d(-96px, -120px, 0);
+}
+
+.plant:nth-of-type(2):after {
+  transform: translate3d(-33%, -33%, 0) scale(0.7, 0.7);
+}
+
+.plant:nth-of-type(3) {
+  width: 51px;
+  height: 51px;
+  --item-half-width: 26px;
+  --item-half-height: 26px;
+  transform: translate3d(96px, 16px, 0) scale(0.6, 0.6);
+}
+
+.plant:nth-of-type(3):after {
+  transform: translate3d(-12%, -12%, 0) scale(0.6, 0.6);
+}
+
+.plant:nth-of-type(4) {
+  width: 48px;
+  height: 48px;
+  --item-half-width: 24px;
+  --item-half-height: 24px;
+  transform: translate3d(-104px, -480px, 0) scale(0.7, 0.7);
+}
+
+.plant:nth-of-type(4):after {
+  transform: translate3d(-20%, -20%, 0) scale(0.6, 0.6);
+}
+
+.plant:nth-of-type(5) {
+  width: 51px;
+  height: 51px;
+  --item-half-width: 26px;
+  --item-half-height: 26px;
+  transform: translate3d(128px, -360px, 0) scale(0.5, 0.5);
+}
+
+.plant:nth-of-type(6) {
+  width: 160px;
+  height: 160px;
+  --item-half-width: 80px;
+  --item-half-height: 80px;
+  transform: translate3d(136px, -528px, 0) scale(0.5, 0.5);
+}
+
+.plant:nth-of-type(6):after {
+  transform: translate3d(-13%, -13%, 0) scale(0.6, 0.6);
+}
+
+@keyframes animFakeParalax {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes animDrive {
+  0%,
+  5% {
+    transform: translate3d(105%, 0, 0);
+  }
+  45%,
+  50% {
+    transform: translate3d(100%, 5%, 0);
+  }
+  100% {
+    transform: translate3d(105%, 0, 0);
+  }
+}
+
+@keyframes animLights {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes animRevealScene {
+  0% {
+    opacity: 0.21;
+  }
+  100% {
+    opacity: 1;
+  }
+}

@@ -211,6 +211,23 @@ class Reserve extends Component {
                     this.props.openSnackbar(error);
                 }
             );
+        } else {
+            apiFetch('api/reservations/lastsettings').then(
+                data => {
+                    if (Object.keys(data).length !== 0) {
+                        const [garage, floor] = data.location.split('/');
+                        this.setState({
+                            vehiclePlateNumber: data.vehiclePlateNumber,
+                            garage,
+                            floor,
+                        });
+                    }
+                },
+                error => {
+                    this.setState({ loading: false });
+                    this.props.openSnackbar(error);
+                }
+            );
         }
 
         if (this.props.user.isCarwashAdmin) {
@@ -244,21 +261,6 @@ class Reserve extends Component {
             );
         }
 
-        apiFetch('api/reservations/lastsettings').then(
-            data => {
-                const [garage, floor] = data.location.split('/');
-                this.setState({
-                    vehiclePlateNumber: data.vehiclePlateNumber,
-                    garage,
-                    floor,
-                });
-            },
-            error => {
-                this.setState({ loading: false });
-                this.props.openSnackbar(error);
-            }
-        );
-
         if (this.props.user.isAdmin || this.props.user.isCarwashAdmin) {
             apiFetch('api/users').then(
                 data => {
@@ -278,7 +280,7 @@ class Reserve extends Component {
         if (this.props.match.params.id) return false;
         if (this.props.user.isAdmin || this.props.user.isCarwashAdmin) return false;
         return this.props.reservations.filter(r => r.state !== 5).length >= 2;
-    }
+    };
 
     handleNext = () => {
         this.setState(state => ({
