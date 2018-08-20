@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -27,7 +28,10 @@ namespace MSHU.CarWash.PWA.Controllers
         public UsersController(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
-            _user = _context.Users.SingleOrDefault(u => u.Email == httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Upn));
+            var email = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Upn)?.ToLower() ??
+                        httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Email)?.ToLower() ??
+                        throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
+            _user = _context.Users.SingleOrDefault(u => u.Email == email);
         }
 
         // GET: api/users
@@ -165,10 +169,11 @@ Please keep in mind, that we are required to continue storing your previous rese
 
     internal class UserViewModel
     {
+        public UserViewModel() { }
+
         public UserViewModel(User user)
         {
             Id = user.Id;
-            Email = user.Email;
             FirstName = user.FirstName;
             LastName = user.LastName;
             Company = user.Company;
@@ -177,7 +182,6 @@ Please keep in mind, that we are required to continue storing your previous rese
         }
 
         public string Id { get; set; }
-        public string Email { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Company { get; set; }

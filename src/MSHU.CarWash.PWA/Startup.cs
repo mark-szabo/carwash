@@ -1,4 +1,21 @@
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
+using MSHU.CarWash.ClassLibrary;
+using MSHU.CarWash.PWA.Controllers;
+using MSHU.CarWash.PWA.Extensions;
+using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,23 +25,6 @@ using System.Net;
 using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.Net.Http.Headers;
-using MSHU.CarWash.ClassLibrary;
-using MSHU.CarWash.PWA.Controllers;
-using MSHU.CarWash.PWA.Extensions;
-using Swashbuckle.AspNetCore.Swagger;
 
 namespace MSHU.CarWash.PWA
 {
@@ -87,8 +87,10 @@ namespace MSHU.CarWash.PWA
                             //Get EF context
                             var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
 
-                            var email = context.Principal.FindFirstValue(ClaimTypes.Upn).ToLower() ??
-                                        throw new Exception("Email ('upn') cannot be found in auth token.");
+                            var company = _authorizedTenants.SingleOrDefault(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))?.Name ?? throw new Exception("Tenant ('tenantid') cannot be found in auth token.");
+                            var email = context.Principal.FindFirstValue(ClaimTypes.Upn)?.ToLower();
+                            if (email == null && company == Company.Carwash) email = context.Principal.FindFirstValue(ClaimTypes.Email)?.ToLower();
+                            if (email == null) throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
 
                             var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
 
@@ -99,9 +101,9 @@ namespace MSHU.CarWash.PWA
                                     FirstName = context.Principal.FindFirstValue(ClaimTypes.GivenName) ?? throw new Exception("First name ('givenname') cannot be found in auth token."),
                                     LastName = context.Principal.FindFirstValue(ClaimTypes.Surname),
                                     Email = email,
-                                    Company = _authorizedTenants.SingleOrDefault(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))?.Name ?? throw new Exception("Tenant ('tenantid') cannot be found in auth token."),
+                                    Company = company,
                                     IsAdmin = false,
-                                    IsCarwashAdmin = false
+                                    IsCarwashAdmin = company == Company.Carwash
                                 };
                                 await dbContext.Users.AddAsync(user);
                                 await dbContext.SaveChangesAsync();
