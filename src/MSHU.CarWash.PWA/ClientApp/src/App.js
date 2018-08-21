@@ -42,31 +42,33 @@ export default class App extends Component {
     };
 
     componentDidMount() {
-        apiFetch('api/users/me').then(
-            data => {
-                this.setState({ user: data });
-
-                if (data.isAdmin) {
-                    this.loadCompanyReservations();
+        apiFetch('api/reservations')
+            .then(
+                data => {
+                    this.setState({
+                        reservations: data,
+                        reservationsLoading: false,
+                    });
+                },
+                error => {
+                    this.setState({ reservationsLoading: false });
+                    this.openSnackbar(error);
                 }
-            },
-            error => {
-                this.openSnackbar(error);
-            }
-        );
+            )
+            .then(() => {
+                apiFetch('api/users/me').then(
+                    data => {
+                        this.setState({ user: data });
 
-        apiFetch('api/reservations').then(
-            data => {
-                this.setState({
-                    reservations: data,
-                    reservationsLoading: false,
-                });
-            },
-            error => {
-                this.setState({ reservationsLoading: false });
-                this.openSnackbar(error);
-            }
-        );
+                        if (data.isAdmin) {
+                            this.loadCompanyReservations();
+                        }
+                    },
+                    error => {
+                        this.openSnackbar(error);
+                    }
+                );
+            });
     }
 
     openSnackbar = message => {
