@@ -29,6 +29,14 @@ workbox.routing.registerRoute(
     })
 );
 
+// [NETWORK FIRST] Cache company reservation list from 'GET /api/reservations/company'
+workbox.routing.registerRoute(
+    ({ url }) => url.pathname === '/api/reservations/company',
+    workbox.strategies.networkFirst({
+        plugins: [bgSyncPlugin],
+    })
+);
+
 // [CACHE FIRST] Cache current user from 'GET /api/users/me'
 workbox.routing.registerRoute(({ url }) => url.pathname === '/api/users/me', workbox.strategies.cacheFirst());
 
