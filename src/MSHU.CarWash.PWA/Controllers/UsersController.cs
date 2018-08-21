@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -47,7 +47,10 @@ namespace MSHU.CarWash.PWA.Controllers
         public IActionResult GetUsers()
         {
             if (!_user.IsAdmin) return Forbid();
-            return Ok(_context.Users.Where(u => u.Company == _user.Company && u.FirstName != "[deleted user]").Select(u => new UserViewModel(u)));
+            return Ok(_context.Users
+            .Where(u => u.Company == _user.Company && u.FirstName != "[deleted user]")
+            .OrderBy(u => u.FullName)
+            .Select(u => new UserViewModel(u)));
         }
 
         // GET: api/users/{id}
