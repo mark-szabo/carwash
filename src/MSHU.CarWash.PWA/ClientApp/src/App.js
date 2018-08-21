@@ -8,6 +8,7 @@ import Home from './components/Home';
 import Reserve from './components/Reserve';
 import Support from './components/Support';
 import Admin from './components/Admin';
+import Settings from './components/Settings';
 
 // A theme with custom primary and secondary color.
 const theme = createMuiTheme({
@@ -170,6 +171,7 @@ export default class App extends Component {
                             />
                         )}
                     />
+                    <Route path="/settings" navbarName="Settings" render={props => <Settings user={user} openSnackbar={this.openSnackbar} {...props} />} />
                     <Route
                         exact
                         path="/admin"

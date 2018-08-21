@@ -29,6 +29,7 @@
     "@material-ui/icons": "^1.1.0",
     "adal-angular": "^1.0.17",
     "ajv": "^6.5.2",
+    "downloadjs": "^1.4.7",
     "prop-types": "^15.6.2",
     "react": "^16.4.1",
     "react-addons-css-transition-group": "^15.6.2",

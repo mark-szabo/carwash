@@ -1,14 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MSHU.CarWash.ClassLibrary;
 using MSHU.CarWash.PWA.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace MSHU.CarWash.PWA.Controllers
 {
@@ -96,17 +96,48 @@ namespace MSHU.CarWash.PWA.Controllers
         [HttpGet, Route("me")]
         public IActionResult GetMe()
         {
-            if (_user == null)
-            {
-                return NotFound();
-            }
+            if (_user == null) return NotFound();
 
             return Ok(new UserViewModel(_user));
         }
 
+        // GET: api/users/downloadpersonaldata
+        /// <summary>
+        /// Download user's personal data (GDPR)
+        /// </summary>
+        /// <returns>Personal data object</returns>
+        /// <response code="200">OK</response>
+        /// <response code="401">Unathorized</response>
+        /// <response code="404">NotFound if user not found.</response>
+        [ProducesResponseType(typeof(object), 200)]
+        [HttpGet, Route("downloadpersonaldata")]
+        public async Task<IActionResult> DownloadPersonalData()
+        {
+            if (_user == null) return NotFound();
+
+            var user = new
+            {
+                _user.Id,
+                _user.FirstName,
+                _user.LastName,
+                _user.Email,
+                _user.Company,
+                _user.IsAdmin,
+                _user.IsCarwashAdmin
+            };
+
+            var reservations = await _context.Reservation
+                .Where(r => r.UserId == _user.Id)
+                .OrderByDescending(r => r.DateFrom)
+                .Select(reservation => new ReservationViewModel(reservation))
+                .ToListAsync();
+
+            return Ok(new { User = user, Reservations = reservations });
+        }
+
         // DELETE: api/users/{id}
         /// <summary>
-        /// Delete a user
+        /// Delete a user (GDPR)
         /// </summary>
         /// <remarks>
         /// Not actually deleting, only removing PII information.
