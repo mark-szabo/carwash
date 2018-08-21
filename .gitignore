@@ -16,3 +16,9 @@ PublishProfiles
 /src/MSHU.CarWash.Web/App_Data/MSHUCarWashContext-20151207160057_log.ldf
 
 src/MSHU\.CarWash\.PWA/appsettings\.Development\.json
+
+*.pfx
+
+src/MSHU\.CarWash\.PWA\.Windows/bld/
+
+src/MSHU\.CarWash\.PWA\.Windows/_pkginfo\.txt
