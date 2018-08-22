@@ -1,7 +1,8 @@
-﻿import React, { Component } from 'react';
+﻿import React from 'react';
+import PropTypes from 'prop-types';
+import TrackedComponent from './TrackedComponent';
 import { Redirect } from 'react-router';
 import apiFetch from '../Auth';
-import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Stepper from '@material-ui/core/Stepper';
 import Step from '@material-ui/core/Step';
@@ -130,7 +131,7 @@ function addDays(date, days) {
     return newDate;
 }
 
-class Reserve extends Component {
+class Reserve extends TrackedComponent {
     displayName = Reserve.name;
 
     constructor(props) {
@@ -176,6 +177,8 @@ class Reserve extends Component {
     }
 
     componentDidMount() {
+        super.componentDidMount();
+
         if (this.props.match.params.id) {
             this.setState({
                 loadingReservation: true,

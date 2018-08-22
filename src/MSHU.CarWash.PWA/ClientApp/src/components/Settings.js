@@ -1,5 +1,6 @@
-import React, { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
+import TrackedComponent from './TrackedComponent';
 import apiFetch from '../Auth';
 import { withStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
@@ -51,7 +52,7 @@ const styles = theme => ({
     },
 });
 
-class Settings extends Component {
+class Settings extends TrackedComponent {
     displayName = Settings.name;
 
     state = {

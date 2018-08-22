@@ -56,6 +56,23 @@ workbox.routing.registerRoute(
     })
 );
 
+// [CACHE FIRST] Cache Application Insights script
+workbox.routing.registerRoute(
+    /https:\/\/(.*).msecnd.net\/(.*)/,
+    workbox.strategies.cacheFirst({
+        cacheName: 'static-cache',
+        plugins: [
+            new workbox.expiration.Plugin({
+                maxEntries: 30,
+                maxAgeSeconds: 24 * 60 * 60, // 1 Day
+            }),
+            new workbox.cacheableResponse.Plugin({
+                statuses: [0, 200],
+            }),
+        ],
+    })
+);
+
 // [STALE WHILE REVALIDATE] Cache CSS and JS files
 workbox.routing.registerRoute(
     /\.(?:js|css)$/,

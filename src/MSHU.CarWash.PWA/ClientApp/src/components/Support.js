@@ -1,4 +1,5 @@
-﻿import React, { Component } from 'react';
+﻿import React from 'react';
+import TrackedComponent from './TrackedComponent';
 import Button from '@material-ui/core/Button';
 
 const style = {
@@ -6,7 +7,7 @@ const style = {
     color: 'initial',
 };
 
-export default class Support extends Component {
+export default class Support extends TrackedComponent {
     displayName = Support.name;
 
     render() {

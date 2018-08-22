@@ -1,8 +1,9 @@
-import React, { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
+import TrackedComponent from './TrackedComponent';
 import ReservationGrid from './ReservationGrid';
 
-export default class Home extends Component {
+export default class Home extends TrackedComponent {
     displayName = Home.name;
 
     render() {

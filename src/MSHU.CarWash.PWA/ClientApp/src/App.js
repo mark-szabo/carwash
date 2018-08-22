@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Route } from 'react-router';
+import { AppInsights } from 'applicationinsights-js';
 import apiFetch from './Auth';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Snackbar from '@material-ui/core/Snackbar';
@@ -70,6 +71,9 @@ export default class App extends Component {
                     }
                 );
             });
+
+        /* Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key */
+        AppInsights.downloadAndSetup({ instrumentationKey: 'd1ce1965-2171-4a11-9438-66114b31f88f' });
     }
 
     openSnackbar = message => {
