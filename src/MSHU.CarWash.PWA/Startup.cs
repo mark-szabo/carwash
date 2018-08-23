@@ -25,6 +25,7 @@ using System.Net;
 using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using MSHU.CarWash.PWA.Services;
 
 namespace MSHU.CarWash.PWA
 {
@@ -52,12 +53,17 @@ namespace MSHU.CarWash.PWA
         {
             // Add application services
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddSingleton(Configuration);
             services.AddScoped<UsersController, UsersController>();
+            services.AddScoped<IGraphService, GraphService>();
+            services.AddScoped<ICalendarService, CalendarService>();
 
             // Add framework services
             services.AddApplicationInsightsTelemetry(Configuration);
 
             services.AddDbContextPool<ApplicationDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Database")));
+
+            services.AddMemoryCache();
 
             services.AddAuthentication(options =>
                 {

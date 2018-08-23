@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MSHU.CarWash.ClassLibrary;
+using MSHU.CarWash.PWA.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,7 @@ namespace MSHU.CarWash.PWA.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly User _user;
+        private readonly ICalendarService _calendarService;
 
         /// <summary>
         /// Wash time unit in minutes
@@ -53,10 +55,11 @@ namespace MSHU.CarWash.PWA.Controllers
         };
 
         /// <inheritdoc />
-        public ReservationsController(ApplicationDbContext context, UsersController usersController)
+        public ReservationsController(ApplicationDbContext context, UsersController usersController, ICalendarService calendarService)
         {
             _context = context;
             _user = usersController.GetCurrentUser();
+            _calendarService = calendarService;
         }
 
         // GET: api/reservations
@@ -169,6 +172,13 @@ namespace MSHU.CarWash.PWA.Controllers
                 return BadRequest("There is not enough time in that slot.");
             #endregion
 
+            // Update calendar event using Microsoft Graph
+            if (dbReservation.UserId == _user.Id)
+            {
+                dbReservation.User = _user;
+                dbReservation.OutlookEventId = await _calendarService.UpdateEventAsync(dbReservation);
+            }
+
             try
             {
                 await _context.SaveChangesAsync();
@@ -253,6 +263,13 @@ namespace MSHU.CarWash.PWA.Controllers
                 return BadRequest("There is not enough time in that slot.");
             #endregion
 
+            // Add calendar event using Microsoft Graph
+            if (reservation.UserId == _user.Id)
+            {
+                reservation.User = _user;
+                reservation.OutlookEventId = await _calendarService.CreateEventAsync(reservation);
+            }
+
             _context.Reservation.Add(reservation);
             await _context.SaveChangesAsync();
 
@@ -283,6 +300,9 @@ namespace MSHU.CarWash.PWA.Controllers
 
             _context.Reservation.Remove(reservation);
             await _context.SaveChangesAsync();
+
+            // Delete calendar event using Microsoft Graph
+            await _calendarService.DeleteEventAsync(reservation.OutlookEventId);
 
             return Ok(new ReservationViewModel(reservation));
         }

@@ -18,7 +18,6 @@ namespace MSHU.CarWash.ClassLibrary
         [StringLength(7)]
         public string VehiclePlateNumber { get; set; }
 
-        [Required]
         public string Location { get; set; }
     
         public State State { get; set; }
@@ -51,5 +50,7 @@ namespace MSHU.CarWash.ClassLibrary
         
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime CreatedOn { get; set; }
+
+        public string OutlookEventId { get; set; }
     }
 }
