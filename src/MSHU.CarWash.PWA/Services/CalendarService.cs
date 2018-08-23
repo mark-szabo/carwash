@@ -80,37 +80,40 @@ namespace MSHU.CarWash.PWA.Services
             }
         }
 
-        private static Event GetCalendarEventFromReservation(Reservation reservation)
+        /// <summary>
+        /// Convert a Reservation object to a Graph calendar Event object
+        /// </summary>
+        /// <param name="reservation">Reservation object to convert from</param>
+        /// <returns>Converted Event object</returns>
+        private static Event GetCalendarEventFromReservation(Reservation reservation) => new Event
         {
-            return new Event
+            Id = reservation.OutlookEventId,
+            Subject = $"🚗 Car wash ({reservation.VehiclePlateNumber})",
+            IsReminderOn = true,
+            ReminderMinutesBeforeStart = 30,
+            ShowAs = FreeBusyStatus.Free,
+            Importance = Importance.Low,
+            Type = EventType.SingleInstance,
+            Start = new DateTimeTimeZone
             {
-                Subject = $"Car wash ({reservation.VehiclePlateNumber})",
-                IsReminderOn = true,
-                ReminderMinutesBeforeStart = 30,
-                ShowAs = FreeBusyStatus.Free,
-                Importance = Importance.Low,
-                Type = EventType.SingleInstance,
-                Start = new DateTimeTimeZone
-                {
-                    DateTime = reservation.DateFrom.ToString(),
-                    TimeZone = "Europe/Budapest"
-                },
-                End = new DateTimeTimeZone
-                {
-                    DateTime = reservation.DateFrom.ToString(),
-                    TimeZone = "Europe/Budapest"
-                },
-                Location = new Location
-                {
-                    DisplayName = reservation.Location
-                },
-                Body = new ItemBody
-                {
-                    ContentType = BodyType.Html,
-                    Content = $"Hi {reservation.User.FirstName}!<br/>Please don't forget to leave the key at the reception and <a href=\"https://carwashu.azurewebsites.net\">confirm dropoff & vihacle location by clicking here</a>!"
-                }
-            };
-        }
+                DateTime = reservation.DateFrom.ToString(),
+                TimeZone = "Europe/Budapest"
+            },
+            End = new DateTimeTimeZone
+            {
+                DateTime = reservation.DateTo.ToString(),
+                TimeZone = "Europe/Budapest"
+            },
+            Location = new Location
+            {
+                DisplayName = reservation.Location
+            },
+            Body = new ItemBody
+            {
+                ContentType = BodyType.Html,
+                Content = "Please don't forget to leave the key at the reception and <a href=\"https://carwashu.azurewebsites.net\">confirm dropoff & vihacle location by clicking here</a>!"
+            }
+        };
     }
 }
 

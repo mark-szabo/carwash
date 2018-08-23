@@ -4,6 +4,7 @@ const adalConfig = {
     clientId: '6e291d40-2613-4a74-9af5-790eb496a828',
     endpoints: {
         api: '6e291d40-2613-4a74-9af5-790eb496a828',
+        graph: 'https://graph.microsoft.com',
     },
     cacheLocation: 'localStorage',
     extraQueryParameter: '',
@@ -96,61 +97,65 @@ function parseJson(response) {
  * @return {Promise} The request promise
  */
 export default function apiFetch(url, options) {
-    return adalGetToken(adalConfig.endpoints.api).then(token => {
-        const o = options || {};
-        if (!o.headers) o.headers = {};
-        o.headers.Authorization = `Bearer ${token}`;
+    return adalGetToken(adalConfig.endpoints.api).then(token =>
+        adalGetToken(adalConfig.endpoints.graph).then(graphToken => {
+            const o = options || {};
+            if (!(o.headers instanceof Headers)) o.headers = new Headers();
+            o.headers.append('Content-Type', 'application/json');
+            o.headers.append('Authorization', `Bearer ${token}`);
+            o.headers.append('X-Graph-Token', graphToken);
 
-        return new window.Promise((resolve, reject) => {
-            window
-                .fetch(url, o)
-                .catch(error => {
-                    if (!navigator.onLine) {
-                        console.error('NETWORK ERROR: Disconnected from network.');
-                        return reject('You are offline.');
-                    }
-                    console.error(`NETWORK ERROR: ${error.message}`);
-                    return reject('Network error. Are you offline?');
-                })
-                .then(parseJson)
-                .then(
-                    response => {
-                        if (response.ok) {
-                            return resolve(response.json);
+            return new window.Promise((resolve, reject) => {
+                window
+                    .fetch(url, o)
+                    .catch(error => {
+                        if (!navigator.onLine) {
+                            console.error('NETWORK ERROR: Disconnected from network.');
+                            return reject('You are offline.');
                         }
-                        // extract the error from the server's json
-                        switch (response.status) {
-                            case 400:
-                                console.error(`BAD REQUEST: ${response.json}`);
-                                return reject(`An error has occured: ${response.json}`);
-                            case 401:
-                                console.error(`UNAUTHORIZED: ${response.json}`);
-                                return reject('You are not authorized. Please refresh the page!');
-                            case 403:
-                                console.error(`UNAUTHORIZED: ${response.json}`);
-                                return reject("You don't have permission!");
-                            case 404:
-                                console.error(`NOT FOUND: ${response.json}`);
-                                return reject('Not found.');
-                            case 500:
-                                console.error(`SERVER ERROR: ${response.json}`);
-                                return reject('A server error has occured.');
-                            default:
-                                console.error(`UNKNOWN ERROR: ${response.json}`);
-                                return reject(`An error has occured. ${response.json}`);
+                        console.error(`NETWORK ERROR: ${error.message}`);
+                        return reject('Network error. Are you offline?');
+                    })
+                    .then(parseJson)
+                    .then(
+                        response => {
+                            if (response.ok) {
+                                return resolve(response.json);
+                            }
+                            // extract the error from the server's json
+                            switch (response.status) {
+                                case 400:
+                                    console.error(`BAD REQUEST: ${response.json}`);
+                                    return reject(`An error has occured: ${response.json}`);
+                                case 401:
+                                    console.error(`UNAUTHORIZED: ${response.json}`);
+                                    return reject('You are not authorized. Please refresh the page!');
+                                case 403:
+                                    console.error(`UNAUTHORIZED: ${response.json}`);
+                                    return reject("You don't have permission!");
+                                case 404:
+                                    console.error(`NOT FOUND: ${response.json}`);
+                                    return reject('Not found.');
+                                case 500:
+                                    console.error(`SERVER ERROR: ${response.json}`);
+                                    return reject('A server error has occured.');
+                                default:
+                                    console.error(`UNKNOWN ERROR: ${response.json}`);
+                                    return reject(`An error has occured. ${response.json}`);
+                            }
+                        },
+                        error => {
+                            console.error(`JSON PARSING ERROR: ${error}`);
+                            return reject('A server error has occured.');
                         }
-                    },
-                    error => {
-                        console.error(`JSON PARSING ERROR: ${error}`);
-                        return reject('A server error has occured.');
-                    }
-                )
-                .catch(error => {
-                    console.error(`NETWORK ERROR: ${error.message}`);
-                    return reject('Network error. Are you offline?');
-                });
-        });
-    });
+                    )
+                    .catch(error => {
+                        console.error(`NETWORK ERROR: ${error.message}`);
+                        return reject('Network error. Are you offline?');
+                    });
+            });
+        })
+    );
 }
 
 export const getToken = () => authContext.getCachedToken(authContext.config.clientId);
