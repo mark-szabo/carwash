@@ -25,7 +25,10 @@ function adalGetToken(resourceGuid) {
     return new Promise((resolve, reject) => {
         authContext.acquireToken(resourceGuid, (message, token, msg) => {
             if (!msg) resolve(token);
-            else reject({ message, msg });
+            else {
+                console.error(message);
+                reject(message);
+            }
         });
     });
 }

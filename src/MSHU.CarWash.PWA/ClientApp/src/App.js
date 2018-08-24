@@ -30,6 +30,16 @@ const theme = createMuiTheme({
     },
 });
 
+function getSafeString(obj) {
+    return JSON.stringify(obj)
+        .replace(/'|"|{|}|\[|\]/g, ' ')
+        .replace(/ :/g, ':')
+        .replace(/ ,/g, ',')
+        .replace(/:./g, ': ')
+        .replace(/,./g, ', ')
+        .trim();
+}
+
 export default class App extends Component {
     displayName = App.name;
 
@@ -203,7 +213,7 @@ export default class App extends Component {
                     ContentProps={{
                         'aria-describedby': 'message-id',
                     }}
-                    message={<span id="message-id">{this.state.snackbarMessage}</span>}
+                    message={<span id="message-id">{getSafeString(this.state.snackbarMessage)}</span>}
                 />
             </MuiThemeProvider>
         );

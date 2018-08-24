@@ -10,7 +10,7 @@ if (workbox) {
 // as it is needed to include the newly genereted js and css files.
 // Error would be thrown: Refused to execute script from '...' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled.
 workbox.precaching.precacheAndRoute([
-    { url: '/', revision: '2' },
+    { url: '/', revision: '5' },
     { url: 'manifest.json', revision: '1' },
     { url: 'images/favicon-32x32.png', revision: '1' },
     { url: 'images/favicon-16x16.png', revision: '1' },
