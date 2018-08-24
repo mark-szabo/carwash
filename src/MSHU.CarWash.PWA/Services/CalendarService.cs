@@ -96,12 +96,12 @@ namespace MSHU.CarWash.PWA.Services
             Type = EventType.SingleInstance,
             Start = new DateTimeTimeZone
             {
-                DateTime = reservation.DateFrom.ToString(),
+                DateTime = reservation.StartDate.ToString(),
                 TimeZone = "Europe/Budapest"
             },
             End = new DateTimeTimeZone
             {
-                DateTime = reservation.DateTo.ToString(),
+                DateTime = reservation.EndDate.ToString(),
                 TimeZone = "Europe/Budapest"
             },
             Location = new Location

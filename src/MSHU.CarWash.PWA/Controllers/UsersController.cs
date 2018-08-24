@@ -128,7 +128,7 @@ namespace MSHU.CarWash.PWA.Controllers
 
             var reservations = await _context.Reservation
                 .Where(r => r.UserId == _user.Id)
-                .OrderByDescending(r => r.DateFrom)
+                .OrderByDescending(r => r.StartDate)
                 .Select(reservation => new ReservationViewModel(reservation))
                 .ToListAsync();
 

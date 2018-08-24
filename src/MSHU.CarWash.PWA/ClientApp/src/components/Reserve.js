@@ -190,7 +190,7 @@ class Reserve extends TrackedComponent {
                         services[s].selected = true;
                     });
                     const [garage, floor, seat] = data.location.split('/');
-                    const date = new Date(data.dateFrom);
+                    const date = new Date(data.startDate);
                     this.setState({
                         services,
                         selectedDate: date,
@@ -439,7 +439,7 @@ class Reserve extends TrackedComponent {
             location: `${this.state.garage}/${this.state.floor}/${this.state.seat}`,
             services: this.state.services.filter(s => s.selected).map(s => s.id),
             private: this.state.private,
-            dateFrom: this.state.selectedDate,
+            startDate: this.state.selectedDate,
             comment: this.state.comment,
         };
 

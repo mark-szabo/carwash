@@ -38,9 +38,9 @@ namespace MSHU.CarWash.ClassLibrary
         public int? TimeRequirement { get; set; }
 
         [Required]
-        public DateTime DateFrom { get; set; }
+        public DateTime StartDate { get; set; }
 
-        public DateTime? DateTo { get; set; }
+        public DateTime? EndDate { get; set; }
         
         public string Comment { get; set; }
         

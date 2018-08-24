@@ -215,12 +215,12 @@ function getDate(reservation) {
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
-    }).format(new Date(reservation.dateFrom));
+    }).format(new Date(reservation.startDate));
 
     const to = new Intl.DateTimeFormat('en-US', {
         hour: '2-digit',
         minute: '2-digit',
-    }).format(new Date(reservation.dateTo));
+    }).format(new Date(reservation.endDate));
 
     return `${from} - ${to}`;
 }
