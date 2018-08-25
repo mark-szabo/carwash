@@ -265,7 +265,7 @@ class Reserve extends TrackedComponent {
         }
 
         if (this.props.user.isAdmin) {
-            apiFetch('api/users').then(
+            apiFetch('api/users/dictionary').then(
                 data => {
                     this.setState({
                         users: data,
@@ -679,9 +679,9 @@ class Reserve extends TrackedComponent {
                                                 id: 'user',
                                             }}
                                         >
-                                            {users.map(u => (
-                                                <MenuItem value={u.id} key={u.id}>
-                                                    {u.firstName} {u.lastName}
+                                            {Object.keys(users).map(id => (
+                                                <MenuItem value={id} key={id}>
+                                                    {users[id]}
                                                 </MenuItem>
                                             ))}
                                         </Select>

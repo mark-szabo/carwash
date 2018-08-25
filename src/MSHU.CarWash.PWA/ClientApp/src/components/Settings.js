@@ -5,7 +5,13 @@ import apiFetch from '../Auth';
 import { withStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
+import Paper from '@material-ui/core/Paper';
 import Dialog from '@material-ui/core/Dialog';
+import Radio from '@material-ui/core/Radio';
+import RadioGroup from '@material-ui/core/RadioGroup';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormControl from '@material-ui/core/FormControl';
+import Switch from '@material-ui/core/Switch';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
@@ -27,6 +33,10 @@ const styles = theme => ({
         '&:hover': {
             backgroundColor: 'rgb(157, 0, 56)',
         },
+        marginTop: theme.spacing.unit,
+    },
+    primaryButtonContained: {
+        marginTop: theme.spacing.unit,
     },
     center: {
         display: 'grid',
@@ -49,6 +59,16 @@ const styles = theme => ({
     },
     title: {
         marginTop: '16px',
+    },
+    paper: {
+        ...theme.mixins.gutters(),
+        paddingTop: theme.spacing.unit * 2,
+        paddingBottom: theme.spacing.unit * 2,
+        maxWidth: '600px',
+        marginBottom: theme.spacing.unit * 2,
+    },
+    group: {
+        margin: `${theme.spacing.unit}px 0`,
     },
 });
 
@@ -98,6 +118,36 @@ class Settings extends TrackedComponent {
         );
     };
 
+    handleCalendarIntegrationChange = () => {
+        const { calendarIntegration } = this.props.user;
+
+        this.props.updateUser('calendarIntegration', !calendarIntegration);
+        this.updateSetting('calendarIntegration', !calendarIntegration);
+    };
+
+    handleNotificationChannelChange = event => {
+        const notificationChannel = parseInt(event.target.value, 10);
+        this.props.updateUser('notificationChannel', notificationChannel);
+        this.updateSetting('notificationChannel', notificationChannel);
+    };
+
+    updateSetting = (key, value) => {
+        apiFetch(`api/users/settings/${key}`, {
+            method: 'PUT',
+            body: JSON.stringify(value),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(
+            () => {
+                this.props.openSnackbar('Updates saved.');
+            },
+            error => {
+                this.props.openSnackbar(error);
+            }
+        );
+    };
+
     render() {
         const { classes } = this.props;
 
@@ -116,43 +166,77 @@ class Settings extends TrackedComponent {
         }
 
         return (
-            <div>
-                <Typography variant="display1" gutterBottom>
-                    Notifications
-                </Typography>
-                <Typography variant="display1" gutterBottom>
-                    Thanks to GDPR...
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                    By using this app, you agree to Microsoft's{' '}
-                    <a href="https://go.microsoft.com/fwlink/?LinkID=206977" className={classes.link}>
-                        Terms of use
-                    </a>{' '}
-                    and that you have read Microsoft's{' '}
-                    <a href="https://go.microsoft.com/fwlink/?LinkId=521839" className={classes.link}>
-                        Privacy & cookies policy
-                    </a>
-                    .
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                    Your account contains personal data that you have given us. You can download or delete that data below.
-                </Typography>
-                <Typography variant="title" gutterBottom className={classes.title}>
-                    Download your data
-                </Typography>
-                <Button variant="contained" color="primary" onClick={this.handleDownloadDataClick}>
-                    Download
-                </Button>
-                <Typography variant="title" gutterBottom className={classes.title}>
-                    Delete your account and your personal data
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                    Please keep in mind, that we are required to continue storing your previous reservations including their vehicle registration plates for
-                    accounting and auditing purposes.
-                </Typography>
-                <Button variant="contained" color="primary" className={classes.dangerButtonContained} onClick={this.handleDeleteDialogOpen}>
-                    Delete
-                </Button>
+            <React.Fragment>
+                <Paper className={classes.paper} elevation={1}>
+                    <Typography variant="headline" component="h3">
+                        Notifications
+                    </Typography>
+                    <Typography component="p">How do you want us to remind you to drop off the keys or notify when your car is ready?</Typography>
+                    <FormControl component="fieldset">
+                        <RadioGroup
+                            aria-label="Channel"
+                            name="channel"
+                            className={classes.group}
+                            value={`${this.props.user.notificationChannel}`}
+                            onChange={this.handleNotificationChannelChange}
+                        >
+                            <FormControlLabel value="0" control={<Radio />} label="Push notification" />
+                            <FormControlLabel value="1" control={<Radio />} label="Email" />
+                        </RadioGroup>
+                    </FormControl>
+                </Paper>
+                <Paper className={classes.paper} elevation={1}>
+                    <Typography variant="headline" component="h3">
+                        Calendar integration
+                    </Typography>
+                    <Typography component="p">Do you want us to automatically create a (non-blocker) event in your calendar for your reservations?</Typography>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={this.props.user.calendarIntegration}
+                                onChange={this.handleCalendarIntegrationChange}
+                                value="calendarIntegration"
+                                color="primary"
+                            />
+                        }
+                        label={this.props.user.calendarIntegration ? 'On' : 'Off'}
+                    />
+                </Paper>
+                <Paper className={classes.paper} elevation={1}>
+                    <Typography variant="headline" component="h3">
+                        Thanks to GDPR...
+                    </Typography>
+                    <Typography component="p">
+                        By using this app, you agree to Microsoft's{' '}
+                        <a href="https://go.microsoft.com/fwlink/?LinkID=206977" className={classes.link}>
+                            Terms of use
+                        </a>{' '}
+                        and that you have read Microsoft's{' '}
+                        <a href="https://go.microsoft.com/fwlink/?LinkId=521839" className={classes.link}>
+                            Privacy & cookies policy
+                        </a>
+                        .
+                    </Typography>
+                    <Typography component="p">
+                        Your account contains personal data that you have given us. You can download or delete that data below.
+                    </Typography>
+                    <Typography variant="subheading" gutterBottom className={classes.title}>
+                        Download your data
+                    </Typography>
+                    <Button variant="contained" color="primary" className={classes.primaryButtonContained} onClick={this.handleDownloadDataClick}>
+                        Download
+                    </Button>
+                    <Typography variant="subheading" className={classes.title}>
+                        Delete your account and your personal data
+                    </Typography>
+                    <Typography component="p" gutterBottom>
+                        Please keep in mind, that we are required to continue storing your previous reservations including their vehicle registration plates for
+                        accounting and auditing purposes.
+                    </Typography>
+                    <Button variant="contained" color="primary" className={classes.dangerButtonContained} onClick={this.handleDeleteDialogOpen}>
+                        Delete
+                    </Button>
+                </Paper>
                 <Dialog
                     open={this.state.deleteDialogOpen}
                     onClose={this.handleDeleteDialogClose}
@@ -174,7 +258,7 @@ class Settings extends TrackedComponent {
                         </Button>
                     </DialogActions>
                 </Dialog>
-            </div>
+            </React.Fragment>
         );
     }
 }
@@ -182,6 +266,7 @@ class Settings extends TrackedComponent {
 Settings.propTypes = {
     classes: PropTypes.object.isRequired,
     openSnackbar: PropTypes.func.isRequired,
+    updateUser: PropTypes.func.isRequired,
     user: PropTypes.object,
 };
 

@@ -138,6 +138,15 @@ export default class App extends Component {
         );
     };
 
+    updateUser = (key, value) => {
+        this.setState(state => {
+            const user = state.user;
+            user[key] = value;
+
+            return { user };
+        });
+    };
+
     handleSnackbarClose = () => {
         this.setState({
             snackbarOpen: false,
@@ -185,7 +194,11 @@ export default class App extends Component {
                             />
                         )}
                     />
-                    <Route path="/settings" navbarName="Settings" render={props => <Settings user={user} openSnackbar={this.openSnackbar} {...props} />} />
+                    <Route
+                        path="/settings"
+                        navbarName="Settings"
+                        render={props => <Settings user={user} updateUser={this.updateUser} openSnackbar={this.openSnackbar} {...props} />}
+                    />
                     <Route
                         exact
                         path="/admin"

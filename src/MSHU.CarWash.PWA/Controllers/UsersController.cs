@@ -7,8 +7,10 @@ using MSHU.CarWash.PWA.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using User = MSHU.CarWash.ClassLibrary.User;
 
 namespace MSHU.CarWash.PWA.Controllers
 {
@@ -51,6 +53,29 @@ namespace MSHU.CarWash.PWA.Controllers
             .Where(u => u.Company == _user.Company && u.FirstName != "[deleted user]")
             .OrderBy(u => u.FullName)
             .Select(u => new UserViewModel(u)));
+        }
+
+        // GET: api/users/dictionary
+        /// <summary>
+        /// Get user ids and names from my company
+        /// </summary>
+        /// <returns>Disctionary of ids and names</returns>
+        /// <response code="200">OK</response>
+        /// <response code="401">Unathorized</response>
+        /// <response code="403">Forbidden if user is not admin.</response>
+        [ProducesResponseType(typeof(Dictionary<string, string>), 200)]
+        [HttpGet, Route("dictionary")]
+        public async Task<IActionResult> GetUserDictionary()
+        {
+            if (!_user.IsAdmin) return Forbid();
+
+            var dictionary = await _context.Users
+                .Where(u => u.Company == _user.Company && u.FirstName != "[deleted user]")
+                .Select(u => new { u.Id, u.FullName })
+                .OrderBy(u => u.FullName)
+                .ToDictionaryAsync(u => u.Id, u => u.FullName);
+
+            return Ok(dictionary);
         }
 
         // GET: api/users/{id}
@@ -99,6 +124,62 @@ namespace MSHU.CarWash.PWA.Controllers
             if (_user == null) return NotFound();
 
             return Ok(new UserViewModel(_user));
+        }
+
+        // PUT: api/users/settings/{key}
+        /// <summary>
+        /// Update a setting
+        /// </summary>
+        /// <param name="key">Setting key</param>
+        /// <param name="value">New setting value</param>
+        /// <returns>No content</returns>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if no service choosen / DateFrom and DateTo isn't on the same day / a Date is in the past / DateFrom and DateTo are not valid slot start/end times / user/company limit has been met / there is no more time in that slot.</response>
+        /// <response code="401">Unathorized</response>
+        [ProducesResponseType(typeof(NoContentResult), 200)]
+        [HttpPut("settings/{key}")]
+        public async Task<IActionResult> PutSettings([FromRoute] string key, [FromBody] object value)
+        {
+            var validKeys = new List<string>
+            {
+                "CalendarIntegration".ToLower(),
+                "NotificationChannel".ToLower()
+            };
+
+            if (!validKeys.Contains(key.ToLower())) return BadRequest("Setting key is not valid.");
+            if (value == null) BadRequest("Setting value cannot be null.");
+
+            try
+            {
+                // ReSharper disable once RedundantNameQualifier
+                typeof(ClassLibrary.User)
+                    .GetProperty(key, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)
+                    .SetValue(_user, value);
+            }
+            catch (Exception)
+            {
+                return BadRequest("Value not accepted.");
+            }
+
+            _context.Users.Update(_user);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Users.Any(e => e.Id == _user.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
         }
 
         // GET: api/users/downloadpersonaldata
@@ -213,6 +294,8 @@ Please keep in mind, that we are required to continue storing your previous rese
             Company = user.Company;
             IsAdmin = user.IsAdmin;
             IsCarwashAdmin = user.IsCarwashAdmin;
+            CalendarIntegration = user.CalendarIntegration;
+            NotificationChannel = user.NotificationChannel;
         }
 
         public string Id { get; set; }
@@ -221,5 +304,7 @@ Please keep in mind, that we are required to continue storing your previous rese
         public string Company { get; set; }
         public bool IsAdmin { get; set; }
         public bool IsCarwashAdmin { get; set; }
+        public bool CalendarIntegration { get; set; }
+        public NotificationChannel NotificationChannel { get; set; }
     }
 }
