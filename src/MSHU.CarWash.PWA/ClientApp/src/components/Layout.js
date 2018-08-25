@@ -19,7 +19,7 @@ const drawerWidth = 240;
 const styles = theme => ({
     root: {
         flexGrow: 1,
-        minHeight: '100vh',
+        height: '100vh',
         zIndex: 1,
         overflow: 'hidden',
         position: 'relative',
@@ -47,6 +47,7 @@ const styles = theme => ({
     },
     content: {
         flexGrow: 1,
+        overflow: 'auto',
         backgroundColor: theme.palette.background.default,
         padding: theme.spacing.unit * 3,
     },
