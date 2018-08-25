@@ -47,7 +47,7 @@ export function runWithAdal(app) {
                     const user = authContext.getCachedUser();
                     adalConfig.extraQueryParameter = `login_hint=${encodeURIComponent(user.profile.upn)}`;
                     authContext = new AuthenticationContext(adalConfig);
-                    console(`User was prevously logged in with ${user.profile.upn}. Using this email as login hint.`);
+                    console.log(`User was prevously logged in with ${user.profile.upn}. Using this email as login hint.`);
                 }
                 authContext.login();
             } else {

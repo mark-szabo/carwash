@@ -11,6 +11,12 @@
 export default function register() {
     if (!('serviceWorker' in navigator)) {
         console.log("Boo! This browser doesn't support Service Workers 😬");
+
+        // Internet Explorer 6-11
+        const isIE = /* @cc_on!@*/ false || !!document.documentMode;
+        const surpassIEBlock = window.location.href.search('surpassieblock') !== -1;
+
+        if (isIE && !surpassIEBlock) window.location = '/ieblock.html';
         return;
     }
 
