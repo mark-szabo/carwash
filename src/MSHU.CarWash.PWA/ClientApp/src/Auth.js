@@ -40,20 +40,31 @@ export function runWithAdal(app) {
     // prevent iframe double app !!!
     if (window === window.parent) {
         if (!authContext.isCallback(window.location.hash)) {
+            console.log('Authentication...');
             if (!authContext.getCachedToken(authContext.config.clientId) || !authContext.getCachedUser()) {
+                console.log('No token found or token is expired. Redirecting...');
                 if (authContext.getCachedUser()) {
                     const user = authContext.getCachedUser();
                     adalConfig.extraQueryParameter = `login_hint=${encodeURIComponent(user.profile.upn)}`;
                     authContext = new AuthenticationContext(adalConfig);
+                    console(`User was prevously logged in with ${user.profile.upn}. Using this email as login hint.`);
                 }
                 authContext.login();
             } else {
                 const user = authContext.getCachedUser();
+                console.log('User is authenticated.');
                 // console.log(user);
                 if (authorizedTenantIds.filter(id => id === user.profile.tid).length > 0) {
-                    app();
+                    console.log('Getting Graph auth token...');
+                    if (!authContext.getCachedToken(adalConfig.endpoints.graph)) {
+                        console.log('Graph toke was not found in cache. Redirecting...');
+                        authContext.acquireTokenRedirect(adalConfig.endpoints.graph, null, null);
+                    } else {
+                        console.log('Graph token was found in cache. Authenticated.');
+                        app();
+                    }
                 } else {
-                    console.log(`Tenant ${user.profile.tid} is not athorized to use this application!`);
+                    console.error(`Tenant ${user.profile.tid} is not athorized to use this application!`);
                 }
             }
         }
