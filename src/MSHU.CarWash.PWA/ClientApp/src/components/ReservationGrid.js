@@ -47,6 +47,14 @@ const styles = theme => ({
 class ReservationGrid extends Component {
     displayName = ReservationGrid.name;
 
+    componentDidMount() {
+        document.getElementsByTagName('main')[0].style.overflow = 'hidden';
+    }
+
+    componentWillUnmount() {
+        document.getElementsByTagName('main')[0].style.overflow = 'auto';
+    }
+
     render() {
         const { classes, reservations, reservationsLoading, removeReservation, openSnackbar, admin } = this.props;
 
