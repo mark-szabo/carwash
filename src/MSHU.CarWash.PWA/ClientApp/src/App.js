@@ -10,6 +10,7 @@ import Reserve from './components/Reserve';
 import Support from './components/Support';
 import Admin from './components/Admin';
 import Settings from './components/Settings';
+import CarwashAdmin from './components/CarwashAdmin';
 
 // A theme with custom primary and secondary color.
 const theme = createMuiTheme({
@@ -208,6 +209,20 @@ export default class App extends Component {
                                 reservations={companyReservations}
                                 reservationsLoading={companyReservationsLoading}
                                 removeReservation={this.removeReservationFromCompanyReservations}
+                                openSnackbar={this.openSnackbar}
+                                {...props}
+                            />
+                        )}
+                    />
+                    <Route
+                        exact
+                        path="/carwashadmin"
+                        navbarName="CarWash admin"
+                        render={props => (
+                            <CarwashAdmin
+                                reservations={reservations}
+                                reservationsLoading={reservationsLoading}
+                                removeReservation={this.removeReservation}
                                 openSnackbar={this.openSnackbar}
                                 {...props}
                             />
