@@ -354,6 +354,53 @@ namespace MSHU.CarWash.PWA.Controllers
             return Ok(reservations);
         }
 
+        // GET: api/reservations/backlog
+        /// <summary>
+        /// Get reservation backlog for carwash admins
+        /// </summary>
+        /// <returns>List of <see cref="AdminReservationViewModel"/></returns>
+        /// <response code="200">OK</response>
+        /// <response code="401">Unathorized</response>
+        /// <response code="403">Forbidden if user is not carwash admin.</response>
+        [ProducesResponseType(typeof(IEnumerable<AdminReservationViewModel>), 200)]
+        [HttpGet, Route("backlog")]
+        public async Task<IActionResult> GetBacklog()
+        {
+            if (!_user.IsCarwashAdmin) return Forbid();
+
+            var reservations = await _context.Reservation
+                .Include(r => r.User)
+                .Where(r => r.StartDate.Date >= DateTime.Today)
+                .OrderByDescending(r => r.StartDate)
+                .Select(reservation => new AdminReservationViewModel
+                {
+                    Id = reservation.Id,
+                    UserId = reservation.UserId,
+                    VehiclePlateNumber = reservation.VehiclePlateNumber,
+                    Location = reservation.Location,
+                    State = reservation.State,
+                    Services = reservation.Services,
+                    Private = reservation.Private,
+                    Mpv = reservation.Mpv,
+                    StartDate = reservation.StartDate,
+                    EndDate = (DateTime)reservation.EndDate,
+                    Comment = reservation.Comment,
+                    CarwashComment = reservation.CarwashComment,
+                    User = new UserViewModel
+                    {
+                        Id = reservation.User.Id,
+                        FirstName = reservation.User.FirstName,
+                        LastName = reservation.User.LastName,
+                        Company = reservation.User.Company,
+                        IsAdmin = reservation.User.IsAdmin,
+                        IsCarwashAdmin = reservation.User.IsCarwashAdmin
+                    }
+                })
+                .ToListAsync();
+
+            return Ok(reservations);
+        }
+
         // GET: api/reservations/obfuscated
         /// <summary>
         /// Get all future reservation data for the next <paramref name="daysAhead"/> days

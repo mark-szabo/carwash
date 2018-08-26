@@ -6,7 +6,6 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import Typography from '@material-ui/core/Typography';
 import CarwashCard from './CarwashCard';
 import CardSection from './CardSection';
-import RoadAnimation from './RoadAnimation';
 
 const styles = theme => ({
     card: {
@@ -32,17 +31,18 @@ const styles = theme => ({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    center: {
-        textAlign: 'center',
-        height: '80%',
+    readyText: {
+        marginLeft: '58px',
     },
-    lonelyText: {
-        color: '#9E9E9E',
-    },
-    lonelyTitle: {
-        color: '#9E9E9E',
-        marginTop: theme.spacing.unit * 4,
-    },
+});
+
+const State = Object.freeze({
+    SubmittedNotActual: 0,
+    ReminderSentWaitingForKey: 1,
+    CarKeyLeftAndLocationConfirmed: 2,
+    WashInProgress: 3,
+    NotYetPaid: 4,
+    Done: 5,
 });
 
 class CarwashGrid extends Component {
@@ -57,9 +57,9 @@ class CarwashGrid extends Component {
     }
 
     render() {
-        const { classes, reservations, reservationsLoading, removeReservation, openSnackbar } = this.props;
+        const { classes, backlog, backlogLoading, openSnackbar } = this.props;
 
-        if (reservationsLoading) {
+        if (backlogLoading) {
             return (
                 <div className={classes.progress}>
                     <CircularProgress size={50} />
@@ -67,53 +67,51 @@ class CarwashGrid extends Component {
             );
         }
 
-        if (reservations.length <= 0) {
-            return (
-                <div className={classes.center}>
-                    <Typography variant="title" gutterBottom className={classes.lonelyTitle}>
-                        It's lonely here...
-                    </Typography>
-                    <Typography className={classes.lonelyText}>Tap the Reserve button on the left to get started.</Typography>
-                    <RoadAnimation />
-                </div>
-            );
-        }
+        const todayMidnight = new Date();
+        todayMidnight.setDate(todayMidnight.getDate() + 1);
+        todayMidnight.setHours(0, 0, 0);
+        const tomorrowMidnight = new Date();
+        tomorrowMidnight.setDate(tomorrowMidnight.getDate() + 2);
+        tomorrowMidnight.setHours(0, 0, 0);
+
+        const done = backlog.filter(r => r.state === State.Done);
+        const today = backlog.filter(r => r.state !== State.Done && r.startDate < todayMidnight);
+        const tomorrow = backlog.filter(r => r.startDate > todayMidnight && r.startDate < tomorrowMidnight);
+        const later = backlog.filter(r => r.startDate > tomorrowMidnight);
 
         return (
             <Grid container direction="row" justify="flex-start" alignItems="flex-start" spacing={16} className={classes.grid}>
-                <CardSection title="Today">
-                    {reservations.map(reservation => (
+                <CardSection title="Done">
+                    {done.map(reservation => (
                         <Grid item key={reservation.id} className={classes.card}>
-                            <CarwashCard
-                                reservation={reservation}
-                                reservations={reservations}
-                                removeReservation={removeReservation}
-                                openSnackbar={openSnackbar}
-                            />
+                            <CarwashCard reservation={reservation} openSnackbar={openSnackbar} />
+                        </Grid>
+                    ))}
+                </CardSection>
+                <CardSection title="Today" expanded>
+                    {today.length <= 0 && (
+                        // eslint-disable-next-line
+                        <Typography gutterBottom className={classes.readyText}>
+                            Yay, there's nothing left for today! 🎉
+                        </Typography>
+                    )}
+                    {today.map(reservation => (
+                        <Grid item key={reservation.id} className={classes.card}>
+                            <CarwashCard reservation={reservation} openSnackbar={openSnackbar} />
                         </Grid>
                     ))}
                 </CardSection>
                 <CardSection title="Tomorrow">
-                    {reservations.map(reservation => (
+                    {tomorrow.map(reservation => (
                         <Grid item key={reservation.id} className={classes.card}>
-                            <CarwashCard
-                                reservation={reservation}
-                                reservations={reservations}
-                                removeReservation={removeReservation}
-                                openSnackbar={openSnackbar}
-                            />
+                            <CarwashCard reservation={reservation} openSnackbar={openSnackbar} />
                         </Grid>
                     ))}
                 </CardSection>
                 <CardSection title="Later">
-                    {reservations.map(reservation => (
+                    {later.map(reservation => (
                         <Grid item key={reservation.id} className={classes.card}>
-                            <CarwashCard
-                                reservation={reservation}
-                                reservations={reservations}
-                                removeReservation={removeReservation}
-                                openSnackbar={openSnackbar}
-                            />
+                            <CarwashCard reservation={reservation} openSnackbar={openSnackbar} />
                         </Grid>
                     ))}
                 </CardSection>
@@ -124,9 +122,8 @@ class CarwashGrid extends Component {
 
 CarwashGrid.propTypes = {
     classes: PropTypes.object.isRequired,
-    reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
-    reservationsLoading: PropTypes.bool.isRequired,
-    removeReservation: PropTypes.func.isRequired,
+    backlog: PropTypes.arrayOf(PropTypes.object).isRequired,
+    backlogLoading: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
 };
 

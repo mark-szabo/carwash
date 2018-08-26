@@ -76,7 +76,7 @@ class CardSection extends React.Component {
     displayName = CardSection.name;
 
     state = {
-        expanded: true,
+        expanded: this.props.expanded,
         focused: false,
     };
 
@@ -133,7 +133,7 @@ class CardSection extends React.Component {
                     </div>
                 </ButtonBase>
 
-                {expanded ? this.props.children : <div />}
+                {expanded && this.props.children}
             </React.Fragment>
         );
     }
@@ -143,10 +143,12 @@ CardSection.propTypes = {
     children: PropTypes.node,
     classes: PropTypes.object.isRequired,
     title: PropTypes.string.isRequired,
+    expanded: PropTypes.bool,
     disabled: PropTypes.bool,
 };
 
 CardSection.defaultProps = {
+    expanded: false,
     disabled: false,
 };
 

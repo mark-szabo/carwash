@@ -50,6 +50,9 @@ export default class App extends Component {
         reservationsLoading: true,
         companyReservations: [],
         companyReservationsLoading: true,
+        backlog: [],
+        backlogLoading: true,
+        backlogUpdateFound: false,
         snackbarOpen: false,
         snackbarMessage: '',
     };
@@ -75,6 +78,10 @@ export default class App extends Component {
 
                         if (data.isAdmin) {
                             this.loadCompanyReservations();
+                        }
+
+                        if (data.isCarwashAdmin) {
+                            this.loadBacklog();
                         }
                     },
                     error => {
@@ -139,6 +146,21 @@ export default class App extends Component {
         );
     };
 
+    loadBacklog = () => {
+        apiFetch('api/reservations/backlog').then(
+            data => {
+                const backlog = data;
+                for (let i = 0; i < backlog.length; i++) {
+                    backlog[i].startDate = new Date(backlog[i].startDate);
+                }
+                this.setState({ backlog, backlogLoading: false });
+            },
+            error => {
+                this.openSnackbar(error);
+            }
+        );
+    };
+
     updateUser = (key, value) => {
         this.setState(state => {
             const user = state.user;
@@ -155,7 +177,17 @@ export default class App extends Component {
     };
 
     render() {
-        const { user, reservations, reservationsLoading, companyReservations, companyReservationsLoading } = this.state;
+        const {
+            user,
+            reservations,
+            reservationsLoading,
+            companyReservations,
+            companyReservationsLoading,
+            backlog,
+            backlogLoading,
+            backlogUpdateFound,
+        } = this.state;
+
         return (
             <MuiThemeProvider theme={theme}>
                 <Layout user={user}>
@@ -220,9 +252,9 @@ export default class App extends Component {
                         navbarName="CarWash admin"
                         render={props => (
                             <CarwashAdmin
-                                reservations={reservations}
-                                reservationsLoading={reservationsLoading}
-                                removeReservation={this.removeReservation}
+                                backlog={backlog}
+                                backlogLoading={backlogLoading}
+                                backlogUpdateFound={backlogUpdateFound}
                                 openSnackbar={this.openSnackbar}
                                 {...props}
                             />

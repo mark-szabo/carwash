@@ -248,7 +248,7 @@ class CarwashCard extends Component {
                 this.props.openSnackbar('Reservation successfully canceled.');
 
                 // Remove deleted reservation from reservations
-                this.props.removeReservation(this.props.reservation.id);
+                // this.props.removeReservation(this.props.reservation.id);
             },
             error => {
                 this.props.openSnackbar(error);
@@ -319,8 +319,6 @@ class CarwashCard extends Component {
 
 CarwashCard.propTypes = {
     classes: PropTypes.object.isRequired,
-    reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
-    removeReservation: PropTypes.func.isRequired,
     openSnackbar: PropTypes.func.isRequired,
 };
 
