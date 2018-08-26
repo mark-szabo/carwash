@@ -103,8 +103,6 @@ class CardSection extends React.Component {
         return (
             <React.Fragment>
                 <ButtonBase
-                    focusRipple={false}
-                    disableRipple
                     disabled={disabled}
                     component="div"
                     aria-expanded={expanded}

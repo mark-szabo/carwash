@@ -74,8 +74,8 @@ class CarwashGrid extends Component {
         tomorrowMidnight.setDate(tomorrowMidnight.getDate() + 2);
         tomorrowMidnight.setHours(0, 0, 0);
 
-        const done = backlog.filter(r => r.state === State.Done);
-        const today = backlog.filter(r => r.state !== State.Done && r.startDate < todayMidnight);
+        const done = backlog.filter(r => r.state === State.Done && r.state === State.NotYetPaid);
+        const today = backlog.filter(r => r.state !== State.Done && r.state !== State.NotYetPaid && r.startDate < todayMidnight);
         const tomorrow = backlog.filter(r => r.startDate > todayMidnight && r.startDate < tomorrowMidnight);
         const later = backlog.filter(r => r.startDate > tomorrowMidnight);
 

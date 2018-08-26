@@ -1,5 +1,6 @@
 ﻿import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import apiFetch from '../Auth';
 import { Link } from 'react-router-dom';
 import { withStyles } from '@material-ui/core/styles';
@@ -10,7 +11,8 @@ import CardMedia from '@material-ui/core/CardMedia';
 import CardHeader from '@material-ui/core/CardHeader';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
-import Grow from '@material-ui/core/Grow';
+import ButtonBase from '@material-ui/core/ButtonBase';
+import Collapse from '@material-ui/core/Collapse';
 import LockIcon from '@material-ui/icons/Lock';
 import Chip from '@material-ui/core/Chip';
 import Divider from '@material-ui/core/Divider';
@@ -35,24 +37,29 @@ const styles = theme => ({
             minWidth: 400,
             maxWidth: 400,
         },
+        '&:hover': {
+            cursor: 'pointer',
+        },
+        '&$focused': {
+            backgroundColor: theme.palette.grey[300],
+        },
     },
     media: {
         height: 0,
         paddingTop: '48.83%', // 512:250
     },
     comment: {
-        clear: 'right',
-        float: 'right',
         borderTopRightRadius: '1.3em',
         borderTopLeftRadius: '1.3em',
-        borderBottomLeftRadius: '1.3em',
-        backgroundColor: theme.palette.primary.dark,
-        color: '#fff',
+        borderBottomRightRadius: '1.3em',
+        backgroundColor: '#e0e0e0',
         padding: '6px 12px',
         margin: '1px 0',
+        clear: 'left',
+        float: 'left',
         maxWidth: '85%',
     },
-    carwashName: {
+    commentName: {
         color: 'rgba(0, 0, 0, .40)',
         fontSize: '12px',
         fontWeight: 'normal',
@@ -64,14 +71,15 @@ const styles = theme => ({
         whiteSpace: 'nowrap',
     },
     carwashComment: {
+        clear: 'right',
+        float: 'right',
         borderTopRightRadius: '1.3em',
         borderTopLeftRadius: '1.3em',
-        borderBottomRightRadius: '1.3em',
-        backgroundColor: '#e0e0e0',
+        borderBottomLeftRadius: '1.3em',
+        backgroundColor: theme.palette.primary.dark,
+        color: '#fff',
         padding: '6px 12px',
         margin: '1px 0',
-        clear: 'left',
-        float: 'left',
         maxWidth: '85%',
     },
     after: {
@@ -88,6 +96,11 @@ const styles = theme => ({
             backgroundColor: 'rgba(229,115,115,0.08)',
         },
     },
+    /* Styles applied to the root element when focused. */
+    focused: {},
+    collapseTransition: {
+        overflow: 'initial',
+    },
 });
 
 function getStateName(state) {
@@ -95,13 +108,13 @@ function getStateName(state) {
         case 0:
             return 'Scheduled';
         case 1:
-            return 'Leave the key at reception';
+            return 'Waiting for key';
         case 2:
-            return 'Waiting';
+            return 'Queued';
         case 3:
-            return 'Wash in progress';
+            return 'In progress';
         case 4:
-            return 'You need to pay';
+            return 'Waiting for payment';
         case 5:
             return 'Done';
         default:
@@ -181,11 +194,14 @@ function getButtons(reservation, classes, handleCancelDialogOpen) {
     }
 }
 
-function getComment(comment, classes) {
+function getComment(comment, name, classes) {
     if (!comment) return null;
     return (
         <div>
             <Divider className={classes.divider} />
+            <Typography component="h5" className={classes.commentName}>
+                {name}
+            </Typography>
             <Typography component="p" className={classes.comment}>
                 {comment}
             </Typography>
@@ -198,9 +214,6 @@ function getCarwashComment(comment, classes) {
     if (!comment) return null;
     return (
         <div>
-            <Typography component="h5" className={classes.carwashName}>
-                CarWash
-            </Typography>
             <Typography component="p" className={classes.carwashComment}>
                 {comment}
             </Typography>
@@ -211,8 +224,6 @@ function getCarwashComment(comment, classes) {
 
 function getDate(reservation) {
     const from = new Intl.DateTimeFormat('en-US', {
-        month: 'long',
-        day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
     }).format(new Date(reservation.startDate));
@@ -222,12 +233,18 @@ function getDate(reservation) {
         minute: '2-digit',
     }).format(new Date(reservation.endDate));
 
-    return `${from} - ${to}`;
+    const date = new Intl.DateTimeFormat('en-US', {
+        month: 'long',
+        day: '2-digit',
+    }).format(new Date(reservation.startDate));
+
+    return `${from} - ${to} • ${date}`;
 }
 
 class CarwashCard extends Component {
     state = {
         cancelDialogOpen: false,
+        focused: false,
     };
 
     handleCancelDialogOpen = () => {
@@ -256,46 +273,61 @@ class CarwashCard extends Component {
         );
     };
 
+    handleFocus = () => {
+        this.setState({
+            focused: true,
+        });
+    };
+
+    handleBlur = () => {
+        this.setState({
+            focused: false,
+        });
+    };
+
     render() {
-        const { classes, reservation, admin } = this.props;
+        const { classes, reservation } = this.props;
+        const { focused } = this.state;
+
         return (
             <React.Fragment>
-                <Grow in>
-                    <Card className={classes.card}>
-                        <CardMedia className={classes.media} image={`/images/state${reservation.state}.png`} />
-                        <CardHeader
-                            action={reservation.private ? <LockIcon alt="Private" style={{ margin: '8px 16px 0 0' }} /> : null}
-                            title={getStateName(reservation.state)}
-                            subheader={getDate(reservation)}
-                        />
-                        <CardContent>
-                            <Typography variant="caption" gutterBottom>
-                                Vehicle plate number
-                            </Typography>
-                            <Typography variant="body1" gutterBottom>
-                                {reservation.vehiclePlateNumber}
-                            </Typography>
-                            {admin && (
-                                <React.Fragment>
-                                    <Typography variant="caption" gutterBottom style={{ marginTop: '8px' }}>
-                                        Name
-                                    </Typography>
-                                    <Typography variant="body1" gutterBottom>
-                                        {reservation.user.firstName} {reservation.user.lastName}
-                                    </Typography>
-                                </React.Fragment>
-                            )}
-                            {getComment(reservation.comment, classes)}
-                            {getCarwashComment(reservation.carwashComment, classes)}
-                            <Divider className={classes.divider} />
-                            <Typography variant="subheading">Selected services</Typography>
-                            {reservation.services.map(service => (
-                                <Chip label={getServiceName(service)} className={classes.chip} key={service} />
-                            ))}
-                        </CardContent>
-                        {getButtons(reservation, classes, this.handleCancelDialogOpen)}
-                    </Card>
-                </Grow>
+                <Collapse in className={classes.collapseTransition}>
+                    <ButtonBase component="div" onFocusVisible={this.handleFocus} onBlur={this.handleBlur} onClick={this.handleCancelDialogOpen}>
+                        <Card
+                            className={classNames(classes.card, {
+                                [classes.focused]: focused,
+                            })}
+                        >
+                            <CardMedia className={classes.media} image={`/images/state${reservation.state}.png`} />
+                            <CardHeader
+                                action={reservation.private ? <LockIcon alt="Private" style={{ margin: '8px 16px 0 0' }} /> : null}
+                                title={reservation.vehiclePlateNumber}
+                                subheader={`${getStateName(reservation.state)} • ${getDate(reservation)}`}
+                            />
+                            <CardContent>
+                                <Typography variant="caption" gutterBottom>
+                                    Location
+                                </Typography>
+                                <Typography variant="body1" gutterBottom>
+                                    {reservation.location}
+                                </Typography>
+                                <Typography variant="caption" gutterBottom style={{ marginTop: '8px' }}>
+                                    Name
+                                </Typography>
+                                <Typography variant="body1" gutterBottom>
+                                    {reservation.user.firstName} {reservation.user.lastName}
+                                </Typography>
+                                {getComment(reservation.comment, reservation.user.firstName, classes)}
+                                {getCarwashComment(reservation.carwashComment, classes)}
+                                <Divider className={classes.divider} />
+                                <Typography variant="subheading">Selected services</Typography>
+                                {reservation.services.map(service => (
+                                    <Chip label={getServiceName(service)} className={classes.chip} key={service} />
+                                ))}
+                            </CardContent>
+                        </Card>
+                    </ButtonBase>
+                </Collapse>
                 <Dialog
                     open={this.state.cancelDialogOpen}
                     onClose={this.handleCancelDialogClose}
