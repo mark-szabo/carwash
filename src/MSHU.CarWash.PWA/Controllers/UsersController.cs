@@ -7,7 +7,6 @@ using MSHU.CarWash.PWA.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using User = MSHU.CarWash.ClassLibrary.User;
@@ -140,21 +139,21 @@ namespace MSHU.CarWash.PWA.Controllers
         [HttpPut("settings/{key}")]
         public async Task<IActionResult> PutSettings([FromRoute] string key, [FromBody] object value)
         {
-            var validKeys = new List<string>
-            {
-                "CalendarIntegration".ToLower(),
-                "NotificationChannel".ToLower()
-            };
-
-            if (!validKeys.Contains(key.ToLower())) return BadRequest("Setting key is not valid.");
-            if (value == null) BadRequest("Setting value cannot be null.");
+            if (value == null) return BadRequest("Setting value cannot be null.");
 
             try
             {
-                // ReSharper disable once RedundantNameQualifier
-                typeof(ClassLibrary.User)
-                    .GetProperty(key, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)
-                    .SetValue(_user, value);
+                switch (key.ToLower())
+                {
+                    case "calendarintegration":
+                        _user.CalendarIntegration = (bool)value;
+                        break;
+                    case "notificationchannel":
+                        _user.NotificationChannel = (NotificationChannel)(int)(long)value;
+                        break;
+                    default:
+                        return BadRequest("Setting key is not valid.");
+                }
             }
             catch (Exception)
             {
