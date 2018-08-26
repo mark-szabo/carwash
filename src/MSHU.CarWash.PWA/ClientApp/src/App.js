@@ -168,6 +168,17 @@ export default class App extends Component {
 
             return { user };
         });
+
+        // Delete cached response for /api/users/me
+        // Not perfect solution as it seems Safari does not supports this
+        // https://developer.mozilla.org/en-US/docs/Web/API/Cache/delete#Browser_compatibility
+        try {
+            caches.open('api-cache').then(cache => {
+                cache.delete('/api/users/me');
+            });
+        } catch (error) {
+            console.error(`Cannot delete user data from cache: ${error}`);
+        }
     };
 
     handleSnackbarClose = () => {

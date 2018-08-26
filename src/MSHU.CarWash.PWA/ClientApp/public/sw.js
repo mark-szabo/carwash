@@ -6,6 +6,13 @@ if (workbox) {
     console.log("Boo! Workbox didn't load 😬");
 }
 
+workbox.core.setCacheNameDetails({
+    prefix: 'carwash',
+    suffix: 'v2',
+    precache: 'precache',
+    runtime: 'runtime',
+});
+
 // Don't forget to increase the revision number of index.html (aka. '/')
 // as it is needed to include the newly genereted js and css files.
 // Error would be thrown: Refused to execute script from '...' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled.
@@ -28,6 +35,7 @@ const bgSyncPlugin = new workbox.backgroundSync.Plugin('bgSyncQueue');
 workbox.routing.registerRoute(
     ({ url }) => url.pathname === '/api/reservations',
     workbox.strategies.networkFirst({
+        cacheName: 'api-cache',
         plugins: [bgSyncPlugin],
     })
 );
@@ -36,15 +44,25 @@ workbox.routing.registerRoute(
 workbox.routing.registerRoute(
     ({ url }) => url.pathname === '/api/reservations/company',
     workbox.strategies.networkFirst({
+        cacheName: 'api-cache',
         plugins: [bgSyncPlugin],
     })
 );
 
-// [NETWORK FIRST] Cache current user from 'GET /api/users/me'
+// [NETWORK FIRST] Cache backlog from 'GET /api/reservations/backlog'
+workbox.routing.registerRoute(
+    ({ url }) => url.pathname === '/api/reservations/backlog',
+    workbox.strategies.networkFirst({
+        cacheName: 'api-cache',
+        plugins: [bgSyncPlugin],
+    })
+);
+
+// [CACHE FIRST] Cache current user from 'GET /api/users/me'
 workbox.routing.registerRoute(
     ({ url }) => url.pathname === '/api/users/me',
-    workbox.strategies.networkFirst({
-        plugins: [bgSyncPlugin],
+    workbox.strategies.cacheFirst({
+        cacheName: 'api-cache',
     })
 );
 
