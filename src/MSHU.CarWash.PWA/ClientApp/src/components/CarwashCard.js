@@ -19,6 +19,7 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import red from '@material-ui/core/colors/red';
 import CarwashCardHeader from './CarwashCardHeader';
+import CarwashDetailsDialog from './CarwashDetailsDialog';
 
 const styles = theme => ({
     chip: {
@@ -245,8 +246,17 @@ function getDate(reservation) {
 
 class CarwashCard extends Component {
     state = {
+        detailsDialogOpen: false,
         cancelDialogOpen: false,
         focused: false,
+    };
+
+    handleDetailsDialogOpen = () => {
+        this.setState({ detailsDialogOpen: true });
+    };
+
+    handleDetailsDialogClose = () => {
+        this.setState({ detailsDialogOpen: false });
     };
 
     handleCancelDialogOpen = () => {
@@ -289,7 +299,7 @@ class CarwashCard extends Component {
 
     render() {
         const { classes, reservation } = this.props;
-        const { focused } = this.state;
+        const { focused, detailsDialogOpen } = this.state;
 
         return (
             <React.Fragment>
@@ -299,16 +309,17 @@ class CarwashCard extends Component {
                         component="div"
                         onFocusVisible={this.handleFocus}
                         onBlur={this.handleBlur}
-                        onClick={this.handleCancelDialogOpen}
+                        onClick={this.handleDetailsDialogOpen}
                     >
                         <Card
                             className={classNames(classes.card, {
                                 [classes.focused]: focused,
                             })}
+                            raised={focused}
                         >
                             <CardMedia className={classes.media} image={`/images/state${reservation.state}.png`} />
                             <CarwashCardHeader
-                                company="sap"
+                                company={reservation.user.company}
                                 title={reservation.vehiclePlateNumber}
                                 private={reservation.private}
                                 subheader={`${getStateName(reservation.state)} • ${getDate(reservation)}`}
@@ -337,13 +348,14 @@ class CarwashCard extends Component {
                         </Card>
                     </ButtonBase>
                 </Collapse>
+                <CarwashDetailsDialog reservation={reservation} open={detailsDialogOpen} handleClose={this.handleDetailsDialogClose} />
                 <Dialog
                     open={this.state.cancelDialogOpen}
                     onClose={this.handleCancelDialogClose}
-                    aria-labelledby="alert-dialog-title"
-                    aria-describedby="alert-dialog-title"
+                    aria-labelledby="cancel-dialog-title"
+                    aria-describedby="cancel-dialog-title"
                 >
-                    <DialogTitle id="alert-dialog-title">Cancel this reservation?</DialogTitle>
+                    <DialogTitle id="cancel-dialog-title">Cancel this reservation?</DialogTitle>
                     <DialogActions>
                         <Button onClick={this.handleCancelDialogClose} color="primary">
                             Don't cancel
@@ -360,6 +372,7 @@ class CarwashCard extends Component {
 
 CarwashCard.propTypes = {
     classes: PropTypes.object.isRequired,
+    reservation: PropTypes.object.isRequired,
     openSnackbar: PropTypes.func.isRequired,
 };
 

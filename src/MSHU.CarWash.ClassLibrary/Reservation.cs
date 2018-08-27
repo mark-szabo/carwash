@@ -31,9 +31,9 @@ namespace MSHU.CarWash.ClassLibrary
         
         public string ServicesJson { get; set; }
         
-        public bool? Private { get; set; }
+        public bool Private { get; set; }
 
-        public bool? Mpv { get; set; }
+        public bool Mpv { get; set; }
         
         public int? TimeRequirement { get; set; }
 

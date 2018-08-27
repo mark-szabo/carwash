@@ -133,9 +133,9 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <param name="value">New setting value</param>
         /// <returns>No content</returns>
         /// <response code="204">NoContent</response>
-        /// <response code="400">BadRequest if no service choosen / DateFrom and DateTo isn't on the same day / a Date is in the past / DateFrom and DateTo are not valid slot start/end times / user/company limit has been met / there is no more time in that slot.</response>
+        /// <response code="400">BadRequest if setting key is not valid or value param is null.</response>
         /// <response code="401">Unathorized</response>
-        [ProducesResponseType(typeof(NoContentResult), 200)]
+        [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPut("settings/{key}")]
         public async Task<IActionResult> PutSettings([FromRoute] string key, [FromBody] object value)
         {

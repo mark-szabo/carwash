@@ -135,7 +135,7 @@ namespace MSHU.CarWash.PWA.Controllers
             dbReservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper();
             dbReservation.Location = reservation.Location;
             dbReservation.Services = reservation.Services;
-            dbReservation.Private = reservation.Private ?? false;
+            dbReservation.Private = reservation.Private;
             dbReservation.StartDate = reservation.StartDate.ToLocalTime();
             dbReservation.Comment = reservation.Comment;
 
@@ -171,6 +171,9 @@ namespace MSHU.CarWash.PWA.Controllers
             if (!IsEnoughTimeInSlot(dbReservation.StartDate, (int)dbReservation.TimeRequirement))
                 return BadRequest("There is not enough time in that slot.");
             #endregion
+
+            // Check if MPV
+            reservation.Mpv = await IsMpvAsync(reservation.VehiclePlateNumber);
 
             // Update calendar event using Microsoft Graph
             if (dbReservation.UserId == _user.Id)
@@ -216,7 +219,6 @@ namespace MSHU.CarWash.PWA.Controllers
 
             // Defaults
             if (reservation.UserId == null) reservation.UserId = _user.Id;
-            if (reservation.Private == null) reservation.Private = false;
             reservation.State = State.SubmittedNotActual;
             reservation.Mpv = false;
             reservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper();
@@ -262,6 +264,9 @@ namespace MSHU.CarWash.PWA.Controllers
             if (!IsEnoughTimeInSlot(reservation.StartDate, (int)reservation.TimeRequirement))
                 return BadRequest("There is not enough time in that slot.");
             #endregion
+
+            // Check if MPV
+            reservation.Mpv = await IsMpvAsync(reservation.VehiclePlateNumber);
 
             // Add calendar event using Microsoft Graph
             if (reservation.UserId == _user.Id)
@@ -399,6 +404,230 @@ namespace MSHU.CarWash.PWA.Controllers
                 .ToListAsync();
 
             return Ok(reservations);
+        }
+
+        // POST: api/reservations/confirmdropoff
+        /// <summary>
+        /// Confirm car key dropoff and location
+        /// </summary>
+        /// <param name="id">reservation id</param>
+        /// <param name="location">car location</param>
+        /// <returns>No content</returns>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if id or location param is null.</response>
+        /// <response code="401">Unathorized</response>
+        /// <response code="403">Forbidden if user is not admin but tries to update another user's reservation.</response>
+        [ProducesResponseType(typeof(NoContentResult), 204)]
+        [HttpPost("reservations/confirmdropoff/{id}")]
+        public async Task<IActionResult> ConfirmDropoff([FromRoute] string id, [FromBody] string location)
+        {
+            if (id == null) return BadRequest("Reservation id cannot be null.");
+            if (location == null) return BadRequest("Reservation location cannot be null.");
+
+            var reservation = await _context.Reservation.FindAsync(id);
+
+            if (reservation == null) return NotFound();
+
+            if (reservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin)) return Forbid();
+
+            reservation.State = State.DropoffAndLocationConfirmed;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Reservation.Any(e => e.Id == id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // POST: api/reservations/startwash
+        /// <summary>
+        /// Log the start of the carwash
+        /// </summary>
+        /// <param name="id">reservation id</param>
+        /// <returns>No content</returns>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if id is null.</response>
+        /// <response code="401">Unathorized</response>
+        /// <response code="403">Forbidden if user is not carwash admin.</response>
+        [ProducesResponseType(typeof(NoContentResult), 204)]
+        [HttpPost("reservations/startwash/{id}")]
+        public async Task<IActionResult> StartWash([FromRoute] string id)
+        {
+            if (!_user.IsCarwashAdmin) return Forbid();
+
+            if (id == null) return BadRequest("Reservation id cannot be null.");
+
+            var reservation = await _context.Reservation.FindAsync(id);
+
+            if (reservation == null) return NotFound();
+
+            reservation.State = State.WashInProgress;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Reservation.Any(e => e.Id == id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // POST: api/reservations/completewash
+        /// <summary>
+        /// Log the completion of the carwash
+        /// </summary>
+        /// <param name="id">reservation id</param>
+        /// <param name="paid">true if reservation was private but is already paid (optional)</param>
+        /// <returns>No content</returns>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if id is null.</response>
+        /// <response code="401">Unathorized</response>
+        /// <response code="403">Forbidden if user is not carwash admin.</response>
+        [ProducesResponseType(typeof(NoContentResult), 204)]
+        [HttpPost("reservations/completewash/{id}")]
+        public async Task<IActionResult> CompleteWash([FromRoute] string id, [FromBody] bool paid = false)
+        {
+            if (!_user.IsCarwashAdmin) return Forbid();
+
+            if (id == null) return BadRequest("Reservation id cannot be null.");
+
+            var reservation = await _context.Reservation.FindAsync(id);
+
+            if (reservation == null) return NotFound();
+
+            if (reservation.Private && !paid) reservation.State = State.NotYetPaid;
+            else reservation.State = State.Done;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Reservation.Any(e => e.Id == id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // POST: api/reservations/confirmpayment
+        /// <summary>
+        /// Confirm payment
+        /// </summary>
+        /// <param name="id">reservation id</param>
+        /// <returns>No content</returns>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if id or location param is null.</response>
+        /// <response code="401">Unathorized</response>
+        /// <response code="403">Forbidden if user is not admin but tries to update another user's reservation.</response>
+        [ProducesResponseType(typeof(NoContentResult), 204)]
+        [HttpPost("reservations/confirmpayment/{id}")]
+        public async Task<IActionResult> ConfirmPayment([FromRoute] string id)
+        {
+            if (id == null) return BadRequest("Reservation id cannot be null.");
+
+            var reservation = await _context.Reservation.FindAsync(id);
+
+            if (reservation == null) return NotFound();
+
+            if (reservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin)) return Forbid();
+
+            if (reservation.State != State.NotYetPaid) return BadRequest("Reservation state is not 'Not yet paid'.");
+
+            reservation.State = State.Done;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Reservation.Any(e => e.Id == id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // POST: api/reservations/carwashcomment
+        /// <summary>
+        /// Add a carwash comment to a reservation
+        /// </summary>
+        /// <param name="id">reservation id</param>
+        /// <param name="comment">comment to be added</param>
+        /// <returns>No content</returns>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if id or comment is null.</response>
+        /// <response code="401">Unathorized</response>
+        /// <response code="403">Forbidden if user is not carwash admin.</response>
+        [ProducesResponseType(typeof(NoContentResult), 204)]
+        [HttpPost("reservations/carwashcomment/{id}")]
+        public async Task<IActionResult> AddCarwashComment([FromRoute] string id, [FromBody] string comment)
+        {
+            if (!_user.IsCarwashAdmin) return Forbid();
+
+            if (id == null) return BadRequest("Reservation id cannot be null.");
+            if (comment == null) return BadRequest("Comment cannot be null.");
+
+            var reservation = await _context.Reservation.FindAsync(id);
+
+            if (reservation == null) return NotFound();
+
+            if (reservation.CarwashComment != null) reservation.CarwashComment += "\n";
+            reservation.CarwashComment += comment;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Reservation.Any(e => e.Id == id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
         }
 
         // GET: api/reservations/obfuscated
@@ -647,6 +876,17 @@ namespace MSHU.CarWash.PWA.Controllers
             return reservedTimeInSlot + timeRequirement <=
                    Slots.Find(s => s.StartTime == dateTime.Hour)?.Capacity * TimeUnit;
         }
+
+        /// <summary>
+        /// Check if car is an MPV
+        /// </summary>
+        /// <param name="vehiclePlateNumber">vehicle plate number</param>
+        /// <returns>true if the given vehicle plate number was categorized as an MPV at least once</returns>
+        private async Task<bool> IsMpvAsync(string vehiclePlateNumber)
+        {
+            return await _context.Reservation
+                .AnyAsync(r => r.VehiclePlateNumber == vehiclePlateNumber && r.Mpv == true);
+        }
     }
 
     internal class ReservationViewModel
@@ -675,8 +915,8 @@ namespace MSHU.CarWash.PWA.Controllers
         public string Location { get; set; }
         public State State { get; set; }
         public List<ServiceType> Services { get; set; }
-        public bool? Private { get; set; }
-        public bool? Mpv { get; set; }
+        public bool Private { get; set; }
+        public bool Mpv { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public string Comment { get; set; }
