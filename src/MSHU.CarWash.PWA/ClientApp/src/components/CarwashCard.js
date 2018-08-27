@@ -8,18 +8,17 @@ import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import CardMedia from '@material-ui/core/CardMedia';
-import CardHeader from '@material-ui/core/CardHeader';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import Collapse from '@material-ui/core/Collapse';
-import LockIcon from '@material-ui/icons/Lock';
 import Chip from '@material-ui/core/Chip';
 import Divider from '@material-ui/core/Divider';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import red from '@material-ui/core/colors/red';
+import CarwashCardHeader from './CarwashCardHeader';
 
 const styles = theme => ({
     chip: {
@@ -43,6 +42,9 @@ const styles = theme => ({
         '&$focused': {
             backgroundColor: theme.palette.grey[300],
         },
+    },
+    buttonBase: {
+        width: '100%',
     },
     media: {
         height: 0,
@@ -292,16 +294,23 @@ class CarwashCard extends Component {
         return (
             <React.Fragment>
                 <Collapse in className={classes.collapseTransition}>
-                    <ButtonBase component="div" onFocusVisible={this.handleFocus} onBlur={this.handleBlur} onClick={this.handleCancelDialogOpen}>
+                    <ButtonBase
+                        className={classes.buttonBase}
+                        component="div"
+                        onFocusVisible={this.handleFocus}
+                        onBlur={this.handleBlur}
+                        onClick={this.handleCancelDialogOpen}
+                    >
                         <Card
                             className={classNames(classes.card, {
                                 [classes.focused]: focused,
                             })}
                         >
                             <CardMedia className={classes.media} image={`/images/state${reservation.state}.png`} />
-                            <CardHeader
-                                action={reservation.private ? <LockIcon alt="Private" style={{ margin: '8px 16px 0 0' }} /> : null}
+                            <CarwashCardHeader
+                                company="sap"
                                 title={reservation.vehiclePlateNumber}
+                                private={reservation.private}
                                 subheader={`${getStateName(reservation.state)} • ${getDate(reservation)}`}
                             />
                             <CardContent>
