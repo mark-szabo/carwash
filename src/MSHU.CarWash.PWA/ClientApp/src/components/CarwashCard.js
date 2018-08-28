@@ -2,10 +2,8 @@
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import apiFetch from '../Auth';
-import { Link } from 'react-router-dom';
 import { withStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
-import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import CardMedia from '@material-ui/core/CardMedia';
 import Button from '@material-ui/core/Button';
@@ -62,43 +60,6 @@ const styles = theme => ({
         overflow: 'initial',
     },
 });
-
-function getButtons(reservation, classes, handleCancelDialogOpen) {
-    switch (reservation.state) {
-        case 0:
-            return (
-                <CardActions>
-                    <Button component={Link} to={`/reserve/${reservation.id}`} size="small" color="primary">
-                        Edit
-                    </Button>
-                    <Button size="small" color="secondary" className={classes.dangerButton} onClick={handleCancelDialogOpen}>
-                        Cancel
-                    </Button>
-                </CardActions>
-            );
-        case 1:
-            return (
-                <CardActions>
-                    <Button size="small" color="primary">
-                        Confirm drop off and location
-                    </Button>
-                    <Button size="small" color="secondary">
-                        Cancel
-                    </Button>
-                </CardActions>
-            );
-        case 4:
-            return (
-                <CardActions>
-                    <Button size="small" color="primary">
-                        I have already paid
-                    </Button>
-                </CardActions>
-            );
-        default:
-            return null;
-    }
-}
 
 function getDate(reservation) {
     const from = new Intl.DateTimeFormat('en-US', {
@@ -227,7 +188,13 @@ class CarwashCard extends Component {
                         </Card>
                     </ButtonBase>
                 </Collapse>
-                <CarwashDetailsDialog reservation={reservation} open={detailsDialogOpen} handleClose={this.handleDetailsDialogClose} />
+                <CarwashDetailsDialog
+                    reservation={reservation}
+                    open={detailsDialogOpen}
+                    handleClose={this.handleDetailsDialogClose}
+                    openSnackbar={this.props.openSnackbar}
+                    updateReservation={this.props.updateReservation}
+                />
                 <Dialog
                     open={this.state.cancelDialogOpen}
                     onClose={this.handleCancelDialogClose}
@@ -253,6 +220,7 @@ CarwashCard.propTypes = {
     classes: PropTypes.object.isRequired,
     reservation: PropTypes.object.isRequired,
     openSnackbar: PropTypes.func.isRequired,
+    updateReservation: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(CarwashCard);

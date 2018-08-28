@@ -49,7 +49,7 @@ class CarwashGrid extends Component {
     }
 
     render() {
-        const { classes, backlog, backlogLoading, openSnackbar } = this.props;
+        const { classes, backlog, backlogLoading, openSnackbar, updateBacklogItem } = this.props;
 
         if (backlogLoading) {
             return (
@@ -66,7 +66,7 @@ class CarwashGrid extends Component {
         tomorrowMidnight.setDate(tomorrowMidnight.getDate() + 2);
         tomorrowMidnight.setHours(0, 0, 0);
 
-        const done = backlog.filter(r => r.state === State.Done && r.state === State.NotYetPaid);
+        const done = backlog.filter(r => (r.state === State.Done || r.state === State.NotYetPaid) && r.startDate < todayMidnight);
         const today = backlog.filter(r => r.state !== State.Done && r.state !== State.NotYetPaid && r.startDate < todayMidnight);
         const tomorrow = backlog.filter(r => r.startDate > todayMidnight && r.startDate < tomorrowMidnight);
         const later = backlog.filter(r => r.startDate > tomorrowMidnight);
@@ -89,21 +89,21 @@ class CarwashGrid extends Component {
                     )}
                     {today.map(reservation => (
                         <Grid item key={reservation.id} className={classes.card}>
-                            <CarwashCard reservation={reservation} openSnackbar={openSnackbar} />
+                            <CarwashCard reservation={reservation} openSnackbar={openSnackbar} updateReservation={updateBacklogItem} />
                         </Grid>
                     ))}
                 </CardSection>
                 <CardSection title="Tomorrow">
                     {tomorrow.map(reservation => (
                         <Grid item key={reservation.id} className={classes.card}>
-                            <CarwashCard reservation={reservation} openSnackbar={openSnackbar} />
+                            <CarwashCard reservation={reservation} openSnackbar={openSnackbar} updateReservation={updateBacklogItem} />
                         </Grid>
                     ))}
                 </CardSection>
                 <CardSection title="Later">
                     {later.map(reservation => (
                         <Grid item key={reservation.id} className={classes.card}>
-                            <CarwashCard reservation={reservation} openSnackbar={openSnackbar} />
+                            <CarwashCard reservation={reservation} openSnackbar={openSnackbar} updateReservation={updateBacklogItem} />
                         </Grid>
                     ))}
                 </CardSection>
@@ -117,6 +117,7 @@ CarwashGrid.propTypes = {
     backlog: PropTypes.arrayOf(PropTypes.object).isRequired,
     backlogLoading: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
+    updateBacklogItem: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(CarwashGrid);

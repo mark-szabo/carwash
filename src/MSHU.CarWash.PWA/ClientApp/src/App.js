@@ -181,6 +181,16 @@ export default class App extends Component {
         }
     };
 
+    updateBacklogItem = backlogItem => {
+        this.setState(state => {
+            const backlog = state.backlog;
+            const i = backlog.findIndex(item => item.id === backlogItem.id);
+            backlog[i] = backlogItem;
+
+            return { backlog };
+        });
+    };
+
     handleSnackbarClose = () => {
         this.setState({
             snackbarOpen: false,
@@ -267,6 +277,7 @@ export default class App extends Component {
                                 backlogLoading={backlogLoading}
                                 backlogUpdateFound={backlogUpdateFound}
                                 openSnackbar={this.openSnackbar}
+                                updateBacklogItem={this.updateBacklogItem}
                                 {...props}
                             />
                         )}
