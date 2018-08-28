@@ -42,9 +42,6 @@ const styles = theme => ({
         '&:hover': {
             cursor: 'pointer',
         },
-        '&$focused': {
-            backgroundColor: theme.palette.grey[300],
-        },
     },
     buttonBase: {
         width: '100%',
