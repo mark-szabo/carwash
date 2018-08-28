@@ -115,6 +115,7 @@ const styles = theme => ({
         color: '#9E9E9E',
     },
 });
+
 const timeFormat = new Intl.DateTimeFormat('en-US', {
     hour: '2-digit',
     minute: '2-digit',

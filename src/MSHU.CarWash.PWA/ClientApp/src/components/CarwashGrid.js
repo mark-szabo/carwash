@@ -6,6 +6,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import Typography from '@material-ui/core/Typography';
 import CarwashCard from './CarwashCard';
 import CardSection from './CardSection';
+import { State } from './Constants';
 
 const styles = theme => ({
     card: {
@@ -34,15 +35,6 @@ const styles = theme => ({
     readyText: {
         marginLeft: '58px',
     },
-});
-
-const State = Object.freeze({
-    SubmittedNotActual: 0,
-    ReminderSentWaitingForKey: 1,
-    CarKeyLeftAndLocationConfirmed: 2,
-    WashInProgress: 3,
-    NotYetPaid: 4,
-    Done: 5,
 });
 
 class CarwashGrid extends Component {

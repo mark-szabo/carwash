@@ -18,6 +18,8 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import red from '@material-ui/core/colors/red';
+import { getStateName, getServiceName } from './Constants';
+import Comments from './Comments';
 
 const styles = theme => ({
     chip: {
@@ -40,48 +42,6 @@ const styles = theme => ({
         height: 0,
         paddingTop: '48.83%', // 512:250
     },
-    comment: {
-        clear: 'right',
-        float: 'right',
-        borderTopRightRadius: '1.3em',
-        borderTopLeftRadius: '1.3em',
-        borderBottomLeftRadius: '1.3em',
-        backgroundColor: theme.palette.primary.dark,
-        color: '#fff',
-        padding: '6px 12px',
-        margin: '1px 0',
-        maxWidth: '85%',
-    },
-    carwashName: {
-        color: 'rgba(0, 0, 0, .40)',
-        fontSize: '12px',
-        fontWeight: 'normal',
-        lineHeight: '1.1',
-        marginBottom: '1px',
-        overflow: 'hidden',
-        paddingLeft: '12px',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-    },
-    carwashComment: {
-        borderTopRightRadius: '1.3em',
-        borderTopLeftRadius: '1.3em',
-        borderBottomRightRadius: '1.3em',
-        backgroundColor: '#e0e0e0',
-        padding: '6px 12px',
-        margin: '1px 0',
-        clear: 'left',
-        float: 'left',
-        maxWidth: '85%',
-    },
-    after: {
-        clear: 'both',
-        display: 'block',
-        fontSize: 0,
-        height: 0,
-        lineHeight: 0,
-        visibility: 'hidden',
-    },
     dangerButton: {
         color: red[300],
         '&:hover': {
@@ -89,60 +49,6 @@ const styles = theme => ({
         },
     },
 });
-
-function getStateName(state) {
-    switch (state) {
-        case 0:
-            return 'Scheduled';
-        case 1:
-            return 'Leave the key at reception';
-        case 2:
-            return 'Waiting';
-        case 3:
-            return 'Wash in progress';
-        case 4:
-            return 'You need to pay';
-        case 5:
-            return 'Done';
-        default:
-            return 'No info';
-    }
-}
-
-function getServiceName(service) {
-    switch (service) {
-        case 0:
-            return 'exterior';
-        case 1:
-            return 'interior';
-        case 2:
-            return 'carpet';
-        case 3:
-            return 'spot cleaning';
-        case 4:
-            return 'vignette removal';
-        case 5:
-            return 'polishing';
-        case 6:
-            return "AC cleaning 'ozon'";
-        case 7:
-            return "AC cleaning 'bomba'";
-        case 8:
-            return 'bug removal';
-        case 9:
-            return 'wheel cleaning';
-        case 10:
-            return 'tire care';
-        case 11:
-            return 'leather care';
-        case 12:
-            return 'plastic care';
-        case 13:
-            return 'prewash';
-        default:
-            return 'no info';
-    }
-}
 
 function getButtons(reservation, classes, handleCancelDialogOpen) {
     switch (reservation.state) {
@@ -179,34 +85,6 @@ function getButtons(reservation, classes, handleCancelDialogOpen) {
         default:
             return null;
     }
-}
-
-function getComment(comment, classes) {
-    if (!comment) return null;
-    return (
-        <div>
-            <Divider className={classes.divider} />
-            <Typography component="p" className={classes.comment}>
-                {comment}
-            </Typography>
-            <div className={classes.after}>.</div>
-        </div>
-    );
-}
-
-function getCarwashComment(comment, classes) {
-    if (!comment) return null;
-    return (
-        <div>
-            <Typography component="h5" className={classes.carwashName}>
-                CarWash
-            </Typography>
-            <Typography component="p" className={classes.carwashComment}>
-                {comment}
-            </Typography>
-            <div className={classes.after}>.</div>
-        </div>
-    );
 }
 
 function getDate(reservation) {
@@ -285,8 +163,11 @@ class ReservationCard extends Component {
                                     </Typography>
                                 </React.Fragment>
                             )}
-                            {getComment(reservation.comment, classes)}
-                            {getCarwashComment(reservation.carwashComment, classes)}
+                            <Comments
+                                commentOutgoing={reservation.comment}
+                                commentIncoming={reservation.carwashComment}
+                                commentIncomingName="CarWash"
+                            />
                             <Divider className={classes.divider} />
                             <Typography variant="subheading">Selected services</Typography>
                             {reservation.services.map(service => (

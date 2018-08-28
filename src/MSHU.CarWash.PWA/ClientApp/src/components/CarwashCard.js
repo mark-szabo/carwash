@@ -20,6 +20,8 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import red from '@material-ui/core/colors/red';
 import CarwashCardHeader from './CarwashCardHeader';
 import CarwashDetailsDialog from './CarwashDetailsDialog';
+import { getAdminStateName, getServiceName } from './Constants';
+import Comments from './Comments';
 
 const styles = theme => ({
     chip: {
@@ -51,48 +53,6 @@ const styles = theme => ({
         height: 0,
         paddingTop: '48.83%', // 512:250
     },
-    comment: {
-        borderTopRightRadius: '1.3em',
-        borderTopLeftRadius: '1.3em',
-        borderBottomRightRadius: '1.3em',
-        backgroundColor: '#e0e0e0',
-        padding: '6px 12px',
-        margin: '1px 0',
-        clear: 'left',
-        float: 'left',
-        maxWidth: '85%',
-    },
-    commentName: {
-        color: 'rgba(0, 0, 0, .40)',
-        fontSize: '12px',
-        fontWeight: 'normal',
-        lineHeight: '1.1',
-        marginBottom: '1px',
-        overflow: 'hidden',
-        paddingLeft: '12px',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-    },
-    carwashComment: {
-        clear: 'right',
-        float: 'right',
-        borderTopRightRadius: '1.3em',
-        borderTopLeftRadius: '1.3em',
-        borderBottomLeftRadius: '1.3em',
-        backgroundColor: theme.palette.primary.dark,
-        color: '#fff',
-        padding: '6px 12px',
-        margin: '1px 0',
-        maxWidth: '85%',
-    },
-    after: {
-        clear: 'both',
-        display: 'block',
-        fontSize: 0,
-        height: 0,
-        lineHeight: 0,
-        visibility: 'hidden',
-    },
     dangerButton: {
         color: red[300],
         '&:hover': {
@@ -105,60 +65,6 @@ const styles = theme => ({
         overflow: 'initial',
     },
 });
-
-function getStateName(state) {
-    switch (state) {
-        case 0:
-            return 'Scheduled';
-        case 1:
-            return 'Waiting for key';
-        case 2:
-            return 'Queued';
-        case 3:
-            return 'In progress';
-        case 4:
-            return 'Waiting for payment';
-        case 5:
-            return 'Done';
-        default:
-            return 'No info';
-    }
-}
-
-function getServiceName(service) {
-    switch (service) {
-        case 0:
-            return 'exterior';
-        case 1:
-            return 'interior';
-        case 2:
-            return 'carpet';
-        case 3:
-            return 'spot cleaning';
-        case 4:
-            return 'vignette removal';
-        case 5:
-            return 'polishing';
-        case 6:
-            return "AC cleaning 'ozon'";
-        case 7:
-            return "AC cleaning 'bomba'";
-        case 8:
-            return 'bug removal';
-        case 9:
-            return 'wheel cleaning';
-        case 10:
-            return 'tire care';
-        case 11:
-            return 'leather care';
-        case 12:
-            return 'plastic care';
-        case 13:
-            return 'prewash';
-        default:
-            return 'no info';
-    }
-}
 
 function getButtons(reservation, classes, handleCancelDialogOpen) {
     switch (reservation.state) {
@@ -195,34 +101,6 @@ function getButtons(reservation, classes, handleCancelDialogOpen) {
         default:
             return null;
     }
-}
-
-function getComment(comment, name, classes) {
-    if (!comment) return null;
-    return (
-        <div>
-            <Divider className={classes.divider} />
-            <Typography component="h5" className={classes.commentName}>
-                {name}
-            </Typography>
-            <Typography component="p" className={classes.comment}>
-                {comment}
-            </Typography>
-            <div className={classes.after}>.</div>
-        </div>
-    );
-}
-
-function getCarwashComment(comment, classes) {
-    if (!comment) return null;
-    return (
-        <div>
-            <Typography component="p" className={classes.carwashComment}>
-                {comment}
-            </Typography>
-            <div className={classes.after}>.</div>
-        </div>
-    );
 }
 
 function getDate(reservation) {
@@ -322,7 +200,7 @@ class CarwashCard extends Component {
                                 company={reservation.user.company}
                                 title={reservation.vehiclePlateNumber}
                                 private={reservation.private}
-                                subheader={`${getStateName(reservation.state)} • ${getDate(reservation)}`}
+                                subheader={`${getAdminStateName(reservation.state)} • ${getDate(reservation)}`}
                             />
                             <CardContent>
                                 <Typography variant="caption" gutterBottom>
@@ -337,8 +215,12 @@ class CarwashCard extends Component {
                                 <Typography variant="body1" gutterBottom>
                                     {reservation.user.firstName} {reservation.user.lastName}
                                 </Typography>
-                                {getComment(reservation.comment, reservation.user.firstName, classes)}
-                                {getCarwashComment(reservation.carwashComment, classes)}
+                                <Comments
+                                    commentOutgoing={reservation.carwashComment}
+                                    commentIncoming={reservation.comment}
+                                    commentIncomingName={reservation.user.firstName}
+                                    incomingFirst
+                                />
                                 <Divider className={classes.divider} />
                                 <Typography variant="subheading">Selected services</Typography>
                                 {reservation.services.map(service => (

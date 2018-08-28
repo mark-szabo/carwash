@@ -9,6 +9,7 @@ import withMobileDialog from '@material-ui/core/withMobileDialog';
 import Typography from '@material-ui/core/Typography';
 import Chip from '@material-ui/core/Chip';
 import Divider from '@material-ui/core/Divider';
+import { getServiceName } from './Constants';
 
 const styles = theme => ({
     chip: {
@@ -18,41 +19,6 @@ const styles = theme => ({
         margin: '24px 0',
     },
 });
-
-function getServiceName(service) {
-    switch (service) {
-        case 0:
-            return 'exterior';
-        case 1:
-            return 'interior';
-        case 2:
-            return 'carpet';
-        case 3:
-            return 'spot cleaning';
-        case 4:
-            return 'vignette removal';
-        case 5:
-            return 'polishing';
-        case 6:
-            return "AC cleaning 'ozon'";
-        case 7:
-            return "AC cleaning 'bomba'";
-        case 8:
-            return 'bug removal';
-        case 9:
-            return 'wheel cleaning';
-        case 10:
-            return 'tire care';
-        case 11:
-            return 'leather care';
-        case 12:
-            return 'plastic care';
-        case 13:
-            return 'prewash';
-        default:
-            return 'no info';
-    }
-}
 
 class ResponsiveDialog extends React.Component {
     render() {
