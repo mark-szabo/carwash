@@ -76,7 +76,7 @@ class CarwashGrid extends Component {
                 <CardSection title="Done">
                     {done.map(reservation => (
                         <Grid item key={reservation.id} className={classes.card}>
-                            <CarwashCard reservation={reservation} openSnackbar={openSnackbar} />
+                            <CarwashCard reservation={reservation} openSnackbar={openSnackbar} updateReservation={updateBacklogItem} />
                         </Grid>
                     ))}
                 </CardSection>

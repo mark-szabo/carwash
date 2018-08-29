@@ -14,6 +14,7 @@ import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import FormControl from '@material-ui/core/FormControl';
+import Icon from '@material-ui/core/Icon';
 import LocalCarWashIcon from '@material-ui/icons/LocalCarWash';
 import LocalShippingIcon from '@material-ui/icons/LocalShipping';
 import CloseIcon from '@material-ui/icons/Close';
@@ -105,6 +106,34 @@ class CarwashDetailsDialog extends React.Component {
         }
     };
 
+    getActions = state => {
+        switch (state) {
+            case State.SubmittedNotActual:
+            case State.ReminderSentWaitingForKey:
+            case State.CarKeyLeftAndLocationConfirmed:
+                return null;
+            case State.WashInProgress:
+                return (
+                    <React.Fragment>
+                        <Button onClick={this.handleBackToWaiting}>
+                            Back to waiting
+                        </Button>
+                    </React.Fragment>
+                );
+            case State.NotYetPaid:
+            case State.Done:
+                return (
+                    <React.Fragment>
+                        <Button onClick={handleClose}>
+                            Back to wash
+                        </Button>
+                    </React.Fragment>
+                );
+            default:
+                return null;
+        }
+    };
+
     handleStartWash = () => {
         const reservation = this.props.reservation;
         const oldState = reservation.state;
@@ -156,6 +185,46 @@ class CarwashDetailsDialog extends React.Component {
         }).then(
             () => {
                 this.props.openSnackbar('Payment confirmed.');
+            },
+            error => {
+                reservation.state = oldState;
+                this.props.updateReservation(reservation);
+                this.props.openSnackbar(error);
+            }
+        );
+    };
+
+    handleBackToWaiting = () => {
+        const reservation = this.props.reservation;
+        const oldState = reservation.state;
+        reservation.state = State.CarKeyLeftAndLocationConfirmed;
+        this.props.updateReservation(reservation);
+
+        apiFetch(`api/reservations/${this.props.reservation.id}/state/${reservation.state}`, {
+            method: 'POST',
+        }).then(
+            () => {
+                this.props.openSnackbar('Wash canceled.');
+            },
+            error => {
+                reservation.state = oldState;
+                this.props.updateReservation(reservation);
+                this.props.openSnackbar(error);
+            }
+        );
+    };
+
+    handleBackToWash = () => {
+        const reservation = this.props.reservation;
+        const oldState = reservation.state;
+        reservation.state = State.WashInProgress;
+        this.props.updateReservation(reservation);
+
+        apiFetch(`api/reservations/${this.props.reservation.id}/state/${reservation.state}`, {
+            method: 'POST',
+        }).then(
+            () => {
+                this.props.openSnackbar('Wash in progress.');
             },
             error => {
                 reservation.state = oldState;
@@ -286,7 +355,7 @@ class CarwashDetailsDialog extends React.Component {
                         {reservation.user.firstName} {reservation.user.lastName}
                     </Typography>
                     <IconButton onClick={this.handleToggleMpv} aria-label="MPV">
-                        {reservation.mpv ? <LocalShippingIcon /> : <LocalShippingIcon color="disabled" />}
+                        {reservation.mpv ? <LocalShippingIcon /> : <Icon color="disabled">local_shipping_outline</Icon>}
                     </IconButton>
                     <FormControl className={classes.commentTextfield}>
                         <InputLabel htmlFor="comment">Comment</InputLabel>
@@ -312,14 +381,7 @@ class CarwashDetailsDialog extends React.Component {
                     ))}
                     {this.getFab(reservation.state)}
                 </DialogContent>
-                <DialogActions className={classes.actions}>
-                    <Button onClick={handleClose} color="primary">
-                        Disagree
-                    </Button>
-                    <Button onClick={handleClose} color="primary" autoFocus>
-                        Start wash
-                    </Button>
-                </DialogActions>
+                <DialogActions className={classes.actions}>{this.getActions(reservation.state)}</DialogActions>
             </Dialog>
         );
     }
