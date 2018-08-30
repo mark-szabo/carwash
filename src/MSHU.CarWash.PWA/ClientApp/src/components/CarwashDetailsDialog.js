@@ -17,6 +17,7 @@ import FormControl from '@material-ui/core/FormControl';
 import Icon from '@material-ui/core/Icon';
 import LocalCarWashIcon from '@material-ui/icons/LocalCarWash';
 import LocalShippingIcon from '@material-ui/icons/LocalShipping';
+import LocalShippingOutlinedIcon from '@material-ui/icons/LocalShippingOutlined';
 import CloseIcon from '@material-ui/icons/Close';
 import DoneIcon from '@material-ui/icons/Done';
 import MoneyOffIcon from '@material-ui/icons/MoneyOff';
@@ -124,7 +125,7 @@ class CarwashDetailsDialog extends React.Component {
             case State.Done:
                 return (
                     <React.Fragment>
-                        <Button onClick={handleClose}>
+                        <Button onClick={this.handleBackToWash}>
                             Back to wash
                         </Button>
                     </React.Fragment>
@@ -348,15 +349,23 @@ class CarwashDetailsDialog extends React.Component {
                     <IconButton onClick={handleClose} className={classes.closeButton} aria-label="Close">
                         <CloseIcon />
                     </IconButton>
-                    <Typography>{reservation.vehiclePlateNumber}</Typography>
-                    <Typography>{reservation.user.company}</Typography>
-                    <Typography>{reservation.location}</Typography>
-                    <Typography>
-                        {reservation.user.firstName} {reservation.user.lastName}
+                    <Typography variant="display2" gutterBottom>{reservation.vehiclePlateNumber}
+                        <IconButton onClick={this.handleToggleMpv} aria-label="MPV">
+                            {reservation.mpv ? <LocalShippingIcon /> : <LocalShippingOutlinedIcon color="disabled" />}
+                        </IconButton>
                     </Typography>
-                    <IconButton onClick={this.handleToggleMpv} aria-label="MPV">
-                        {reservation.mpv ? <LocalShippingIcon /> : <Icon color="disabled">local_shipping_outline</Icon>}
-                    </IconButton>
+                    <Typography variant="caption" gutterBottom>
+                        Location
+                    </Typography>
+                    <Typography variant="body1" gutterBottom>
+                        {reservation.location}
+                    </Typography>
+                    <Typography variant="caption" gutterBottom style={{ marginTop: '8px' }}>
+                        Name
+                    </Typography>
+                    <Typography variant="body1" gutterBottom>
+                        {reservation.user.firstName} {reservation.user.lastName} ({reservation.user.company})
+                    </Typography>
                     <FormControl className={classes.commentTextfield}>
                         <InputLabel htmlFor="comment">Comment</InputLabel>
                         <Input

@@ -281,7 +281,7 @@ namespace MSHU.CarWash.PWA.Controllers
             return CreatedAtAction("GetReservation", new { id = reservation.Id }, new ReservationViewModel(reservation));
         }
 
-        // DELETE: api/Reservations/5
+        // DELETE: api/Reservations/{id}
         /// <summary>
         /// Delete an existing reservation
         /// </summary>
@@ -499,7 +499,6 @@ namespace MSHU.CarWash.PWA.Controllers
         /// Log the completion of the carwash
         /// </summary>
         /// <param name="id">reservation id</param>
-        /// <param name="paid">true if reservation was private but is already paid (optional)</param>
         /// <returns>No content</returns>
         /// <response code="204">NoContent</response>
         /// <response code="400">BadRequest if id is null.</response>
@@ -538,14 +537,14 @@ namespace MSHU.CarWash.PWA.Controllers
             return NoContent();
         }
 
-        // POST: api/reservations/confirmpayment
+        // POST: api/reservations/{id}/confirmpayment
         /// <summary>
         /// Confirm payment
         /// </summary>
         /// <param name="id">reservation id</param>
         /// <returns>No content</returns>
         /// <response code="204">NoContent</response>
-        /// <response code="400">BadRequest if id or location param is null.</response>
+        /// <response code="400">BadRequest if id is null.</response>
         /// <response code="401">Unathorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to update another user's reservation.</response>
         [ProducesResponseType(typeof(NoContentResult), 204)]
@@ -563,6 +562,50 @@ namespace MSHU.CarWash.PWA.Controllers
             if (reservation.State != State.NotYetPaid) return BadRequest("Reservation state is not 'Not yet paid'.");
 
             reservation.State = State.Done;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Reservation.Any(e => e.Id == id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // POST: api/reservations/{id}/state/{state}
+        /// <summary>
+        /// Set new state
+        /// </summary>
+        /// <param name="id">reservation id</param>
+        /// <param name="state">state no.</param>
+        /// <returns>No content</returns>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if id or location param is null.</response>
+        /// <response code="401">Unathorized</response>
+        /// <response code="403">Forbidden if user is not carwash admin.</response>
+        [ProducesResponseType(typeof(NoContentResult), 204)]
+        [HttpPost("{id}/state/{state}")]
+        public async Task<IActionResult> SetState([FromRoute] string id, [FromRoute] State state)
+        {
+            if (!_user.IsCarwashAdmin) return Forbid();
+
+            if (id == null) return BadRequest("Reservation id cannot be null.");
+
+            var reservation = await _context.Reservation.FindAsync(id);
+
+            if (reservation == null) return NotFound();
+
+            reservation.State = state;
 
             try
             {
