@@ -175,6 +175,7 @@ class Reserve extends TrackedComponent {
             servicesStepLabel: 'Select services',
             dateStepLabel: 'Choose date',
             timeStepLabel: 'Choose time',
+            locationKnown: false,
         };
     }
 
@@ -393,6 +394,12 @@ class Reserve extends TrackedComponent {
         });
     };
 
+    handleLocationKnown = () => {
+        this.setState(state => ({
+            locationKnown: !state.locationKnown,
+        }));
+    };
+
     handleGarageChange = event => {
         this.setState({
             garage: event.target.value,
@@ -437,7 +444,7 @@ class Reserve extends TrackedComponent {
             id: this.props.match.params.id,
             userId: this.state.userId,
             vehiclePlateNumber: this.state.vehiclePlateNumber,
-            location: `${this.state.garage}/${this.state.floor}/${this.state.seat}`,
+            location: this.state.locationKnown ? `${this.state.garage}/${this.state.floor}/${this.state.seat}` : null,
             services: this.state.services.filter(s => s.selected).map(s => s.id),
             private: this.state.private,
             startDate: this.state.selectedDate,
@@ -495,6 +502,7 @@ class Reserve extends TrackedComponent {
             garage,
             floor,
             seat,
+            locationKnown,
         } = this.state;
         const today = new Date();
 
@@ -695,51 +703,65 @@ class Reserve extends TrackedComponent {
                                         onChange={this.handlePlateNumberChange}
                                     />
                                 </div>
-                                <FormControl className={classes.formControl} error={validationErrors.garage}>
-                                    <InputLabel htmlFor="garage">Garage</InputLabel>
-                                    <Select
-                                        required
-                                        value={garage}
-                                        onChange={this.handleGarageChange}
-                                        inputProps={{
-                                            name: 'garage',
-                                            id: 'garage',
-                                        }}
-                                    >
-                                        <MenuItem value="M">M</MenuItem>
-                                        <MenuItem value="G">G</MenuItem>
-                                        <MenuItem value="S1">S1</MenuItem>
-                                    </Select>
-                                </FormControl>
-                                {garage !== '' && (
-                                    <FormControl className={classes.formControl} error={validationErrors.floor}>
-                                        <InputLabel htmlFor="floor">Floor</InputLabel>
-                                        <Select
-                                            required
-                                            value={floor}
-                                            onChange={this.handleFloorChange}
-                                            inputProps={{
-                                                name: 'floor',
-                                                id: 'floor',
-                                            }}
-                                        >
-                                            {Garages[garage].map(item => (
-                                                <MenuItem value={item} key={item}>
-                                                    {item}
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-                                )}
-                                {floor !== '' && (
-                                    <TextField
-                                        id="seat"
-                                        label="Seat (optional)"
-                                        value={seat}
-                                        className={classes.textField}
-                                        margin="normal"
-                                        onChange={this.handleSeatChange}
-                                    />
+                                <div>
+                                    <FormGroup className={classes.checkbox} style={{ marginTop: 8 }}>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox checked={locationKnown} onChange={this.handleLocationKnown} value="locationKnown" color="primary" />
+                                            }
+                                            label="I have already parked the car"
+                                        />
+                                    </FormGroup>
+                                </div>
+                                {locationKnown && (
+                                    <React.Fragment>
+                                        <FormControl className={classes.formControl} error={validationErrors.garage}>
+                                            <InputLabel htmlFor="garage">Garage</InputLabel>
+                                            <Select
+                                                required
+                                                value={garage}
+                                                onChange={this.handleGarageChange}
+                                                inputProps={{
+                                                    name: 'garage',
+                                                    id: 'garage',
+                                                }}
+                                            >
+                                                <MenuItem value="M">M</MenuItem>
+                                                <MenuItem value="G">G</MenuItem>
+                                                <MenuItem value="S1">S1</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                        {garage && (
+                                            <FormControl className={classes.formControl} error={validationErrors.floor}>
+                                                <InputLabel htmlFor="floor">Floor</InputLabel>
+                                                <Select
+                                                    required
+                                                    value={floor}
+                                                    onChange={this.handleFloorChange}
+                                                    inputProps={{
+                                                        name: 'floor',
+                                                        id: 'floor',
+                                                    }}
+                                                >
+                                                    {Garages[garage].map(item => (
+                                                        <MenuItem value={item} key={item}>
+                                                            {item}
+                                                        </MenuItem>
+                                                    ))}
+                                                </Select>
+                                            </FormControl>
+                                        )}
+                                        {floor && (
+                                            <TextField
+                                                id="seat"
+                                                label="Seat (optional)"
+                                                value={seat}
+                                                className={classes.textField}
+                                                margin="normal"
+                                                onChange={this.handleSeatChange}
+                                            />
+                                        )}
+                                    </React.Fragment>
                                 )}
                                 <div>
                                     <TextField

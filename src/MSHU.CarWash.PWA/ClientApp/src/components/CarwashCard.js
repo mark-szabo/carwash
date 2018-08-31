@@ -166,7 +166,7 @@ class CarwashCard extends Component {
                                     Location
                                 </Typography>
                                 <Typography variant="body1" gutterBottom>
-                                    {reservation.location}
+                                    {reservation.location ? reservation.location : 'Not set'}
                                 </Typography>
                                 <Typography variant="caption" gutterBottom style={{ marginTop: '8px' }}>
                                     Name

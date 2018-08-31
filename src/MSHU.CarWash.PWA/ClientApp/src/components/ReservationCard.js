@@ -258,7 +258,7 @@ class ReservationCard extends Component {
                             </Typography>
                             {reservation.location && (
                                 <React.Fragment>
-                                    <Typography variant="caption" gutterBottom style={{ marginTop: '8px' }}>
+                                    <Typography variant="caption" gutterBottom style={{ marginTop: 8 }}>
                                         Location
                                     </Typography>
                                     <Typography variant="body1" gutterBottom>
@@ -268,7 +268,7 @@ class ReservationCard extends Component {
                             )}
                             {admin && (
                                 <React.Fragment>
-                                    <Typography variant="caption" gutterBottom style={{ marginTop: '8px' }}>
+                                    <Typography variant="caption" gutterBottom style={{ marginTop: 8 }}>
                                         Name
                                     </Typography>
                                     <Typography variant="body1" gutterBottom>

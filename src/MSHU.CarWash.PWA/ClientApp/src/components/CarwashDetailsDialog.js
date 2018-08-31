@@ -132,13 +132,14 @@ class CarwashDetailsDialog extends React.Component {
     };
 
     componentDidMount() {
-        const [garage, floor, seat] = this.props.reservation.location.split('/');
-
-        this.setState({
-            garage,
-            floor,
-            seat,
-        });
+        if (this.props.reservation.location) {
+            const [garage, floor, seat] = this.props.reservation.location.split('/');
+            this.setState({
+                garage,
+                floor,
+                seat,
+            });
+        }
     }
 
     getFab = state => {
