@@ -158,7 +158,8 @@ class CarwashCard extends Component {
                                 company={reservation.user.company}
                                 title={reservation.vehiclePlateNumber}
                                 private={reservation.private}
-                                subheader={`${getAdminStateName(reservation.state)} • ${getDate(reservation)}`}
+                                subheader={getAdminStateName(reservation.state)}
+                                subheaderSecondLine={getDate(reservation)}
                             />
                             <CardContent>
                                 <Typography variant="caption" gutterBottom>

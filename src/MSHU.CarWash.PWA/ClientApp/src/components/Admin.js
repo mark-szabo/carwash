@@ -7,7 +7,7 @@ export default class Admin extends TrackedComponent {
     displayName = Admin.name;
 
     render() {
-        const { reservations, reservationsLoading, removeReservation, openSnackbar } = this.props;
+        const { reservations, reservationsLoading, removeReservation, openSnackbar, updateReservation } = this.props;
 
         return (
             <ReservationGrid
@@ -15,6 +15,7 @@ export default class Admin extends TrackedComponent {
                 reservationsLoading={reservationsLoading}
                 removeReservation={removeReservation}
                 openSnackbar={openSnackbar}
+                updateReservation={updateReservation}
                 admin
             />
         );
@@ -26,4 +27,5 @@ Admin.propTypes = {
     reservationsLoading: PropTypes.bool.isRequired,
     removeReservation: PropTypes.func.isRequired,
     openSnackbar: PropTypes.func.isRequired,
+    updateReservation: PropTypes.func.isRequired,
 };

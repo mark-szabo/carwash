@@ -191,6 +191,26 @@ export default class App extends Component {
         });
     };
 
+    updateReservation = reservation => {
+        this.setState(state => {
+            const reservations = state.reservations;
+            const i = reservations.findIndex(item => item.id === reservation.id);
+            reservations[i] = reservation;
+
+            return { reservations };
+        });
+    };
+
+    updateCompanyReservation = reservation => {
+        this.setState(state => {
+            const companyReservations = state.companyReservations;
+            const i = companyReservations.findIndex(item => item.id === reservation.id);
+            companyReservations[i] = reservation;
+
+            return { companyReservations };
+        });
+    };
+
     handleSnackbarClose = () => {
         this.setState({
             snackbarOpen: false,
@@ -221,6 +241,7 @@ export default class App extends Component {
                                 reservations={reservations}
                                 reservationsLoading={reservationsLoading}
                                 removeReservation={this.removeReservation}
+                                updateReservation={this.updateReservation}
                                 openSnackbar={this.openSnackbar}
                                 {...props}
                             />
@@ -262,6 +283,7 @@ export default class App extends Component {
                                 reservations={companyReservations}
                                 reservationsLoading={companyReservationsLoading}
                                 removeReservation={this.removeReservationFromCompanyReservations}
+                                updateReservation={this.updateCompanyReservation}
                                 openSnackbar={this.openSnackbar}
                                 {...props}
                             />

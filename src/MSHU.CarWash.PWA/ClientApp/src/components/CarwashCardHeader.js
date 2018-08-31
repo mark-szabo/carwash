@@ -39,7 +39,7 @@ export const styles = theme => ({
 });
 
 function CarwashCardHeader(props) {
-    const { company, classes, subheader, title, private: priv, ...other } = props;
+    const { company, classes, subheader, subheaderSecondLine, title, private: priv, ...other } = props;
 
     return (
         <div className={classes.root} {...other}>
@@ -55,6 +55,9 @@ function CarwashCardHeader(props) {
                 <Typography variant="body1" className={classes.subheader} color="textSecondary" component="span">
                     {subheader}
                 </Typography>
+                <Typography variant="body1" className={classes.subheader} color="textSecondary" component="span">
+                    {subheaderSecondLine}
+                </Typography>
             </div>
         </div>
     );
@@ -64,6 +67,7 @@ CarwashCardHeader.propTypes = {
     company: PropTypes.string,
     classes: PropTypes.object.isRequired,
     subheader: PropTypes.string.isRequired,
+    subheaderSecondLine: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,
     private: PropTypes.bool,
 };

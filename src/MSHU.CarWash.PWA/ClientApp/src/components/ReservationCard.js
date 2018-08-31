@@ -17,8 +17,15 @@ import Divider from '@material-ui/core/Divider';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import InputLabel from '@material-ui/core/InputLabel';
+import FormControl from '@material-ui/core/FormControl';
+import TextField from '@material-ui/core/TextField';
+import MenuItem from '@material-ui/core/MenuItem';
+import Select from '@material-ui/core/Select';
 import red from '@material-ui/core/colors/red';
-import { getStateName, getServiceName } from './Constants';
+import { getStateName, getServiceName, State, Garages } from './Constants';
 import Comments from './Comments';
 
 const styles = theme => ({
@@ -48,44 +55,17 @@ const styles = theme => ({
             backgroundColor: 'rgba(229,115,115,0.08)',
         },
     },
+    formControl: {
+        marginRight: theme.spacing.unit,
+        marginBottom: theme.spacing.unit,
+        [theme.breakpoints.down('sm')]: {
+            width: '100%',
+        },
+        [theme.breakpoints.up('md')]: {
+            width: 75,
+        },
+    },
 });
-
-function getButtons(reservation, classes, handleCancelDialogOpen) {
-    switch (reservation.state) {
-        case 0:
-            return (
-                <CardActions>
-                    <Button component={Link} to={`/reserve/${reservation.id}`} size="small" color="primary">
-                        Edit
-                    </Button>
-                    <Button size="small" color="secondary" className={classes.dangerButton} onClick={handleCancelDialogOpen}>
-                        Cancel
-                    </Button>
-                </CardActions>
-            );
-        case 1:
-            return (
-                <CardActions>
-                    <Button size="small" color="primary">
-                        Confirm drop off and location
-                    </Button>
-                    <Button size="small" color="secondary">
-                        Cancel
-                    </Button>
-                </CardActions>
-            );
-        case 4:
-            return (
-                <CardActions>
-                    <Button size="small" color="primary">
-                        I have already paid
-                    </Button>
-                </CardActions>
-            );
-        default:
-            return null;
-    }
-}
 
 function getDate(reservation) {
     const from = new Intl.DateTimeFormat('en-US', {
@@ -106,6 +86,44 @@ function getDate(reservation) {
 class ReservationCard extends Component {
     state = {
         cancelDialogOpen: false,
+        dropoffDialogOpen: false,
+        garage: '',
+        floor: '',
+        seat: '',
+        validationErrors: {
+            garage: false,
+            floor: false,
+        },
+    };
+
+    getButtons = (reservation, classes) => {
+        switch (reservation.state) {
+            case 0:
+            case 1:
+                return (
+                    <CardActions>
+                        <Button size="small" color="primary" onClick={this.handleDropoffDialogOpen}>
+                            Confirm key drop-off
+                        </Button>
+                        <Button component={Link} to={`/reserve/${reservation.id}`} size="small" color="primary">
+                            Edit
+                        </Button>
+                        <Button size="small" color="secondary" className={classes.dangerButton} onClick={this.handleCancelDialogOpen}>
+                            Cancel
+                        </Button>
+                    </CardActions>
+                );
+            case 4:
+                return (
+                    <CardActions>
+                        <Button size="small" color="primary" onClick={this.handlePaymentConfirmed}>
+                            I have already paid
+                        </Button>
+                    </CardActions>
+                );
+            default:
+                return null;
+        }
     };
 
     handleCancelDialogOpen = () => {
@@ -134,7 +152,92 @@ class ReservationCard extends Component {
         );
     };
 
+    handleDropoffDialogOpen = () => {
+        this.setState({ dropoffDialogOpen: true });
+    };
+
+    handleDropoffDialogClose = () => {
+        this.setState({ dropoffDialogOpen: false });
+    };
+
+    handleDropoffConfirmed = () => {
+        const validationErrors = {
+            garage: this.state.garage === '',
+            floor: this.state.floor === '',
+        };
+
+        if (validationErrors.vehiclePlateNumber || validationErrors.garage || validationErrors.floor) {
+            this.setState({ validationErrors });
+            return;
+        }
+
+        const reservation = this.props.reservation;
+        reservation.location = `${this.state.garage}/${this.state.floor}/${this.state.seat}`;
+        const oldState = reservation.state;
+        reservation.state = State.CarKeyLeftAndLocationConfirmed;
+
+        this.setState({ dropoffDialogOpen: false });
+
+        this.props.updateReservation(reservation);
+
+        apiFetch(`api/reservations/${this.props.reservation.id}/confirmdropoff`, {
+            method: 'POST',
+            body: JSON.stringify(this.props.reservation.location),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(
+            () => {
+                this.props.openSnackbar('Drop-off and location confirmed.');
+            },
+            error => {
+                reservation.state = oldState;
+                this.props.updateReservation(reservation);
+                this.props.openSnackbar(error);
+            }
+        );
+    };
+
+    handlePaymentConfirmed = () => {
+        const reservation = this.props.reservation;
+        const oldState = reservation.state;
+        reservation.state = State.Done;
+        this.props.updateReservation(reservation);
+
+        apiFetch(`api/reservations/${this.props.reservation.id}/confirmpayment`, {
+            method: 'POST',
+        }).then(
+            () => {
+                this.props.openSnackbar('Payment confirmed.');
+            },
+            error => {
+                reservation.state = oldState;
+                this.props.updateReservation(reservation);
+                this.props.openSnackbar(error);
+            }
+        );
+    };
+
+    handleGarageChange = event => {
+        this.setState({
+            garage: event.target.value,
+        });
+    };
+
+    handleFloorChange = event => {
+        this.setState({
+            floor: event.target.value,
+        });
+    };
+
+    handleSeatChange = event => {
+        this.setState({
+            seat: event.target.value,
+        });
+    };
+
     render() {
+        const { garage, floor, seat, validationErrors } = this.state;
         const { classes, reservation, admin } = this.props;
         return (
             <React.Fragment>
@@ -153,6 +256,16 @@ class ReservationCard extends Component {
                             <Typography variant="body1" gutterBottom>
                                 {reservation.vehiclePlateNumber}
                             </Typography>
+                            {reservation.location && (
+                                <React.Fragment>
+                                    <Typography variant="caption" gutterBottom style={{ marginTop: '8px' }}>
+                                        Location
+                                    </Typography>
+                                    <Typography variant="body1" gutterBottom>
+                                        {reservation.location}
+                                    </Typography>
+                                </React.Fragment>
+                            )}
                             {admin && (
                                 <React.Fragment>
                                     <Typography variant="caption" gutterBottom style={{ marginTop: '8px' }}>
@@ -163,33 +276,94 @@ class ReservationCard extends Component {
                                     </Typography>
                                 </React.Fragment>
                             )}
-                            <Comments
-                                commentOutgoing={reservation.comment}
-                                commentIncoming={reservation.carwashComment}
-                                commentIncomingName="CarWash"
-                            />
+                            <Comments commentOutgoing={reservation.comment} commentIncoming={reservation.carwashComment} commentIncomingName="CarWash" />
                             <Divider className={classes.divider} />
                             <Typography variant="subheading">Selected services</Typography>
                             {reservation.services.map(service => (
                                 <Chip label={getServiceName(service)} className={classes.chip} key={service} />
                             ))}
                         </CardContent>
-                        {getButtons(reservation, classes, this.handleCancelDialogOpen)}
+                        {this.getButtons(reservation, classes, this.handleCancelDialogOpen)}
                     </Card>
                 </Grow>
                 <Dialog
                     open={this.state.cancelDialogOpen}
                     onClose={this.handleCancelDialogClose}
-                    aria-labelledby="alert-dialog-title"
-                    aria-describedby="alert-dialog-title"
+                    aria-labelledby="cancel-dialog-title"
+                    aria-describedby="cancel-dialog-title"
                 >
-                    <DialogTitle id="alert-dialog-title">Cancel this reservation?</DialogTitle>
+                    <DialogTitle id="cancel-dialog-title">Cancel this reservation?</DialogTitle>
                     <DialogActions>
                         <Button onClick={this.handleCancelDialogClose} color="primary">
                             Don't cancel
                         </Button>
                         <Button onClick={this.handleCancelConfirmed} color="primary" className={classes.dangerButton} autoFocus>
                             Cancel
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+                <Dialog
+                    open={this.state.dropoffDialogOpen}
+                    onClose={this.handleDropoffDialogClose}
+                    aria-labelledby="dropoff-dialog-title"
+                    aria-describedby="dropoff-dialog-title"
+                >
+                    <DialogTitle id="dropoff-dialog-title">Confirm drop-off and location</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>Please drop-off the key at the reception and confirm vehicle location!</DialogContentText>
+                        <FormControl className={classes.formControl} error={validationErrors.garage}>
+                            <InputLabel htmlFor="garage">Garage</InputLabel>
+                            <Select
+                                required
+                                value={garage}
+                                onChange={this.handleGarageChange}
+                                inputProps={{
+                                    name: 'garage',
+                                    id: 'garage',
+                                }}
+                            >
+                                <MenuItem value="M">M</MenuItem>
+                                <MenuItem value="G">G</MenuItem>
+                                <MenuItem value="S1">S1</MenuItem>
+                            </Select>
+                        </FormControl>
+                        {garage !== '' && (
+                            <FormControl className={classes.formControl} error={validationErrors.floor}>
+                                <InputLabel htmlFor="floor">Floor</InputLabel>
+                                <Select
+                                    required
+                                    value={floor}
+                                    onChange={this.handleFloorChange}
+                                    inputProps={{
+                                        name: 'floor',
+                                        id: 'floor',
+                                    }}
+                                >
+                                    {Garages[garage].map(item => (
+                                        <MenuItem value={item} key={item}>
+                                            {item}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        )}
+                        {floor !== '' && (
+                            <TextField
+                                id="seat"
+                                label="Seat (optional)"
+                                value={seat}
+                                className={classes.textField}
+                                margin="normal"
+                                onChange={this.handleSeatChange}
+                            />
+                        )}
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={this.handleDropoffDialogClose} color="primary">
+                            Cancel
+                        </Button>
+                        <Button onClick={this.handleDropoffConfirmed} color="primary" autoFocus>
+                            Confirm
                         </Button>
                     </DialogActions>
                 </Dialog>
@@ -203,6 +377,7 @@ ReservationCard.propTypes = {
     reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
     removeReservation: PropTypes.func.isRequired,
     openSnackbar: PropTypes.func.isRequired,
+    updateReservation: PropTypes.func.isRequired,
     admin: PropTypes.bool,
 };
 

@@ -56,7 +56,7 @@ class ReservationGrid extends Component {
     }
 
     render() {
-        const { classes, reservations, reservationsLoading, removeReservation, openSnackbar, admin } = this.props;
+        const { classes, reservations, reservationsLoading, removeReservation, openSnackbar, updateReservation, admin } = this.props;
 
         if (reservationsLoading) {
             return (
@@ -87,6 +87,7 @@ class ReservationGrid extends Component {
                             reservations={reservations}
                             removeReservation={removeReservation}
                             openSnackbar={openSnackbar}
+                            updateReservation={updateReservation}
                             admin={admin}
                         />
                     </Grid>
@@ -102,6 +103,7 @@ ReservationGrid.propTypes = {
     reservationsLoading: PropTypes.bool.isRequired,
     removeReservation: PropTypes.func.isRequired,
     openSnackbar: PropTypes.func.isRequired,
+    updateReservation: PropTypes.func.isRequired,
     admin: PropTypes.bool,
 };
 
