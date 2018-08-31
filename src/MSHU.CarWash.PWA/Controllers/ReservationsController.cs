@@ -546,18 +546,18 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="204">NoContent</response>
         /// <response code="400">BadRequest if id is null.</response>
         /// <response code="401">Unauthorized</response>
-        /// <response code="403">Forbidden if user is not admin but tries to update another user's reservation.</response>
+        /// <response code="403">Forbidden if user is not carwash admin.</response>
         [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/confirmpayment")]
         public async Task<IActionResult> ConfirmPayment([FromRoute] string id)
         {
+            if (!_user.IsCarwashAdmin) return Forbid();
+
             if (id == null) return BadRequest("Reservation id cannot be null.");
 
             var reservation = await _context.Reservation.FindAsync(id);
 
             if (reservation == null) return NotFound();
-
-            if (reservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin)) return Forbid();
 
             if (reservation.State != State.NotYetPaid) return BadRequest("Reservation state is not 'Not yet paid'.");
 

@@ -113,14 +113,6 @@ class ReservationCard extends Component {
                         </Button>
                     </CardActions>
                 );
-            case 4:
-                return (
-                    <CardActions>
-                        <Button size="small" color="primary" onClick={this.handlePaymentConfirmed}>
-                            I have already paid
-                        </Button>
-                    </CardActions>
-                );
             default:
                 return null;
         }
@@ -189,26 +181,6 @@ class ReservationCard extends Component {
         }).then(
             () => {
                 this.props.openSnackbar('Drop-off and location confirmed.');
-            },
-            error => {
-                reservation.state = oldState;
-                this.props.updateReservation(reservation);
-                this.props.openSnackbar(error);
-            }
-        );
-    };
-
-    handlePaymentConfirmed = () => {
-        const reservation = this.props.reservation;
-        const oldState = reservation.state;
-        reservation.state = State.Done;
-        this.props.updateReservation(reservation);
-
-        apiFetch(`api/reservations/${this.props.reservation.id}/confirmpayment`, {
-            method: 'POST',
-        }).then(
-            () => {
-                this.props.openSnackbar('Payment confirmed.');
             },
             error => {
                 reservation.state = oldState;
