@@ -2,7 +2,9 @@
 {
     public enum NotificationChannel
     {
-        Push,
-        Email
+        NotSet,
+        Disabled,
+        Email,
+        Push
     }
 }

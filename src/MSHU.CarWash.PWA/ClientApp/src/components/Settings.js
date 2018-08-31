@@ -180,8 +180,9 @@ class Settings extends TrackedComponent {
                             value={`${this.props.user.notificationChannel}`}
                             onChange={this.handleNotificationChannelChange}
                         >
-                            <FormControlLabel value="0" control={<Radio />} label="Push notification" />
-                            <FormControlLabel value="1" control={<Radio />} label="Email" />
+                            <FormControlLabel value="1" control={<Radio />} label="Disable" />
+                            <FormControlLabel value="2" control={<Radio />} label="Email" />
+                            <FormControlLabel value="3" control={<Radio />} label="Push notification" />
                         </RadioGroup>
                     </FormControl>
                 </Paper>
