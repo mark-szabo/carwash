@@ -192,7 +192,12 @@ class Reserve extends TrackedComponent {
                     data.services.forEach(s => {
                         services[s].selected = true;
                     });
-                    const [garage, floor, seat] = data.location.split('/');
+
+                    let garage; let floor; let seat;
+                    if (data.location) {
+                        [garage, floor, seat] = data.location.split('/');
+                    }
+
                     const date = new Date(data.startDate);
                     this.setState({
                         services,
@@ -221,7 +226,10 @@ class Reserve extends TrackedComponent {
             apiFetch('api/reservations/lastsettings').then(
                 data => {
                     if (Object.keys(data).length !== 0) {
-                        const [garage, floor] = data.location.split('/');
+                        let garage; let floor;
+                        if (data.location) {
+                            [garage, floor] = data.location.split('/');
+                        }
                         this.setState({
                             vehiclePlateNumber: data.vehiclePlateNumber,
                             garage,

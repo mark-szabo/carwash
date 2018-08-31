@@ -407,16 +407,15 @@ class CarwashDetailsDialog extends React.Component {
             if (reservation.services.filter(s => s === Service.Exterior).length <= 0) reservation.services.push(Service.Exterior);
             if (reservation.services.filter(s => s === Service.Interior).length <= 0) reservation.services.push(Service.Interior);
         }
-        if ((service === Service.Exterior || service === Service.Interior) && reservation.services.filter(s => s === Service.Carpet).length > 0) {
-            reservation.services.splice(Service.Carpet, 1);
-        }
 
         // cannot have both AC cleaning
         if (service === Service.AcCleaningBomba && reservation.services.filter(s => s === Service.AcCleaningOzon).length > 0) {
-            reservation.services.splice(Service.AcCleaningOzon, 1);
+            const serviceToRemove = reservation.services.indexOf(Service.AcCleaningOzon);
+            if (serviceToRemove !== -1) reservation.services.splice(serviceToRemove, 1);
         }
         if (service === Service.AcCleaningOzon && reservation.services.filter(s => s === Service.AcCleaningBomba).length > 0) {
-            reservation.services.splice(Service.AcCleaningBomba, 1);
+            const serviceToRemove = reservation.services.indexOf(Service.AcCleaningBomba);
+            if (serviceToRemove !== -1) reservation.services.splice(serviceToRemove, 1);
         }
 
         this.props.updateReservation(reservation);
@@ -428,8 +427,8 @@ class CarwashDetailsDialog extends React.Component {
         reservation.services.splice(serviceToDelete, 1);
 
         // if carpet, must include exterior and interior too
-        if (service === 0 || service === 1) {
-            const carpet = reservation.services.indexOf(2);
+        if (service === Service.Exterior || service === Service.Interior) {
+            const carpet = reservation.services.indexOf(Service.Carpet);
             if (carpet !== -1) reservation.services.splice(carpet, 1);
         }
 
