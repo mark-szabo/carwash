@@ -403,9 +403,20 @@ class CarwashDetailsDialog extends React.Component {
         reservation.services.push(service);
 
         // if carpet, must include exterior and interior too
-        if (service === 2) {
-            if (reservation.services.filter(s => s === 0).length <= 0) reservation.services.push(0);
-            if (reservation.services.filter(s => s === 1).length <= 0) reservation.services.push(1);
+        if (service === Service.Carpet) {
+            if (reservation.services.filter(s => s === Service.Exterior).length <= 0) reservation.services.push(Service.Exterior);
+            if (reservation.services.filter(s => s === Service.Interior).length <= 0) reservation.services.push(Service.Interior);
+        }
+        if ((service === Service.Exterior || service === Service.Interior) && reservation.services.filter(s => s === Service.Carpet).length > 0) {
+            reservation.services.splice(Service.Carpet, 1);
+        }
+
+        // cannot have both AC cleaning
+        if (service === Service.AcCleaningBomba && reservation.services.filter(s => s === Service.AcCleaningOzon).length > 0) {
+            reservation.services.splice(Service.AcCleaningOzon, 1);
+        }
+        if (service === Service.AcCleaningOzon && reservation.services.filter(s => s === Service.AcCleaningBomba).length > 0) {
+            reservation.services.splice(Service.AcCleaningBomba, 1);
         }
 
         this.props.updateReservation(reservation);

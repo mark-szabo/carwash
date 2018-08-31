@@ -25,7 +25,7 @@ import Select from '@material-ui/core/Select';
 import InfiniteCalendar from 'react-infinite-calendar';
 import CloudOffIcon from '@material-ui/icons/CloudOff';
 import ErrorOutlineIcon from '@material-ui/icons/ErrorOutline';
-import { Garages } from './Constants';
+import { Garages, Service } from './Constants';
 import 'react-infinite-calendar/styles.css';
 import './Reserve.css';
 
@@ -307,13 +307,17 @@ class Reserve extends TrackedComponent {
             services[service.id].selected = !services[service.id].selected;
 
             // if carpet, must include exterior and interior too
-            if (service.id === 2 && service.selected) {
-                services[0].selected = true;
-                services[1].selected = true;
+            if (service.id === Service.Carpet && service.selected) {
+                services[Service.Exterior].selected = true;
+                services[Service.Interior].selected = true;
             }
-            if ((service.id === 0 || service.id === 1) && !service.selected) {
-                services[2].selected = false;
+            if ((service.id === Service.Exterior || service.id === Service.Interior) && !service.selected) {
+                services[Service.Carpet].selected = false;
             }
+
+            // cannot have both AC cleaning
+            if (service.id === Service.AcCleaningBomba) services[Service.AcCleaningOzon].selected = false;
+            if (service.id === Service.AcCleaningOzon) services[Service.AcCleaningBomba].selected = false;
 
             return { services };
         });
