@@ -74,7 +74,7 @@ function getDate(reservation) {
 
     const date = new Intl.DateTimeFormat('en-US', {
         month: 'long',
-        day: '2-digit',
+        day: 'numeric',
     }).format(new Date(reservation.startDate));
 
     return `${from} - ${to} • ${date}`;

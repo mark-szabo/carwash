@@ -11,7 +11,6 @@ import IconButton from '@material-ui/core/IconButton';
 import Hidden from '@material-ui/core/Hidden';
 import Divider from '@material-ui/core/Divider';
 import MenuIcon from '@material-ui/icons/Menu';
-import LocalCarWashIcon from '@material-ui/icons/LocalCarWash';
 import { drawerItems, otherDrawerItems } from './DrawerItems';
 
 const drawerWidth = 240;
@@ -52,8 +51,8 @@ const styles = theme => ({
         padding: theme.spacing.unit * 3,
     },
     appTitle: {
-        padding: '20px 24px',
-        color: 'initial',
+        height: 60,
+        padding: '16px 24px',
     },
 });
 
@@ -87,9 +86,7 @@ class Layout extends React.Component {
             <div>
                 <div className={classes.toolbar}>
                     <Link to="/">
-                        <Typography variant="title" color="inherit" noWrap className={classes.appTitle}>
-                            <LocalCarWashIcon /> CarWash
-                        </Typography>
+                        <img src={'/images/carwash.svg'} alt="CarWash" height="20px" className={classes.appTitle} />
                     </Link>
                 </div>
                 <Divider />

@@ -90,7 +90,7 @@ function getButtons(reservation, classes, handleCancelDialogOpen) {
 function getDate(reservation) {
     const from = new Intl.DateTimeFormat('en-US', {
         month: 'long',
-        day: '2-digit',
+        day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
     }).format(new Date(reservation.startDate));

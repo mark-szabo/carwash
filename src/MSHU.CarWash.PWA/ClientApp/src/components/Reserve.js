@@ -25,6 +25,7 @@ import Select from '@material-ui/core/Select';
 import InfiniteCalendar from 'react-infinite-calendar';
 import CloudOffIcon from '@material-ui/icons/CloudOff';
 import ErrorOutlineIcon from '@material-ui/icons/ErrorOutline';
+import { Garages } from './Constants';
 import 'react-infinite-calendar/styles.css';
 import './Reserve.css';
 
@@ -423,11 +424,10 @@ class Reserve extends TrackedComponent {
             floor: this.state.floor === '',
         };
 
-        this.setState({
-            validationErrors,
-        });
-
-        if (validationErrors.vehiclePlateNumber || validationErrors.garage || validationErrors.floor) return;
+        if (validationErrors.vehiclePlateNumber || validationErrors.garage || validationErrors.floor) {
+            this.setState({ validationErrors });
+            return;
+        }
 
         this.setState({
             loading: true,
@@ -497,11 +497,6 @@ class Reserve extends TrackedComponent {
             seat,
         } = this.state;
         const today = new Date();
-        const garages = {
-            M: ['-1', '-2', '-2.5', '-3', '-3.5', 'outdoor'],
-            G: ['-1', 'outdoor'],
-            S1: ['-1', '-2', '-3'],
-        };
 
         if (this.state.reservationCompleteRedirect) {
             return <Redirect to="/" />;
@@ -728,7 +723,7 @@ class Reserve extends TrackedComponent {
                                                 id: 'floor',
                                             }}
                                         >
-                                            {garages[garage].map(item => (
+                                            {Garages[garage].map(item => (
                                                 <MenuItem value={item} key={item}>
                                                     {item}
                                                 </MenuItem>

@@ -14,19 +14,38 @@ import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import FormControl from '@material-ui/core/FormControl';
-import Icon from '@material-ui/core/Icon';
+import TextField from '@material-ui/core/TextField';
+import MenuItem from '@material-ui/core/MenuItem';
+import Select from '@material-ui/core/Select';
 import LocalCarWashIcon from '@material-ui/icons/LocalCarWash';
 import LocalShippingIcon from '@material-ui/icons/LocalShipping';
 import LocalShippingOutlinedIcon from '@material-ui/icons/LocalShippingOutlined';
 import CloseIcon from '@material-ui/icons/Close';
 import DoneIcon from '@material-ui/icons/Done';
+import EditIcon from '@material-ui/icons/Edit';
 import MoneyOffIcon from '@material-ui/icons/MoneyOff';
 import SendIcon from '@material-ui/icons/Send';
-import { State, getServiceName } from './Constants';
+import SaveIcon from '@material-ui/icons/Save';
+import { State, getServiceName, getAdminStateName, Garages, Service } from './Constants';
+import Comments from './Comments';
 
 const styles = theme => ({
     chip: {
         margin: '8px 8px 0 0',
+    },
+    unselectedChip: {
+        margin: '8px 8px 0 0',
+        border: '1px solid rgba(0, 0, 0, 0.23)',
+        backgroundColor: 'transparent',
+        '&:hover': {
+            backgroundColor: 'rgba(0, 0, 0, 0.08)',
+        },
+        '&:focus': {
+            backgroundColor: 'rgba(0, 0, 0, 0.08)',
+        },
+        '&:hover:focus': {
+            backgroundColor: 'rgba(0, 0, 0, 0.08)',
+        },
     },
     details: {
         [theme.breakpoints.down('sm')]: {
@@ -52,19 +71,75 @@ const styles = theme => ({
     },
     actions: {
         justifyContent: 'initial',
+        height: 36,
     },
     notSelectedMpv: {
         color: theme.palette.grey[300],
     },
     commentTextfield: {
-        margin: theme.spacing.unit,
+        width: '100%',
+    },
+    subheader: {
+        marginTop: theme.spacing.unit * 4,
+    },
+    comments: {
+        maxWidth: 300,
+    },
+    formControl: {
+        marginRight: theme.spacing.unit,
+        marginBottom: theme.spacing.unit,
+        [theme.breakpoints.down('sm')]: {
+            width: '100%',
+        },
+        [theme.breakpoints.up('md')]: {
+            maxWidth: 60,
+        },
     },
 });
+
+function getDate(reservation) {
+    const from = new Intl.DateTimeFormat('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(new Date(reservation.startDate));
+
+    const to = new Intl.DateTimeFormat('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(new Date(reservation.endDate));
+
+    const date = new Intl.DateTimeFormat('en-US', {
+        month: 'long',
+        day: 'numeric',
+    }).format(new Date(reservation.startDate));
+
+    return `${from} - ${to} • ${date}`;
+}
 
 class CarwashDetailsDialog extends React.Component {
     state = {
         commentTextfield: '',
+        editLocation: false,
+        garage: '',
+        floor: '',
+        seat: '',
+        validationErrors: {
+            garage: false,
+            floor: false,
+        },
+        editServices: false,
+        oldServices: [],
     };
+
+    componentDidMount() {
+        const [garage, floor, seat] = this.props.reservation.location.split('/');
+
+        this.setState({
+            garage,
+            floor,
+            seat,
+        });
+    }
 
     getFab = state => {
         switch (state) {
@@ -116,23 +191,24 @@ class CarwashDetailsDialog extends React.Component {
             case State.WashInProgress:
                 return (
                     <React.Fragment>
-                        <Button onClick={this.handleBackToWaiting}>
-                            Back to waiting
-                        </Button>
+                        <Button onClick={this.handleBackToWaiting}>Back to waiting</Button>
                     </React.Fragment>
                 );
             case State.NotYetPaid:
             case State.Done:
                 return (
                     <React.Fragment>
-                        <Button onClick={this.handleBackToWash}>
-                            Back to wash
-                        </Button>
+                        <Button onClick={this.handleBackToWash}>Back to wash</Button>
                     </React.Fragment>
                 );
             default:
                 return null;
         }
+    };
+
+    getUnselectedServices = services => {
+        const defaultServices = Object.values(Service);
+        return defaultServices.filter(s => services.filter(z => z === s).length <= 0);
     };
 
     handleStartWash = () => {
@@ -242,6 +318,9 @@ class CarwashDetailsDialog extends React.Component {
         else reservation.carwashComment = this.state.commentTextfield;
         this.props.updateReservation(reservation);
 
+        const oldTextfield = this.state.commentTextfield;
+        this.setState({ commentTextfield: '' });
+
         apiFetch(`api/reservations/${this.props.reservation.id}/carwashcomment`, {
             method: 'POST',
             body: JSON.stringify(this.state.commentTextfield),
@@ -255,6 +334,9 @@ class CarwashDetailsDialog extends React.Component {
             error => {
                 reservation.carwashComment = oldComment;
                 this.props.updateReservation(reservation);
+
+                this.setState({ commentTextfield: oldTextfield });
+
                 this.props.openSnackbar(error);
             }
         );
@@ -284,11 +366,9 @@ class CarwashDetailsDialog extends React.Component {
         );
     };
 
-    handleUpdateServices = services => {
-        const reservation = this.props.reservation;
-        const oldServices = reservation.services;
-        reservation.services = services;
-        this.props.updateReservation(reservation);
+    handleUpdateServices = services => () => {
+        this.setState({ editServices: false });
+        // if (this.state.oldServices.length === services.length && this.state.oldServices.every(s => services.some(z => z === s))) return;
 
         apiFetch(`api/reservations/${this.props.reservation.id}/services`, {
             method: 'POST',
@@ -298,31 +378,82 @@ class CarwashDetailsDialog extends React.Component {
             },
         }).then(
             () => {
-                this.props.openSnackbar('Updated selected services..');
+                this.setState({ oldServices: [] });
+                this.props.openSnackbar('Updated selected services.');
             },
             error => {
-                reservation.services = oldServices;
+                const reservation = this.props.reservation;
+                reservation.services = this.state.oldServices;
                 this.props.updateReservation(reservation);
                 this.props.openSnackbar(error);
             }
         );
     };
 
-    handleUpdateLocation = location => {
+    handleEditServices = () => {
+        this.setState({
+            editServices: true,
+            oldServices: this.props.reservation.services,
+        });
+    };
+
+    handleAddService = service => () => {
+        const reservation = this.props.reservation;
+        reservation.services.push(service);
+
+        // if carpet, must include exterior and interior too
+        if (service === 2) {
+            if (reservation.services.filter(s => s === 0).length <= 0) reservation.services.push(0);
+            if (reservation.services.filter(s => s === 1).length <= 0) reservation.services.push(1);
+        }
+
+        this.props.updateReservation(reservation);
+    };
+
+    handleRemoveService = service => () => {
+        const reservation = this.props.reservation;
+        const serviceToDelete = reservation.services.indexOf(service);
+        reservation.services.splice(serviceToDelete, 1);
+
+        // if carpet, must include exterior and interior too
+        if (service === 0 || service === 1) {
+            const carpet = reservation.services.indexOf(2);
+            if (carpet !== -1) reservation.services.splice(carpet, 1);
+        }
+
+        this.props.updateReservation(reservation);
+    };
+
+    handleUpdateLocation = () => {
+        const validationErrors = {
+            garage: this.state.garage === '',
+            floor: this.state.floor === '',
+        };
+
+        if (validationErrors.vehiclePlateNumber || validationErrors.garage || validationErrors.floor) {
+            this.setState({ validationErrors });
+            return;
+        }
+
         const reservation = this.props.reservation;
         const oldLocation = reservation.location;
-        reservation.location = location;
+        reservation.location = `${this.state.garage}/${this.state.floor}/${this.state.seat}`;
+
+        this.setState({ editLocation: false });
+
+        if (oldLocation === reservation.location) return;
+
         this.props.updateReservation(reservation);
 
         apiFetch(`api/reservations/${this.props.reservation.id}/location`, {
             method: 'POST',
-            body: JSON.stringify(location),
+            body: JSON.stringify(reservation.location),
             headers: {
                 'Content-Type': 'application/json',
             },
         }).then(
             () => {
-                this.props.openSnackbar('Updated vehicle location...');
+                this.props.openSnackbar('Updated vehicle location.');
             },
             error => {
                 reservation.location = oldLocation;
@@ -336,58 +467,181 @@ class CarwashDetailsDialog extends React.Component {
         this.setState({ commentTextfield: event.target.value });
     };
 
+    handleCommentKeyPress = event => {
+        if (event.key === 'Enter') this.handleAddComment();
+    };
+
+    handleEditLocation = () => {
+        this.setState({ editLocation: true });
+    };
+
+    handleGarageChange = event => {
+        this.setState({
+            garage: event.target.value,
+        });
+    };
+
+    handleFloorChange = event => {
+        this.setState({
+            floor: event.target.value,
+        });
+    };
+
+    handleSeatChange = event => {
+        this.setState({
+            seat: event.target.value,
+        });
+    };
+
+    handleClose = () => {
+        this.setState({ editLocation: false, editServices: false });
+        this.props.handleClose();
+    };
+
     preventDefault = event => {
         event.preventDefault();
     };
 
     render() {
-        const { reservation, open, handleClose, fullScreen, classes } = this.props;
+        const { editLocation, garage, floor, seat, validationErrors, editServices } = this.state;
+        const { reservation, open, fullScreen, classes } = this.props;
 
         return (
-            <Dialog open={open} onClose={handleClose} fullScreen={fullScreen}>
+            <Dialog open={open} onClose={this.handleClose} fullScreen={fullScreen}>
                 <DialogContent className={classes.details}>
-                    <IconButton onClick={handleClose} className={classes.closeButton} aria-label="Close">
-                        <CloseIcon />
-                    </IconButton>
-                    <Typography variant="display2" gutterBottom>{reservation.vehiclePlateNumber}
+                    <div className={classes.closeButton}>
                         <IconButton onClick={this.handleToggleMpv} aria-label="MPV">
-                            {reservation.mpv ? <LocalShippingIcon /> : <LocalShippingOutlinedIcon color="disabled" />}
+                            {reservation.mpv ? <LocalShippingIcon /> : <LocalShippingOutlinedIcon />}
                         </IconButton>
+                        <IconButton onClick={this.handleClose} aria-label="Close">
+                            <CloseIcon />
+                        </IconButton>
+                    </div>
+                    <Typography variant="display2">{reservation.vehiclePlateNumber}</Typography>
+                    <Typography variant="body1" color="textSecondary" component="span" style={{ margin: '8px 0' }}>
+                        {getAdminStateName(reservation.state)} • {getDate(reservation)} • {reservation.user.firstName} {reservation.user.lastName} •{' '}
+                        {reservation.user.company}
                     </Typography>
-                    <Typography variant="caption" gutterBottom>
-                        Location
-                    </Typography>
-                    <Typography variant="body1" gutterBottom>
-                        {reservation.location}
-                    </Typography>
-                    <Typography variant="caption" gutterBottom style={{ marginTop: '8px' }}>
-                        Name
-                    </Typography>
-                    <Typography variant="body1" gutterBottom>
-                        {reservation.user.firstName} {reservation.user.lastName} ({reservation.user.company})
-                    </Typography>
-                    <FormControl className={classes.commentTextfield}>
-                        <InputLabel htmlFor="comment">Comment</InputLabel>
-                        <Input
-                            id="comment"
-                            type="text"
-                            value={this.state.commentTextfield}
-                            onChange={this.handleCommentChange}
-                            endAdornment={
-                                <InputAdornment position="end">
-                                    {this.state.commentTextfield && (
-                                        <IconButton aria-label="Save comment" onClick={this.handleAddComment} onMouseDown={this.preventDefault}>
-                                            <SendIcon />
-                                        </IconButton>
-                                    )}
-                                </InputAdornment>
-                            }
+                    {!editLocation ? (
+                        <Typography variant="subheading" gutterBottom>
+                            {reservation.location}
+                            <IconButton onClick={this.handleEditLocation} aria-label="Edit location">
+                                <EditIcon />
+                            </IconButton>
+                        </Typography>
+                    ) : (
+                        <React.Fragment>
+                            <FormControl className={classes.formControl} error={validationErrors.garage}>
+                                <InputLabel htmlFor="garage">Garage</InputLabel>
+                                <Select
+                                    required
+                                    value={garage}
+                                    onChange={this.handleGarageChange}
+                                    inputProps={{
+                                        name: 'garage',
+                                        id: 'garage',
+                                    }}
+                                >
+                                    <MenuItem value="M">M</MenuItem>
+                                    <MenuItem value="G">G</MenuItem>
+                                    <MenuItem value="S1">S1</MenuItem>
+                                </Select>
+                            </FormControl>
+                            {garage !== '' && (
+                                <FormControl className={classes.formControl} error={validationErrors.floor}>
+                                    <InputLabel htmlFor="floor">Floor</InputLabel>
+                                    <Select
+                                        required
+                                        value={floor}
+                                        onChange={this.handleFloorChange}
+                                        inputProps={{
+                                            name: 'floor',
+                                            id: 'floor',
+                                        }}
+                                    >
+                                        {Garages[garage].map(item => (
+                                            <MenuItem value={item} key={item}>
+                                                {item}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            )}
+                            {floor !== '' && (
+                                <React.Fragment>
+                                    <TextField
+                                        id="seat"
+                                        label="Seat (optional)"
+                                        value={seat}
+                                        className={classes.textField}
+                                        margin="normal"
+                                        onChange={this.handleSeatChange}
+                                    />
+                                    <IconButton onClick={this.handleUpdateLocation} aria-label="Save location">
+                                        <SaveIcon />
+                                    </IconButton>
+                                </React.Fragment>
+                            )}
+                        </React.Fragment>
+                    )}
+                    <div className={classes.comments}>
+                        <Comments
+                            commentOutgoing={reservation.carwashComment}
+                            commentIncoming={reservation.comment}
+                            commentIncomingName={reservation.user.firstName}
+                            incomingFirst
                         />
-                    </FormControl>
-                    <Typography variant="subheading">Selected services</Typography>
-                    {reservation.services.map(service => (
-                        <Chip label={getServiceName(service)} className={classes.chip} key={service} />
-                    ))}
+                        <FormControl className={classes.commentTextfield}>
+                            <InputLabel htmlFor="comment">Reply</InputLabel>
+                            <Input
+                                id="comment"
+                                type="text"
+                                value={this.state.commentTextfield}
+                                onChange={this.handleCommentChange}
+                                onKeyPress={this.handleCommentKeyPress}
+                                endAdornment={
+                                    <InputAdornment position="end">
+                                        {this.state.commentTextfield && (
+                                            <IconButton aria-label="Save comment" onClick={this.handleAddComment} onMouseDown={this.preventDefault}>
+                                                <SendIcon />
+                                            </IconButton>
+                                        )}
+                                    </InputAdornment>
+                                }
+                            />
+                        </FormControl>
+                    </div>
+                    <Typography variant="subheading" className={classes.subheader}>
+                        Selected services
+                    </Typography>
+                    {!editServices ? (
+                        <React.Fragment>
+                            {reservation.services.map(service => (
+                                <Chip label={getServiceName(service)} className={classes.chip} key={service} />
+                            ))}
+                            <IconButton onClick={this.handleEditServices} aria-label="Add service">
+                                <EditIcon />
+                            </IconButton>
+                        </React.Fragment>
+                    ) : (
+                        <React.Fragment>
+                            {reservation.services.map(service => (
+                                <Chip label={getServiceName(service)} className={classes.chip} key={service} onDelete={this.handleRemoveService(service)} />
+                            ))}
+                            {this.getUnselectedServices(reservation.services).map(service => (
+                                <Chip
+                                    label={getServiceName(service)}
+                                    className={classes.unselectedChip}
+                                    key={service}
+                                    variant="outlined"
+                                    onClick={this.handleAddService(service)}
+                                />
+                            ))}
+                            <IconButton onClick={this.handleUpdateServices(reservation.services)} aria-label="Save services">
+                                <SaveIcon />
+                            </IconButton>
+                        </React.Fragment>
+                    )}
                     {this.getFab(reservation.state)}
                 </DialogContent>
                 <DialogActions className={classes.actions}>{this.getActions(reservation.state)}</DialogActions>

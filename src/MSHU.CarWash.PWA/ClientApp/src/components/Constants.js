@@ -7,6 +7,30 @@ export const State = Object.freeze({
     Done: 5,
 });
 
+export const Service = Object.freeze({
+    Exterior: 0,
+    Interior: 1,
+    Carpet: 2,
+    SpotCleaning: 3,
+    VignetteRemoval: 4,
+    Polishing: 5,
+    AcCleaningOzon: 6,
+    AcCleaningBomba: 7,
+    // below are those services that are hidden from the user
+    BugRemoval: 8,
+    WheelCleaning: 9,
+    TireCare: 10,
+    LeatherCare: 11,
+    PlasticCare: 12,
+    PreWash: 13,
+});
+
+export const Garages = {
+    M: ['-1', '-2', '-2.5', '-3', '-3.5', 'outdoor'],
+    G: ['-1', 'outdoor'],
+    S1: ['-1', '-2', '-3'],
+};
+
 export function getStateName(state) {
     switch (state) {
         case State.SubmittedNotActual:
@@ -47,33 +71,33 @@ export function getAdminStateName(state) {
 
 export function getServiceName(service) {
     switch (service) {
-        case 0:
+        case Service.Exterior:
             return 'exterior';
-        case 1:
+        case Service.Interior:
             return 'interior';
-        case 2:
+        case Service.Carpet:
             return 'carpet';
-        case 3:
+        case Service.SpotCleaning:
             return 'spot cleaning';
-        case 4:
+        case Service.VignetteRemoval:
             return 'vignette removal';
-        case 5:
+        case Service.Polishing:
             return 'polishing';
-        case 6:
+        case Service.AcCleaningOzon:
             return "AC cleaning 'ozon'";
-        case 7:
+        case Service.AcCleaningBomba:
             return "AC cleaning 'bomba'";
-        case 8:
+        case Service.BugRemoval:
             return 'bug removal';
-        case 9:
+        case Service.WheelCleaning:
             return 'wheel cleaning';
-        case 10:
+        case Service.TireCare:
             return 'tire care';
-        case 11:
+        case Service.LeatherCare:
             return 'leather care';
-        case 12:
+        case Service.PlasticCare:
             return 'plastic care';
-        case 13:
+        case Service.PreWash:
             return 'prewash';
         default:
             return 'no info';
