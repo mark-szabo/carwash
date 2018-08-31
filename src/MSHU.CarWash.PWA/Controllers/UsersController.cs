@@ -41,7 +41,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// </summary>
         /// <returns>List of <see cref="UserViewModel"/></returns>
         /// <response code="200">OK</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin.</response>
         [ProducesResponseType(typeof(IEnumerable<UserViewModel>), 200)]
         [HttpGet]
@@ -58,9 +58,9 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <summary>
         /// Get user ids and names from my company
         /// </summary>
-        /// <returns>Disctionary of ids and names</returns>
+        /// <returns>Dictionary of ids and names</returns>
         /// <response code="200">OK</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin.</response>
         [ProducesResponseType(typeof(Dictionary<string, string>), 200)]
         [HttpGet, Route("dictionary")]
@@ -85,7 +85,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns><see cref="UserViewModel"/></returns>
         /// <response code="200">OK</response>
         /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formated.</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to get another user's information or user is admin but tries to get a user from another company.</response>
         /// <response code="404">NotFound if user not found.</response>
         [ProducesResponseType(typeof(UserViewModel), 200)]
@@ -114,7 +114,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// </summary>
         /// <returns><see cref="UserViewModel"/></returns>
         /// <response code="200">OK</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="404">NotFound if user not found.</response>
         [ProducesResponseType(typeof(UserViewModel), 200)]
         [HttpGet, Route("me")]
@@ -134,7 +134,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>No content</returns>
         /// <response code="204">NoContent</response>
         /// <response code="400">BadRequest if setting key is not valid or value param is null.</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPut("settings/{key}")]
         public async Task<IActionResult> PutSettings([FromRoute] string key, [FromBody] object value)
@@ -187,7 +187,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// </summary>
         /// <returns>Personal data object</returns>
         /// <response code="200">OK</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="404">NotFound if user not found.</response>
         [ProducesResponseType(typeof(object), 200)]
         [HttpGet, Route("downloadpersonaldata")]
@@ -226,7 +226,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>The deleted user (<see cref="UserViewModel"/>)</returns>
         /// <response code="200">OK</response>
         /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formated.</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to delete another user or user is admin but tries to delete a user from another company.</response>
         /// <response code="404">NotFound if user not found.</response>
         [ProducesResponseType(typeof(UserViewModel), 200)]

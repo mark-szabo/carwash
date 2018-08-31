@@ -111,7 +111,7 @@ namespace MSHU.CarWash.PWA.Services
             Body = new ItemBody
             {
                 ContentType = BodyType.Html,
-                Content = "Please don't forget to leave the key at the reception and <a href=\"https://carwashu.azurewebsites.net\">confirm dropoff & vihacle location by clicking here</a>!"
+                Content = "Please don't forget to leave the key at the reception and <a href=\"https://carwashu.azurewebsites.net\">confirm drop-off & vehicle location by clicking here</a>!"
             }
         };
     }

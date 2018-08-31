@@ -68,7 +68,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// </summary>
         /// <returns>List of <see cref="ReservationViewModel"/></returns>
         /// <response code="200">OK</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         [ProducesResponseType(typeof(IEnumerable<ReservationViewModel>), 200)]
         [HttpGet]
         public IEnumerable<object> GetReservation()
@@ -87,7 +87,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns><see cref="ReservationViewModel"/></returns>
         /// <response code="200">OK</response>
         /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formated.</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to get another user's reservation.</response>
         /// <response code="404">NotFound if reservation not found.</response>
         [ProducesResponseType(typeof(ReservationViewModel), 200)]
@@ -114,7 +114,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>No content</returns>
         /// <response code="200">OK</response>
         /// <response code="400">BadRequest if no service choosen / StartDate and EndDate isn't on the same day / a Date is in the past / StartDate and EndDate are not valid slot start/end times / user/company limit has been met / there is no more time in that slot.</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to update another user's reservation.</response>
         [ProducesResponseType(typeof(ReservationViewModel), 200)]
         [HttpPut("{id}")]
@@ -209,7 +209,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>The newly created <see cref="Reservation"/></returns>
         /// <response code="201">Created</response>
         /// <response code="400">BadRequest if no service choosen / StartDate and EndDate isn't on the same day / a Date is in the past / StartDate and EndDate are not valid slot start/end times / user/company limit has been met / there is no more time in that slot.</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to reserve for another user.</response>
         [ProducesResponseType(typeof(ReservationViewModel), 201)]
         [HttpPost]
@@ -289,7 +289,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>The deleted <see cref="Reservation"/></returns>
         /// <response code="200">OK</response>
         /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formated.</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to delete another user's reservation.</response>
         /// <response code="404">NotFound if reservation not found.</response>
         [ProducesResponseType(typeof(ReservationViewModel), 200)]
@@ -318,7 +318,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// </summary>
         /// <returns>List of <see cref="AdminReservationViewModel"/></returns>
         /// <response code="200">OK</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin.</response>
         [ProducesResponseType(typeof(IEnumerable<AdminReservationViewModel>), 200)]
         [HttpGet, Route("company")]
@@ -365,7 +365,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// </summary>
         /// <returns>List of <see cref="AdminReservationViewModel"/></returns>
         /// <response code="200">OK</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         [ProducesResponseType(typeof(IEnumerable<AdminReservationViewModel>), 200)]
         [HttpGet, Route("backlog")]
@@ -415,7 +415,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>No content</returns>
         /// <response code="204">NoContent</response>
         /// <response code="400">BadRequest if id or location param is null.</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to update another user's reservation.</response>
         [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/confirmdropoff")]
@@ -459,7 +459,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>No content</returns>
         /// <response code="204">NoContent</response>
         /// <response code="400">BadRequest if id is null.</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/startwash")]
@@ -502,7 +502,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>No content</returns>
         /// <response code="204">NoContent</response>
         /// <response code="400">BadRequest if id is null.</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/completewash")]
@@ -545,7 +545,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>No content</returns>
         /// <response code="204">NoContent</response>
         /// <response code="400">BadRequest if id is null.</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to update another user's reservation.</response>
         [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/confirmpayment")]
@@ -591,7 +591,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>No content</returns>
         /// <response code="204">NoContent</response>
         /// <response code="400">BadRequest if id or location param is null.</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/state/{state}")]
@@ -635,7 +635,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>No content</returns>
         /// <response code="204">NoContent</response>
         /// <response code="400">BadRequest if id or comment is null.</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/carwashcomment")]
@@ -681,7 +681,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>No content</returns>
         /// <response code="204">NoContent</response>
         /// <response code="400">BadRequest if id is null.</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/mpv")]
@@ -725,7 +725,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>No content</returns>
         /// <response code="204">NoContent</response>
         /// <response code="400">BadRequest if id or services param is null.</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/services")]
@@ -770,7 +770,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>No content</returns>
         /// <response code="204">NoContent</response>
         /// <response code="400">BadRequest if id or services param is null.</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/location")]
@@ -813,7 +813,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <param name="daysAhead">Days ahead to return reservation data</param>
         /// <returns>List of <see cref="ReservationViewModel"/></returns>
         /// <response code="200">OK</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         [ProducesResponseType(typeof(IEnumerable<ObfuscatedReservationViewModel>), 200)]
         [HttpGet, Route("obfuscated")]
         public IEnumerable<object> GetObfuscatedReservations(int daysAhead = 365)
@@ -838,7 +838,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// </summary>
         /// <returns>List of <see cref="DateTime"/></returns>
         /// <response code="200">OK</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         [ProducesResponseType(typeof(NotAvailableDatesAndTimesViewModel), 200)]
         [HttpGet, Route("notavailabledates")]
         public async Task<object> GetNotAvailableDatesAndTimes(int daysAhead = 365)
@@ -907,7 +907,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>an object containing the plate number and location last used</returns>
         /// <response code="200">OK</response>
         /// <response code="204">NoContent if user has no reservation yet.</response>
-        /// <response code="401">Unathorized</response>
+        /// <response code="401">Unauthorized</response>
         [ProducesResponseType(typeof(LastSettingsViewModel), 200)]
         [HttpGet, Route("lastsettings")]
         public async Task<IActionResult> GetLastSettings()
