@@ -57,8 +57,9 @@ export function runWithAdal(app) {
                 if (authorizedTenantIds.filter(id => id === user.profile.tid).length > 0) {
                     console.log('Getting Graph auth token...');
                     if (!authContext.getCachedToken(adalConfig.endpoints.graph)) {
-                        console.log('Graph toke was not found in cache. Redirecting...');
-                        authContext.acquireTokenRedirect(adalConfig.endpoints.graph, null, null);
+                        console.log('Graph token was not found in cache. Redirecting...');
+                        const loginHint = user.profile.upn ? user.profile.upn : user.profile.email;
+                        authContext.acquireTokenRedirect(adalConfig.endpoints.graph, `&login_hint=${encodeURIComponent(loginHint)}`, null);
                     } else {
                         console.log('Graph token was found in cache. Authenticated.');
                         app();
