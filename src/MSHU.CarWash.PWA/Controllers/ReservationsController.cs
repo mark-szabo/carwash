@@ -176,7 +176,7 @@ namespace MSHU.CarWash.PWA.Controllers
             reservation.Mpv = await IsMpvAsync(reservation.VehiclePlateNumber);
 
             // Update calendar event using Microsoft Graph
-            if (dbReservation.UserId == _user.Id)
+            if (dbReservation.UserId == _user.Id && _user.CalendarIntegration)
             {
                 dbReservation.User = _user;
                 dbReservation.OutlookEventId = await _calendarService.UpdateEventAsync(dbReservation);
@@ -269,7 +269,7 @@ namespace MSHU.CarWash.PWA.Controllers
             reservation.Mpv = await IsMpvAsync(reservation.VehiclePlateNumber);
 
             // Add calendar event using Microsoft Graph
-            if (reservation.UserId == _user.Id)
+            if (reservation.UserId == _user.Id && _user.CalendarIntegration)
             {
                 reservation.User = _user;
                 reservation.OutlookEventId = await _calendarService.CreateEventAsync(reservation);
