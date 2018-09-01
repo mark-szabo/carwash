@@ -1061,7 +1061,10 @@ namespace MSHU.CarWash.PWA.Controllers
         private async Task<bool> IsMpvAsync(string vehiclePlateNumber)
         {
             return await _context.Reservation
-                .AnyAsync(r => r.VehiclePlateNumber == vehiclePlateNumber && r.Mpv == true);
+                .OrderByDescending(r => r.StartDate)
+                .Where(r => r.VehiclePlateNumber == vehiclePlateNumber)
+                .Select(r => r.Mpv)
+                .FirstOrDefaultAsync();
         }
     }
 
