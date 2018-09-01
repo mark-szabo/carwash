@@ -375,7 +375,7 @@ namespace MSHU.CarWash.PWA.Controllers
 
             var reservations = await _context.Reservation
                 .Include(r => r.User)
-                .Where(r => r.StartDate.Date >= DateTime.Today)
+                .Where(r => r.StartDate.Date >= DateTime.Today || r.State != State.Done)
                 .OrderByDescending(r => r.StartDate)
                 .Select(reservation => new AdminReservationViewModel
                 {

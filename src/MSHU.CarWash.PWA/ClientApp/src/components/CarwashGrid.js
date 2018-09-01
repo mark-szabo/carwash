@@ -59,6 +59,8 @@ class CarwashGrid extends Component {
             );
         }
 
+        const yesterdayMidnight = new Date();
+        yesterdayMidnight.setHours(0, 0, 0);
         const todayMidnight = new Date();
         todayMidnight.setDate(todayMidnight.getDate() + 1);
         todayMidnight.setHours(0, 0, 0);
@@ -66,13 +68,23 @@ class CarwashGrid extends Component {
         tomorrowMidnight.setDate(tomorrowMidnight.getDate() + 2);
         tomorrowMidnight.setHours(0, 0, 0);
 
+        const earlier = backlog.filter(r => r.startDate < yesterdayMidnight);
         const done = backlog.filter(r => (r.state === State.Done || r.state === State.NotYetPaid) && r.startDate < todayMidnight);
-        const today = backlog.filter(r => r.state !== State.Done && r.state !== State.NotYetPaid && r.startDate < todayMidnight);
+        const today = backlog.filter(
+            r => r.state !== State.Done && r.state !== State.NotYetPaid && r.startDate < todayMidnight && r.startDate > yesterdayMidnight
+        );
         const tomorrow = backlog.filter(r => r.startDate > todayMidnight && r.startDate < tomorrowMidnight);
         const later = backlog.filter(r => r.startDate > tomorrowMidnight);
 
         return (
             <Grid container direction="row" justify="flex-start" alignItems="flex-start" spacing={16} className={classes.grid}>
+                <CardSection title="Earlier">
+                    {earlier.map(reservation => (
+                        <Grid item key={reservation.id} className={classes.card}>
+                            <CarwashCard reservation={reservation} openSnackbar={openSnackbar} updateReservation={updateBacklogItem} />
+                        </Grid>
+                    ))}
+                </CardSection>
                 <CardSection title="Done">
                     {done.map(reservation => (
                         <Grid item key={reservation.id} className={classes.card}>
