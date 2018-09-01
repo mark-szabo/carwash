@@ -1,0 +1,11 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "Environment": "Production",
+    "AzureWebJobsStorage": "",
+    "AzureWebJobsDashboard": "",
+    "Database": "",
+    "StorageAccount": "",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet"
+  }
+}
