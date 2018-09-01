@@ -71,24 +71,7 @@ export default class App extends Component {
                     this.openSnackbar(error);
                 }
             )
-            .then(() => {
-                apiFetch('api/users/me').then(
-                    data => {
-                        this.setState({ user: data });
-
-                        if (data.isAdmin) {
-                            this.loadCompanyReservations();
-                        }
-
-                        if (data.isCarwashAdmin) {
-                            this.loadBacklog();
-                        }
-                    },
-                    error => {
-                        this.openSnackbar(error);
-                    }
-                );
-            });
+            .then(() => this.loadMe());
 
         /* Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key */
         AppInsights.downloadAndSetup({ instrumentationKey: 'd1ce1965-2171-4a11-9438-66114b31f88f' });
@@ -135,10 +118,18 @@ export default class App extends Component {
         });
     };
 
-    loadCompanyReservations = () => {
-        apiFetch('api/reservations/company').then(
+    loadMe = () => {
+        apiFetch('api/users/me').then(
             data => {
-                this.setState({ companyReservations: data, companyReservationsLoading: false });
+                this.setState({ user: data });
+
+                if (data.isAdmin) {
+                    this.loadCompanyReservations();
+                }
+
+                if (data.isCarwashAdmin) {
+                    this.loadBacklog();
+                }
             },
             error => {
                 this.openSnackbar(error);
@@ -146,7 +137,36 @@ export default class App extends Component {
         );
     };
 
-    loadBacklog = () => {
+    loadReservations = refresh => {
+        apiFetch('api/reservations').then(
+            data => {
+                this.setState({
+                    reservations: data,
+                    reservationsLoading: false,
+                });
+                if (refresh) this.openSnackbar('Refreshed.');
+            },
+            error => {
+                this.setState({ reservationsLoading: false });
+                this.openSnackbar(error);
+            }
+        );
+    };
+
+    loadCompanyReservations = refresh => {
+        apiFetch('api/reservations/company').then(
+            data => {
+                this.setState({ companyReservations: data, companyReservationsLoading: false });
+                if (refresh) this.openSnackbar('Refreshed.');
+            },
+            error => {
+                this.setState({ companyReservationsLoading: false });
+                this.openSnackbar(error);
+            }
+        );
+    };
+
+    loadBacklog = refresh => {
         apiFetch('api/reservations/backlog').then(
             data => {
                 const backlog = data;
@@ -154,8 +174,10 @@ export default class App extends Component {
                     backlog[i].startDate = new Date(backlog[i].startDate);
                 }
                 this.setState({ backlog, backlogLoading: false });
+                if (refresh) this.openSnackbar('Refreshed.');
             },
             error => {
+                this.setState({ backlogLoading: false });
                 this.openSnackbar(error);
             }
         );
@@ -236,6 +258,7 @@ export default class App extends Component {
                         exact
                         path="/"
                         navbarName="My reservations"
+                        refresh={this.loadReservations}
                         render={props => (
                             <Home
                                 reservations={reservations}
@@ -278,6 +301,7 @@ export default class App extends Component {
                         exact
                         path="/admin"
                         navbarName="Admin"
+                        refresh={this.loadCompanyReservations}
                         render={props => (
                             <Admin
                                 reservations={companyReservations}
@@ -293,6 +317,7 @@ export default class App extends Component {
                         exact
                         path="/carwashadmin"
                         navbarName="CarWash admin"
+                        refresh={this.loadBacklog}
                         render={props => (
                             <CarwashAdmin
                                 backlog={backlog}

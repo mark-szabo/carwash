@@ -11,6 +11,7 @@ import IconButton from '@material-ui/core/IconButton';
 import Hidden from '@material-ui/core/Hidden';
 import Divider from '@material-ui/core/Divider';
 import MenuIcon from '@material-ui/icons/Menu';
+import RefreshIcon from '@material-ui/icons/Refresh';
 import { drawerItems, otherDrawerItems } from './DrawerItems';
 
 const drawerWidth = 240;
@@ -24,6 +25,9 @@ const styles = theme => ({
         position: 'relative',
         display: 'flex',
         width: '100%',
+    },
+    flex: {
+        flexGrow: 1,
     },
     appBar: {
         position: 'absolute',
@@ -79,8 +83,21 @@ class Layout extends React.Component {
         return name;
     }
 
+    getRefreshFunc() {
+        let func;
+        this.props.children.map(child => {
+            if (window.location.pathname.includes(child.props.path)) {
+                func = child.props.refresh;
+            }
+            return null;
+        });
+
+        return func;
+    }
+
     render() {
         const { classes, theme, user } = this.props;
+        const refresh = this.getRefreshFunc();
 
         const drawer = (
             <div>
@@ -103,9 +120,14 @@ class Layout extends React.Component {
                         <IconButton color="inherit" aria-label="open drawer" onClick={this.handleDrawerToggle} className={classes.navIconHide}>
                             <MenuIcon />
                         </IconButton>
-                        <Typography variant="title" color="inherit" noWrap>
+                        <Typography variant="title" color="inherit" noWrap className={classes.flex}>
                             {this.getNavbarName()}
                         </Typography>
+                        {refresh && (
+                            <IconButton color="inherit" aria-label="refresh" onClick={refresh}>
+                                <RefreshIcon />
+                            </IconButton>
+                        )}
                     </Toolbar>
                 </AppBar>
                 <Hidden mdUp>
