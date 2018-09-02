@@ -25,6 +25,13 @@ export const Service = Object.freeze({
     PreWash: 13,
 });
 
+export const NotificationChannel = Object.freeze({
+    NotSet: 0,
+    Disabled: 1,
+    Email: 2,
+    Push: 3,
+});
+
 export const Garages = {
     M: ['-1', '-2', '-2.5', '-3', '-3.5', 'outdoor'],
     G: ['-1', 'outdoor'],

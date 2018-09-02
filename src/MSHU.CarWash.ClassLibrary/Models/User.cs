@@ -28,6 +28,6 @@ namespace MSHU.CarWash.ClassLibrary.Models
         public bool CalendarIntegration { get; set; } = true;
 
         [Required]
-        public NotificationChannel NotificationChannel { get; set; } = NotificationChannel.Email;
+        public NotificationChannel NotificationChannel { get; set; } = NotificationChannel.NotSet;
     }
 }

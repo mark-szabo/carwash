@@ -109,7 +109,6 @@ namespace MSHU.CarWash.PWA
                                     LastName = context.Principal.FindFirstValue(ClaimTypes.Surname),
                                     Email = email,
                                     Company = company,
-                                    IsAdmin = false,
                                     IsCarwashAdmin = company == Company.Carwash
                                 };
                                 await dbContext.Users.AddAsync(user);

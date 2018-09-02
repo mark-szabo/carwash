@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MSHU.CarWash.PWA.Extensions;
 
 namespace MSHU.CarWash.PWA.Controllers
 {
@@ -516,7 +517,7 @@ namespace MSHU.CarWash.PWA.Controllers
 
             if (id == null) return BadRequest("Reservation id cannot be null.");
 
-            var reservation = await _context.Reservation.FindAsync(id);
+            var reservation = await _context.Reservation.Include(r => r.User).SingleOrDefaultAsync(r => r.Id == id);
 
             if (reservation == null) return NotFound();
 
@@ -538,14 +539,32 @@ namespace MSHU.CarWash.PWA.Controllers
                 }
             }
 
-            var notification = new Notification
+            switch (reservation.User.NotificationChannel)
             {
-                Title = reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!",
-                Body = "He/she told us, that it feels much better... 😁",
-                Tag = NotificationTag.Done
-            };
-
-            await _pushService.Send(reservation.UserId, notification);
+                case NotificationChannel.Disabled:
+                    break;
+                case NotificationChannel.NotSet:
+                case NotificationChannel.Email:
+                    var email = new Email
+                    {
+                        To = reservation.User.Email,
+                        Subject = reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!",
+                        Body = "He/she told us, that it feels much better... 😁",
+                    };
+                    await email.Send();
+                    break;
+                case NotificationChannel.Push:
+                    var notification = new Notification
+                    {
+                        Title = reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!",
+                        Body = "He/she told us, that it feels much better... 😁",
+                        Tag = NotificationTag.Done
+                    };
+                    await _pushService.Send(reservation.UserId, notification);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
 
             return NoContent();
         }
@@ -659,7 +678,7 @@ namespace MSHU.CarWash.PWA.Controllers
             if (id == null) return BadRequest("Reservation id cannot be null.");
             if (comment == null) return BadRequest("Comment cannot be null.");
 
-            var reservation = await _context.Reservation.FindAsync(id);
+            var reservation = await _context.Reservation.Include(r => r.User).SingleOrDefaultAsync(r => r.Id == id);
 
             if (reservation == null) return NotFound();
 
@@ -682,14 +701,24 @@ namespace MSHU.CarWash.PWA.Controllers
                 }
             }
 
-            var notification = new Notification
+            switch (reservation.User.NotificationChannel)
             {
-                Title = "CarWash has left a comment on your reservation.",
-                Body = reservation.CarwashComment,
-                Tag = NotificationTag.Comment
-            };
-
-            await _pushService.Send(reservation.UserId, notification);
+                case NotificationChannel.Disabled:
+                case NotificationChannel.NotSet:
+                case NotificationChannel.Email:
+                    break;
+                case NotificationChannel.Push:
+                    var notification = new Notification
+                    {
+                        Title = "CarWash has left a comment on your reservation.",
+                        Body = reservation.CarwashComment,
+                        Tag = NotificationTag.Comment
+                    };
+                    await _pushService.Send(reservation.UserId, notification);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
 
             return NoContent();
         }

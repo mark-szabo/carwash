@@ -55,10 +55,10 @@ namespace MSHU.CarWash.Functions
 
                 switch (reservation.User.NotificationChannel)
                 {
-                    case NotificationChannel.NotSet:
                     case NotificationChannel.Disabled:
                         log.LogInformation($"Notifications are not enabled for the user with id: {reservation.User.Id}.");
                         break;
+                    case NotificationChannel.NotSet:
                     case NotificationChannel.Email:
                         await SendEmailReminder(reservation);
                         log.LogInformation($"Email notification was sent to the user ({reservation.User.Id}) about the reservation with id: {reservation.Id}. ({watch.ElapsedMilliseconds}ms)");

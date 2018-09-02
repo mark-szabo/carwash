@@ -25,7 +25,7 @@ import Select from '@material-ui/core/Select';
 import InfiniteCalendar from 'react-infinite-calendar';
 import CloudOffIcon from '@material-ui/icons/CloudOff';
 import ErrorOutlineIcon from '@material-ui/icons/ErrorOutline';
-import { Garages, Service } from './Constants';
+import { Garages, Service, NotificationChannel } from './Constants';
 import 'react-infinite-calendar/styles.css';
 import './Reserve.css';
 
@@ -193,7 +193,9 @@ class Reserve extends TrackedComponent {
                         services[s].selected = true;
                     });
 
-                    let garage; let floor; let seat;
+                    let garage;
+                    let floor;
+                    let seat;
                     if (data.location) {
                         [garage, floor, seat] = data.location.split('/');
                     }
@@ -226,7 +228,8 @@ class Reserve extends TrackedComponent {
             apiFetch('api/reservations/lastsettings').then(
                 data => {
                     if (Object.keys(data).length !== 0) {
-                        let garage; let floor;
+                        let garage;
+                        let floor;
                         if (data.location) {
                             [garage, floor] = data.location.split('/');
                         }
@@ -478,6 +481,8 @@ class Reserve extends TrackedComponent {
             },
         }).then(
             data => {
+                if (this.props.user.notificationChannel === NotificationChannel.NotSet) this.props.openNotificationDialog();
+
                 this.setState({
                     loading: false,
                     reservationCompleteRedirect: true,
@@ -807,12 +812,13 @@ class Reserve extends TrackedComponent {
 }
 
 Reserve.propTypes = {
-    classes: PropTypes.object.isRequired,
-    user: PropTypes.object.isRequired,
+    classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+    user: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
     addReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func,
     openSnackbar: PropTypes.func.isRequired,
+    openNotificationDialog: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(Reserve);

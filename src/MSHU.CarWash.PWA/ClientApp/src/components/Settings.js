@@ -19,6 +19,8 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DeleteForeverIcon from '@material-ui/icons/DeleteForever';
 import red from '@material-ui/core/colors/red';
 import * as download from 'downloadjs';
+import { NotificationChannel } from './Constants';
+import registerPush, { askPermission } from '../PushService';
 
 const styles = theme => ({
     dangerButton: {
@@ -127,8 +129,16 @@ class Settings extends TrackedComponent {
 
     handleNotificationChannelChange = event => {
         const notificationChannel = parseInt(event.target.value, 10);
-        this.props.updateUser('notificationChannel', notificationChannel);
-        this.updateSetting('notificationChannel', notificationChannel);
+
+        if (notificationChannel === NotificationChannel.Push) {
+            askPermission().then(permissionResult => {
+                if (permissionResult === 'granted') {
+                    this.props.updateUser('notificationChannel', notificationChannel);
+                    this.updateSetting('notificationChannel', notificationChannel);
+                    registerPush();
+                }
+            });
+        }
     };
 
     updateSetting = (key, value) => {

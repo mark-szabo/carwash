@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { Route } from 'react-router';
 import { AppInsights } from 'applicationinsights-js';
 import apiFetch from './Auth';
-import registerPush from './PushService';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Snackbar from '@material-ui/core/Snackbar';
 import Layout from './components/Layout';
@@ -12,6 +11,7 @@ import Support from './components/Support';
 import Admin from './components/Admin';
 import Settings from './components/Settings';
 import CarwashAdmin from './components/CarwashAdmin';
+import NotificationDialog from './components/NotificationDialog';
 
 // A theme with custom primary and secondary color.
 const theme = createMuiTheme({
@@ -56,6 +56,7 @@ export default class App extends Component {
         backlogUpdateFound: false,
         snackbarOpen: false,
         snackbarMessage: '',
+        notificationDialogOpen: false,
     };
 
     componentDidMount() {
@@ -74,7 +75,6 @@ export default class App extends Component {
             )
             .then(() => {
                 this.loadMe();
-                registerPush();
             });
 
         /* Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key */
@@ -85,6 +85,24 @@ export default class App extends Component {
         this.setState({
             snackbarOpen: true,
             snackbarMessage: message,
+        });
+    };
+
+    handleSnackbarClose = () => {
+        this.setState({
+            snackbarOpen: false,
+        });
+    };
+
+    openNotificationDialog = () => {
+        this.setState({
+            notificationDialogOpen: true,
+        });
+    };
+
+    handleNotificationDialogClose = () => {
+        this.setState({
+            notificationDialogOpen: false,
         });
     };
 
@@ -237,12 +255,6 @@ export default class App extends Component {
         });
     };
 
-    handleSnackbarClose = () => {
-        this.setState({
-            snackbarOpen: false,
-        });
-    };
-
     render() {
         const {
             user,
@@ -279,7 +291,14 @@ export default class App extends Component {
                         path="/reserve"
                         navbarName="Reserve"
                         render={props => (
-                            <Reserve user={user} reservations={reservations} addReservation={this.addReservation} openSnackbar={this.openSnackbar} {...props} />
+                            <Reserve
+                                user={user}
+                                reservations={reservations}
+                                addReservation={this.addReservation}
+                                openSnackbar={this.openSnackbar}
+                                openNotificationDialog={this.openNotificationDialog}
+                                {...props}
+                            />
                         )}
                     />
                     <Route
@@ -292,6 +311,7 @@ export default class App extends Component {
                                 addReservation={this.addReservation}
                                 removeReservation={this.removeReservation}
                                 openSnackbar={this.openSnackbar}
+                                openNotificationDialog={this.openNotificationDialog}
                                 {...props}
                             />
                         )}
@@ -347,6 +367,12 @@ export default class App extends Component {
                         'aria-describedby': 'message-id',
                     }}
                     message={<span id="message-id">{getSafeString(this.state.snackbarMessage)}</span>}
+                />
+                <NotificationDialog
+                    open={this.state.notificationDialogOpen}
+                    handleClose={this.handleNotificationDialogClose}
+                    openSnackbar={this.openSnackbar}
+                    updateUser={this.updateUser}
                 />
             </MuiThemeProvider>
         );
