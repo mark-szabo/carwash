@@ -7,6 +7,10 @@ namespace MSHU.CarWash.ClassLibrary.Models
 {
     public class User : IdentityUser
     {
+        [Key]
+        [Required]
+        public override string Email { get; set; }
+
         [Required]
         public string FirstName { get; set; }
 

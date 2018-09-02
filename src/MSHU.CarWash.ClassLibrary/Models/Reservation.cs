@@ -37,7 +37,7 @@ namespace MSHU.CarWash.ClassLibrary.Models
 
         public bool Mpv { get; set; }
 
-        public int? TimeRequirement { get; set; }
+        public int TimeRequirement { get; set; }
 
         [Required]
         public DateTime StartDate { get; set; }

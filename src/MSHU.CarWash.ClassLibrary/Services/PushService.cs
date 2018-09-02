@@ -72,12 +72,7 @@ namespace MSHU.CarWash.ClassLibrary.Services
         /// <inheritdoc />
         public async Task Register(PushSubscription subscription)
         {
-            if (await _context.PushSubscription.AnyAsync(s =>
-                s.UserId == subscription.UserId &&
-                s.Endpoint == subscription.Endpoint &&
-                s.Auth == subscription.Auth &&
-                s.P256Dh == subscription.P256Dh))
-                return;
+            if (await _context.PushSubscription.AnyAsync(s => s.P256Dh == subscription.P256Dh)) return;
 
             await _context.PushSubscription.AddAsync(subscription);
             await _context.SaveChangesAsync();
@@ -116,7 +111,7 @@ namespace MSHU.CarWash.ClassLibrary.Services
         /// </summary>
         /// <param name="userId">user id</param>
         /// <returns>List of subscriptions</returns>
-        private async Task<List<PushSubscription>> GetUserSubscriptions(string userId) => 
+        private async Task<List<PushSubscription>> GetUserSubscriptions(string userId) =>
             await _context.PushSubscription.Where(s => s.UserId == userId).ToListAsync();
     }
 }
