@@ -14,13 +14,13 @@ namespace MSHU.CarWash.ClassLibrary.Services
     /// <inheritdoc />
     public class PushService : IPushService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IPushDbContext _context;
         private readonly WebPushClient _client;
         private readonly TelemetryClient _telemetryClient;
         private readonly VapidDetails _vapidDetails;
 
         /// <inheritdoc />
-        public PushService(ApplicationDbContext context, string vapidSubject, string vapidPublicKey, string vapidPrivateKey)
+        public PushService(IPushDbContext context, string vapidSubject, string vapidPublicKey, string vapidPrivateKey)
         {
             _context = context;
             _client = new WebPushClient();
@@ -58,7 +58,7 @@ namespace MSHU.CarWash.ClassLibrary.Services
                 Debug.WriteLine($"Public {vapidKeys.PublicKey}");
                 Debug.WriteLine($"Private {vapidKeys.PrivateKey}");
 
-                throw new Exception("You must set the Vapid:Subject, Vapid:PublicKey and Vapid:PrivateKey application settings. You can use the ones just printed to the debug console.");
+                throw new Exception("You must set the Vapid:Subject, Vapid:PublicKey and Vapid:PrivateKey application settings or pass them to the service in the constructor. You can use the ones just printed to the debug console.");
             }
         }
 

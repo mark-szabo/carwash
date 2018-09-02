@@ -6,7 +6,7 @@ using MSHU.CarWash.ClassLibrary;
 
 namespace MSHU.CarWash.Functions
 {
-    internal class FunctionsDbContext : DbContext
+    internal class FunctionsDbContext : DbContext, IPushDbContext
     {
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -24,5 +24,6 @@ namespace MSHU.CarWash.Functions
         }
         public DbSet<User> Users { get; set; }
         public DbSet<Reservation> Reservation { get; set; }
+        public DbSet<PushSubscription> PushSubscription { get; set; }
     }
 }

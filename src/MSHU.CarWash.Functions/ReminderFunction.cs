@@ -6,6 +6,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using MSHU.CarWash.ClassLibrary.Services;
 
 namespace MSHU.CarWash.Functions
 {
@@ -19,7 +20,7 @@ namespace MSHU.CarWash.Functions
         /// <param name="timer"></param>
         /// <param name="log"></param>
         [FunctionName("ReminderFunction")]
-        public static async Task Run([TimerTrigger("0,15,30,45 * * * * *")]TimerInfo timer, ILogger log)
+        public static async Task Run([TimerTrigger("*/10 * * * *")]TimerInfo timer, ILogger log)
         {
             log.LogInformation($"Reminder function executed at: {DateTime.Now}");
             var watch = Stopwatch.StartNew();
@@ -60,6 +61,7 @@ namespace MSHU.CarWash.Functions
                         log.LogInformation($"Email notification was sent to the user ({reservation.User.Id}) about the reservation with id: {reservation.Id}. ({watch.ElapsedMilliseconds}ms)");
                         break;
                     case NotificationChannel.Push:
+                        await SendPushReminder(reservation, context);
                         log.LogInformation($"Push notification was sent to the user ({reservation.User.Id}) about the reservation with id: {reservation.Id}. ({watch.ElapsedMilliseconds}ms)");
                         break;
                     default:
@@ -84,6 +86,17 @@ If don't want to get email reminders in the future, you can <a href='https://car
             };
 
             await email.Send();
+        }
+
+        private static async Task SendPushReminder(Reservation reservation, IPushDbContext context)
+        {
+            var vapidSubject = Environment.GetEnvironmentVariable("VapidSubject", EnvironmentVariableTarget.Process);
+            var vapidPublicKey = Environment.GetEnvironmentVariable("VapidPublicKey", EnvironmentVariableTarget.Process);
+            var vapidPrivateKey = Environment.GetEnvironmentVariable("VapidPrivateKey", EnvironmentVariableTarget.Process);
+
+            var pushService = new PushService(context, vapidSubject, vapidPublicKey, vapidPrivateKey);
+
+            await pushService.Send(reservation.UserId, "It's time to leave the key at the reception and confirm vehicle location!");
         }
     }
 }
