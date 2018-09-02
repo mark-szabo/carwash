@@ -25,6 +25,7 @@ using System.Net;
 using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using MSHU.CarWash.ClassLibrary.Services;
 using MSHU.CarWash.PWA.Services;
 
 namespace MSHU.CarWash.PWA
@@ -57,6 +58,7 @@ namespace MSHU.CarWash.PWA
             services.AddScoped<UsersController, UsersController>();
             services.AddScoped<IGraphService, GraphService>();
             services.AddScoped<ICalendarService, CalendarService>();
+            services.AddScoped<IPushService, PushService>();
 
             // Add framework services
             services.AddApplicationInsightsTelemetry(Configuration);

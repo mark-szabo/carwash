@@ -1,12 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using MSHU.CarWash.ClassLibrary;
-using System.Diagnostics;
-using System.Linq;
+using MSHU.CarWash.ClassLibrary.Services;
 using System.Threading.Tasks;
-using WebPush;
 using PushSubscription = MSHU.CarWash.ClassLibrary.PushSubscription;
 
 namespace MSHU.CarWash.PWA.Controllers
@@ -22,35 +19,16 @@ namespace MSHU.CarWash.PWA.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly User _user;
-        private readonly string _vapidSubject;
-        private readonly string _vapidPublicKey;
-        private readonly string _vapidPrivateKey;
-        private readonly VapidDetails _vapidDetails;
+        private readonly IHostingEnvironment _env;
+        private readonly IPushService _pushService;
 
         /// <inheritdoc />
-        public PushController(ApplicationDbContext context, UsersController usersController, IConfiguration configuration)
+        public PushController(ApplicationDbContext context, UsersController usersController, IHostingEnvironment hostingEnvironment, IPushService pushService)
         {
             _context = context;
             _user = usersController.GetCurrentUser();
-
-            _vapidSubject = configuration.GetValue<string>("Vapid:Subject");
-            _vapidPublicKey = configuration.GetValue<string>("Vapid:PublicKey");
-            _vapidPrivateKey = configuration.GetValue<string>("Vapid:PrivateKey");
-
-            if (string.IsNullOrEmpty(_vapidPublicKey) || string.IsNullOrEmpty(_vapidPrivateKey))
-            {
-                Debug.WriteLine("You must set the Vapid:Subject, Vapid:PublicKey and Vapid:PrivateKey application settings. You can use the following ones:");
-
-                var vapidKeys = VapidHelper.GenerateVapidKeys();
-
-                // Prints 2 URL Safe Base64 Encoded Strings
-                Debug.WriteLine($"Public {vapidKeys.PublicKey}");
-                Debug.WriteLine($"Private {vapidKeys.PrivateKey}");
-
-                return;
-            }
-
-            _vapidDetails = new VapidDetails(_vapidSubject, _vapidPublicKey, _vapidPrivateKey);
+            _env = hostingEnvironment;
+            _pushService = pushService;
         }
 
         // GET: api/push/vapidpublickey
@@ -64,7 +42,7 @@ namespace MSHU.CarWash.PWA.Controllers
         [HttpGet, Route("vapidpublickey")]
         public IActionResult GetVapidPublicKey()
         {
-            return Ok(_vapidPublicKey);
+            return Ok(_pushService.GetVapidPublicKey());
         }
 
         // POST: api/push/register
@@ -72,7 +50,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// Register for push notifications
         /// </summary>
         /// <returns>No content</returns>
-        /// <response code="201">Created</response>
+        /// <response code="204">NoContent</response>
         /// <response code="400">BadRequest if subscription is null or invalid.</response>
         /// <response code="401">Unauthorized</response>
         [ProducesResponseType(typeof(NoContentResult), 204)]
@@ -88,68 +66,84 @@ namespace MSHU.CarWash.PWA.Controllers
                 P256Dh = subscription.Subscription.Keys.P256Dh
             };
 
-            if (!await _context.PushSubscription.AnyAsync(s =>
-                s.UserId == dbSubscription.UserId &&
-                s.Endpoint == dbSubscription.Endpoint &&
-                s.Auth == dbSubscription.Auth &&
-                s.P256Dh == dbSubscription.P256Dh))
-            {
-                await _context.PushSubscription.AddAsync(dbSubscription);
-                await _context.SaveChangesAsync();
-            }
+            await _pushService.Register(dbSubscription);
 
-            return CreatedAtAction("Register", null);
+            return NoContent();
         }
 
         // POST: api/push/send
         /// <summary>
-        /// Send a push notifications
+        /// Send a push notifications to a specific user's every device (for development only!)
         /// </summary>
         /// <returns>No content</returns>
-        /// <response code="201">Created</response>
+        /// <response code="202">Accepted</response>
         /// <response code="400">BadRequest if subscription is null or invalid.</response>
         /// <response code="401">Unauthorized</response>
-        [ProducesResponseType(typeof(NoContentResult), 204)]
+        [ProducesResponseType(typeof(AcceptedResult), 202)]
         [HttpPost("send")]
         public async Task<IActionResult> Send([FromBody] string userId)
         {
-            var client = new WebPushClient();
+            if (!_env.IsDevelopment()) return Forbid();
 
-            var subscriptions = await _context.PushSubscription.Where(s => s.UserId == userId).ToListAsync();
+            await _pushService.Send(userId, "Test payload");
 
-            try
-            {
-                foreach (var subscription in subscriptions)
-                {
-                    client.SendNotification(subscription.ToWebPushSubscription(), "payload", _vapidDetails);
-                }
-            }
-            catch (WebPushException e)
-            {
-                Debug.WriteLine("Error during push notification sending: " + e.Message);
-            }
-
-            return CreatedAtAction("Send", null);
+            return Accepted();
         }
     }
 
+    /// <summary>
+    /// Request body model for Push registration
+    /// </summary>
     public class PushSubscriptionViewModel
     {
+        /// <inheritdoc cref="Subscription"/>
         public Subscription Subscription { get; set; }
+
+        /// <summary>
+        /// Device id for later use.
+        /// </summary>
+        public string DeviceId { get; set; }
     }
 
+    /// <summary>
+    /// Representation of the Web Standard Push API's <see href="https://developer.mozilla.org/en-US/docs/Web/API/PushSubscription">PushSubscription</see>
+    /// </summary>
     public class Subscription
     {
+        /// <summary>
+        /// The endpoint associated with the push subscription.
+        /// </summary>
         public string Endpoint { get; set; }
+
+        /// <summary>
+        /// The subscription expiration time associated with the push subscription, if there is one, or null otherwise.
+        /// </summary>
         public double? ExpirationTime { get; set; }
+
+        /// <inheritdoc cref="Keys"/>
         public Keys Keys { get; set; }
 
+        /// <summary>
+        /// Converts the push subscription to the format of the library WebPush
+        /// </summary>
+        /// <returns>WebPush subscription</returns>
         public WebPush.PushSubscription ToWebPushSubscription() => new WebPush.PushSubscription(Endpoint, Keys.P256Dh, Keys.Auth);
     }
 
+    /// <summary>
+    /// Contains the client's public key and authentication secret to be used in encrypting push message data.
+    /// </summary>
     public class Keys
     {
+        /// <summary>
+        /// An <see href="https://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman">Elliptic curve Diffie–Hellman</see> public key on the P-256 curve (that is, the NIST secp256r1 elliptic curve).
+        /// The resulting key is an uncompressed point in ANSI X9.62 format.
+        /// </summary>
         public string P256Dh { get; set; }
+
+        /// <summary>
+        /// An authentication secret, as described in <see href="https://tools.ietf.org/html/draft-ietf-webpush-encryption-08">Message Encryption for Web Push</see>.
+        /// </summary>
         public string Auth { get; set; }
     }
 }

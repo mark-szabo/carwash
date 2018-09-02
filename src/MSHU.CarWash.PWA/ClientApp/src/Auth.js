@@ -82,8 +82,8 @@ export function signOut() {
  * @return {object} The parsed JSON, status from the response
  */
 function parseJson(response) {
-    // NoContent would throw a JSON parsing error
-    if (response.status === 204) {
+    // NoContent and Accepted would throw a JSON parsing error as they have no response body
+    if (response.status === 204 || response.status === 202) {
         return {
             status: response.status,
             ok: response.ok,

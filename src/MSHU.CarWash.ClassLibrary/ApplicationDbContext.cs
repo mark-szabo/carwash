@@ -15,6 +15,9 @@ namespace MSHU.CarWash.ClassLibrary
          **/
         public interface IEntity
         {
+            /// <summary>
+            /// Id of the given object.
+            /// </summary>
             string Id { get; }
         }
 
