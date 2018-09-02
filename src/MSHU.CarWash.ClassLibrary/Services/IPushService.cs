@@ -29,17 +29,17 @@ namespace MSHU.CarWash.ClassLibrary.Services
         Task Register(PushSubscription subscription);
 
         /// <summary>
-        /// Send a push notification to a user with a string text (payload)
+        /// Send a plain text push notification to a user without any special option
         /// </summary>
         /// <param name="userId">user id the push should be sent to</param>
-        /// <param name="payload">text payload</param>
-        Task Send(string userId, string payload);
+        /// <param name="text">text of the notification</param>
+        Task Send(string userId, string text);
 
         /// <summary>
-        /// Send a push notification to a user with an object as payload
+        /// Send a push notification to a user
         /// </summary>
         /// <param name="userId">user id the push should be sent to</param>
-        /// <param name="payload">payload object</param>
-        Task Send(string userId, object payload);
+        /// <param name="notification">the notification to be sent</param>
+        Task Send(string userId, Notification notification);
     }
 }

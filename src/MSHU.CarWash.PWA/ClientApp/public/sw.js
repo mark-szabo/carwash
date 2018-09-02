@@ -127,14 +127,22 @@ workbox.clientsClaim();
 // Respond to a server push with a user notification
 self.addEventListener('push', event => {
     if (Notification.permission === 'granted') {
-        const payload = event.data ? event.data.text() : 'no payload';
-        const promiseChain = self.registration.showNotification('CarWash', {
-            lang: 'en',
-            body: payload,
-            icon: '/images/apple-touch-icon.png',
-        });
-        // Ensure the toast notification is displayed before exiting this function
-        event.waitUntil(promiseChain);
+        if (event.data) {
+            const payload = event.data.json();
+            const promiseChain = self.registration.showNotification(payload.title, {
+                lang: payload.lang,
+                body: payload.body,
+                tag: payload.tag,
+                timestamp: Date.parse(payload.timestamp),
+                requireInteraction: payload.requireInteraction,
+                actions: payload.actions,
+                image: payload.image,
+                badge: '/images/notification72.png',
+                icon: '/images/notificationicon512.png',
+            });
+            // Ensure the toast notification is displayed before exiting this function
+            event.waitUntil(promiseChain);
+        }
     }
 });
 

@@ -84,12 +84,12 @@ namespace MSHU.CarWash.ClassLibrary.Services
         }
 
         /// <inheritdoc />
-        public async Task Send(string userId, string payload)
+        public async Task Send(string userId, Notification notification)
         {
             foreach (var subscription in await GetUserSubscriptions(userId))
                 try
                 {
-                    _client.SendNotification(subscription.ToWebPushSubscription(), payload, _vapidDetails);
+                    _client.SendNotification(subscription.ToWebPushSubscription(), JsonConvert.SerializeObject(notification), _vapidDetails);
                 }
                 catch (WebPushException e)
                 {
@@ -106,9 +106,9 @@ namespace MSHU.CarWash.ClassLibrary.Services
         }
 
         /// <inheritdoc />
-        public async Task Send(string userId, object payload)
+        public async Task Send(string userId, string text)
         {
-            await Send(userId, JsonConvert.SerializeObject(payload));
+            await Send(userId, new Notification(text));
         }
 
         /// <summary>

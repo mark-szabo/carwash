@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace MSHU.CarWash.ClassLibrary.Models
 {
@@ -8,14 +9,41 @@ namespace MSHU.CarWash.ClassLibrary.Models
     /// </summary>
     public class Notification
     {
-        public string Lang { get; set; }
+        public Notification() { }
+
+        public Notification(string text)
+        {
+            Body = text;
+        }
+
+        [JsonProperty("title")]
+        public string Title { get; set; } = "CarWash";
+
+        [JsonProperty("lang")]
+        public string Lang { get; set; } = "en";
+
+        [JsonProperty("body")]
         public string Body { get; set; }
+
+        [JsonProperty("tag")]
         public string Tag { get; set; }
+
+        [JsonProperty("image")]
         public string Image { get; set; }
+
+        [JsonProperty("icon")]
         public string Icon { get; set; }
+
+        [JsonProperty("badge")]
         public string Badge { get; set; }
+
+        [JsonProperty("timestamp")]
         public DateTime Timestamp { get; set; } = DateTime.Now;
-        public bool RequireInteraction { get; set; } = true;
+
+        [JsonProperty("requireInteraction")]
+        public bool RequireInteraction { get; set; } = false;
+
+        [JsonProperty("actions")]
         public List<NotificationAction> Actions { get; set; }
     }
 
@@ -24,7 +52,18 @@ namespace MSHU.CarWash.ClassLibrary.Models
     /// </summary>
     public class NotificationAction
     {
+
+        [JsonProperty("action")]
         public string Action { get; set; }
+
+        [JsonProperty("title")]
         public string Title { get; set; }
+    }
+
+    public class NotificationTag
+    {
+        public const string Reminder = "carwash_reminder";
+        public const string Done = "carwash_done";
+        public const string Comment = "carwash_comment";
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MSHU.CarWash.ClassLibrary;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -98,7 +99,19 @@ If don't want to get email reminders in the future, you can <a href='https://car
 
             var pushService = new PushService(context, vapidSubject, vapidPublicKey, vapidPrivateKey);
 
-            await pushService.Send(reservation.UserId, "It's time to leave the key at the reception and confirm vehicle location!");
+            var notification = new Notification
+            {
+                Title = "CarWash reminder",
+                Body = "It's time to leave the key at the reception and confirm vehicle location!",
+                Tag = NotificationTag.Reminder,
+                RequireInteraction = true,
+                Actions = new List<NotificationAction>
+                {
+                    new NotificationAction { Action = "confirm-dropoff", Title = "Confirm drop-off" }
+                }
+            };
+
+            await pushService.Send(reservation.UserId, notification);
         }
     }
 }

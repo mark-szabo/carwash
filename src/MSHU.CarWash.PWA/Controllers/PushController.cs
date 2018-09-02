@@ -79,12 +79,12 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="400">BadRequest if subscription is null or invalid.</response>
         /// <response code="401">Unauthorized</response>
         [ProducesResponseType(typeof(AcceptedResult), 202)]
-        [HttpPost("send")]
-        public async Task<IActionResult> Send([FromBody] string userId)
+        [HttpPost("send/{userId}")]
+        public async Task<IActionResult> Send([FromRoute] string userId, [FromBody] Notification notification)
         {
             if (!_env.IsDevelopment()) return Forbid();
 
-            await _pushService.Send(userId, "Test payload");
+            await _pushService.Send(userId, notification);
 
             return Accepted();
         }

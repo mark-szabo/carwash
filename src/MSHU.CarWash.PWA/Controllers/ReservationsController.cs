@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using MSHU.CarWash.ClassLibrary;
+using MSHU.CarWash.ClassLibrary.Enums;
+using MSHU.CarWash.ClassLibrary.Models;
+using MSHU.CarWash.ClassLibrary.Services;
 using MSHU.CarWash.PWA.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MSHU.CarWash.ClassLibrary.Enums;
-using MSHU.CarWash.ClassLibrary.Models;
 
 namespace MSHU.CarWash.PWA.Controllers
 {
@@ -24,6 +24,7 @@ namespace MSHU.CarWash.PWA.Controllers
         private readonly ApplicationDbContext _context;
         private readonly User _user;
         private readonly ICalendarService _calendarService;
+        private readonly IPushService _pushService;
 
         /// <summary>
         /// Wash time unit in minutes
@@ -57,11 +58,12 @@ namespace MSHU.CarWash.PWA.Controllers
         };
 
         /// <inheritdoc />
-        public ReservationsController(ApplicationDbContext context, UsersController usersController, ICalendarService calendarService)
+        public ReservationsController(ApplicationDbContext context, UsersController usersController, ICalendarService calendarService, IPushService pushService)
         {
             _context = context;
             _user = usersController.GetCurrentUser();
             _calendarService = calendarService;
+            _pushService = pushService;
         }
 
         // GET: api/reservations
@@ -536,6 +538,15 @@ namespace MSHU.CarWash.PWA.Controllers
                 }
             }
 
+            var notification = new Notification
+            {
+                Title = reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!",
+                Body = "He/she told us, that it feels much better... 😁",
+                Tag = NotificationTag.Done
+            };
+
+            await _pushService.Send(reservation.UserId, notification);
+
             return NoContent();
         }
 
@@ -670,6 +681,15 @@ namespace MSHU.CarWash.PWA.Controllers
                     throw;
                 }
             }
+
+            var notification = new Notification
+            {
+                Title = "CarWash has left a comment on your reservation.",
+                Body = reservation.CarwashComment,
+                Tag = NotificationTag.Comment
+            };
+
+            await _pushService.Send(reservation.UserId, notification);
 
             return NoContent();
         }
