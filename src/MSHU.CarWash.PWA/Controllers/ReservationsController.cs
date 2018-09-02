@@ -7,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MSHU.CarWash.ClassLibrary.Enums;
+using MSHU.CarWash.ClassLibrary.Models;
 
 namespace MSHU.CarWash.PWA.Controllers
 {

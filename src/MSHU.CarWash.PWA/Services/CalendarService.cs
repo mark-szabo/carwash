@@ -3,6 +3,7 @@ using Microsoft.Graph;
 using MSHU.CarWash.ClassLibrary;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
+using MSHU.CarWash.ClassLibrary.Models;
 
 namespace MSHU.CarWash.PWA.Services
 {

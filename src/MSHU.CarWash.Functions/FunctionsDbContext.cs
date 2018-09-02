@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Debug;
 using MSHU.CarWash.ClassLibrary;
+using MSHU.CarWash.ClassLibrary.Models;
 
 namespace MSHU.CarWash.Functions
 {

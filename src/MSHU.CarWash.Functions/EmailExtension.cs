@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
 using MSHU.CarWash.ClassLibrary;
+using MSHU.CarWash.ClassLibrary.Models;
 using Newtonsoft.Json;
 
 namespace MSHU.CarWash.Functions

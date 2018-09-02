@@ -9,7 +9,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using User = MSHU.CarWash.ClassLibrary.User;
+using MSHU.CarWash.ClassLibrary.Enums;
+using MSHU.CarWash.ClassLibrary.Models;
+using User = MSHU.CarWash.ClassLibrary.Models.User;
 
 namespace MSHU.CarWash.PWA.Controllers
 {

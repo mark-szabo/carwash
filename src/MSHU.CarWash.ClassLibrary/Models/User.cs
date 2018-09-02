@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using MSHU.CarWash.ClassLibrary.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MSHU.CarWash.ClassLibrary
+namespace MSHU.CarWash.ClassLibrary.Models
 {
     public class User : IdentityUser
     {

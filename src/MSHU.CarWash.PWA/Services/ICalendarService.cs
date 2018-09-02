@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using MSHU.CarWash.ClassLibrary;
+using MSHU.CarWash.ClassLibrary.Models;
 
 namespace MSHU.CarWash.PWA.Services
 {

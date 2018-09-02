@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using static MSHU.CarWash.ClassLibrary.ServiceType;
+using static MSHU.CarWash.ClassLibrary.Enums.ServiceType;
 
-namespace MSHU.CarWash.ClassLibrary
+namespace MSHU.CarWash.ClassLibrary.Enums
 {
     public enum ServiceType
     {
@@ -13,6 +13,7 @@ namespace MSHU.CarWash.ClassLibrary
         Polishing = 5,
         AcCleaningOzon = 6,
         AcCleaningBomba = 7,
+
         // below are those services that are hidden from the user
         BugRemoval = 8,
         WheelCleaning = 9,

@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using MSHU.CarWash.ClassLibrary;
+using MSHU.CarWash.ClassLibrary.Models;
 using MSHU.CarWash.ClassLibrary.Services;
 using System.Threading.Tasks;
-using PushSubscription = MSHU.CarWash.ClassLibrary.PushSubscription;
 
 namespace MSHU.CarWash.PWA.Controllers
 {

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using MSHU.CarWash.ClassLibrary.Models;
+using System.Threading.Tasks;
 
 namespace MSHU.CarWash.ClassLibrary.Services
 {

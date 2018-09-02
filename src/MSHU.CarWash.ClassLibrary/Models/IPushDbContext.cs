@@ -1,8 +1,8 @@
-﻿using System.Threading;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 
-namespace MSHU.CarWash.ClassLibrary
+namespace MSHU.CarWash.ClassLibrary.Models
 {
     public interface IPushDbContext
     {

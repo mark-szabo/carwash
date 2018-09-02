@@ -5,6 +5,7 @@ using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
 using Newtonsoft.Json;
 using MSHU.CarWash.ClassLibrary;
+using MSHU.CarWash.ClassLibrary.Models;
 
 namespace MSHU.CarWash.PWA.Extensions
 {

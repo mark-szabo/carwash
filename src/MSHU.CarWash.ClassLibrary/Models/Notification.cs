@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace MSHU.CarWash.ClassLibrary.Models
 {
     /// <summary>
-    /// <see href="https://notifications.spec.whatwg.org/#dictdef-notificationoptions">Notification API Standard</see>
+    ///     <see href="https://notifications.spec.whatwg.org/#dictdef-notificationoptions">Notification API Standard</see>
     /// </summary>
     public class Notification
     {
@@ -20,7 +20,7 @@ namespace MSHU.CarWash.ClassLibrary.Models
     }
 
     /// <summary>
-    /// <see href="https://notifications.spec.whatwg.org/#dictdef-notificationaction">Notification API Standard</see>
+    ///     <see href="https://notifications.spec.whatwg.org/#dictdef-notificationaction">Notification API Standard</see>
     /// </summary>
     public class NotificationAction
     {

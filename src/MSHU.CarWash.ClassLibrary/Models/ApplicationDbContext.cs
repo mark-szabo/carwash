@@ -1,25 +1,16 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System;
 
-namespace MSHU.CarWash.ClassLibrary
+namespace MSHU.CarWash.ClassLibrary.Models
 {
     public class ApplicationDbContext : IdentityDbContext<User>, IPushDbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
-        {
-        }
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
-        /**
-         * Implement this interface in all DB model classes!
-         **/
-        public interface IEntity
-        {
-            /// <summary>
-            /// Id of the given object.
-            /// </summary>
-            string Id { get; }
-        }
+        public DbSet<Reservation> Reservation { get; set; }
+        public DbSet<PushSubscription> PushSubscription { get; set; }
 
         /** 
          * WORKAROUND:
@@ -33,17 +24,14 @@ namespace MSHU.CarWash.ClassLibrary
          **/
         public override EntityEntry<TEntity> Update<TEntity>(TEntity entity)
         {
-            if (entity == null)
-            {
-                throw new System.ArgumentNullException(nameof(entity));
-            }
+            if (entity == null) throw new ArgumentNullException(nameof(entity));
 
             try
             {
                 // Try first with normal Update
                 return base.Update(entity);
             }
-            catch (System.InvalidOperationException)
+            catch (InvalidOperationException)
             {
                 // Load original object from database
                 var originalEntity = Find(entity.GetType(), ((IEntity)entity).Id);
@@ -64,8 +52,16 @@ namespace MSHU.CarWash.ClassLibrary
             // Add your customizations after calling base.OnModelCreating(builder);
         }
 
-        public DbSet<Reservation> Reservation { get; set; }
-        public DbSet<PushSubscription> PushSubscription { get; set; }
+        /**
+         * Implement this interface in all DB model classes!
+         **/
+        public interface IEntity
+        {
+            /// <summary>
+            /// Id of the given object.
+            /// </summary>
+            string Id { get; }
+        }
 
         /*
          * Db migration:

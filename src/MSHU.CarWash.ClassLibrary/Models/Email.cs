@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace MSHU.CarWash.ClassLibrary
+namespace MSHU.CarWash.ClassLibrary.Models
 {
     public class Email
     {
