@@ -52,6 +52,7 @@ namespace MSHU.CarWash.PWA
         public void ConfigureServices(IServiceCollection services)
         {
             // Add application services
+            services.AddSingleton(Configuration);
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<UsersController, UsersController>();
             services.AddScoped<IGraphService, GraphService>();

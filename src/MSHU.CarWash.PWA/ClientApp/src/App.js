@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Route } from 'react-router';
 import { AppInsights } from 'applicationinsights-js';
 import apiFetch from './Auth';
+import registerPush from './PushService';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Snackbar from '@material-ui/core/Snackbar';
 import Layout from './components/Layout';
@@ -71,7 +72,10 @@ export default class App extends Component {
                     this.openSnackbar(error);
                 }
             )
-            .then(() => this.loadMe());
+            .then(() => {
+                this.loadMe();
+                registerPush();
+            });
 
         /* Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key */
         AppInsights.downloadAndSetup({ instrumentationKey: 'd1ce1965-2171-4a11-9438-66114b31f88f' });

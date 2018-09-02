@@ -123,3 +123,39 @@ workbox.routing.registerRoute(
 
 workbox.skipWaiting();
 workbox.clientsClaim();
+
+// Respond to a server push with a user notification
+self.addEventListener('push', event => {
+    if (Notification.permission === 'granted') {
+        const payload = event.data ? event.data.text() : 'no payload';
+        const promiseChain = self.registration.showNotification('CarWash', {
+            lang: 'en',
+            body: payload,
+            icon: '/images/apple-touch-icon.png',
+        });
+        // Ensure the toast notification is displayed before exiting this function
+        event.waitUntil(promiseChain);
+    }
+});
+
+// Respond to the user clicking the toast notification
+self.addEventListener('notificationclick', event => {
+    console.log('On notification click: ', event.notification.tag);
+    event.notification.close();
+
+    // This looks to see if the current is already open and focuses it
+    event.waitUntil(
+        clients
+            .matchAll({
+                type: 'window',
+            })
+            .then(clientList => {
+                for (let i = 0; i < clientList.length; i++) {
+                    const client = clientList[i];
+                    if (client.url === 'https://localhost:44340/' && 'focus' in client) return client.focus();
+                }
+                if (clients.openWindow) return clients.openWindow('/');
+                return null;
+            })
+    );
+});

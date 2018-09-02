@@ -62,6 +62,7 @@ namespace MSHU.CarWash.ClassLibrary
         }
 
         public DbSet<Reservation> Reservation { get; set; }
+        public DbSet<PushSubscription> PushSubscription { get; set; }
 
         /*
          * Db migration:
