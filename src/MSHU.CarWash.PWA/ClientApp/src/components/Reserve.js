@@ -442,8 +442,8 @@ class Reserve extends TrackedComponent {
     handleReserve = () => {
         const validationErrors = {
             vehiclePlateNumber: this.state.vehiclePlateNumber === '',
-            garage: this.state.garage === '',
-            floor: this.state.floor === '',
+            garage: this.state.garage === '' && this.state.locationKnown,
+            floor: this.state.floor === '' && this.state.locationKnown,
         };
 
         if (validationErrors.vehiclePlateNumber || validationErrors.garage || validationErrors.floor) {

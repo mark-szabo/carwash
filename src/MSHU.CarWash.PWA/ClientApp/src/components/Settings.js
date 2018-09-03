@@ -136,6 +136,10 @@ class Settings extends TrackedComponent {
                     this.props.updateUser('notificationChannel', notificationChannel);
                     this.updateSetting('notificationChannel', notificationChannel);
                     registerPush();
+                } else if (permissionResult === 'denied') {
+                    this.props.openSnackbar(
+                        'You have denied notification permission previouly. You need to go to your browser settings to enable notifications first.'
+                    );
                 }
             });
         } else {
