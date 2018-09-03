@@ -357,6 +357,7 @@ export default class App extends Component {
                                 backlog={backlog}
                                 backlogLoading={backlogLoading}
                                 backlogUpdateFound={backlogUpdateFound}
+                                snackbarOpen={this.state.snackbarOpen}
                                 openSnackbar={this.openSnackbar}
                                 updateBacklogItem={this.updateBacklogItem}
                                 {...props}

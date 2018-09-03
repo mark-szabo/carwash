@@ -549,7 +549,7 @@ namespace MSHU.CarWash.PWA.Controllers
                     {
                         To = reservation.User.Email,
                         Subject = reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!",
-                        Body = "He/she told us, that it feels much better... 😁",
+                        Body = $"You can find it here: {reservation.Location}",
                     };
                     await email.Send();
                     break;
@@ -557,7 +557,7 @@ namespace MSHU.CarWash.PWA.Controllers
                     var notification = new Notification
                     {
                         Title = reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!",
-                        Body = "He/she told us, that it feels much better... 😁",
+                        Body = $"You can find it here: {reservation.Location}",
                         Tag = NotificationTag.Done
                     };
                     await _pushService.Send(reservation.UserId, notification);

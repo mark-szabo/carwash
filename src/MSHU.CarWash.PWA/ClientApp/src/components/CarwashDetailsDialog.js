@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import { withStyles } from '@material-ui/core/styles';
 import apiFetch from '../Auth';
 import Button from '@material-ui/core/Button';
@@ -62,6 +63,9 @@ const styles = theme => ({
         position: 'absolute',
         bottom: theme.spacing.unit * 2,
         right: theme.spacing.unit * 2,
+        '&$pushActionsUp': {
+            bottom: theme.spacing.unit * 2 + 48,
+        },
     },
     closeButton: {
         margin: theme.spacing.unit,
@@ -72,6 +76,9 @@ const styles = theme => ({
     actions: {
         justifyContent: 'initial',
         height: 36,
+        '&$pushActionsUp': {
+            marginBottom: 56,
+        },
     },
     notSelectedMpv: {
         color: theme.palette.grey[300],
@@ -95,6 +102,7 @@ const styles = theme => ({
             maxWidth: 60,
         },
     },
+    pushActionsUp: {},
 });
 
 function getDate(reservation) {
@@ -153,7 +161,9 @@ class CarwashDetailsDialog extends React.Component {
                         variant="fab"
                         color="primary"
                         aria-label="Start wash"
-                        className={this.props.classes.button}
+                        className={classNames(this.props.classes.button, {
+                            [this.props.classes.pushActionsUp]: this.props.fullScreen && this.props.snackbarOpen,
+                        })}
                         autoFocus
                     >
                         <LocalCarWashIcon />
@@ -166,7 +176,9 @@ class CarwashDetailsDialog extends React.Component {
                         variant="fab"
                         color="primary"
                         aria-label="Complete wash"
-                        className={this.props.classes.button}
+                        className={classNames(this.props.classes.button, {
+                            [this.props.classes.pushActionsUp]: this.props.fullScreen && this.props.snackbarOpen,
+                        })}
                         autoFocus
                     >
                         <DoneIcon />
@@ -174,7 +186,16 @@ class CarwashDetailsDialog extends React.Component {
                 );
             case State.NotYetPaid:
                 return (
-                    <Button onClick={this.handleConfirmPayment} variant="fab" color="primary" aria-label="Paid" className={this.props.classes.button} autoFocus>
+                    <Button
+                        onClick={this.handleConfirmPayment}
+                        variant="fab"
+                        color="primary"
+                        aria-label="Paid"
+                        className={classNames(this.props.classes.button, {
+                            [this.props.classes.pushActionsUp]: this.props.fullScreen && this.props.snackbarOpen,
+                        })}
+                        autoFocus
+                    >
                         <MoneyOffIcon />
                     </Button>
                 );
@@ -515,7 +536,7 @@ class CarwashDetailsDialog extends React.Component {
 
     render() {
         const { editLocation, garage, floor, seat, validationErrors, editServices } = this.state;
-        const { reservation, open, fullScreen, classes } = this.props;
+        const { reservation, open, snackbarOpen, fullScreen, classes } = this.props;
 
         return (
             <Dialog open={open} onClose={this.handleClose} fullScreen={fullScreen}>
@@ -655,7 +676,13 @@ class CarwashDetailsDialog extends React.Component {
                     )}
                     {this.getFab(reservation.state)}
                 </DialogContent>
-                <DialogActions className={classes.actions}>{this.getActions(reservation.state)}</DialogActions>
+                <DialogActions
+                    className={classNames(classes.actions, {
+                        [classes.pushActionsUp]: fullScreen && snackbarOpen,
+                    })}
+                >
+                    {this.getActions(reservation.state)}
+                </DialogActions>
             </Dialog>
         );
     }
@@ -666,6 +693,7 @@ CarwashDetailsDialog.propTypes = {
     reservation: PropTypes.object.isRequired,
     fullScreen: PropTypes.bool.isRequired,
     open: PropTypes.bool.isRequired,
+    snackbarOpen: PropTypes.bool.isRequired,
     handleClose: PropTypes.func.isRequired,
     openSnackbar: PropTypes.func.isRequired,
     updateReservation: PropTypes.func.isRequired,

@@ -9,13 +9,22 @@ export default class CarwashAdmin extends TrackedComponent {
     render() {
         const { backlog, backlogLoading, openSnackbar, updateBacklogItem } = this.props;
 
-        return <CarwashGrid backlog={backlog} backlogLoading={backlogLoading} openSnackbar={openSnackbar} updateBacklogItem={updateBacklogItem} />;
+        return (
+            <CarwashGrid
+                backlog={backlog}
+                backlogLoading={backlogLoading}
+                snackbarOpen={this.props.snackbarOpen}
+                openSnackbar={openSnackbar}
+                updateBacklogItem={updateBacklogItem}
+            />
+        );
     }
 }
 
 CarwashAdmin.propTypes = {
     backlog: PropTypes.arrayOf(PropTypes.object).isRequired,
     backlogLoading: PropTypes.bool.isRequired,
+    snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
     updateBacklogItem: PropTypes.func.isRequired,
 };

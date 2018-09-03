@@ -81,14 +81,24 @@ class CarwashGrid extends Component {
                 <CardSection title="Earlier">
                     {earlier.map(reservation => (
                         <Grid item key={reservation.id} className={classes.card}>
-                            <CarwashCard reservation={reservation} openSnackbar={openSnackbar} updateReservation={updateBacklogItem} />
+                            <CarwashCard
+                                reservation={reservation}
+                                snackbarOpen={this.props.snackbarOpen}
+                                openSnackbar={openSnackbar}
+                                updateReservation={updateBacklogItem}
+                            />
                         </Grid>
                     ))}
                 </CardSection>
                 <CardSection title="Done">
                     {done.map(reservation => (
                         <Grid item key={reservation.id} className={classes.card}>
-                            <CarwashCard reservation={reservation} openSnackbar={openSnackbar} updateReservation={updateBacklogItem} />
+                            <CarwashCard
+                                reservation={reservation}
+                                snackbarOpen={this.props.snackbarOpen}
+                                openSnackbar={openSnackbar}
+                                updateReservation={updateBacklogItem}
+                            />
                         </Grid>
                     ))}
                 </CardSection>
@@ -101,21 +111,36 @@ class CarwashGrid extends Component {
                     )}
                     {today.map(reservation => (
                         <Grid item key={reservation.id} className={classes.card}>
-                            <CarwashCard reservation={reservation} openSnackbar={openSnackbar} updateReservation={updateBacklogItem} />
+                            <CarwashCard
+                                reservation={reservation}
+                                snackbarOpen={this.props.snackbarOpen}
+                                openSnackbar={openSnackbar}
+                                updateReservation={updateBacklogItem}
+                            />
                         </Grid>
                     ))}
                 </CardSection>
                 <CardSection title="Tomorrow">
                     {tomorrow.map(reservation => (
                         <Grid item key={reservation.id} className={classes.card}>
-                            <CarwashCard reservation={reservation} openSnackbar={openSnackbar} updateReservation={updateBacklogItem} />
+                            <CarwashCard
+                                reservation={reservation}
+                                snackbarOpen={this.props.snackbarOpen}
+                                openSnackbar={openSnackbar}
+                                updateReservation={updateBacklogItem}
+                            />
                         </Grid>
                     ))}
                 </CardSection>
                 <CardSection title="Later">
                     {later.map(reservation => (
                         <Grid item key={reservation.id} className={classes.card}>
-                            <CarwashCard reservation={reservation} openSnackbar={openSnackbar} updateReservation={updateBacklogItem} />
+                            <CarwashCard
+                                reservation={reservation}
+                                snackbarOpen={this.props.snackbarOpen}
+                                openSnackbar={openSnackbar}
+                                updateReservation={updateBacklogItem}
+                            />
                         </Grid>
                     ))}
                 </CardSection>
@@ -128,6 +153,7 @@ CarwashGrid.propTypes = {
     classes: PropTypes.object.isRequired,
     backlog: PropTypes.arrayOf(PropTypes.object).isRequired,
     backlogLoading: PropTypes.bool.isRequired,
+    snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
     updateBacklogItem: PropTypes.func.isRequired,
 };

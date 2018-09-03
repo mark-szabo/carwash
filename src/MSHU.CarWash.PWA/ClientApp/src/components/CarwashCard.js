@@ -193,6 +193,7 @@ class CarwashCard extends Component {
                     reservation={reservation}
                     open={detailsDialogOpen}
                     handleClose={this.handleDetailsDialogClose}
+                    snackbarOpen={this.props.snackbarOpen}
                     openSnackbar={this.props.openSnackbar}
                     updateReservation={this.props.updateReservation}
                 />
@@ -220,6 +221,7 @@ class CarwashCard extends Component {
 CarwashCard.propTypes = {
     classes: PropTypes.object.isRequired,
     reservation: PropTypes.object.isRequired,
+    snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
     updateReservation: PropTypes.func.isRequired,
 };
