@@ -1015,7 +1015,7 @@ namespace MSHU.CarWash.PWA.Controllers
                 slotReservationPrecentage.Add(new ReservationPrecentageViewModel
                 {
                     StartTime = a.DateTime,
-                    Precentage = a.TimeSum == null || a.TimeSum == 0 ? 0 : Math.Round((double)a.TimeSum / (double)(slotCapacity * TimeUnit), 2)
+                    Precentage = a.TimeSum == 0 ? 0 : Math.Round(a.TimeSum / (double)(slotCapacity * TimeUnit), 2)
                 });
             }
 
