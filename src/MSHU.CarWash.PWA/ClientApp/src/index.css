@@ -1,31 +1,51 @@
 body {
-    margin: 0;
-    font-family: "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  margin: 0;
+  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-a, a:active, a:focus, a:hover, a:visited {
-    text-decoration: none;
+a,
+a:active,
+a:focus,
+a:hover,
+a:visited {
+  text-decoration: none;
 }
 
 .underline {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 iframe {
-    border: 0;
+  border: 0;
 }
 
 .primary {
-    background-color: #80d8ff;
-    color: #000000;
+  background-color: #80d8ff;
+  color: #000000;
 }
 
 .primary-light {
-    background-color: #b5ffff;
-    color: #000000;
+  background-color: #b5ffff;
+  color: #000000;
 }
 
 .primary-dark {
-    background-color: #49a7cc;
-    color: #000000;
+  background-color: #49a7cc;
+  color: #000000;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+::-webkit-scrollbar-thumb:active {
+  background: rgba(0, 0, 0, 0.4);
 }
