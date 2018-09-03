@@ -15,6 +15,8 @@ const styles = theme => ({
         padding: '6px 12px',
         margin: '1px 0',
         maxWidth: '85%',
+        whiteSpace: 'pre-wrap',
+        textAlign: 'right',
     },
     after: {
         clear: 'both',

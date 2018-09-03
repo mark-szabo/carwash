@@ -91,6 +91,9 @@ const styles = theme => ({
     },
     comments: {
         maxWidth: 300,
+        [theme.breakpoints.down('sm')]: {
+            maxWidth: '100%',
+        },
     },
     formControl: {
         marginRight: theme.spacing.unit,

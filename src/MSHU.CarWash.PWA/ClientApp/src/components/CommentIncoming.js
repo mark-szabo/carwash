@@ -14,6 +14,7 @@ const styles = {
         clear: 'left',
         float: 'left',
         maxWidth: '85%',
+        whiteSpace: 'pre-wrap',
     },
     commentName: {
         color: 'rgba(0, 0, 0, .40)',
