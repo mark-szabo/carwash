@@ -948,6 +948,16 @@ namespace MSHU.CarWash.PWA.Controllers
                 .Select(d => d.DateTime)
                 .ToList();
 
+            // Check if a slot has already started today
+            foreach (var slot in Slots)
+            {
+                var slotStartTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, slot.StartTime, 0, 0);
+                if (!notAvailableTimes.Contains(slotStartTime) && slotStartTime.AddHours(1) > DateTime.Now)
+                {
+                    notAvailableTimes.Add(slotStartTime);
+                }
+            }
+
             return new NotAvailableDatesAndTimesViewModel { Dates = notAvailableDates, Times = notAvailableTimes };
         }
 
