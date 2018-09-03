@@ -44,7 +44,7 @@ namespace MSHU.CarWash.ClassLibrary.Models
         public bool RequireInteraction { get; set; } = false;
 
         [JsonProperty("actions")]
-        public List<NotificationAction> Actions { get; set; }
+        public List<NotificationAction> Actions { get; set; } = new List<NotificationAction>();
     }
 
     /// <summary>

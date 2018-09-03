@@ -17,7 +17,7 @@ workbox.core.setCacheNameDetails({
 // as it is needed to include the newly genereted js and css files.
 // Error would be thrown: Refused to execute script from '...' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled.
 workbox.precaching.precacheAndRoute([
-    { url: '/', revision: '2001' },
+    { url: '/', revision: '2002' },
     { url: 'manifest.json', revision: '1' },
     { url: 'images/favicon-32x32.png', revision: '1' },
     { url: 'images/favicon-16x16.png', revision: '1' },
@@ -130,13 +130,13 @@ self.addEventListener('push', event => {
         if (event.data) {
             const payload = event.data.json();
             const promiseChain = self.registration.showNotification(payload.title, {
-                lang: payload.lang,
+                lang: payload.lang ? payload.lang : 'en',
                 body: payload.body,
-                tag: payload.tag,
-                timestamp: Date.parse(payload.timestamp),
+                tag: payload.tag ? payload.tag : undefined,
+                timestamp: payload.timestamp ? Date.parse(payload.timestamp) : undefined,
                 requireInteraction: payload.requireInteraction,
-                actions: payload.actions,
-                image: payload.image,
+                actions: payload.actions ? payload.actions : undefined,
+                image: payload.image ? payload.image : undefined,
                 badge: '/images/notification72.png',
                 icon: '/images/notificationicon512.png',
             });
