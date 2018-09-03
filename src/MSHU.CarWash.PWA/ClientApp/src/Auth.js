@@ -45,9 +45,10 @@ export function runWithAdal(app) {
                 console.log('No token found or token is expired. Redirecting...');
                 if (authContext.getCachedUser()) {
                     const user = authContext.getCachedUser();
-                    adalConfig.extraQueryParameter = `login_hint=${encodeURIComponent(user.profile.upn)}`;
+                    const loginHint = user.profile.upn ? user.profile.upn : user.profile.email;
+                    adalConfig.extraQueryParameter = `login_hint=${encodeURIComponent(loginHint)}`;
                     authContext = new AuthenticationContext(adalConfig);
-                    console.log(`User was prevously logged in with ${user.profile.upn}. Using this email as login hint.`);
+                    console.log(`User was prevously logged in with ${loginHint}. Using this email as login hint.`);
                 }
                 authContext.login();
             } else {
