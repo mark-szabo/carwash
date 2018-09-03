@@ -138,6 +138,9 @@ class Settings extends TrackedComponent {
                     registerPush();
                 }
             });
+        } else {
+            this.props.updateUser('notificationChannel', notificationChannel);
+            this.updateSetting('notificationChannel', notificationChannel);
         }
     };
 

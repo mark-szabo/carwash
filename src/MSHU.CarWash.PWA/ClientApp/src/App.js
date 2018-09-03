@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Route } from 'react-router';
 import { AppInsights } from 'applicationinsights-js';
 import apiFetch from './Auth';
+import registerPush from './PushService';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Snackbar from '@material-ui/core/Snackbar';
 import Layout from './components/Layout';
@@ -12,6 +13,7 @@ import Admin from './components/Admin';
 import Settings from './components/Settings';
 import CarwashAdmin from './components/CarwashAdmin';
 import NotificationDialog from './components/NotificationDialog';
+import { NotificationChannel } from './components/Constants';
 
 // A theme with custom primary and secondary color.
 const theme = createMuiTheme({
@@ -75,6 +77,10 @@ export default class App extends Component {
             )
             .then(() => {
                 this.loadMe();
+
+                if (Notification.permission === 'granted') {
+                    registerPush();
+                }
             });
 
         /* Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key */
@@ -144,6 +150,10 @@ export default class App extends Component {
         apiFetch('api/users/me').then(
             data => {
                 this.setState({ user: data });
+
+                if (data.notificationChannel === NotificationChannel.Push) {
+                    this.openNotificationDialog();
+                }
 
                 if (data.isAdmin) {
                     this.loadCompanyReservations();

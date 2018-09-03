@@ -75,8 +75,6 @@ export default class NotificationDialog extends React.Component {
         }
 
         if (Notification.permission === 'granted') {
-            registerPush();
-            this.handleEnabled();
             return null;
         }
 
