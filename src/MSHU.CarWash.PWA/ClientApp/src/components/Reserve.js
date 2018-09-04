@@ -168,8 +168,8 @@ class Reserve extends TrackedComponent {
             private: false,
             comment: '',
             disabledSlots: [],
-            reservationPrecentage: [],
-            reservationPrecentageDataArrived: false,
+            reservationPercentage: [],
+            reservationPercentageDataArrived: false,
             users: [],
             userId: this.props.user.id,
             servicesStepLabel: 'Select services',
@@ -308,7 +308,7 @@ class Reserve extends TrackedComponent {
     handleBack = () => {
         this.setState(state => ({
             activeStep: state.activeStep - 1,
-            reservationPrecentageDataArrived: false,
+            reservationPercentageDataArrived: false,
         }));
     };
 
@@ -354,11 +354,11 @@ class Reserve extends TrackedComponent {
             dateStepLabel: dateFormat.format(date),
         });
 
-        apiFetch(`api/reservations/reservationprecentage?date=${date.toJSON()}`).then(
+        apiFetch(`api/reservations/reservationpercentage?date=${date.toJSON()}`).then(
             data => {
                 this.setState({
-                    reservationPrecentage: data,
-                    reservationPrecentageDataArrived: true,
+                    reservationPercentage: data,
+                    reservationPercentageDataArrived: true,
                 });
             },
             error => {
@@ -368,10 +368,10 @@ class Reserve extends TrackedComponent {
         );
     };
 
-    getSlotReservationPrecentage = slot => {
-        if (!this.state.reservationPrecentageDataArrived) return '';
-        if (!this.state.reservationPrecentage[slot]) return '(0%)';
-        return `(${this.state.reservationPrecentage[slot].precentage * 100}%)`;
+    getSlotReservationPercentage = slot => {
+        if (!this.state.reservationPercentageDataArrived) return '';
+        if (!this.state.reservationPercentage[slot]) return '(0%)';
+        return `(${this.state.reservationPercentage[slot].percentage * 100}%)`;
     };
 
     handleTimeSelectionComplete = event => {
@@ -644,19 +644,19 @@ class Reserve extends TrackedComponent {
                                 <FormControlLabel
                                     value="8"
                                     control={<Radio />}
-                                    label={`8:00 AM - 11:00 AM ${this.getSlotReservationPrecentage(0)}`}
+                                    label={`8:00 AM - 11:00 AM ${this.getSlotReservationPercentage(0)}`}
                                     disabled={disabledSlots[0]}
                                 />
                                 <FormControlLabel
                                     value="11"
                                     control={<Radio />}
-                                    label={`11:00 AM - 2:00 PM ${this.getSlotReservationPrecentage(1)}`}
+                                    label={`11:00 AM - 2:00 PM ${this.getSlotReservationPercentage(1)}`}
                                     disabled={disabledSlots[1]}
                                 />
                                 <FormControlLabel
                                     value="14"
                                     control={<Radio />}
-                                    label={`2:00 PM - 5:00 PM ${this.getSlotReservationPrecentage(2)}`}
+                                    label={`2:00 PM - 5:00 PM ${this.getSlotReservationPercentage(2)}`}
                                     disabled={disabledSlots[2]}
                                 />
                             </RadioGroup>
