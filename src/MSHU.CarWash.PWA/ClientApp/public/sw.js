@@ -128,15 +128,16 @@ workbox.clientsClaim();
 self.addEventListener('push', event => {
     if (Notification.permission === 'granted') {
         if (event.data) {
-            const payload = event.data.json();
-            const promiseChain = self.registration.showNotification(payload.title, {
-                lang: payload.lang ? payload.lang : 'en',
-                body: payload.body,
-                tag: payload.tag ? payload.tag : undefined,
-                timestamp: payload.timestamp ? Date.parse(payload.timestamp) : undefined,
-                requireInteraction: payload.requireInteraction,
-                actions: payload.actions ? payload.actions : undefined,
-                image: payload.image ? payload.image : undefined,
+            const { title, lang = 'en', body, tag, timestamp, requireInteraction, actions, image } = event.data.json();
+
+            const promiseChain = self.registration.showNotification(title, {
+                lang,
+                body,
+                requireInteraction,
+                ...(tag && { tag }),
+                ...(timestamp && { timestamp: Date.parse(timestamp) }),
+                ...(actions && { actions }),
+                ...(image && { image }),
                 badge: '/images/notification72.png',
                 icon: '/images/notificationicon512.png',
             });
