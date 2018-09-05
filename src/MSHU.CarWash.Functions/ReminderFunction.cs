@@ -39,6 +39,7 @@ namespace MSHU.CarWash.Functions
                 .Include(r => r.User)
                 .Where(r => r.State == State.SubmittedNotActual && r.StartDate.Date == DateTime.Today)
                 .ToListAsync();
+
             // Cannot use normal LINQ as dates are not in UTC in database. TODO: refactor database to use UTC based times
             reservations = reservations
                 .Where(r => r.StartDate.AddMinutes(MinutesBeforeReservationToSendReminder * -1) < DateTime.Now.ToLocalTime() && DateTime.Now.ToLocalTime() < r.StartDate)
