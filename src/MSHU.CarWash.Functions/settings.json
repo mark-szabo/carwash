@@ -9,6 +9,7 @@
     "VapidSubject": "https://carwashu.azurewebsites.net/",
     "VapidPublicKey": "",
     "VapidPrivateKey": "",
+    "WEBSITE_TIME_ZONE": "Central Europe Standard Time",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet"
   }
 }

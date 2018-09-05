@@ -1,20 +1,25 @@
 using Microsoft.Azure.WebJobs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using MSHU.CarWash.ClassLibrary;
+using MSHU.CarWash.ClassLibrary.Enums;
+using MSHU.CarWash.ClassLibrary.Models;
+using MSHU.CarWash.ClassLibrary.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using MSHU.CarWash.ClassLibrary.Enums;
-using MSHU.CarWash.ClassLibrary.Models;
-using MSHU.CarWash.ClassLibrary.Services;
 
 namespace MSHU.CarWash.Functions
 {
     public static class ReminderFunction
     {
+        /// <summary>
+        /// Number of minutes before a reservation after we should send the reminder
+        /// The function is running every 10 minutes, so use a number not dividable with 10 for consistent execution.
+        /// </summary>
+        private const int MinutesBeforeReservationToSendReminder = 35;
+
         /// <summary>
         /// Checks for reservations where a reminder should be sent to drop-off the key and confirm vehicle location
         /// This function will get triggered/executed every 10 minutes: "*/10 * * * *"
@@ -36,9 +41,9 @@ namespace MSHU.CarWash.Functions
                 .ToListAsync();
             // Cannot use normal LINQ as dates are not in UTC in database. TODO: refactor database to use UTC based times
             reservations = reservations
-                .Where(r => r.StartDate.AddMinutes(-30) < DateTime.Now.ToLocalTime() && DateTime.Now.ToLocalTime() < r.StartDate)
+                .Where(r => r.StartDate.AddMinutes(MinutesBeforeReservationToSendReminder * -1) < DateTime.Now.ToLocalTime() && DateTime.Now.ToLocalTime() < r.StartDate)
                 .ToList();
-            
+
             if (reservations.Count == 0)
             {
                 log.LogInformation($"No reservations found where reminder should be sent. Exiting. ({watch.ElapsedMilliseconds}ms)");
@@ -52,6 +57,8 @@ namespace MSHU.CarWash.Functions
                 reservation.State = State.ReminderSentWaitingForKey;
                 await context.SaveChangesAsync();
                 log.LogInformation($"Reservation state updated to ReminderSentWaitingForKey for reservation with id: {reservation.Id}. ({watch.ElapsedMilliseconds}ms)");
+
+                if (reservation.User == null) throw new Exception($"Failed to load user with id: {reservation.UserId}");
 
                 switch (reservation.User.NotificationChannel)
                 {
@@ -88,7 +95,11 @@ It's time to leave the key at the reception and <a href='https://carwashu.azurew
 If don't want to get email reminders in the future, you can <a href='https://carwashu.azurewebsites.net'>disable it in the settings</a>."
             };
 
-            await email.Send();
+            try { await email.Send(); }
+            catch (Exception e)
+            {
+                throw new Exception($"Failed to send email to user with id: {reservation.UserId}. See inner exception.", e);
+            }
         }
 
         private static async Task SendPushReminder(Reservation reservation, IPushDbContext context)
@@ -111,7 +122,11 @@ If don't want to get email reminders in the future, you can <a href='https://car
                 }
             };
 
-            await pushService.Send(reservation.UserId, notification);
+            try { await pushService.Send(reservation.UserId, notification); }
+            catch (Exception e)
+            {
+                throw new Exception($"Failed to send push to user with id: {reservation.UserId}. See inner exception.", e);
+            }
         }
     }
 }
