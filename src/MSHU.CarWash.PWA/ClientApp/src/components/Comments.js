@@ -5,31 +5,11 @@ import Divider from '@material-ui/core/Divider';
 import CommentOutgoing from './CommentOutgoing';
 import CommentIncoming from './CommentIncoming';
 
-const styles = theme => ({
+const styles = {
     divider: {
         margin: '24px 0',
     },
-    comment: {
-        clear: 'right',
-        float: 'right',
-        borderTopRightRadius: '1.3em',
-        borderTopLeftRadius: '1.3em',
-        borderBottomLeftRadius: '1.3em',
-        backgroundColor: theme.palette.primary.dark,
-        color: '#fff',
-        padding: '6px 12px',
-        margin: '1px 0',
-        maxWidth: '85%',
-    },
-    after: {
-        clear: 'both',
-        display: 'block',
-        fontSize: 0,
-        height: 0,
-        lineHeight: 0,
-        visibility: 'hidden',
-    },
-});
+};
 
 class Comments extends Component {
     render() {

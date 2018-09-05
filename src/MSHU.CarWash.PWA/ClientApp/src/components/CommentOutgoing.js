@@ -10,7 +10,7 @@ const styles = theme => ({
         borderTopRightRadius: '1.3em',
         borderTopLeftRadius: '1.3em',
         borderBottomLeftRadius: '1.3em',
-        backgroundColor: theme.palette.primary.dark,
+        backgroundColor: '#007ac1',
         color: '#fff',
         padding: '6px 12px',
         margin: '1px 0',
