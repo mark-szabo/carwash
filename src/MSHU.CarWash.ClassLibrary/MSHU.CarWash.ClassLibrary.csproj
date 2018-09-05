@@ -6,6 +6,9 @@
 
   <ItemGroup>
     <Compile Remove="Migrations\20180902003120_PushSubscription.cs" />
+    <Compile Remove="Migrations\20180902003549_PushSubscription.cs" />
+    <Compile Remove="Migrations\20180902233002_Keys.cs" />
+    <Compile Remove="Migrations\20180905115640_PushSubscription.cs" />
   </ItemGroup>
 
   <ItemGroup>

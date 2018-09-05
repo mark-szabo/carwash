@@ -131,7 +131,7 @@ namespace MSHU.CarWash.ClassLibrary.Migrations
 
             modelBuilder.Entity("MSHU.CarWash.ClassLibrary.Models.PushSubscription", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<string>("P256Dh")
                         .ValueGeneratedOnAdd();
 
                     b.Property<string>("Auth")
@@ -144,13 +144,16 @@ namespace MSHU.CarWash.ClassLibrary.Migrations
 
                     b.Property<double?>("ExpirationTime");
 
-                    b.Property<string>("P256Dh")
+                    b.Property<string>("Id")
                         .IsRequired();
 
                     b.Property<string>("UserId")
                         .IsRequired();
 
-                    b.HasKey("Id");
+                    b.HasKey("P256Dh");
+
+                    b.HasIndex("Id")
+                        .IsUnique();
 
                     b.HasIndex("UserId");
 
@@ -259,7 +262,8 @@ namespace MSHU.CarWash.ClassLibrary.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasAlternateKey("Email");
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.HasIndex("NormalizedEmail")
                         .HasName("EmailIndex");

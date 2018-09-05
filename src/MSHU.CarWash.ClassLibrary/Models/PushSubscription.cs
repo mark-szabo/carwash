@@ -22,6 +22,7 @@ namespace MSHU.CarWash.ClassLibrary.Models
         }
 
         /// <inheritdoc />
+        [Required]
         public string Id { get; set; }
 
         /// <summary>
@@ -56,6 +57,7 @@ namespace MSHU.CarWash.ClassLibrary.Models
         /// The resulting key is an uncompressed point in ANSI X9.62 format.
         /// </summary>
         [Required]
+        [Key]
         public string P256Dh { get; set; }
 
         /// <summary>

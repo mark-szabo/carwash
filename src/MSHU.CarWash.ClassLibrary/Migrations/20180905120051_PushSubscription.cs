@@ -6,6 +6,13 @@ namespace MSHU.CarWash.ClassLibrary.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AlterColumn<int>(
+                name: "TimeRequirement",
+                table: "Reservation",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldNullable: true);
+
             migrationBuilder.AlterColumn<bool>(
                 name: "Private",
                 table: "Reservation",
@@ -18,6 +25,15 @@ namespace MSHU.CarWash.ClassLibrary.Migrations
                 table: "Reservation",
                 nullable: false,
                 oldClrType: typeof(bool),
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<string>(
+                name: "Email",
+                table: "AspNetUsers",
+                maxLength: 256,
+                nullable: false,
+                oldClrType: typeof(string),
+                oldMaxLength: 256,
                 oldNullable: true);
 
             migrationBuilder.CreateTable(
@@ -34,7 +50,7 @@ namespace MSHU.CarWash.ClassLibrary.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PushSubscription", x => x.Id);
+                    table.PrimaryKey("PK_PushSubscription", x => x.P256Dh);
                     table.ForeignKey(
                         name: "FK_PushSubscription_AspNetUsers_UserId",
                         column: x => x.UserId,
@@ -42,6 +58,18 @@ namespace MSHU.CarWash.ClassLibrary.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_Email",
+                table: "AspNetUsers",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PushSubscription_Id",
+                table: "PushSubscription",
+                column: "Id",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_PushSubscription_UserId",
@@ -54,6 +82,16 @@ namespace MSHU.CarWash.ClassLibrary.Migrations
             migrationBuilder.DropTable(
                 name: "PushSubscription");
 
+            migrationBuilder.DropIndex(
+                name: "IX_AspNetUsers_Email",
+                table: "AspNetUsers");
+
+            migrationBuilder.AlterColumn<int>(
+                name: "TimeRequirement",
+                table: "Reservation",
+                nullable: true,
+                oldClrType: typeof(int));
+
             migrationBuilder.AlterColumn<bool>(
                 name: "Private",
                 table: "Reservation",
@@ -65,6 +103,14 @@ namespace MSHU.CarWash.ClassLibrary.Migrations
                 table: "Reservation",
                 nullable: true,
                 oldClrType: typeof(bool));
+
+            migrationBuilder.AlterColumn<string>(
+                name: "Email",
+                table: "AspNetUsers",
+                maxLength: 256,
+                nullable: true,
+                oldClrType: typeof(string),
+                oldMaxLength: 256);
         }
     }
 }
