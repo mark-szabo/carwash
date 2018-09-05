@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using MSHU.CarWash.ClassLibrary.Models;
@@ -58,6 +59,7 @@ namespace MSHU.CarWash.PWA.Controllers
         {
             var dbSubscription = new PushSubscription
             {
+                Id = Guid.NewGuid().ToString(),
                 UserId = _user.Id,
                 Endpoint = subscription.Subscription.Endpoint,
                 ExpirationTime = subscription.Subscription.ExpirationTime,
