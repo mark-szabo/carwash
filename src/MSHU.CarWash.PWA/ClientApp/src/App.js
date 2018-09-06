@@ -13,7 +13,7 @@ import Admin from './components/Admin';
 import Settings from './components/Settings';
 import CarwashAdmin from './components/CarwashAdmin';
 import NotificationDialog from './components/NotificationDialog';
-import { NotificationChannel } from './components/Constants';
+import { NotificationChannel } from './Constants';
 
 // A theme with custom primary and secondary color.
 const theme = createMuiTheme({

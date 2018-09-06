@@ -6,7 +6,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import Typography from '@material-ui/core/Typography';
 import CarwashCard from './CarwashCard';
 import CardSection from './CardSection';
-import { State } from './Constants';
+import { State } from '../Constants';
 
 const styles = theme => ({
     card: {

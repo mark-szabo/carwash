@@ -25,7 +25,7 @@ import Select from '@material-ui/core/Select';
 import InfiniteCalendar from 'react-infinite-calendar';
 import CloudOffIcon from '@material-ui/icons/CloudOff';
 import ErrorOutlineIcon from '@material-ui/icons/ErrorOutline';
-import { Garages, Service, NotificationChannel } from './Constants';
+import { Garages, Service, NotificationChannel } from '../Constants';
 import 'react-infinite-calendar/styles.css';
 import './Reserve.css';
 

@@ -18,7 +18,7 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import red from '@material-ui/core/colors/red';
 import CarwashCardHeader from './CarwashCardHeader';
 import CarwashDetailsDialog from './CarwashDetailsDialog';
-import { getAdminStateName, getServiceName } from './Constants';
+import { getAdminStateName, getServiceName } from '../Constants';
 import { formatLocation } from '../Helpers';
 import Comments from './Comments';
 

@@ -25,7 +25,7 @@ import TextField from '@material-ui/core/TextField';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import red from '@material-ui/core/colors/red';
-import { getStateName, getServiceName, State, Garages } from './Constants';
+import { getStateName, getServiceName, State, Garages } from '../Constants';
 import { formatLocation } from '../Helpers';
 import Comments from './Comments';
 

@@ -19,7 +19,7 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DeleteForeverIcon from '@material-ui/icons/DeleteForever';
 import red from '@material-ui/core/colors/red';
 import * as download from 'downloadjs';
-import { NotificationChannel } from './Constants';
+import { NotificationChannel } from '../Constants';
 import registerPush, { askPermission } from '../PushService';
 
 const styles = theme => ({

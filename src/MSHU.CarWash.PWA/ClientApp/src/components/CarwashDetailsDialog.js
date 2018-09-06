@@ -27,7 +27,7 @@ import EditIcon from '@material-ui/icons/Edit';
 import MoneyOffIcon from '@material-ui/icons/MoneyOff';
 import SendIcon from '@material-ui/icons/Send';
 import SaveIcon from '@material-ui/icons/Save';
-import { State, getServiceName, getAdminStateName, Garages, Service } from './Constants';
+import { State, getServiceName, getAdminStateName, Garages, Service } from '../Constants';
 import { formatLocation } from '../Helpers';
 import Comments from './Comments';
 
