@@ -123,6 +123,7 @@ class CardSection extends React.Component {
                         component="div"
                         tabIndex={-1}
                         aria-hidden="true"
+                        disableRipple
                     >
                         <ExpandMoreIcon />
                     </IconButton>

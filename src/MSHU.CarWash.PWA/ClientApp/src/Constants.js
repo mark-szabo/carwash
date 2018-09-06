@@ -110,3 +110,64 @@ export function getServiceName(service) {
             return 'no info';
     }
 }
+
+export function getServiceList() {
+    return [
+        {
+            id: Service.Exterior,
+            name: getServiceName(Service.Exterior),
+            price: 3213,
+            priceMpv: 4017,
+            description: null,
+        },
+        {
+            id: Service.Interior,
+            name: getServiceName(Service.Interior),
+            price: 1607,
+            priceMpv: 2410,
+            description: null,
+        },
+        {
+            id: Service.Carpet,
+            name: getServiceName(Service.Carpet),
+            price: -1,
+            priceMpv: -1,
+            description: 'whole carpet cleaning, including all the seats',
+        },
+        {
+            id: Service.SpotCleaning,
+            name: getServiceName(Service.SpotCleaning),
+            price: 3534,
+            priceMpv: 3534,
+            description: 'partial cleaning of the carpet, only where it is needed (eg. when something is spilled in the car)',
+        },
+        {
+            id: Service.VignetteRemoval,
+            name: getServiceName(Service.VignetteRemoval),
+            price: 466,
+            priceMpv: 466,
+            description: 'eg. highway tickets on the windscreen',
+        },
+        {
+            id: Service.Polishing,
+            name: getServiceName(Service.Polishing),
+            price: 4498,
+            priceMpv: 4498,
+            description: 'for small scratches',
+        },
+        {
+            id: Service.AcCleaningOzon,
+            name: getServiceName(Service.AcCleaningOzon),
+            price: 8033,
+            priceMpv: 8033,
+            description: 'disinfects the molecules with ozone',
+        },
+        {
+            id: Service.AcCleaningBomba,
+            name: getServiceName(Service.AcCleaningBomba),
+            price: 6426,
+            priceMpv: 6426,
+            description: 'blowing chemical spray in the AC system',
+        },
+    ];
+}

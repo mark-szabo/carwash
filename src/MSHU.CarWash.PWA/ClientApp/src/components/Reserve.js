@@ -25,9 +25,11 @@ import Select from '@material-ui/core/Select';
 import InfiniteCalendar from 'react-infinite-calendar';
 import CloudOffIcon from '@material-ui/icons/CloudOff';
 import ErrorOutlineIcon from '@material-ui/icons/ErrorOutline';
+import Grid from '@material-ui/core/Grid';
 import { Garages, Service, NotificationChannel } from '../Constants';
 import 'react-infinite-calendar/styles.css';
 import './Reserve.css';
+import ServiceDetailsTable from './ServiceDetailsTable';
 
 const styles = theme => ({
     stepper: {
@@ -563,39 +565,44 @@ class Reserve extends TrackedComponent {
                         {loadingReservation ? (
                             <CircularProgress className={classes.progress} size={50} />
                         ) : (
-                            <React.Fragment>
-                                {this.state.services.map(service => (
-                                    <span key={service.id}>
-                                        {service.id === 0 && <Typography variant="body2">Basic</Typography>}
-                                        {service.id === 3 && <Typography variant="body2">Extras</Typography>}
-                                        {service.id === 6 && <Typography variant="body2">AC</Typography>}
-                                        <Chip
-                                            key={service.id}
-                                            label={service.name}
-                                            onClick={this.handleServiceChipClick(service)}
-                                            className={service.selected ? classes.selectedChip : classes.chip}
-                                        />
-                                        {service.id === 2 && <br />}
-                                        {service.id === 5 && <br />}
-                                    </span>
-                                ))}
-                                <div className={classes.actionsContainer}>
-                                    <div>
-                                        <Button disabled className={classes.button}>
-                                            Back
-                                        </Button>
-                                        <Button
-                                            variant="contained"
-                                            color="primary"
-                                            onClick={this.handleServiceSelectionComplete}
-                                            className={classes.button}
-                                            disabled={this.state.services.filter(service => service.selected === true).length <= 0}
-                                        >
-                                            Next
-                                        </Button>
+                            <Grid container spacing={24}>
+                                <Grid item xs={12} md={6}>
+                                    {this.state.services.map(service => (
+                                        <span key={service.id}>
+                                            {service.id === 0 && <Typography variant="body2">Basic</Typography>}
+                                            {service.id === 3 && <Typography variant="body2">Extras</Typography>}
+                                            {service.id === 6 && <Typography variant="body2">AC</Typography>}
+                                            <Chip
+                                                key={service.id}
+                                                label={service.name}
+                                                onClick={this.handleServiceChipClick(service)}
+                                                className={service.selected ? classes.selectedChip : classes.chip}
+                                            />
+                                            {service.id === 2 && <br />}
+                                            {service.id === 5 && <br />}
+                                        </span>
+                                    ))}
+                                    <div className={classes.actionsContainer}>
+                                        <div>
+                                            <Button disabled className={classes.button}>
+                                                Back
+                                            </Button>
+                                            <Button
+                                                variant="contained"
+                                                color="primary"
+                                                onClick={this.handleServiceSelectionComplete}
+                                                className={classes.button}
+                                                disabled={this.state.services.filter(service => service.selected === true).length <= 0}
+                                            >
+                                                Next
+                                            </Button>
+                                        </div>
                                     </div>
-                                </div>
-                            </React.Fragment>
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <ServiceDetailsTable />
+                                </Grid>
+                            </Grid>
                         )}
                     </StepContent>
                 </Step>
