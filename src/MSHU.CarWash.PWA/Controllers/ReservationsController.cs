@@ -458,6 +458,7 @@ namespace MSHU.CarWash.PWA.Controllers
             if (reservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin)) return Forbid();
 
             reservation.State = State.DropoffAndLocationConfirmed;
+            reservation.Location = location;
 
             try
             {
