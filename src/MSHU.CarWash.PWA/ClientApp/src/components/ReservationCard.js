@@ -26,6 +26,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import red from '@material-ui/core/colors/red';
 import { getStateName, getServiceName, State, Garages } from './Constants';
+import { formatLocation } from '../Helpers';
 import Comments from './Comments';
 
 const styles = theme => ({
@@ -234,7 +235,7 @@ class ReservationCard extends Component {
                                         Location
                                     </Typography>
                                     <Typography variant="body1" gutterBottom>
-                                        {reservation.location}
+                                        {formatLocation(reservation.location)}
                                     </Typography>
                                 </React.Fragment>
                             )}

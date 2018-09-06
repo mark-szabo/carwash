@@ -28,6 +28,7 @@ import MoneyOffIcon from '@material-ui/icons/MoneyOff';
 import SendIcon from '@material-ui/icons/Send';
 import SaveIcon from '@material-ui/icons/Save';
 import { State, getServiceName, getAdminStateName, Garages, Service } from './Constants';
+import { formatLocation } from '../Helpers';
 import Comments from './Comments';
 
 const styles = theme => ({
@@ -559,7 +560,7 @@ class CarwashDetailsDialog extends React.Component {
                     </Typography>
                     {!editLocation ? (
                         <Typography variant="subheading" gutterBottom>
-                            {reservation.location}
+                            {reservation.location ? formatLocation(reservation.location) : 'Location not set'}
                             <IconButton onClick={this.handleEditLocation} aria-label="Edit location">
                                 <EditIcon />
                             </IconButton>

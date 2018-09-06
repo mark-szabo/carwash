@@ -19,6 +19,7 @@ import red from '@material-ui/core/colors/red';
 import CarwashCardHeader from './CarwashCardHeader';
 import CarwashDetailsDialog from './CarwashDetailsDialog';
 import { getAdminStateName, getServiceName } from './Constants';
+import { formatLocation } from '../Helpers';
 import Comments from './Comments';
 
 const styles = theme => ({
@@ -166,7 +167,7 @@ class CarwashCard extends Component {
                                     Location
                                 </Typography>
                                 <Typography variant="body1" gutterBottom>
-                                    {reservation.location ? reservation.location : 'Not set'}
+                                    {reservation.location ? formatLocation(reservation.location) : 'Not set'}
                                 </Typography>
                                 <Typography variant="caption" gutterBottom style={{ marginTop: '8px' }}>
                                     Name
