@@ -282,10 +282,10 @@ class Settings extends TrackedComponent {
 }
 
 Settings.propTypes = {
-    classes: PropTypes.object.isRequired,
+    classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
     updateUser: PropTypes.func.isRequired,
-    user: PropTypes.object,
+    user: PropTypes.object, // eslint-disable-line react/forbid-prop-types
 };
 
 export default withStyles(styles)(Settings);

@@ -220,8 +220,8 @@ class CarwashCard extends Component {
 }
 
 CarwashCard.propTypes = {
-    classes: PropTypes.object.isRequired,
-    reservation: PropTypes.object.isRequired,
+    classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+    reservation: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
     updateReservation: PropTypes.func.isRequired,

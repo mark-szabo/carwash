@@ -64,8 +64,8 @@ function CarwashCardHeader(props) {
 }
 
 CarwashCardHeader.propTypes = {
+    classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     company: PropTypes.string,
-    classes: PropTypes.object.isRequired,
     subheader: PropTypes.string.isRequired,
     subheaderSecondLine: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,

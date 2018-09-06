@@ -346,7 +346,7 @@ class ReservationCard extends Component {
 }
 
 ReservationCard.propTypes = {
-    classes: PropTypes.object.isRequired,
+    classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
     removeReservation: PropTypes.func.isRequired,
     openSnackbar: PropTypes.func.isRequired,

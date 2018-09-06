@@ -167,10 +167,10 @@ class Layout extends React.Component {
 }
 
 Layout.propTypes = {
-    classes: PropTypes.object.isRequired,
-    theme: PropTypes.object.isRequired,
-    location: PropTypes.object,
-    user: PropTypes.object,
+    classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+    theme: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+    location: PropTypes.object, // eslint-disable-line react/forbid-prop-types
+    user: PropTypes.object, // eslint-disable-line react/forbid-prop-types
 };
 
 export default withStyles(styles, { withTheme: true })(Layout);

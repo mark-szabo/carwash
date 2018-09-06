@@ -98,7 +98,7 @@ class ReservationGrid extends Component {
 }
 
 ReservationGrid.propTypes = {
-    classes: PropTypes.object.isRequired,
+    classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
     reservationsLoading: PropTypes.bool.isRequired,
     removeReservation: PropTypes.func.isRequired,

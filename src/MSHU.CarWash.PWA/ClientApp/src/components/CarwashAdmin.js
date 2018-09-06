@@ -22,7 +22,7 @@ export default class CarwashAdmin extends TrackedComponent {
 }
 
 CarwashAdmin.propTypes = {
-    backlog: PropTypes.arrayOf(PropTypes.object).isRequired,
+    backlog: PropTypes.arrayOf(PropTypes.object).isRequired, // eslint-disable-line react/forbid-prop-types
     backlogLoading: PropTypes.bool.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,

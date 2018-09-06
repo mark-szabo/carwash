@@ -45,7 +45,7 @@ class CommentOutgoing extends Component {
 }
 
 CommentOutgoing.propTypes = {
-    classes: PropTypes.object.isRequired,
+    classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     comment: PropTypes.string,
 };
 

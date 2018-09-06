@@ -139,7 +139,7 @@ class CardSection extends React.Component {
 
 CardSection.propTypes = {
     children: PropTypes.node,
-    classes: PropTypes.object.isRequired,
+    classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     title: PropTypes.string.isRequired,
     expanded: PropTypes.bool,
     disabled: PropTypes.bool,

@@ -150,7 +150,7 @@ class CarwashGrid extends Component {
 }
 
 CarwashGrid.propTypes = {
-    classes: PropTypes.object.isRequired,
+    classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     backlog: PropTypes.arrayOf(PropTypes.object).isRequired,
     backlogLoading: PropTypes.bool.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,

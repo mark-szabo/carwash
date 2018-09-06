@@ -693,8 +693,8 @@ class CarwashDetailsDialog extends React.Component {
 }
 
 CarwashDetailsDialog.propTypes = {
-    classes: PropTypes.object.isRequired,
-    reservation: PropTypes.object.isRequired,
+    classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+    reservation: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     fullScreen: PropTypes.bool.isRequired,
     open: PropTypes.bool.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
