@@ -110,9 +110,14 @@ function parseJson(response) {
  * Requests a URL, returning a promise
  * @param {string} url The URL we want to request
  * @param {object} options The options we want to pass to "fetch"
+ * @param {bool} errorIfOffline Indicates whether the function should reject the Promise if offline (default: false)
  * @return {Promise} The request promise
  */
-export default function apiFetch(url, options) {
+export default function apiFetch(url, options, errorIfOffline = false) {
+    if (errorIfOffline && !navigator.onLine) {
+        return new window.Promise((_resolve, reject) => reject('You are offline.'));
+    }
+
     return adalGetToken(adalConfig.endpoints.api).then(token =>
         adalGetToken(adalConfig.endpoints.graph).then(graphToken => {
             const o = options || {};

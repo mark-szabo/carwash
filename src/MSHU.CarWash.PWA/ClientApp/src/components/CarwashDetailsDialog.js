@@ -243,9 +243,7 @@ class CarwashDetailsDialog extends React.Component {
         reservation.state = State.WashInProgress;
         this.props.updateReservation(reservation);
 
-        apiFetch(`api/reservations/${this.props.reservation.id}/startwash`, {
-            method: 'POST',
-        }).then(
+        apiFetch(`api/reservations/${this.props.reservation.id}/startwash`, { method: 'POST' }, true).then(
             () => {
                 this.props.openSnackbar('Wash started.');
             },
@@ -263,9 +261,7 @@ class CarwashDetailsDialog extends React.Component {
         reservation.state = reservation.private ? State.NotYetPaid : State.Done;
         this.props.updateReservation(reservation);
 
-        apiFetch(`api/reservations/${this.props.reservation.id}/completewash`, {
-            method: 'POST',
-        }).then(
+        apiFetch(`api/reservations/${this.props.reservation.id}/completewash`, { method: 'POST' }, true).then(
             () => {
                 this.props.openSnackbar('Wash completed.');
             },
@@ -283,9 +279,7 @@ class CarwashDetailsDialog extends React.Component {
         reservation.state = State.Done;
         this.props.updateReservation(reservation);
 
-        apiFetch(`api/reservations/${this.props.reservation.id}/confirmpayment`, {
-            method: 'POST',
-        }).then(
+        apiFetch(`api/reservations/${this.props.reservation.id}/confirmpayment`, { method: 'POST' }, true).then(
             () => {
                 this.props.openSnackbar('Payment confirmed.');
             },
@@ -303,9 +297,7 @@ class CarwashDetailsDialog extends React.Component {
         reservation.state = State.CarKeyLeftAndLocationConfirmed;
         this.props.updateReservation(reservation);
 
-        apiFetch(`api/reservations/${this.props.reservation.id}/state/${reservation.state}`, {
-            method: 'POST',
-        }).then(
+        apiFetch(`api/reservations/${this.props.reservation.id}/state/${reservation.state}`, { method: 'POST' }, true).then(
             () => {
                 this.props.openSnackbar('Wash canceled.');
             },
@@ -323,9 +315,7 @@ class CarwashDetailsDialog extends React.Component {
         reservation.state = State.WashInProgress;
         this.props.updateReservation(reservation);
 
-        apiFetch(`api/reservations/${this.props.reservation.id}/state/${reservation.state}`, {
-            method: 'POST',
-        }).then(
+        apiFetch(`api/reservations/${this.props.reservation.id}/state/${reservation.state}`, { method: 'POST' }, true).then(
             () => {
                 this.props.openSnackbar('Wash in progress.');
             },
@@ -347,13 +337,17 @@ class CarwashDetailsDialog extends React.Component {
         const oldTextfield = this.state.commentTextfield;
         this.setState({ commentTextfield: '' });
 
-        apiFetch(`api/reservations/${this.props.reservation.id}/carwashcomment`, {
-            method: 'POST',
-            body: JSON.stringify(this.state.commentTextfield),
-            headers: {
-                'Content-Type': 'application/json',
+        apiFetch(
+            `api/reservations/${this.props.reservation.id}/carwashcomment`,
+            {
+                method: 'POST',
+                body: JSON.stringify(this.state.commentTextfield),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             },
-        }).then(
+            true
+        ).then(
             () => {
                 this.props.openSnackbar('Comment saved.');
             },
@@ -374,13 +368,17 @@ class CarwashDetailsDialog extends React.Component {
         reservation.mpv = !reservation.mpv;
         this.props.updateReservation(reservation);
 
-        apiFetch(`api/reservations/${this.props.reservation.id}/mpv`, {
-            method: 'POST',
-            body: JSON.stringify(reservation.mpv),
-            headers: {
-                'Content-Type': 'application/json',
+        apiFetch(
+            `api/reservations/${this.props.reservation.id}/mpv`,
+            {
+                method: 'POST',
+                body: JSON.stringify(reservation.mpv),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             },
-        }).then(
+            true
+        ).then(
             () => {
                 this.props.openSnackbar(reservation.mpv ? 'Saved as MPV.' : 'Saved as not MPV.');
             },
@@ -396,13 +394,17 @@ class CarwashDetailsDialog extends React.Component {
         this.setState({ editServices: false });
         // if (this.state.oldServices.length === services.length && this.state.oldServices.every(s => services.some(z => z === s))) return;
 
-        apiFetch(`api/reservations/${this.props.reservation.id}/services`, {
-            method: 'POST',
-            body: JSON.stringify(services),
-            headers: {
-                'Content-Type': 'application/json',
+        apiFetch(
+            `api/reservations/${this.props.reservation.id}/services`,
+            {
+                method: 'POST',
+                body: JSON.stringify(services),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             },
-        }).then(
+            true
+        ).then(
             () => {
                 this.setState({ oldServices: [] });
                 this.props.openSnackbar('Updated selected services.');
@@ -481,13 +483,17 @@ class CarwashDetailsDialog extends React.Component {
 
         this.props.updateReservation(reservation);
 
-        apiFetch(`api/reservations/${this.props.reservation.id}/location`, {
-            method: 'POST',
-            body: JSON.stringify(reservation.location),
-            headers: {
-                'Content-Type': 'application/json',
+        apiFetch(
+            `api/reservations/${this.props.reservation.id}/location`,
+            {
+                method: 'POST',
+                body: JSON.stringify(reservation.location),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             },
-        }).then(
+            true
+        ).then(
             () => {
                 this.props.openSnackbar('Updated vehicle location.');
             },

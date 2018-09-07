@@ -93,9 +93,7 @@ class Settings extends TrackedComponent {
     handleDeleteConfirmed = () => {
         this.setState({ deleteDialogOpen: false });
 
-        apiFetch(`api/users/${this.props.user.id}`, {
-            method: 'DELETE',
-        }).then(
+        apiFetch(`api/users/${this.props.user.id}`, { method: 'DELETE' }, true).then(
             () => {
                 this.props.openSnackbar('Your account has been deleted.');
                 this.setState({ userDeleted: true });
@@ -107,7 +105,7 @@ class Settings extends TrackedComponent {
     };
 
     handleDownloadDataClick = () => {
-        apiFetch('api/users/downloadpersonaldata').then(
+        apiFetch('api/users/downloadpersonaldata', null, true).then(
             data => {
                 const dataString = JSON.stringify(data);
                 const name = this.props.user.firstName.toLowerCase() + this.props.user.lastName.toLowerCase();
@@ -149,13 +147,17 @@ class Settings extends TrackedComponent {
     };
 
     updateSetting = (key, value) => {
-        apiFetch(`api/users/settings/${key}`, {
-            method: 'PUT',
-            body: JSON.stringify(value),
-            headers: {
-                'Content-Type': 'application/json',
+        apiFetch(
+            `api/users/settings/${key}`,
+            {
+                method: 'PUT',
+                body: JSON.stringify(value),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             },
-        }).then(
+            true
+        ).then(
             () => {
                 this.props.openSnackbar('Updates saved.');
             },
