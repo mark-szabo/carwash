@@ -1,4 +1,5 @@
-﻿using MSHU.CarWash.UWP.ViewModels;
+﻿using MSHU.CarWash.UWP.Services;
+using MSHU.CarWash.UWP.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -33,6 +34,16 @@ namespace MSHU.CarWash.UWP.Views
             ViewModel = new HomeViewModel();
             ((HomeViewModel)ViewModel).UserSignedOut += HomePage_UserSignedOut;
             base.InitializePage();
+        }
+
+        protected async override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            var s = new WhatsNewService(new RoamingSettingsStoreService());
+            if(await s.IsSomethingNewAsync())
+            {
+                await s.ShowWhatsNewAsync();
+            }
         }
 
         private void HomePage_UserSignedOut(object sender, EventArgs e)

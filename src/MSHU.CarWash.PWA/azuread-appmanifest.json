@@ -1,0 +1,61 @@
+{
+  "appId": "6e291d40-2613-4a74-9af5-790eb496a828",
+  "appRoles": [],
+  "availableToOtherTenants": true,
+  "displayName": "CarWash",
+  "errorUrl": null,
+  "groupMembershipClaims": null,
+  "optionalClaims": null,
+  "acceptMappedClaims": null,
+  "homepage": "https://carwashu.azurewebsites.net",
+  "informationalUrls": {
+    "privacy": "https://go.microsoft.com/fwlink/?LinkId=521839",
+    "termsOfService": "https://go.microsoft.com/fwlink/?LinkID=206977"
+  },
+  "identifierUris": [
+    "https://carwashu.onmicrosoft.com/carwash"
+  ],
+  "keyCredentials": [],
+  "knownClientApplications": [],
+  "logoutUrl": "https://carwashu.azurewebsites.net/signout",
+  "oauth2AllowImplicitFlow": true,
+  "oauth2AllowUrlPathMatching": false,
+  "oauth2Permissions": [
+    {
+      "adminConsentDescription": "Allow the application to access its API on behalf of the signed-in user.",
+      "adminConsentDisplayName": "Access CarWash API",
+      "id": "aa1032d5-839c-4f0f-824a-6f8cf44f34ad",
+      "isEnabled": true,
+      "type": "User",
+      "userConsentDescription": "Allow the application to its API on your behalf.",
+      "userConsentDisplayName": "Access CarWash API",
+      "value": "user_impersonation"
+    }
+  ],
+  "oauth2RequirePostResponse": false,
+  "objectId": "89f33781-1137-44fe-9112-190299221610",
+  "parentalControlSettings": {
+    "countriesBlockedForMinors": [],
+    "legalAgeGroupRule": "Allow"
+  },
+  "passwordCredentials": [],
+  "publicClient": false,
+  "replyUrls": [
+    "https://mshucarwash-dev.azurewebsites.net/*",
+    "https://carwashu.azurewebsites.net/*",
+    "https://localhost:44340/*"
+  ],
+  "requiredResourceAccess": [
+    {
+      "resourceAppId": "00000002-0000-0000-c000-000000000000",
+      "resourceAccess": [
+        {
+          "id": "311a71cc-e848-46a1-bdf8-97ff7156d8e6",
+          "type": "Scope"
+        }
+      ]
+    }
+  ],
+  "samlMetadataUrl": null,
+  "logoUrl": "data:image/Jpeg;base64,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"
+}

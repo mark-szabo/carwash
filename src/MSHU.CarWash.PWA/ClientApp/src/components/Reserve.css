@@ -1,0 +1,11 @@
+.Cal__Month__rows {
+    background: inherit;
+}
+
+.Cal__MonthList__root {
+    background-color: #fafafa;
+}
+
+.Cal__Month__row:first-child li {
+    background-color: #fafafa;
+}

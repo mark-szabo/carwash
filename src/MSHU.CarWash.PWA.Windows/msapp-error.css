@@ -1,0 +1,11 @@
+﻿body {
+    padding: 24px;
+    color: #000000;
+    background-color: #fafafa;
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+a, a:hover, a:focus, a:visited, a:link {
+    text-decoration: underline;
+    color: #000000;
+}

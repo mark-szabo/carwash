@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
+  <Identity Name="65462MarkSzabo.602807DA653B6" Version="2.0.3.0" Publisher="CN=F8823879-DBD1-481A-A00C-12C50CA900A5" />
+  <mp:PhoneIdentity PhoneProductId="3a0ecb78-0e53-43c9-bfbf-5413123e72a8" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
+  <Properties>
+    <DisplayName>CarWash</DisplayName>
+    <PublisherDisplayName>markszabo</PublisherDisplayName>
+    <Logo>images\storelogo.png</Logo>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
+  </Dependencies>
+  <Resources>
+    <Resource Language="x-generate" />
+  </Resources>
+  <Applications>
+    <Application Id="App" StartPage="https://carwashu.azurewebsites.net/">
+      <uap:ApplicationContentUriRules>
+        <uap:Rule Match="https://carwashu.azurewebsites.net/" Type="include" WindowsRuntimeAccess="all" />
+        <uap:Rule Match="https://login.microsoftonline.com/" Type="include" WindowsRuntimeAccess="none" />
+        <uap:Rule Match="https://*.*.microsoft.com/" Type="include" WindowsRuntimeAccess="none" />
+        <uap:Rule Match="https://login.live.com/" Type="include" WindowsRuntimeAccess="none" />
+        <uap:Rule Match="https://*.*.corp.sap/" Type="include" WindowsRuntimeAccess="none" />
+        <uap:Rule Match="https://*.graphisoft.hu/" Type="include" WindowsRuntimeAccess="none" />
+      </uap:ApplicationContentUriRules>
+      <uap:VisualElements DisplayName="CarWash" Description="This app is intended to help employees working in Graphisoft park (Budapest, Hungary) reserve car washing services." BackgroundColor="#80d8ff" Square150x150Logo="images\Square150x150Logo.png" Square44x44Logo="images\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="images\Wide310x150Logo.png" ShortName="CarWash" Square310x310Logo="images\LargeTile.png" Square71x71Logo="images\SmallTile.png">
+          <uap:ShowNameOnTiles>
+            <uap:ShowOn Tile="square150x150Logo" />
+            <uap:ShowOn Tile="wide310x150Logo" />
+            <uap:ShowOn Tile="square310x310Logo" />
+          </uap:ShowNameOnTiles>
+        </uap:DefaultTile>
+        <uap:SplashScreen Image="images\splashscreen.png" BackgroundColor="#80d8ff" />
+        <uap:InitialRotationPreference>
+          <uap:Rotation Preference="portrait" />
+          <uap:Rotation Preference="landscape" />
+          <uap:Rotation Preference="portraitFlipped" />
+          <uap:Rotation Preference="landscapeFlipped" />
+        </uap:InitialRotationPreference>
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <Capability Name="internetClient" />
+  </Capabilities>
+</Package>

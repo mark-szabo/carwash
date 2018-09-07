@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="theme-color" content="#80d8ff">
+    <meta name="description" content="This app is intended to help employees working in Graphisoft park (Budapest, Hungary) reserve car washing services."
+    />
+    <meta name="apple-mobile-web-app-title" content="CarWash">
+    <meta name="application-name" content="CarWash">
+    <meta name="msapplication-TileColor" content="#80d8ff">
+    <meta name="msapplication-config" content="%PUBLIC_URL%/browserconfig.xml">
+    <!--<base href="%PUBLIC_URL%/" />-->
+
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json">
+    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/images/apple-touch-icon.png">
+    <link rel="mask-icon" href="%PUBLIC_URL%/images/safari-pinned-tab.svg" color="#49a7cc">
+
+    <title>CarWash</title>
+
+    <style>
+        body {
+            padding: 24px;
+            background-color: #fafafa;
+            font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .left {
+            width: 400px;
+            float: left;
+            margin-top: auto;
+            margin-bottom: auto;
+            margin-right: 60px;
+        }
+
+        .right {
+            float: right;
+            width: 300px;
+        }
+
+        .button {
+            margin: 8px;
+            color: rgba(0, 0, 0, 0.87);
+            padding: 8px 16px;
+            font-size: 0.875rem;
+            min-width: 64px;
+            transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, border 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+            min-height: 36px;
+            box-sizing: border-box;
+            line-height: 1.4em;
+            font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+            font-weight: 500;
+            border-radius: 4px;
+            text-transform: uppercase;
+            cursor: pointer;
+            border: 0;
+            display: inline-flex;
+            outline: none;
+            position: relative;
+            user-select: none;
+            align-items: center;
+            vertical-align: middle;
+            justify-content: center;
+            -moz-appearance: none;
+            text-decoration: none;
+            background-color: transparent;
+            -webkit-appearance: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .button:hover {
+            text-decoration: none;
+            background-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .buttonText {
+            width: 100%;
+            display: inherit;
+            align-items: inherit;
+            justify-content: inherit;
+        }
+
+        .afterButtonText {
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            z-index: 0;
+            position: absolute;
+            overflow: hidden;
+            border-radius: inherit;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="display:flex;justify-content:center;align-items:center;">
+        <div style="display:flex;justify-content:center;align-items:center;width:700px;">
+            <div class="left">
+                <p>
+                    This app works with modern browsers only. Internet Explorer was a great browser in the early 00's, with about 95% market
+                    share but that time has passed, and it is no longer a maintained browser, lucking a lot of modern features.
+                    Please swith to Edge, Chrome, Firefox or any other modern browser as this app is depending on features
+                    not supported by Internet Explorer!
+                </p>
+                <a href="/?surpassieblock=true" class="button">
+                    <span class="buttonText">Continue in IE (Not recommended)</span>
+                    <span class="afterButtonText"></span>
+                </a>
+            </div>
+            <div class="right">
+                <img src="images/rain-robot.svg" width="300px" />
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

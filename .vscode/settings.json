@@ -1,0 +1,12 @@
+{
+  "files.exclude": {
+    "**/src/MSHU.CarWash.UWP": true,
+    "**/src/MSHU.CarWash.DomainModel": true,
+    "**/src/MSHU.CarWash.DAL": true,
+    "**/src/MSHU.CarWash.EmailJob": true,
+    "**/src/CarWash.Azure.Deployment": true,
+    "**/.vs": true,
+    "**/bin": true,
+    "**/obj": true
+  }
+}
