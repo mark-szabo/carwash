@@ -163,14 +163,19 @@ class ServiceDetailsTable extends React.Component {
                 ))}
                 <TableRow className={this.props.classes.row}>
                     <TableCell colSpan="3" className={this.props.classes.contactUs}>
-                        <a href="tel:+36200000000" className={this.props.classes.link}>
-                            Call us (+36 20 000 0000)
+                        Call us (
+                        <a href="tel:+36704506612" className={this.props.classes.link}>
+                            +36 70 450 6612
                         </a>{' '}
                         or{' '}
-                        <a href="mailto:email@email.com" className={this.props.classes.link}>
-                            email us (email@email.com)
+                        <a href="tel:+36303594870" className={this.props.classes.link}>
+                            +36 30 359 4870
                         </a>
-                        !
+                        ) or email us (
+                        <a href="mailto:mimosonk@gmail.com" className={this.props.classes.link}>
+                            mimosonk@gmail.com
+                        </a>
+                        )!
                     </TableCell>
                 </TableRow>
             </TableBody>
