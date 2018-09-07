@@ -170,6 +170,11 @@ export default class App extends Component {
     };
 
     loadReservations = refresh => {
+        if (refresh && !navigator.onLine) {
+            this.openSnackbar('You are offline.');
+            return;
+        }
+
         apiFetch('api/reservations').then(
             data => {
                 this.setState({
@@ -186,6 +191,11 @@ export default class App extends Component {
     };
 
     loadCompanyReservations = refresh => {
+        if (refresh && !navigator.onLine) {
+            this.openSnackbar('You are offline.');
+            return;
+        }
+
         apiFetch('api/reservations/company').then(
             data => {
                 this.setState({ companyReservations: data, companyReservationsLoading: false });
@@ -199,6 +209,11 @@ export default class App extends Component {
     };
 
     loadBacklog = refresh => {
+        if (refresh && !navigator.onLine) {
+            this.openSnackbar('You are offline.');
+            return;
+        }
+
         apiFetch('api/reservations/backlog').then(
             data => {
                 const backlog = data;
