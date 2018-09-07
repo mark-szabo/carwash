@@ -37,8 +37,8 @@ namespace MSHU.CarWash.PWA
         {
             new Company(Company.Carwash, "bca200e7-1765-4001-977f-5363e5f7a63a"),
             new Company(Company.Microsoft, "72f988bf-86f1-41af-91ab-2d7cd011db47"),
-            new Company(Company.Sap, ""),
-            new Company(Company.Graphisoft, "")
+            new Company(Company.Sap, "42f7676c-f455-423c-82f6-dc2d99791af7"),
+            new Company(Company.Graphisoft, "917332b6-5fee-4b92-9d05-812c7f08b9b9")
         };
 
         public Startup(IConfiguration configuration, IHostingEnvironment environment)

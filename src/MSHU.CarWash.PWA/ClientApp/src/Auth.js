@@ -13,8 +13,8 @@ const adalConfig = {
 const authorizedTenantIds = [
     'bca200e7-1765-4001-977f-5363e5f7a63a', // carwash
     '72f988bf-86f1-41af-91ab-2d7cd011db47', // microsoft
-    '', // sap
-    '', // graphisoft
+    '42f7676c-f455-423c-82f6-dc2d99791af7', // sap
+    '917332b6-5fee-4b92-9d05-812c7f08b9b9', // graphisoft
 ];
 
 // https://github.com/salvoravida/react-adal
