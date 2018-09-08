@@ -40,7 +40,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <summary>
         /// Number of minutes to allow reserving in past or in a slot after that slot has already started
         /// </summary>
-        private const int MinutesToAllowReserveInPast = 60;
+        private const int MinutesToAllowReserveInPast = 120;
 
         /// <summary>
         /// Daily limits per company
