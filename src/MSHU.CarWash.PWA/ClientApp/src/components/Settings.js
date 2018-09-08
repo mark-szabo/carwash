@@ -15,6 +15,7 @@ import Switch from '@material-ui/core/Switch';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DeleteForeverIcon from '@material-ui/icons/DeleteForever';
 import red from '@material-ui/core/colors/red';
@@ -71,6 +72,12 @@ const styles = theme => ({
     },
     group: {
         margin: `${theme.spacing.unit}px 0`,
+    },
+    progress: {
+        margin: theme.spacing.unit * 2,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });
 
@@ -168,7 +175,7 @@ class Settings extends TrackedComponent {
     };
 
     render() {
-        const { classes } = this.props;
+        const { classes, user } = this.props;
 
         if (this.state.userDeleted) {
             return (
@@ -180,6 +187,14 @@ class Settings extends TrackedComponent {
                         </Typography>
                         <Typography className={classes.errorText}>Please close the app now!</Typography>
                     </div>
+                </div>
+            );
+        }
+
+        if (Object.keys(user).length === 0) {
+            return (
+                <div className={classes.progress}>
+                    <CircularProgress size={50} />
                 </div>
             );
         }
@@ -196,7 +211,7 @@ class Settings extends TrackedComponent {
                             aria-label="Channel"
                             name="channel"
                             className={classes.group}
-                            value={`${this.props.user.notificationChannel}`}
+                            value={`${user.notificationChannel}`}
                             onChange={this.handleNotificationChannelChange}
                         >
                             <FormControlLabel value="1" control={<Radio />} label="Disable" />
@@ -213,13 +228,13 @@ class Settings extends TrackedComponent {
                     <FormControlLabel
                         control={
                             <Switch
-                                checked={this.props.user.calendarIntegration}
+                                checked={user.calendarIntegration}
                                 onChange={this.handleCalendarIntegrationChange}
                                 value="calendarIntegration"
                                 color="primary"
                             />
                         }
-                        label={this.props.user.calendarIntegration ? 'On' : 'Off'}
+                        label={user.calendarIntegration ? 'On' : 'Off'}
                     />
                 </Paper>
                 <Paper className={classes.paper} elevation={1}>
