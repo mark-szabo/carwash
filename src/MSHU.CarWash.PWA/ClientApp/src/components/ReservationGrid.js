@@ -2,10 +2,10 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import Typography from '@material-ui/core/Typography';
 import ReservationCard from './ReservationCard';
 import RoadAnimation from './RoadAnimation';
+import Spinner from './Spinner';
 
 const styles = theme => ({
     card: {
@@ -24,12 +24,6 @@ const styles = theme => ({
         margin: '-24px',
         padding: '8px',
         overflow: 'auto',
-    },
-    progress: {
-        margin: theme.spacing.unit * 2,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
     },
     center: {
         textAlign: 'center',
@@ -59,11 +53,7 @@ class ReservationGrid extends Component {
         const { classes, reservations, reservationsLoading, removeReservation, openSnackbar, updateReservation, lastSettings, admin } = this.props;
 
         if (reservationsLoading) {
-            return (
-                <div className={classes.progress}>
-                    <CircularProgress size={50} />
-                </div>
-            );
+            return <Spinner />;
         }
 
         if (reservations.length <= 0) {

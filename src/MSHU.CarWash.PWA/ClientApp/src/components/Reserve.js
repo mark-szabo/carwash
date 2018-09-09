@@ -17,7 +17,6 @@ import FormGroup from '@material-ui/core/FormGroup';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormControl from '@material-ui/core/FormControl';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import TextField from '@material-ui/core/TextField';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -30,6 +29,7 @@ import { Garages, Service, NotificationChannel } from '../Constants';
 import 'react-infinite-calendar/styles.css';
 import './Reserve.css';
 import ServiceDetailsTable from './ServiceDetailsTable';
+import Spinner from './Spinner';
 
 const styles = theme => ({
     stepper: {
@@ -98,9 +98,6 @@ const styles = theme => ({
         [theme.breakpoints.up('md')]: {
             width: 200,
         },
-    },
-    progress: {
-        margin: theme.spacing.unit * 2,
     },
     center: {
         display: 'grid',
@@ -561,7 +558,7 @@ class Reserve extends TrackedComponent {
                     <StepLabel>{servicesStepLabel}</StepLabel>
                     <StepContent>
                         {loadingReservation ? (
-                            <CircularProgress className={classes.progress} size={50} />
+                            <Spinner />
                         ) : (
                             <Grid container spacing={24}>
                                 <Grid item xs={12} md={6}>
@@ -608,7 +605,7 @@ class Reserve extends TrackedComponent {
                     <StepLabel>{dateStepLabel}</StepLabel>
                     <StepContent>
                         {loading ? (
-                            <CircularProgress className={classes.progress} size={50} />
+                            <Spinner />
                         ) : (
                             <InfiniteCalendar
                                 onSelect={date => this.handleDateSelectionComplete(date)}
@@ -682,7 +679,7 @@ class Reserve extends TrackedComponent {
                     <StepLabel>Reserve</StepLabel>
                     <StepContent>
                         {loading ? (
-                            <CircularProgress className={classes.progress} size={50} />
+                            <Spinner />
                         ) : (
                             <div>
                                 <div>
