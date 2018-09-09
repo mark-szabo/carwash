@@ -62,26 +62,43 @@ export default class App extends Component {
     };
 
     componentDidMount() {
-        apiFetch('api/reservations')
-            .then(
-                data => {
-                    this.setState({
-                        reservations: data,
-                        reservationsLoading: false,
-                    });
-                },
-                error => {
-                    this.setState({ reservationsLoading: false });
-                    this.openSnackbar(error);
-                }
-            )
-            .then(() => {
-                this.loadMe();
+        apiFetch('api/reservations').then(
+            data => {
+                this.setState({
+                    reservations: data,
+                    reservationsLoading: false,
+                });
+            },
+            error => {
+                this.setState({ reservationsLoading: false });
+                this.openSnackbar(error);
+            }
+        );
 
-                if (Notification.permission === 'granted') {
-                    registerPush();
+        apiFetch('api/users/me').then(
+            data => {
+                this.setState({ user: data });
+
+                if (data.notificationChannel === NotificationChannel.Push) {
+                    this.openNotificationDialog();
                 }
-            });
+
+                if (data.isAdmin) {
+                    this.loadCompanyReservations();
+                }
+
+                if (data.isCarwashAdmin) {
+                    this.loadBacklog();
+                }
+            },
+            error => {
+                this.openSnackbar(error);
+            }
+        );
+
+        if (Notification.permission === 'granted') {
+            registerPush();
+        }
 
         /* Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key */
         AppInsights.downloadAndSetup({ instrumentationKey: 'd1ce1965-2171-4a11-9438-66114b31f88f' });
@@ -144,29 +161,6 @@ export default class App extends Component {
 
             return { companyReservations };
         });
-    };
-
-    loadMe = () => {
-        apiFetch('api/users/me').then(
-            data => {
-                this.setState({ user: data });
-
-                if (data.notificationChannel === NotificationChannel.Push) {
-                    this.openNotificationDialog();
-                }
-
-                if (data.isAdmin) {
-                    this.loadCompanyReservations();
-                }
-
-                if (data.isCarwashAdmin) {
-                    this.loadBacklog();
-                }
-            },
-            error => {
-                this.openSnackbar(error);
-            }
-        );
     };
 
     loadReservations = refresh => {
