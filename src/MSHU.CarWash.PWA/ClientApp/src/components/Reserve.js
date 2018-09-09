@@ -232,14 +232,12 @@ class Reserve extends TrackedComponent {
                 data => {
                     if (Object.keys(data).length !== 0) {
                         let garage;
-                        let floor;
                         if (data.location) {
-                            [garage, floor] = data.location.split('/');
+                            [garage] = data.location.split('/');
                         }
                         this.setState({
                             vehiclePlateNumber: data.vehiclePlateNumber,
                             garage,
-                            floor,
                         });
                     }
                 },
