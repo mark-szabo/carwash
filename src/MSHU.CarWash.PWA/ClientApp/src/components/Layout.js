@@ -71,6 +71,10 @@ class Layout extends React.Component {
         this.setState(state => ({ mobileOpen: !state.mobileOpen }));
     };
 
+    handleDrawerClose = () => {
+        this.setState({ mobileOpen: false });
+    };
+
     getNavbarName() {
         let name;
         this.props.children.map(child => {
@@ -102,14 +106,14 @@ class Layout extends React.Component {
         const drawer = (
             <div>
                 <div className={classes.toolbar}>
-                    <Link to="/">
+                    <Link to="/" onClick={this.handleDrawerClose}>
                         <img src={'/images/carwash.svg'} alt="CarWash" height="20px" className={classes.appTitle} />
                     </Link>
                 </div>
                 <Divider />
-                <List>{drawerItems(user)}</List>
+                <List>{drawerItems(this.handleDrawerClose, user)}</List>
                 <Divider />
-                <List>{otherDrawerItems}</List>
+                <List>{otherDrawerItems(this.handleDrawerClose)}</List>
             </div>
         );
 
