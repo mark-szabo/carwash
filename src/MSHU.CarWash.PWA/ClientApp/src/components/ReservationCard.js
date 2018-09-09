@@ -97,6 +97,15 @@ class ReservationCard extends Component {
         },
     };
 
+    componentDidMount() {
+        const [garage, floor, seat] = this.props.reservation.location.split('/');
+        this.setState({
+            garage,
+            floor,
+            seat,
+        });
+    }
+
     getButtons = (reservation, classes) => {
         switch (reservation.state) {
             case 0:
