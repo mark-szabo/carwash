@@ -144,7 +144,7 @@ namespace MSHU.CarWash.PWA.Controllers
             dbReservation.Services = reservation.Services;
             dbReservation.Private = reservation.Private;
             dbReservation.StartDate = reservation.StartDate.ToLocalTime();
-            if (reservation.EndDate != null) dbReservation.EndDate = ((DateTime) reservation.EndDate).ToLocalTime();
+            if (reservation.EndDate != null) dbReservation.EndDate = ((DateTime)reservation.EndDate).ToLocalTime();
             else dbReservation.EndDate = null;
             dbReservation.Comment = reservation.Comment;
 
@@ -931,6 +931,8 @@ namespace MSHU.CarWash.PWA.Controllers
         [HttpGet, Route("notavailabledates")]
         public async Task<object> GetNotAvailableDatesAndTimes(int daysAhead = 365)
         {
+            if (_user.IsCarwashAdmin) return new NotAvailableDatesAndTimesViewModel { Dates = new List<DateTime>(), Times = new List<DateTime>() };
+
             #region Get not available dates
             var userCompanyLimit = CompanyLimit.Find(c => c.Name == _user.Company).DailyLimit;
 
