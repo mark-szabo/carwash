@@ -179,6 +179,10 @@ namespace MSHU.CarWash.PWA.Controllers
             if (!IsStartAndEndTimeOnSameDay(dbReservation.StartDate, dbReservation.EndDate))
                 return BadRequest("Reservation time range should be located entirely on the same day.");
 
+            // Checks whether end time is later than start time
+            if (!IsEndTimeLaterThanStartTime(dbReservation.StartDate, dbReservation.EndDate))
+                return BadRequest("Reservation end time should be later than the start time.");
+
             // Checks whether start or end time is before the earliest allowed time
             if (IsInPast(dbReservation.StartDate, dbReservation.EndDate))
                 return BadRequest("Cannot reserve in the past.");
@@ -284,6 +288,10 @@ namespace MSHU.CarWash.PWA.Controllers
             // Checks whether start and end times are on the same day
             if (!IsStartAndEndTimeOnSameDay(reservation.StartDate, reservation.EndDate))
                 return BadRequest("Reservation time range should be located entirely on the same day.");
+
+            // Checks whether end time is later than start time
+            if (!IsEndTimeLaterThanStartTime(reservation.StartDate, reservation.EndDate))
+                return BadRequest("Reservation end time should be later than the start time.");
 
             // Checks whether start or end time is before the earliest allowed time
             if (IsInPast(reservation.StartDate, reservation.EndDate))
