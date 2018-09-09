@@ -203,6 +203,10 @@ class Reserve extends TrackedComponent {
                         [garage, floor, seat] = data.location.split('/');
                     }
 
+                    garage = garage || '';
+                    floor = floor || '';
+                    seat = seat || '';
+
                     const date = new Date(data.startDate);
                     this.setState({
                         services,
@@ -228,24 +232,10 @@ class Reserve extends TrackedComponent {
                 }
             );
         } else {
-            apiFetch('api/reservations/lastsettings').then(
-                data => {
-                    if (Object.keys(data).length !== 0) {
-                        let garage;
-                        if (data.location) {
-                            [garage] = data.location.split('/');
-                        }
-                        this.setState({
-                            vehiclePlateNumber: data.vehiclePlateNumber,
-                            garage,
-                        });
-                    }
-                },
-                error => {
-                    this.setState({ loading: false });
-                    this.props.openSnackbar(error);
-                }
-            );
+            this.setState({
+                vehiclePlateNumber: this.props.lastSettings.vehiclePlateNumber || '',
+                garage: this.props.lastSettings.garage || '',
+            });
         }
 
         if (this.props.user.isCarwashAdmin) {
@@ -847,6 +837,7 @@ Reserve.propTypes = {
     reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
     addReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func,
+    lastSettings: PropTypes.object, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
     openNotificationDialog: PropTypes.func.isRequired,
 };

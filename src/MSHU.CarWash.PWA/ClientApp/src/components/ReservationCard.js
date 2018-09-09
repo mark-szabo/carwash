@@ -98,7 +98,17 @@ class ReservationCard extends Component {
     };
 
     componentDidMount() {
-        const [garage, floor, seat] = this.props.reservation.location.split('/');
+        let garage;
+        let floor;
+        let seat;
+
+        garage = this.props.lastSettings.garage;
+        if (this.props.reservation.location) [garage, floor, seat] = this.props.reservation.location.split('/');
+
+        garage = garage || '';
+        floor = floor || '';
+        seat = seat || '';
+
         this.setState({
             garage,
             floor,
@@ -309,7 +319,7 @@ class ReservationCard extends Component {
                                 <MenuItem value="S1">S1</MenuItem>
                             </Select>
                         </FormControl>
-                        {garage !== '' && (
+                        {garage && (
                             <FormControl className={classes.formControl} error={validationErrors.floor}>
                                 <InputLabel htmlFor="floor">Floor</InputLabel>
                                 <Select
@@ -329,7 +339,7 @@ class ReservationCard extends Component {
                                 </Select>
                             </FormControl>
                         )}
-                        {floor !== '' && (
+                        {floor && (
                             <TextField
                                 id="seat"
                                 label="Seat (optional)"
@@ -357,9 +367,10 @@ class ReservationCard extends Component {
 ReservationCard.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
-    removeReservation: PropTypes.func.isRequired,
-    openSnackbar: PropTypes.func.isRequired,
     updateReservation: PropTypes.func.isRequired,
+    removeReservation: PropTypes.func.isRequired,
+    lastSettings: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+    openSnackbar: PropTypes.func.isRequired,
     admin: PropTypes.bool,
 };
 

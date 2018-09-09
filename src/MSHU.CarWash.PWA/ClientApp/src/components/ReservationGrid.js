@@ -56,7 +56,7 @@ class ReservationGrid extends Component {
     }
 
     render() {
-        const { classes, reservations, reservationsLoading, removeReservation, openSnackbar, updateReservation, admin } = this.props;
+        const { classes, reservations, reservationsLoading, removeReservation, openSnackbar, updateReservation, lastSettings, admin } = this.props;
 
         if (reservationsLoading) {
             return (
@@ -86,8 +86,9 @@ class ReservationGrid extends Component {
                             reservation={reservation}
                             reservations={reservations}
                             removeReservation={removeReservation}
-                            openSnackbar={openSnackbar}
                             updateReservation={updateReservation}
+                            lastSettings={lastSettings}
+                            openSnackbar={openSnackbar}
                             admin={admin}
                         />
                     </Grid>
@@ -102,6 +103,7 @@ ReservationGrid.propTypes = {
     reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
     reservationsLoading: PropTypes.bool.isRequired,
     removeReservation: PropTypes.func.isRequired,
+    lastSettings: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
     updateReservation: PropTypes.func.isRequired,
     admin: PropTypes.bool,

@@ -56,6 +56,7 @@ export default class App extends Component {
         backlog: [],
         backlogLoading: true,
         backlogUpdateFound: false,
+        lastSettings: {},
         snackbarOpen: false,
         snackbarMessage: '',
         notificationDialogOpen: false,
@@ -99,6 +100,26 @@ export default class App extends Component {
         if (Notification.permission === 'granted') {
             registerPush();
         }
+
+        apiFetch('api/reservations/lastsettings').then(
+            data => {
+                if (Object.keys(data).length !== 0) {
+                    let garage;
+                    if (data.location) {
+                        [garage] = data.location.split('/');
+                    }
+                    this.setState({
+                        lastSettings: {
+                            vehiclePlateNumber: data.vehiclePlateNumber,
+                            garage,
+                        },
+                    });
+                }
+            },
+            error => {
+                this.props.openSnackbar(error);
+            }
+        );
 
         /* Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key */
         AppInsights.downloadAndSetup({ instrumentationKey: 'd1ce1965-2171-4a11-9438-66114b31f88f' });
@@ -284,6 +305,7 @@ export default class App extends Component {
             backlog,
             backlogLoading,
             backlogUpdateFound,
+            lastSettings,
         } = this.state;
 
         return (
@@ -300,6 +322,7 @@ export default class App extends Component {
                                 reservationsLoading={reservationsLoading}
                                 removeReservation={this.removeReservation}
                                 updateReservation={this.updateReservation}
+                                lastSettings={lastSettings}
                                 openSnackbar={this.openSnackbar}
                                 {...props}
                             />
@@ -314,6 +337,7 @@ export default class App extends Component {
                                 user={user}
                                 reservations={reservations}
                                 addReservation={this.addReservation}
+                                lastSettings={lastSettings}
                                 openSnackbar={this.openSnackbar}
                                 openNotificationDialog={this.openNotificationDialog}
                                 {...props}
@@ -351,6 +375,7 @@ export default class App extends Component {
                                 reservationsLoading={companyReservationsLoading}
                                 removeReservation={this.removeReservationFromCompanyReservations}
                                 updateReservation={this.updateCompanyReservation}
+                                lastSettings={lastSettings}
                                 openSnackbar={this.openSnackbar}
                                 {...props}
                             />
