@@ -14,6 +14,7 @@ import Settings from './components/Settings';
 import CarwashAdmin from './components/CarwashAdmin';
 import NotificationDialog from './components/NotificationDialog';
 import { NotificationChannel } from './Constants';
+import Spinner from './components/Spinner';
 
 // A theme with custom primary and secondary color.
 const theme = createMuiTheme({
@@ -332,32 +333,40 @@ export default class App extends Component {
                         exact
                         path="/reserve"
                         navbarName="Reserve"
-                        render={props => (
-                            <Reserve
-                                user={user}
-                                reservations={reservations}
-                                addReservation={this.addReservation}
-                                lastSettings={lastSettings}
-                                openSnackbar={this.openSnackbar}
-                                openNotificationDialog={this.openNotificationDialog}
-                                {...props}
-                            />
-                        )}
+                        render={props =>
+                            Object.keys(user).length !== 0 ? (
+                                <Reserve
+                                    user={user}
+                                    reservations={reservations}
+                                    addReservation={this.addReservation}
+                                    lastSettings={lastSettings}
+                                    openSnackbar={this.openSnackbar}
+                                    openNotificationDialog={this.openNotificationDialog}
+                                    {...props}
+                                />
+                            ) : (
+                                <Spinner />
+                            )
+                        }
                     />
                     <Route
                         path="/reserve/:id"
                         navbarName="Reserve"
-                        render={props => (
-                            <Reserve
-                                user={user}
-                                reservations={reservations}
-                                addReservation={this.addReservation}
-                                removeReservation={this.removeReservation}
-                                openSnackbar={this.openSnackbar}
-                                openNotificationDialog={this.openNotificationDialog}
-                                {...props}
-                            />
-                        )}
+                        render={props =>
+                            Object.keys(user).length !== 0 ? (
+                                <Reserve
+                                    user={user}
+                                    reservations={reservations}
+                                    addReservation={this.addReservation}
+                                    removeReservation={this.removeReservation}
+                                    openSnackbar={this.openSnackbar}
+                                    openNotificationDialog={this.openNotificationDialog}
+                                    {...props}
+                                />
+                            ) : (
+                                <Spinner />
+                            )
+                        }
                     />
                     <Route
                         path="/settings"
