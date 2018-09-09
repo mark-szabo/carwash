@@ -43,6 +43,11 @@ namespace MSHU.CarWash.PWA.Controllers
         private const int MinutesToAllowReserveInPast = 120;
 
         /// <summary>
+        /// Time of day in hours after reservations for the same day must not be validated against company limit
+        /// </summary>
+        private const int HoursAfterCompanyLimitIsNotChecked = 11;
+
+        /// <summary>
         /// Daily limits per company
         /// </summary>
         private static readonly List<Company> CompanyLimit = new List<Company>
@@ -1079,6 +1084,15 @@ namespace MSHU.CarWash.PWA.Controllers
             foreach (var slot in Slots)
             {
                 if (DateTime.Now.Hour < slot.StartTime) capacity += slot.Capacity;
+
+                if (DateTime.Now.Hour >= slot.StartTime && DateTime.Now.Hour <= slot.EndTime)
+                {
+                    var endTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, slot.EndTime, 0, 0);
+                    var timeDifference = endTime - DateTime.Now;
+                    var slotTimeSpan = (slot.EndTime - slot.StartTime) * 60;
+                    var slotCapacity = timeDifference.Minutes / slotTimeSpan * slot.Capacity;
+                    capacity += slotCapacity;
+                }
             }
 
             return capacity;
@@ -1174,17 +1188,34 @@ namespace MSHU.CarWash.PWA.Controllers
         private bool IsEnoughTimeOnDate(DateTime date, int timeRequirement)
         {
             if (_user.IsCarwashAdmin) return true;
+            
+            // Do not validate against company limit after {HoursAfterCompanyLimitIsNotChecked} for today
+            if (date.Date == DateTime.Today && DateTime.Now.Hour > HoursAfterCompanyLimitIsNotChecked)
+            {
+                var allCompanyLimit = CompanyLimit.Sum(c => c.DailyLimit);
 
-            var userCompanyLimit = CompanyLimit.Find(c => c.Name == _user.Company).DailyLimit;
+                // Cannot use SumAsync because of this EF issue:
+                // https://github.com/aspnet/EntityFrameworkCore/issues/12314
+                // Current milestone to be fixed is EF 2.1.3
+                var reservedTimeOnDate = _context.Reservation
+                    .Where(r => r.StartDate.Date == date.Date)
+                    .Sum(r => r.TimeRequirement);
 
-            // Cannot use SumAsync because of this EF issue:
-            // https://github.com/aspnet/EntityFrameworkCore/issues/12314
-            // Current milestone to be fixed is EF 2.1.3
-            var reservedTimeOnDate = _context.Reservation
-                .Where(r => r.StartDate.Date == date.Date && r.User.Company == _user.Company)
-                .Sum(r => r.TimeRequirement);
+                if (reservedTimeOnDate + timeRequirement > allCompanyLimit * TimeUnit) return false;
+            }
+            else
+            {
+                var userCompanyLimit = CompanyLimit.Find(c => c.Name == _user.Company).DailyLimit;
 
-            if (reservedTimeOnDate + timeRequirement > userCompanyLimit * TimeUnit) return false;
+                // Cannot use SumAsync because of this EF issue:
+                // https://github.com/aspnet/EntityFrameworkCore/issues/12314
+                // Current milestone to be fixed is EF 2.1.3
+                var reservedTimeOnDate = _context.Reservation
+                    .Where(r => r.StartDate.Date == date.Date && r.User.Company == _user.Company)
+                    .Sum(r => r.TimeRequirement);
+
+                if (reservedTimeOnDate + timeRequirement > userCompanyLimit * TimeUnit) return false;
+            }
 
             if (date.Date == DateTime.Today)
             {
