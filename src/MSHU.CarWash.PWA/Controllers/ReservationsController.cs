@@ -121,6 +121,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// </summary>
         /// <param name="id">Reservation id</param>
         /// <param name="reservation"><see cref="Reservation"/></param>
+        /// <param name="dropoffConfirmed">Indicates key drop-off and location confirmation (default false)</param>
         /// <returns>No content</returns>
         /// <response code="200">OK</response>
         /// <response code="400">BadRequest if no service choosen / StartDate and EndDate isn't on the same day / a Date is in the past / StartDate and EndDate are not valid slot start/end times / user/company limit has been met / there is no more time in that slot.</response>
@@ -128,7 +129,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="403">Forbidden if user is not admin but tries to update another user's reservation.</response>
         [ProducesResponseType(typeof(ReservationViewModel), 200)]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutReservation([FromRoute] string id, [FromBody] Reservation reservation)
+        public async Task<IActionResult> PutReservation([FromRoute] string id, [FromBody] Reservation reservation, [FromQuery] bool dropoffConfirmed = false)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -154,6 +155,12 @@ namespace MSHU.CarWash.PWA.Controllers
             catch (ArgumentOutOfRangeException)
             {
                 return BadRequest("Reservation can be made to slots only.");
+            }
+
+            if (dropoffConfirmed)
+            {
+                if (dbReservation.Location == null) return BadRequest("Location must be set if drop-off pre-confirmed.");
+                dbReservation.State = State.DropoffAndLocationConfirmed;
             }
 
             #region Input validation
@@ -227,14 +234,15 @@ namespace MSHU.CarWash.PWA.Controllers
         /// Add a new reservation
         /// </summary>
         /// <param name="reservation"><see cref="Reservation"/></param>
+        /// <param name="dropoffConfirmed">Indicates key drop-off and location confirmation (default false)</param>
         /// <returns>The newly created <see cref="Reservation"/></returns>
         /// <response code="201">Created</response>
-        /// <response code="400">BadRequest if no service choosen / StartDate and EndDate isn't on the same day / a Date is in the past / StartDate and EndDate are not valid slot start/end times / user/company limit has been met / there is no more time in that slot.</response>
+        /// <response code="400">BadRequest if no service chosen / StartDate and EndDate isn't on the same day / a Date is in the past / StartDate and EndDate are not valid slot start/end times / user/company limit has been met / there is no more time in that slot.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to reserve for another user.</response>
         [ProducesResponseType(typeof(ReservationViewModel), 201)]
         [HttpPost]
-        public async Task<IActionResult> PostReservation([FromBody] Reservation reservation)
+        public async Task<IActionResult> PostReservation([FromBody] Reservation reservation, [FromQuery] bool dropoffConfirmed = false)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -255,6 +263,12 @@ namespace MSHU.CarWash.PWA.Controllers
             catch (ArgumentOutOfRangeException)
             {
                 return BadRequest("Reservation can be made to slots only.");
+            }
+
+            if (dropoffConfirmed)
+            {
+                if (reservation.Location == null) return BadRequest("Location must be set if drop-off pre-confirmed.");
+                reservation.State = State.DropoffAndLocationConfirmed;
             }
             #endregion
 

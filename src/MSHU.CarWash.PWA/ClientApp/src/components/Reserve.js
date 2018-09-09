@@ -178,6 +178,7 @@ class Reserve extends TrackedComponent {
             dateStepLabel: 'Choose date',
             timeStepLabel: 'Choose time',
             locationKnown: false,
+            dropoffPreConfirmed: false,
         };
     }
 
@@ -417,6 +418,12 @@ class Reserve extends TrackedComponent {
         }));
     };
 
+    handleDropoffPreConfirmed = () => {
+        this.setState(state => ({
+            dropoffPreConfirmed: !state.dropoffPreConfirmed,
+        }));
+    };
+
     handleGarageChange = event => {
         this.setState({
             garage: event.target.value,
@@ -475,6 +482,8 @@ class Reserve extends TrackedComponent {
             apiMethod = 'PUT';
         }
 
+        if (this.state.dropoffPreConfirmed) apiUrl += '?dropoffconfirmed=true';
+
         apiFetch(apiUrl, {
             method: apiMethod,
             body: JSON.stringify(payload),
@@ -522,6 +531,7 @@ class Reserve extends TrackedComponent {
             floor,
             seat,
             locationKnown,
+            dropoffPreConfirmed,
         } = this.state;
         const today = new Date();
 
@@ -785,6 +795,21 @@ class Reserve extends TrackedComponent {
                                                 onChange={this.handleSeatChange}
                                             />
                                         )}
+                                        <div>
+                                            <FormGroup className={classes.checkbox} style={{ marginTop: 8 }}>
+                                                <FormControlLabel
+                                                    control={
+                                                        <Checkbox
+                                                            checked={dropoffPreConfirmed}
+                                                            onChange={this.handleDropoffPreConfirmed}
+                                                            value="dropoffPreConfirmed"
+                                                            color="primary"
+                                                        />
+                                                    }
+                                                    label="I have already left the key at the reception"
+                                                />
+                                            </FormGroup>
+                                        </div>
                                     </React.Fragment>
                                 )}
                                 <div>
