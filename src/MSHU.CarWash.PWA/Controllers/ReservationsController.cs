@@ -191,10 +191,6 @@ namespace MSHU.CarWash.PWA.Controllers
             if (!IsInSlot(dbReservation.StartDate, dbReservation.EndDate))
                 return BadRequest("Reservation can be made to slots only.");
 
-            // Checks whether user has met the active concurrent reservation limit
-            if (await IsUserConcurrentReservationLimitMetAsync())
-                return BadRequest($"Cannot have more than {UserConcurrentReservationLimit} concurrent active reservations.");
-
             // Check if there is enough time on that day
             if (!IsEnoughTimeOnDate(dbReservation.StartDate, dbReservation.TimeRequirement))
                 return BadRequest("Company limit has been met for this day or there is not enough time at all.");
