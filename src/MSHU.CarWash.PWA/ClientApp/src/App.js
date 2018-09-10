@@ -14,6 +14,7 @@ import Settings from './components/Settings';
 import CarwashAdmin from './components/CarwashAdmin';
 import NotificationDialog from './components/NotificationDialog';
 import { NotificationChannel } from './Constants';
+import Spinner from './components/Spinner';
 
 // A theme with custom primary and secondary color.
 const theme = createMuiTheme({
@@ -56,32 +57,70 @@ export default class App extends Component {
         backlog: [],
         backlogLoading: true,
         backlogUpdateFound: false,
+        lastSettings: {},
         snackbarOpen: false,
         snackbarMessage: '',
         notificationDialogOpen: false,
     };
 
     componentDidMount() {
-        apiFetch('api/reservations')
-            .then(
-                data => {
-                    this.setState({
-                        reservations: data,
-                        reservationsLoading: false,
-                    });
-                },
-                error => {
-                    this.setState({ reservationsLoading: false });
-                    this.openSnackbar(error);
-                }
-            )
-            .then(() => {
-                this.loadMe();
+        apiFetch('api/reservations').then(
+            data => {
+                this.setState({
+                    reservations: data,
+                    reservationsLoading: false,
+                });
+            },
+            error => {
+                this.setState({ reservationsLoading: false });
+                this.openSnackbar(error);
+            }
+        );
 
-                if (Notification.permission === 'granted') {
-                    registerPush();
+        apiFetch('api/users/me').then(
+            data => {
+                this.setState({ user: data });
+
+                if (data.notificationChannel === NotificationChannel.Push) {
+                    this.openNotificationDialog();
                 }
-            });
+
+                if (data.isAdmin) {
+                    this.loadCompanyReservations();
+                }
+
+                if (data.isCarwashAdmin) {
+                    this.loadBacklog();
+                }
+            },
+            error => {
+                this.openSnackbar(error);
+            }
+        );
+
+        if (Notification.permission === 'granted') {
+            registerPush();
+        }
+
+        apiFetch('api/reservations/lastsettings').then(
+            data => {
+                if (Object.keys(data).length !== 0) {
+                    let garage;
+                    if (data.location) {
+                        [garage] = data.location.split('/');
+                    }
+                    this.setState({
+                        lastSettings: {
+                            vehiclePlateNumber: data.vehiclePlateNumber,
+                            garage,
+                        },
+                    });
+                }
+            },
+            error => {
+                this.props.openSnackbar(error);
+            }
+        );
 
         /* Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key */
         AppInsights.downloadAndSetup({ instrumentationKey: 'd1ce1965-2171-4a11-9438-66114b31f88f' });
@@ -144,29 +183,6 @@ export default class App extends Component {
 
             return { companyReservations };
         });
-    };
-
-    loadMe = () => {
-        apiFetch('api/users/me').then(
-            data => {
-                this.setState({ user: data });
-
-                if (data.notificationChannel === NotificationChannel.Push) {
-                    this.openNotificationDialog();
-                }
-
-                if (data.isAdmin) {
-                    this.loadCompanyReservations();
-                }
-
-                if (data.isCarwashAdmin) {
-                    this.loadBacklog();
-                }
-            },
-            error => {
-                this.openSnackbar(error);
-            }
-        );
     };
 
     loadReservations = refresh => {
@@ -290,6 +306,7 @@ export default class App extends Component {
             backlog,
             backlogLoading,
             backlogUpdateFound,
+            lastSettings,
         } = this.state;
 
         return (
@@ -306,6 +323,7 @@ export default class App extends Component {
                                 reservationsLoading={reservationsLoading}
                                 removeReservation={this.removeReservation}
                                 updateReservation={this.updateReservation}
+                                lastSettings={lastSettings}
                                 openSnackbar={this.openSnackbar}
                                 {...props}
                             />
@@ -315,31 +333,40 @@ export default class App extends Component {
                         exact
                         path="/reserve"
                         navbarName="Reserve"
-                        render={props => (
-                            <Reserve
-                                user={user}
-                                reservations={reservations}
-                                addReservation={this.addReservation}
-                                openSnackbar={this.openSnackbar}
-                                openNotificationDialog={this.openNotificationDialog}
-                                {...props}
-                            />
-                        )}
+                        render={props =>
+                            Object.keys(user).length !== 0 ? (
+                                <Reserve
+                                    user={user}
+                                    reservations={reservations}
+                                    addReservation={this.addReservation}
+                                    lastSettings={lastSettings}
+                                    openSnackbar={this.openSnackbar}
+                                    openNotificationDialog={this.openNotificationDialog}
+                                    {...props}
+                                />
+                            ) : (
+                                <Spinner />
+                            )
+                        }
                     />
                     <Route
                         path="/reserve/:id"
                         navbarName="Reserve"
-                        render={props => (
-                            <Reserve
-                                user={user}
-                                reservations={reservations}
-                                addReservation={this.addReservation}
-                                removeReservation={this.removeReservation}
-                                openSnackbar={this.openSnackbar}
-                                openNotificationDialog={this.openNotificationDialog}
-                                {...props}
-                            />
-                        )}
+                        render={props =>
+                            Object.keys(user).length !== 0 ? (
+                                <Reserve
+                                    user={user}
+                                    reservations={reservations}
+                                    addReservation={this.addReservation}
+                                    removeReservation={this.removeReservation}
+                                    openSnackbar={this.openSnackbar}
+                                    openNotificationDialog={this.openNotificationDialog}
+                                    {...props}
+                                />
+                            ) : (
+                                <Spinner />
+                            )
+                        }
                     />
                     <Route
                         path="/settings"
@@ -357,6 +384,7 @@ export default class App extends Component {
                                 reservationsLoading={companyReservationsLoading}
                                 removeReservation={this.removeReservationFromCompanyReservations}
                                 updateReservation={this.updateCompanyReservation}
+                                lastSettings={lastSettings}
                                 openSnackbar={this.openSnackbar}
                                 {...props}
                             />

@@ -22,6 +22,7 @@ import red from '@material-ui/core/colors/red';
 import * as download from 'downloadjs';
 import { NotificationChannel } from '../Constants';
 import registerPush, { askPermission } from '../PushService';
+import Spinner from './Spinner';
 
 const styles = theme => ({
     dangerButton: {
@@ -212,6 +213,10 @@ class Settings extends TrackedComponent {
             );
         }
 
+        if (Object.keys(user).length === 0) {
+            return <Spinner />;
+        }
+
         return (
             <React.Fragment>
                 <Paper className={classes.paper} elevation={1}>
@@ -224,7 +229,7 @@ class Settings extends TrackedComponent {
                             aria-label="Channel"
                             name="channel"
                             className={classes.group}
-                            value={`${this.props.user.notificationChannel}`}
+                            value={`${user.notificationChannel}`}
                             onChange={this.handleNotificationChannelChange}
                         >
                             <FormControlLabel value="1" control={<Radio />} label="Disable" />
@@ -241,13 +246,13 @@ class Settings extends TrackedComponent {
                     <FormControlLabel
                         control={
                             <Switch
-                                checked={this.props.user.calendarIntegration}
+                                checked={user.calendarIntegration}
                                 onChange={this.handleCalendarIntegrationChange}
                                 value="calendarIntegration"
                                 color="primary"
                             />
                         }
-                        label={this.props.user.calendarIntegration ? 'On' : 'Off'}
+                        label={user.calendarIntegration ? 'On' : 'Off'}
                     />
                 </Paper>
                 {(user.isAdmin || user.IsCarwashAdmin) && (

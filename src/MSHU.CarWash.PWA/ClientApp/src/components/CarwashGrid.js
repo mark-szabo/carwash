@@ -2,11 +2,11 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import Typography from '@material-ui/core/Typography';
 import CarwashCard from './CarwashCard';
 import CardSection from './CardSection';
 import { State } from '../Constants';
+import Spinner from './Spinner';
 
 const styles = theme => ({
     card: {
@@ -25,12 +25,6 @@ const styles = theme => ({
         margin: '-24px',
         padding: '8px',
         overflow: 'auto',
-    },
-    progress: {
-        margin: theme.spacing.unit * 2,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
     },
     readyText: {
         marginLeft: '58px',
@@ -52,11 +46,7 @@ class CarwashGrid extends Component {
         const { classes, backlog, backlogLoading, openSnackbar, updateBacklogItem } = this.props;
 
         if (backlogLoading) {
-            return (
-                <div className={classes.progress}>
-                    <CircularProgress size={50} />
-                </div>
-            );
+            return <Spinner />;
         }
 
         const yesterdayMidnight = new Date();
