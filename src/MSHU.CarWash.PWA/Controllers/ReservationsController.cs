@@ -144,7 +144,7 @@ namespace MSHU.CarWash.PWA.Controllers
 
             if (dbReservation == null) return NotFound();
 
-            dbReservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper();
+            dbReservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty);
             dbReservation.Location = reservation.Location;
             dbReservation.Services = reservation.Services;
             dbReservation.Private = reservation.Private;
@@ -255,7 +255,7 @@ namespace MSHU.CarWash.PWA.Controllers
             if (reservation.UserId == null) reservation.UserId = _user.Id;
             reservation.State = State.SubmittedNotActual;
             reservation.Mpv = false;
-            reservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper();
+            reservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty);
             reservation.CarwashComment = null;
             reservation.CreatedById = _user.Id;
             reservation.CreatedOn = DateTime.Now;
