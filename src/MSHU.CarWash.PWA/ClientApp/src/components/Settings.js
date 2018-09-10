@@ -12,6 +12,7 @@ import RadioGroup from '@material-ui/core/RadioGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormControl from '@material-ui/core/FormControl';
 import Switch from '@material-ui/core/Switch';
+import TextField from '@material-ui/core/TextField';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
@@ -72,6 +73,10 @@ const styles = theme => ({
     group: {
         margin: `${theme.spacing.unit}px 0`,
     },
+    formControl: {
+        marginTop: theme.spacing.unit * 2,
+        marginBottom: theme.spacing.unit * 2,
+    },
 });
 
 class Settings extends TrackedComponent {
@@ -80,6 +85,8 @@ class Settings extends TrackedComponent {
     state = {
         userDeleted: false,
         deleteDialogOpen: false,
+        exportStartDate: '',
+        exportEndDate: '',
     };
 
     handleDeleteDialogOpen = () => {
@@ -146,6 +153,27 @@ class Settings extends TrackedComponent {
         }
     };
 
+    handleExportStartDateChange = event => {
+        this.setState({
+            exportStartDate: event.target.value,
+        });
+    };
+
+    handleExportEndDateChange = event => {
+        this.setState({
+            exportEndDate: event.target.value,
+        });
+    };
+
+    handleExportClick = () => {
+        apiFetch(`api/reservations/export?startDate=${this.state.exportStartDate}&endDate=${this.state.exportEndDate}`, null, true).then(
+            () => {},
+            error => {
+                this.props.openSnackbar(error);
+            }
+        );
+    };
+
     updateSetting = (key, value) => {
         apiFetch(
             `api/users/settings/${key}`,
@@ -168,7 +196,7 @@ class Settings extends TrackedComponent {
     };
 
     render() {
-        const { classes } = this.props;
+        const { classes, user } = this.props;
 
         if (this.state.userDeleted) {
             return (
@@ -222,6 +250,43 @@ class Settings extends TrackedComponent {
                         label={this.props.user.calendarIntegration ? 'On' : 'Off'}
                     />
                 </Paper>
+                {(user.isAdmin || user.IsCarwashAdmin) && (
+                    <Paper className={classes.paper} elevation={1}>
+                        <Typography variant="headline" component="h3">
+                            Export reservations to Excel
+                        </Typography>
+                        <Typography component="p">
+                            You can export reservations from the database to an Excel file for accounting and auditing pourposes.
+                        </Typography>
+                        <div className={classes.formControl}>
+                            <TextField
+                                id="startDate"
+                                label="Start date"
+                                type="date"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                onChange={this.handleExportStartDateChange}
+                            />
+                        </div>
+                        <div className={classes.formControl}>
+                            <TextField
+                                id="endDate"
+                                label="End date"
+                                type="date"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                onChange={this.handleExportEndDateChange}
+                            />
+                        </div>
+                        <div className={classes.formControl}>
+                            <Button variant="contained" color="primary" className={classes.primaryButtonContained} onClick={this.handleExportClick}>
+                                Export
+                            </Button>
+                        </div>
+                    </Paper>
+                )}
                 <Paper className={classes.paper} elevation={1}>
                     <Typography variant="headline" component="h3">
                         Thanks to GDPR...

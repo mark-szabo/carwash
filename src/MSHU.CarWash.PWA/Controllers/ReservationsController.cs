@@ -1126,7 +1126,7 @@ namespace MSHU.CarWash.PWA.Controllers
 
                 var stream = new MemoryStream(package.GetAsByteArray());
 
-                return File(stream, "application/x-msdownload", $"carwash-export-{startDateNonNull.Year}-{startDateNonNull.Month}-{startDateNonNull.Day}.xlsx");
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"carwash-export-{startDateNonNull.Year}-{startDateNonNull.Month}-{startDateNonNull.Day}.xlsx");
             }
         }
 
