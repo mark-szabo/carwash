@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MSHU.CarWash.ClassLibrary.Enums;
@@ -6,8 +6,10 @@ using MSHU.CarWash.ClassLibrary.Models;
 using MSHU.CarWash.ClassLibrary.Services;
 using MSHU.CarWash.PWA.Extensions;
 using MSHU.CarWash.PWA.Services;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -40,7 +42,12 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <summary>
         /// Number of minutes to allow reserving in past or in a slot after that slot has already started
         /// </summary>
-        private const int MinutesToAllowReserveInPast = 60;
+        private const int MinutesToAllowReserveInPast = 120;
+
+        /// <summary>
+        /// Time of day in hours after reservations for the same day must not be validated against company limit
+        /// </summary>
+        private const int HoursAfterCompanyLimitIsNotChecked = 11;
 
         /// <summary>
         /// Daily limits per company
@@ -121,6 +128,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// </summary>
         /// <param name="id">Reservation id</param>
         /// <param name="reservation"><see cref="Reservation"/></param>
+        /// <param name="dropoffConfirmed">Indicates key drop-off and location confirmation (default false)</param>
         /// <returns>No content</returns>
         /// <response code="200">OK</response>
         /// <response code="400">BadRequest if no service choosen / StartDate and EndDate isn't on the same day / a Date is in the past / StartDate and EndDate are not valid slot start/end times / user/company limit has been met / there is no more time in that slot.</response>
@@ -128,7 +136,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="403">Forbidden if user is not admin but tries to update another user's reservation.</response>
         [ProducesResponseType(typeof(ReservationViewModel), 200)]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutReservation([FromRoute] string id, [FromBody] Reservation reservation)
+        public async Task<IActionResult> PutReservation([FromRoute] string id, [FromBody] Reservation reservation, [FromQuery] bool dropoffConfirmed = false)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -138,12 +146,12 @@ namespace MSHU.CarWash.PWA.Controllers
 
             if (dbReservation == null) return NotFound();
 
-            dbReservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper();
+            dbReservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty);
             dbReservation.Location = reservation.Location;
             dbReservation.Services = reservation.Services;
             dbReservation.Private = reservation.Private;
             dbReservation.StartDate = reservation.StartDate.ToLocalTime();
-            if (reservation.EndDate != null) dbReservation.EndDate = ((DateTime) reservation.EndDate).ToLocalTime();
+            if (reservation.EndDate != null) dbReservation.EndDate = ((DateTime)reservation.EndDate).ToLocalTime();
             else dbReservation.EndDate = null;
             dbReservation.Comment = reservation.Comment;
 
@@ -154,6 +162,12 @@ namespace MSHU.CarWash.PWA.Controllers
             catch (ArgumentOutOfRangeException)
             {
                 return BadRequest("Reservation can be made to slots only.");
+            }
+
+            if (dropoffConfirmed)
+            {
+                if (dbReservation.Location == null) return BadRequest("Location must be set if drop-off pre-confirmed.");
+                dbReservation.State = State.DropoffAndLocationConfirmed;
             }
 
             #region Input validation
@@ -172,6 +186,10 @@ namespace MSHU.CarWash.PWA.Controllers
             if (!IsStartAndEndTimeOnSameDay(dbReservation.StartDate, dbReservation.EndDate))
                 return BadRequest("Reservation time range should be located entirely on the same day.");
 
+            // Checks whether end time is later than start time
+            if (!IsEndTimeLaterThanStartTime(dbReservation.StartDate, dbReservation.EndDate))
+                return BadRequest("Reservation end time should be later than the start time.");
+
             // Checks whether start or end time is before the earliest allowed time
             if (IsInPast(dbReservation.StartDate, dbReservation.EndDate))
                 return BadRequest("Cannot reserve in the past.");
@@ -179,10 +197,6 @@ namespace MSHU.CarWash.PWA.Controllers
             // Checks whether start or end times fit into a slot
             if (!IsInSlot(dbReservation.StartDate, dbReservation.EndDate))
                 return BadRequest("Reservation can be made to slots only.");
-
-            // Checks whether user has met the active concurrent reservation limit
-            if (await IsUserConcurrentReservationLimitMetAsync())
-                return BadRequest($"Cannot have more than {UserConcurrentReservationLimit} concurrent active reservations.");
 
             // Check if there is enough time on that day
             if (!IsEnoughTimeOnDate(dbReservation.StartDate, dbReservation.TimeRequirement))
@@ -227,14 +241,15 @@ namespace MSHU.CarWash.PWA.Controllers
         /// Add a new reservation
         /// </summary>
         /// <param name="reservation"><see cref="Reservation"/></param>
+        /// <param name="dropoffConfirmed">Indicates key drop-off and location confirmation (default false)</param>
         /// <returns>The newly created <see cref="Reservation"/></returns>
         /// <response code="201">Created</response>
-        /// <response code="400">BadRequest if no service choosen / StartDate and EndDate isn't on the same day / a Date is in the past / StartDate and EndDate are not valid slot start/end times / user/company limit has been met / there is no more time in that slot.</response>
+        /// <response code="400">BadRequest if no service chosen / StartDate and EndDate isn't on the same day / a Date is in the past / StartDate and EndDate are not valid slot start/end times / user/company limit has been met / there is no more time in that slot.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to reserve for another user.</response>
         [ProducesResponseType(typeof(ReservationViewModel), 201)]
         [HttpPost]
-        public async Task<IActionResult> PostReservation([FromBody] Reservation reservation)
+        public async Task<IActionResult> PostReservation([FromBody] Reservation reservation, [FromQuery] bool dropoffConfirmed = false)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -242,7 +257,7 @@ namespace MSHU.CarWash.PWA.Controllers
             if (reservation.UserId == null) reservation.UserId = _user.Id;
             reservation.State = State.SubmittedNotActual;
             reservation.Mpv = false;
-            reservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper();
+            reservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty);
             reservation.CarwashComment = null;
             reservation.CreatedById = _user.Id;
             reservation.CreatedOn = DateTime.Now;
@@ -255,6 +270,12 @@ namespace MSHU.CarWash.PWA.Controllers
             catch (ArgumentOutOfRangeException)
             {
                 return BadRequest("Reservation can be made to slots only.");
+            }
+
+            if (dropoffConfirmed)
+            {
+                if (reservation.Location == null) return BadRequest("Location must be set if drop-off pre-confirmed.");
+                reservation.State = State.DropoffAndLocationConfirmed;
             }
             #endregion
 
@@ -270,6 +291,10 @@ namespace MSHU.CarWash.PWA.Controllers
             // Checks whether start and end times are on the same day
             if (!IsStartAndEndTimeOnSameDay(reservation.StartDate, reservation.EndDate))
                 return BadRequest("Reservation time range should be located entirely on the same day.");
+
+            // Checks whether end time is later than start time
+            if (!IsEndTimeLaterThanStartTime(reservation.StartDate, reservation.EndDate))
+                return BadRequest("Reservation end time should be later than the start time.");
 
             // Checks whether start or end time is before the earliest allowed time
             if (IsInPast(reservation.StartDate, reservation.EndDate))
@@ -917,6 +942,8 @@ namespace MSHU.CarWash.PWA.Controllers
         [HttpGet, Route("notavailabledates")]
         public async Task<object> GetNotAvailableDatesAndTimes(int daysAhead = 365)
         {
+            if (_user.IsCarwashAdmin) return new NotAvailableDatesAndTimesViewModel { Dates = new List<DateTime>(), Times = new List<DateTime>() };
+
             #region Get not available dates
             var userCompanyLimit = CompanyLimit.Find(c => c.Name == _user.Company).DailyLimit;
 
@@ -970,7 +997,7 @@ namespace MSHU.CarWash.PWA.Controllers
             foreach (var slot in Slots)
             {
                 var slotStartTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, slot.StartTime, 0, 0);
-                if (!notAvailableTimes.Contains(slotStartTime) && slotStartTime.AddMinutes(MinutesToAllowReserveInPast) > DateTime.Now)
+                if (!notAvailableTimes.Contains(slotStartTime) && slotStartTime.AddMinutes(MinutesToAllowReserveInPast) < DateTime.Now)
                 {
                     notAvailableTimes.Add(slotStartTime);
                 }
@@ -1041,6 +1068,93 @@ namespace MSHU.CarWash.PWA.Controllers
             return Ok(slotReservationPercentage);
         }
 
+        // GET: api/reservations/export
+        /// <summary>
+        /// Export a list of reservations to Excel for a given timespan
+        /// </summary>
+        /// <param name="startDate">start date (default: a month before today)</param>
+        /// <param name="endDate">end date (default: today)</param>
+        /// <returns>An Excel file of the list of reservations</returns>
+        [ProducesResponseType(typeof(FileStreamResult), 200)]
+        [HttpGet, Route("export")]
+        public async Task<IActionResult> Export(DateTime? startDate, DateTime? endDate)
+        {
+            var startDateNonNull = startDate ?? DateTime.Today.AddMonths(-1);
+            var endDateNonNull = endDate ?? DateTime.Today;
+
+            List<Reservation> reservations;
+
+            if (_user.IsCarwashAdmin)
+                reservations = await _context.Reservation
+                    .Include(r => r.User)
+                    .Where(r => r.StartDate.Date >= startDateNonNull.Date && r.StartDate.Date <= endDateNonNull.Date)
+                    .OrderBy(r => r.StartDate)
+                    .ToListAsync();
+            else if (_user.IsAdmin)
+                reservations = await _context.Reservation
+                    .Include(r => r.User)
+                    .Where(r => r.User.Company == _user.Company && r.StartDate.Date >= startDateNonNull.Date &&
+                                r.StartDate.Date <= endDateNonNull.Date)
+                    .OrderBy(r => r.StartDate)
+                    .ToListAsync();
+            else return Forbid();
+
+            using (var package = new ExcelPackage())
+            {
+                // Add a new worksheet to the empty workbook
+                var worksheet = package.Workbook.Worksheets.Add($"{startDateNonNull.Year}-{startDateNonNull.Month}");
+
+                // Add the headers
+                worksheet.Cells[1, 1].Value = "Date";
+                worksheet.Cells[1, 2].Value = "Start time";
+                worksheet.Cells[1, 3].Value = "End time";
+                worksheet.Cells[1, 4].Value = "Company";
+                worksheet.Cells[1, 5].Value = "Name";
+                worksheet.Cells[1, 6].Value = "Vehicle plate number";
+                worksheet.Cells[1, 7].Value = "MPV";
+                worksheet.Cells[1, 8].Value = "Private";
+                worksheet.Cells[1, 9].Value = "Services";
+                worksheet.Cells[1, 10].Value = "Comment";
+                worksheet.Cells[1, 11].Value = "Carwash comment";
+
+                // Add values
+                var i = 2;
+                foreach (var reservation in reservations)
+                {
+                    worksheet.Cells[i, 1].Style.Numberformat.Format = "yyyy-mm-dd";
+                    worksheet.Cells[i, 1].Value = reservation.StartDate.Date;
+
+                    worksheet.Cells[i, 2].Style.Numberformat.Format = "hh:mm";
+                    worksheet.Cells[i, 2].Value = reservation.StartDate.TimeOfDay;
+
+                    worksheet.Cells[i, 3].Style.Numberformat.Format = "hh:mm";
+                    worksheet.Cells[i, 3].Value = reservation.EndDate?.TimeOfDay;
+
+                    worksheet.Cells[i, 4].Value = reservation.User.Company;
+
+                    worksheet.Cells[i, 5].Value = reservation.User.FullName;
+
+                    worksheet.Cells[i, 6].Value = reservation.VehiclePlateNumber;
+
+                    worksheet.Cells[i, 7].Value = reservation.Mpv;
+
+                    worksheet.Cells[i, 8].Value = reservation.Private;
+
+                    worksheet.Cells[i, 9].Value = string.Join(", ", reservation.Services);
+
+                    worksheet.Cells[i, 10].Value = reservation.Comment;
+
+                    worksheet.Cells[i, 11].Value = reservation.CarwashComment;
+
+                    i++;
+                }
+
+                var stream = new MemoryStream(package.GetAsByteArray());
+
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"carwash-export-{startDateNonNull.Year}-{startDateNonNull.Month}-{startDateNonNull.Day}.xlsx");
+            }
+        }
+
         /// <summary>
         /// Sums the capacity of all not started slots, what are left from the day
         /// </summary>
@@ -1059,6 +1173,15 @@ namespace MSHU.CarWash.PWA.Controllers
             foreach (var slot in Slots)
             {
                 if (DateTime.Now.Hour < slot.StartTime) capacity += slot.Capacity;
+
+                if (DateTime.Now.Hour >= slot.StartTime && DateTime.Now.Hour < slot.EndTime)
+                {
+                    var endTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, slot.EndTime, 0, 0);
+                    var timeDifference = endTime - DateTime.Now;
+                    var slotTimeSpan = (slot.EndTime - slot.StartTime) * 60;
+                    var slotCapacity = timeDifference.TotalMinutes / slotTimeSpan * slot.Capacity;
+                    capacity += (int)Math.Floor(slotCapacity);
+                }
             }
 
             return capacity;
@@ -1113,6 +1236,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>true if start and end times are both after the earliest allowed time</returns>
         private bool IsInPast(DateTime startTime, DateTime? endTime)
         {
+            if (_user.IsCarwashAdmin) return false;
+
             if (endTime == null) throw new ArgumentNullException(nameof(endTime));
             var earliestTimeAllowed = DateTime.Now.AddMinutes(MinutesToAllowReserveInPast * -1);
 
@@ -1155,16 +1280,33 @@ namespace MSHU.CarWash.PWA.Controllers
         {
             if (_user.IsCarwashAdmin) return true;
 
-            var userCompanyLimit = CompanyLimit.Find(c => c.Name == _user.Company).DailyLimit;
+            // Do not validate against company limit after {HoursAfterCompanyLimitIsNotChecked} for today
+            if (date.Date == DateTime.Today && DateTime.Now.Hour >= HoursAfterCompanyLimitIsNotChecked)
+            {
+                var allCompanyLimit = CompanyLimit.Sum(c => c.DailyLimit);
 
-            // Cannot use SumAsync because of this EF issue:
-            // https://github.com/aspnet/EntityFrameworkCore/issues/12314
-            // Current milestone to be fixed is EF 2.1.3
-            var reservedTimeOnDate = _context.Reservation
-                .Where(r => r.StartDate.Date == date.Date && r.User.Company == _user.Company)
-                .Sum(r => r.TimeRequirement);
+                // Cannot use SumAsync because of this EF issue:
+                // https://github.com/aspnet/EntityFrameworkCore/issues/12314
+                // Current milestone to be fixed is EF 2.1.3
+                var reservedTimeOnDate = _context.Reservation
+                    .Where(r => r.StartDate.Date == date.Date)
+                    .Sum(r => r.TimeRequirement);
 
-            if (reservedTimeOnDate + timeRequirement > userCompanyLimit * TimeUnit) return false;
+                if (reservedTimeOnDate + timeRequirement > allCompanyLimit * TimeUnit) return false;
+            }
+            else
+            {
+                var userCompanyLimit = CompanyLimit.Find(c => c.Name == _user.Company).DailyLimit;
+
+                // Cannot use SumAsync because of this EF issue:
+                // https://github.com/aspnet/EntityFrameworkCore/issues/12314
+                // Current milestone to be fixed is EF 2.1.3
+                var reservedTimeOnDate = _context.Reservation
+                    .Where(r => r.StartDate.Date == date.Date && r.User.Company == _user.Company)
+                    .Sum(r => r.TimeRequirement);
+
+                if (reservedTimeOnDate + timeRequirement > userCompanyLimit * TimeUnit) return false;
+            }
 
             if (date.Date == DateTime.Today)
             {

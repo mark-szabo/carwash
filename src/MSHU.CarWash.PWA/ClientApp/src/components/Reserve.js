@@ -17,7 +17,6 @@ import FormGroup from '@material-ui/core/FormGroup';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormControl from '@material-ui/core/FormControl';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import TextField from '@material-ui/core/TextField';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -30,6 +29,7 @@ import { Garages, Service, NotificationChannel } from '../Constants';
 import 'react-infinite-calendar/styles.css';
 import './Reserve.css';
 import ServiceDetailsTable from './ServiceDetailsTable';
+import Spinner from './Spinner';
 
 const styles = theme => ({
     stepper: {
@@ -98,9 +98,6 @@ const styles = theme => ({
         [theme.breakpoints.up('md')]: {
             width: 200,
         },
-    },
-    progress: {
-        margin: theme.spacing.unit * 2,
     },
     center: {
         display: 'grid',
@@ -178,6 +175,7 @@ class Reserve extends TrackedComponent {
             dateStepLabel: 'Choose date',
             timeStepLabel: 'Choose time',
             locationKnown: false,
+            dropoffPreConfirmed: false,
         };
     }
 
@@ -201,6 +199,10 @@ class Reserve extends TrackedComponent {
                     if (data.location) {
                         [garage, floor, seat] = data.location.split('/');
                     }
+
+                    garage = garage || '';
+                    floor = floor || '';
+                    seat = seat || '';
 
                     const date = new Date(data.startDate);
                     this.setState({
@@ -227,26 +229,10 @@ class Reserve extends TrackedComponent {
                 }
             );
         } else {
-            apiFetch('api/reservations/lastsettings').then(
-                data => {
-                    if (Object.keys(data).length !== 0) {
-                        let garage;
-                        let floor;
-                        if (data.location) {
-                            [garage, floor] = data.location.split('/');
-                        }
-                        this.setState({
-                            vehiclePlateNumber: data.vehiclePlateNumber,
-                            garage,
-                            floor,
-                        });
-                    }
-                },
-                error => {
-                    this.setState({ loading: false });
-                    this.props.openSnackbar(error);
-                }
-            );
+            this.setState({
+                vehiclePlateNumber: this.props.lastSettings.vehiclePlateNumber || '',
+                garage: this.props.lastSettings.garage || '',
+            });
         }
 
         if (this.props.user.isCarwashAdmin) {
@@ -417,6 +403,12 @@ class Reserve extends TrackedComponent {
         }));
     };
 
+    handleDropoffPreConfirmed = () => {
+        this.setState(state => ({
+            dropoffPreConfirmed: !state.dropoffPreConfirmed,
+        }));
+    };
+
     handleGarageChange = event => {
         this.setState({
             garage: event.target.value,
@@ -475,6 +467,8 @@ class Reserve extends TrackedComponent {
             apiMethod = 'PUT';
         }
 
+        if (this.state.dropoffPreConfirmed) apiUrl += '?dropoffconfirmed=true';
+
         apiFetch(apiUrl, {
             method: apiMethod,
             body: JSON.stringify(payload),
@@ -522,6 +516,7 @@ class Reserve extends TrackedComponent {
             floor,
             seat,
             locationKnown,
+            dropoffPreConfirmed,
         } = this.state;
         const today = new Date();
 
@@ -563,7 +558,7 @@ class Reserve extends TrackedComponent {
                     <StepLabel>{servicesStepLabel}</StepLabel>
                     <StepContent>
                         {loadingReservation ? (
-                            <CircularProgress className={classes.progress} size={50} />
+                            <Spinner />
                         ) : (
                             <Grid container spacing={24}>
                                 <Grid item xs={12} md={6}>
@@ -610,7 +605,7 @@ class Reserve extends TrackedComponent {
                     <StepLabel>{dateStepLabel}</StepLabel>
                     <StepContent>
                         {loading ? (
-                            <CircularProgress className={classes.progress} size={50} />
+                            <Spinner />
                         ) : (
                             <InfiniteCalendar
                                 onSelect={date => this.handleDateSelectionComplete(date)}
@@ -684,7 +679,7 @@ class Reserve extends TrackedComponent {
                     <StepLabel>Reserve</StepLabel>
                     <StepContent>
                         {loading ? (
-                            <CircularProgress className={classes.progress} size={50} />
+                            <Spinner />
                         ) : (
                             <div>
                                 <div>
@@ -785,6 +780,21 @@ class Reserve extends TrackedComponent {
                                                 onChange={this.handleSeatChange}
                                             />
                                         )}
+                                        <div>
+                                            <FormGroup className={classes.checkbox} style={{ marginTop: 8 }}>
+                                                <FormControlLabel
+                                                    control={
+                                                        <Checkbox
+                                                            checked={dropoffPreConfirmed}
+                                                            onChange={this.handleDropoffPreConfirmed}
+                                                            value="dropoffPreConfirmed"
+                                                            color="primary"
+                                                        />
+                                                    }
+                                                    label="I have already left the key at the reception"
+                                                />
+                                            </FormGroup>
+                                        </div>
                                     </React.Fragment>
                                 )}
                                 <div>
@@ -824,6 +834,7 @@ Reserve.propTypes = {
     reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
     addReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func,
+    lastSettings: PropTypes.object, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
     openNotificationDialog: PropTypes.func.isRequired,
 };

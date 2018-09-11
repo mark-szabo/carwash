@@ -12,12 +12,15 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
-using MSHU.CarWash.ClassLibrary;
+using MSHU.CarWash.ClassLibrary.Models;
+using MSHU.CarWash.ClassLibrary.Services;
 using MSHU.CarWash.PWA.Controllers;
 using MSHU.CarWash.PWA.Extensions;
+using MSHU.CarWash.PWA.Services;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -25,9 +28,6 @@ using System.Net;
 using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using MSHU.CarWash.ClassLibrary.Models;
-using MSHU.CarWash.ClassLibrary.Services;
-using MSHU.CarWash.PWA.Services;
 
 namespace MSHU.CarWash.PWA
 {
@@ -111,8 +111,31 @@ namespace MSHU.CarWash.PWA
                                     Company = company,
                                     IsCarwashAdmin = company == Company.Carwash
                                 };
+
                                 await dbContext.Users.AddAsync(user);
-                                await dbContext.SaveChangesAsync();
+
+                                try
+                                {
+                                    await dbContext.SaveChangesAsync();
+                                }
+                                catch (DbUpdateException)
+                                {
+                                    user = dbContext.Users.SingleOrDefault(u => u.Email == email);
+
+                                    if (user != null)
+                                    {
+                                        Debug.WriteLine(
+                                            "User already exists. Most likely the user was just created and the exception was thrown by the concurrently firing requests at the first load.");
+
+                                        // Remove above added user from the EF Change Tracker.
+                                        // It would re-throw the exception as it would try to insert it again into the db at the next SaveChanges()
+                                        dbContext.ChangeTracker.Entries()
+                                            .Where(e => e.Entity != null && e.State == EntityState.Added)
+                                            .ToList()
+                                            .ForEach(e => e.State = EntityState.Detached);
+                                    }
+                                    else throw;
+                                }
                             }
 
                             var claims = new List<Claim>

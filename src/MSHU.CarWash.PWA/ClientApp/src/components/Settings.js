@@ -12,6 +12,7 @@ import RadioGroup from '@material-ui/core/RadioGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormControl from '@material-ui/core/FormControl';
 import Switch from '@material-ui/core/Switch';
+import TextField from '@material-ui/core/TextField';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
@@ -21,6 +22,7 @@ import red from '@material-ui/core/colors/red';
 import * as download from 'downloadjs';
 import { NotificationChannel } from '../Constants';
 import registerPush, { askPermission } from '../PushService';
+import Spinner from './Spinner';
 
 const styles = theme => ({
     dangerButton: {
@@ -72,6 +74,10 @@ const styles = theme => ({
     group: {
         margin: `${theme.spacing.unit}px 0`,
     },
+    formControl: {
+        marginTop: theme.spacing.unit * 2,
+        marginBottom: theme.spacing.unit * 2,
+    },
 });
 
 class Settings extends TrackedComponent {
@@ -80,6 +86,8 @@ class Settings extends TrackedComponent {
     state = {
         userDeleted: false,
         deleteDialogOpen: false,
+        exportStartDate: '',
+        exportEndDate: '',
     };
 
     handleDeleteDialogOpen = () => {
@@ -129,21 +137,46 @@ class Settings extends TrackedComponent {
         const notificationChannel = parseInt(event.target.value, 10);
 
         if (notificationChannel === NotificationChannel.Push) {
-            askPermission().then(permissionResult => {
-                if (permissionResult === 'granted') {
-                    this.props.updateUser('notificationChannel', notificationChannel);
-                    this.updateSetting('notificationChannel', notificationChannel);
-                    registerPush();
-                } else if (permissionResult === 'denied') {
-                    this.props.openSnackbar(
-                        'You have denied notification permission previouly. You need to go to your browser settings to enable notifications first.'
-                    );
-                }
-            });
+            if ('PushManager' in window) {
+                askPermission().then(permissionResult => {
+                    if (permissionResult === 'granted') {
+                        this.props.updateUser('notificationChannel', notificationChannel);
+                        this.updateSetting('notificationChannel', notificationChannel);
+                        registerPush();
+                    } else if (permissionResult === 'denied') {
+                        this.props.openSnackbar(
+                            'You have denied notification permission previouly. You need to go to your browser settings to enable notifications first.'
+                        );
+                    }
+                });
+            } else {
+                this.props.openSnackbar('Push notifications are not supported by your device! :(');
+            }
         } else {
             this.props.updateUser('notificationChannel', notificationChannel);
             this.updateSetting('notificationChannel', notificationChannel);
         }
+    };
+
+    handleExportStartDateChange = event => {
+        this.setState({
+            exportStartDate: event.target.value,
+        });
+    };
+
+    handleExportEndDateChange = event => {
+        this.setState({
+            exportEndDate: event.target.value,
+        });
+    };
+
+    handleExportClick = () => {
+        apiFetch(`api/reservations/export?startDate=${this.state.exportStartDate}&endDate=${this.state.exportEndDate}`, null, true).then(
+            () => {},
+            error => {
+                this.props.openSnackbar(error);
+            }
+        );
     };
 
     updateSetting = (key, value) => {
@@ -168,7 +201,7 @@ class Settings extends TrackedComponent {
     };
 
     render() {
-        const { classes } = this.props;
+        const { classes, user } = this.props;
 
         if (this.state.userDeleted) {
             return (
@@ -184,6 +217,10 @@ class Settings extends TrackedComponent {
             );
         }
 
+        if (Object.keys(user).length === 0) {
+            return <Spinner />;
+        }
+
         return (
             <React.Fragment>
                 <Paper className={classes.paper} elevation={1}>
@@ -196,7 +233,7 @@ class Settings extends TrackedComponent {
                             aria-label="Channel"
                             name="channel"
                             className={classes.group}
-                            value={`${this.props.user.notificationChannel}`}
+                            value={`${user.notificationChannel}`}
                             onChange={this.handleNotificationChannelChange}
                         >
                             <FormControlLabel value="1" control={<Radio />} label="Disable" />
@@ -213,15 +250,52 @@ class Settings extends TrackedComponent {
                     <FormControlLabel
                         control={
                             <Switch
-                                checked={this.props.user.calendarIntegration}
+                                checked={user.calendarIntegration}
                                 onChange={this.handleCalendarIntegrationChange}
                                 value="calendarIntegration"
                                 color="primary"
                             />
                         }
-                        label={this.props.user.calendarIntegration ? 'On' : 'Off'}
+                        label={user.calendarIntegration ? 'On' : 'Off'}
                     />
                 </Paper>
+                {(user.isAdmin || user.IsCarwashAdmin) && (
+                    <Paper className={classes.paper} elevation={1}>
+                        <Typography variant="headline" component="h3">
+                            Export reservations to Excel
+                        </Typography>
+                        <Typography component="p">
+                            You can export reservations from the database to an Excel file for accounting and auditing pourposes.
+                        </Typography>
+                        <div className={classes.formControl}>
+                            <TextField
+                                id="startDate"
+                                label="Start date"
+                                type="date"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                onChange={this.handleExportStartDateChange}
+                            />
+                        </div>
+                        <div className={classes.formControl}>
+                            <TextField
+                                id="endDate"
+                                label="End date"
+                                type="date"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                onChange={this.handleExportEndDateChange}
+                            />
+                        </div>
+                        <div className={classes.formControl}>
+                            <Button variant="contained" color="primary" className={classes.primaryButtonContained} onClick={this.handleExportClick}>
+                                Export
+                            </Button>
+                        </div>
+                    </Paper>
+                )}
                 <Paper className={classes.paper} elevation={1}>
                     <Typography variant="headline" component="h3">
                         Thanks to GDPR...

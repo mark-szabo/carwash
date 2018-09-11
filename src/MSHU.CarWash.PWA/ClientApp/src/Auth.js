@@ -1,4 +1,5 @@
 ﻿import AuthenticationContext from 'adal-angular';
+import * as download from 'downloadjs';
 
 const adalConfig = {
     clientId: '6e291d40-2613-4a74-9af5-790eb496a828',
@@ -85,6 +86,25 @@ export function signOut() {
 function parseJson(response) {
     // NoContent and Accepted would throw a JSON parsing error as they have no response body
     if (response.status === 204 || response.status === 202) {
+        return {
+            status: response.status,
+            ok: response.ok,
+            json: {},
+        };
+    }
+
+    if (response.headers.get('content-type').indexOf('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') !== -1) {
+        let filename = 'carwash-export.xlsx';
+        const disposition = response.headers.get('content-disposition');
+        if (disposition && disposition.indexOf('attachment') !== -1) {
+            const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+            const matches = filenameRegex.exec(disposition);
+            if (matches && matches[1]) {
+                filename = matches[1].replace(/['"]/g, '');
+            }
+        }
+        download(response.blob(), filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
         return {
             status: response.status,
             ok: response.ok,
