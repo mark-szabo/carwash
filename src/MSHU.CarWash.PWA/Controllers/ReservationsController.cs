@@ -995,7 +995,7 @@ namespace MSHU.CarWash.PWA.Controllers
             foreach (var slot in Slots)
             {
                 var slotStartTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, slot.StartTime, 0, 0);
-                if (!notAvailableTimes.Contains(slotStartTime) && slotStartTime.AddMinutes(MinutesToAllowReserveInPast) > DateTime.Now)
+                if (!notAvailableTimes.Contains(slotStartTime) && slotStartTime.AddMinutes(MinutesToAllowReserveInPast) < DateTime.Now)
                 {
                     notAvailableTimes.Add(slotStartTime);
                 }
@@ -1085,13 +1085,13 @@ namespace MSHU.CarWash.PWA.Controllers
             {
                 if (DateTime.Now.Hour < slot.StartTime) capacity += slot.Capacity;
 
-                if (DateTime.Now.Hour >= slot.StartTime && DateTime.Now.Hour <= slot.EndTime)
+                if (DateTime.Now.Hour >= slot.StartTime && DateTime.Now.Hour < slot.EndTime)
                 {
                     var endTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, slot.EndTime, 0, 0);
                     var timeDifference = endTime - DateTime.Now;
                     var slotTimeSpan = (slot.EndTime - slot.StartTime) * 60;
-                    var slotCapacity = timeDifference.Minutes / slotTimeSpan * slot.Capacity;
-                    capacity += slotCapacity;
+                    var slotCapacity = timeDifference.TotalMinutes / slotTimeSpan * slot.Capacity;
+                    capacity += (int)Math.Floor(slotCapacity);
                 }
             }
 
@@ -1188,9 +1188,9 @@ namespace MSHU.CarWash.PWA.Controllers
         private bool IsEnoughTimeOnDate(DateTime date, int timeRequirement)
         {
             if (_user.IsCarwashAdmin) return true;
-            
+
             // Do not validate against company limit after {HoursAfterCompanyLimitIsNotChecked} for today
-            if (date.Date == DateTime.Today && DateTime.Now.Hour > HoursAfterCompanyLimitIsNotChecked)
+            if (date.Date == DateTime.Today && DateTime.Now.Hour >= HoursAfterCompanyLimitIsNotChecked)
             {
                 var allCompanyLimit = CompanyLimit.Sum(c => c.DailyLimit);
 
