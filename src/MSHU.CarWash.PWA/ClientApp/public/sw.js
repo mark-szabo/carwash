@@ -161,7 +161,7 @@ self.addEventListener('notificationclick', event => {
             .then(clientList => {
                 for (let i = 0; i < clientList.length; i++) {
                     const client = clientList[i];
-                    if (client.url === 'https://localhost:44340/' && 'focus' in client) return client.focus();
+                    if (client.url === 'https://carwashu.azurewebsites.net/' && 'focus' in client) return client.focus();
                 }
                 if (clients.openWindow) return clients.openWindow('/');
                 return null;
