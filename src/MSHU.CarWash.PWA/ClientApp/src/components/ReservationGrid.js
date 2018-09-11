@@ -60,7 +60,7 @@ class ReservationGrid extends Component {
             return (
                 <div className={classes.center}>
                     <Typography variant="title" gutterBottom className={classes.lonelyTitle}>
-                        It's lonely here...
+                        Your reservations will show up here...
                     </Typography>
                     <Typography className={classes.lonelyText}>Tap the Reserve button on the left to get started.</Typography>
                     <RoadAnimation />
