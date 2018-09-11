@@ -1147,6 +1147,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>true if start and end times are both after the earliest allowed time</returns>
         private bool IsInPast(DateTime startTime, DateTime? endTime)
         {
+            if (_user.IsCarwashAdmin) return false;
+
             if (endTime == null) throw new ArgumentNullException(nameof(endTime));
             var earliestTimeAllowed = DateTime.Now.AddMinutes(MinutesToAllowReserveInPast * -1);
 
