@@ -137,17 +137,21 @@ class Settings extends TrackedComponent {
         const notificationChannel = parseInt(event.target.value, 10);
 
         if (notificationChannel === NotificationChannel.Push) {
-            askPermission().then(permissionResult => {
-                if (permissionResult === 'granted') {
-                    this.props.updateUser('notificationChannel', notificationChannel);
-                    this.updateSetting('notificationChannel', notificationChannel);
-                    registerPush();
-                } else if (permissionResult === 'denied') {
-                    this.props.openSnackbar(
-                        'You have denied notification permission previouly. You need to go to your browser settings to enable notifications first.'
-                    );
-                }
-            });
+            if ('PushManager' in window) {
+                askPermission().then(permissionResult => {
+                    if (permissionResult === 'granted') {
+                        this.props.updateUser('notificationChannel', notificationChannel);
+                        this.updateSetting('notificationChannel', notificationChannel);
+                        registerPush();
+                    } else if (permissionResult === 'denied') {
+                        this.props.openSnackbar(
+                            'You have denied notification permission previouly. You need to go to your browser settings to enable notifications first.'
+                        );
+                    }
+                });
+            } else {
+                this.props.openSnackbar('Push notifications are not supported by your device! :(');
+            }
         } else {
             this.props.updateUser('notificationChannel', notificationChannel);
             this.updateSetting('notificationChannel', notificationChannel);
