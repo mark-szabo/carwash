@@ -98,7 +98,7 @@ export default class App extends Component {
             }
         );
 
-        if (Notification.permission === 'granted') {
+        if ('Notification' in window && Notification.permission === 'granted') {
             registerPush();
         }
 
