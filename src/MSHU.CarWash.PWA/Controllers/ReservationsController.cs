@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MSHU.CarWash.ClassLibrary.Enums;
@@ -6,8 +6,10 @@ using MSHU.CarWash.ClassLibrary.Models;
 using MSHU.CarWash.ClassLibrary.Services;
 using MSHU.CarWash.PWA.Extensions;
 using MSHU.CarWash.PWA.Services;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -1064,6 +1066,93 @@ namespace MSHU.CarWash.PWA.Controllers
             }
 
             return Ok(slotReservationPercentage);
+        }
+
+        // GET: api/reservations/export
+        /// <summary>
+        /// Export a list of reservations to Excel for a given timespan
+        /// </summary>
+        /// <param name="startDate">start date (default: a month before today)</param>
+        /// <param name="endDate">end date (default: today)</param>
+        /// <returns>An Excel file of the list of reservations</returns>
+        [ProducesResponseType(typeof(FileStreamResult), 200)]
+        [HttpGet, Route("export")]
+        public async Task<IActionResult> Export(DateTime? startDate, DateTime? endDate)
+        {
+            var startDateNonNull = startDate ?? DateTime.Today.AddMonths(-1);
+            var endDateNonNull = endDate ?? DateTime.Today;
+
+            List<Reservation> reservations;
+
+            if (_user.IsCarwashAdmin)
+                reservations = await _context.Reservation
+                    .Include(r => r.User)
+                    .Where(r => r.StartDate.Date >= startDateNonNull.Date && r.StartDate.Date <= endDateNonNull.Date)
+                    .OrderBy(r => r.StartDate)
+                    .ToListAsync();
+            else if (_user.IsAdmin)
+                reservations = await _context.Reservation
+                    .Include(r => r.User)
+                    .Where(r => r.User.Company == _user.Company && r.StartDate.Date >= startDateNonNull.Date &&
+                                r.StartDate.Date <= endDateNonNull.Date)
+                    .OrderBy(r => r.StartDate)
+                    .ToListAsync();
+            else return Forbid();
+
+            using (var package = new ExcelPackage())
+            {
+                // Add a new worksheet to the empty workbook
+                var worksheet = package.Workbook.Worksheets.Add($"{startDateNonNull.Year}-{startDateNonNull.Month}");
+
+                // Add the headers
+                worksheet.Cells[1, 1].Value = "Date";
+                worksheet.Cells[1, 2].Value = "Start time";
+                worksheet.Cells[1, 3].Value = "End time";
+                worksheet.Cells[1, 4].Value = "Company";
+                worksheet.Cells[1, 5].Value = "Name";
+                worksheet.Cells[1, 6].Value = "Vehicle plate number";
+                worksheet.Cells[1, 7].Value = "MPV";
+                worksheet.Cells[1, 8].Value = "Private";
+                worksheet.Cells[1, 9].Value = "Services";
+                worksheet.Cells[1, 10].Value = "Comment";
+                worksheet.Cells[1, 11].Value = "Carwash comment";
+
+                // Add values
+                var i = 2;
+                foreach (var reservation in reservations)
+                {
+                    worksheet.Cells[i, 1].Style.Numberformat.Format = "yyyy-mm-dd";
+                    worksheet.Cells[i, 1].Value = reservation.StartDate.Date;
+
+                    worksheet.Cells[i, 2].Style.Numberformat.Format = "hh:mm";
+                    worksheet.Cells[i, 2].Value = reservation.StartDate.TimeOfDay;
+
+                    worksheet.Cells[i, 3].Style.Numberformat.Format = "hh:mm";
+                    worksheet.Cells[i, 3].Value = reservation.EndDate?.TimeOfDay;
+
+                    worksheet.Cells[i, 4].Value = reservation.User.Company;
+
+                    worksheet.Cells[i, 5].Value = reservation.User.FullName;
+
+                    worksheet.Cells[i, 6].Value = reservation.VehiclePlateNumber;
+
+                    worksheet.Cells[i, 7].Value = reservation.Mpv;
+
+                    worksheet.Cells[i, 8].Value = reservation.Private;
+
+                    worksheet.Cells[i, 9].Value = string.Join(", ", reservation.Services);
+
+                    worksheet.Cells[i, 10].Value = reservation.Comment;
+
+                    worksheet.Cells[i, 11].Value = reservation.CarwashComment;
+
+                    i++;
+                }
+
+                var stream = new MemoryStream(package.GetAsByteArray());
+
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"carwash-export-{startDateNonNull.Year}-{startDateNonNull.Month}-{startDateNonNull.Day}.xlsx");
+            }
         }
 
         /// <summary>

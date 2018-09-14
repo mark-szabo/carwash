@@ -17,16 +17,16 @@ workbox.core.setCacheNameDetails({
 // as it is needed to include the newly genereted js and css files.
 // Error would be thrown: Refused to execute script from '...' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled.
 workbox.precaching.precacheAndRoute([
-    { url: '/', revision: '2014' },
+    { url: '/', revision: '2016' },
     { url: 'manifest.json', revision: '1' },
-    { url: 'images/favicon-32x32.png', revision: '1' },
-    { url: 'images/favicon-16x16.png', revision: '1' },
-    { url: 'images/state0.png', revision: '1' },
-    { url: 'images/state1.png', revision: '1' },
-    { url: 'images/state2.png', revision: '1' },
-    { url: 'images/state3.png', revision: '1' },
-    { url: 'images/state4.png', revision: '1' },
-    { url: 'images/state5.png', revision: '1' },
+    { url: 'images/favicon-32x32.png', revision: '2' },
+    { url: 'images/favicon-16x16.png', revision: '2' },
+    { url: 'images/state0.png', revision: '2' },
+    { url: 'images/state1.png', revision: '2' },
+    { url: 'images/state2.png', revision: '2' },
+    { url: 'images/state3.png', revision: '2' },
+    { url: 'images/state4.png', revision: '2' },
+    { url: 'images/state5.png', revision: '2' },
 ]);
 
 const bgSyncPlugin = new workbox.backgroundSync.Plugin('bgSyncQueue');
@@ -134,10 +134,10 @@ self.addEventListener('push', event => {
                 lang,
                 body,
                 requireInteraction,
-                ...(tag && { tag }),
-                ...(timestamp && { timestamp: Date.parse(timestamp) }),
-                ...(actions && { actions }),
-                ...(image && { image }),
+                tag: tag || undefined,
+                timestamp: timestamp ? Date.parse(timestamp) : undefined,
+                actions: actions || undefined,
+                image: image || undefined,
                 badge: '/images/notification72.png',
                 icon: '/images/notificationicon512.png',
             });
@@ -161,7 +161,7 @@ self.addEventListener('notificationclick', event => {
             .then(clientList => {
                 for (let i = 0; i < clientList.length; i++) {
                     const client = clientList[i];
-                    if (client.url === 'https://localhost:44340/' && 'focus' in client) return client.focus();
+                    if (client.url === 'https://carwashu.azurewebsites.net/' && 'focus' in client) return client.focus();
                 }
                 if (clients.openWindow) return clients.openWindow('/');
                 return null;
