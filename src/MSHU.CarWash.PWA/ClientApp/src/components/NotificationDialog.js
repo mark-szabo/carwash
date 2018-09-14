@@ -65,7 +65,7 @@ export default class NotificationDialog extends React.Component {
     render() {
         const { open, handleClose } = this.props;
 
-        if (!('PushManager' in window)) {
+        if (!('Notification' in window) || !('PushManager' in window)) {
             // Push isn't supported on this browser, disable or hide UI.
             return null;
         }

@@ -26,6 +26,8 @@ function urlBase64ToUint8Array(base64String) {
  */
 export function askPermission() {
     return new Promise((resolve, reject) => {
+        if (!('Notification' in window)) reject();
+
         const permissionResult = Notification.requestPermission(result => {
             resolve(result);
         });
@@ -40,7 +42,7 @@ export function askPermission() {
  * Subscribe this PWA to push notifications from the server
  */
 export default function registerPush() {
-    if (Notification.permission === 'granted') {
+    if ('Notification' in window && Notification.permission === 'granted') {
         navigator.serviceWorker.ready
             .then(registration =>
                 // Check if the user has an existing subscription
