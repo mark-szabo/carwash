@@ -359,7 +359,7 @@ namespace MSHU.CarWash.PWA.Controllers
             await _context.SaveChangesAsync();
 
             // Delete calendar event using Microsoft Graph
-            await _calendarService.DeleteEventAsync(reservation.OutlookEventId);
+            await _calendarService.DeleteEventAsync(reservation);
 
             return Ok(new ReservationViewModel(reservation));
         }

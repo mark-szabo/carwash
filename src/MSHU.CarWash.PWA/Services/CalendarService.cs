@@ -1,24 +1,27 @@
-﻿using System;
-using Microsoft.Graph;
-using MSHU.CarWash.ClassLibrary;
-using System.Threading.Tasks;
-using Microsoft.ApplicationInsights;
+﻿using Microsoft.ApplicationInsights;
+using Microsoft.Extensions.Configuration;
 using MSHU.CarWash.ClassLibrary.Models;
+using Newtonsoft.Json;
+using System;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace MSHU.CarWash.PWA.Services
 {
     /// <inheritdoc />
     public class CalendarService : ICalendarService
     {
-        private readonly IGraphServiceClient _graphClient;
         private readonly TelemetryClient _telemetryClient;
+        private readonly HttpClient _client;
+        private readonly string _logicAppUrl;
 
         /// <inheritdoc />
-        public CalendarService(IGraphService graphService)
+        public CalendarService(IConfiguration configuration)
         {
-            _graphClient = graphService.GetAuthenticatedClient();
-
             _telemetryClient = new TelemetryClient();
+            _client = new HttpClient();
+            _logicAppUrl = configuration.GetValue<string>("CalendarService:LogicAppUrl");
         }
 
         /// <inheritdoc />
@@ -28,17 +31,14 @@ namespace MSHU.CarWash.PWA.Services
 
             try
             {
-                calendarEvent = await _graphClient.Me
-                    .Events
-                    .Request()
-                    .AddAsync(calendarEvent);
+                return await CallLogicApp(calendarEvent);
             }
             catch (Exception e)
             {
                 _telemetryClient.TrackException(e);
-            }
 
-            return calendarEvent.Id;
+                return null;
+            }
         }
 
         /// <inheritdoc />
@@ -50,30 +50,27 @@ namespace MSHU.CarWash.PWA.Services
 
             try
             {
-                calendarEvent = await _graphClient.Me
-                    .Events[reservation.OutlookEventId]
-                    .Request()
-                    .UpdateAsync(calendarEvent);
+                return await CallLogicApp(calendarEvent);
             }
             catch (Exception e)
             {
                 _telemetryClient.TrackException(e);
-            }
 
-            return calendarEvent.Id;
+                return null;
+            }
         }
 
         /// <inheritdoc />
-        public async Task DeleteEventAsync(string outlookEventId)
+        public async Task DeleteEventAsync(Reservation reservation)
         {
-            if (outlookEventId == null) return;
+            if (reservation.OutlookEventId == null) return;
+
+            var calendarEvent = GetCalendarEventFromReservation(reservation);
+            calendarEvent.IsCancelled = true;
 
             try
             {
-                await _graphClient.Me
-                    .Events[outlookEventId]
-                    .Request()
-                    .DeleteAsync();
+                await CallLogicApp(calendarEvent);
             }
             catch (Exception e)
             {
@@ -82,39 +79,67 @@ namespace MSHU.CarWash.PWA.Services
         }
 
         /// <summary>
-        /// Convert a Reservation object to a Graph calendar Event object
+        /// Call the Logic App with the event in the request body
+        /// </summary>
+        /// <param name="calendarEvent">The event to be created/updated/deleted</param>
+        /// <returns>response body</returns>
+        private async Task<string> CallLogicApp(Event calendarEvent)
+        {
+            var content = new StringContent(JsonConvert.SerializeObject(calendarEvent), Encoding.UTF8, "application/json");
+            var response = await _client.PostAsync(_logicAppUrl, content);
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadAsStringAsync();
+        }
+
+        /// <summary>
+        /// Convert a Reservation object to an Event object for the Logic App
         /// </summary>
         /// <param name="reservation">Reservation object to convert from</param>
         /// <returns>Converted Event object</returns>
-        private static Event GetCalendarEventFromReservation(Reservation reservation) => new Event
+        private static Event GetCalendarEventFromReservation(Reservation reservation)
         {
-            Id = reservation.OutlookEventId,
-            Subject = $"🚗 Car wash ({reservation.VehiclePlateNumber})",
-            IsReminderOn = true,
-            ReminderMinutesBeforeStart = 30,
-            ShowAs = FreeBusyStatus.Free,
-            Importance = Importance.Low,
-            Type = EventType.SingleInstance,
-            Start = new DateTimeTimeZone
+            if (reservation.User == null) throw new Exception("User is not loaded for reservation!");
+
+            return new Event
             {
-                DateTime = reservation.StartDate.ToString(),
-                TimeZone = "Europe/Budapest"
-            },
-            End = new DateTimeTimeZone
-            {
-                DateTime = reservation.EndDate.ToString(),
-                TimeZone = "Europe/Budapest"
-            },
-            Location = new Location
-            {
-                DisplayName = reservation.Location
-            },
-            Body = new ItemBody
-            {
-                ContentType = BodyType.Html,
-                Content = "Please don't forget to leave the key at the reception and <a href=\"https://carwashu.azurewebsites.net\">confirm drop-off & vehicle location by clicking here</a>!"
-            }
-        };
+                Id = reservation.OutlookEventId,
+                To = reservation.User.Email,
+                Subject = $"🚗 Car wash ({reservation.VehiclePlateNumber})",
+                StartTime = reservation.StartDate.ToString(),
+                EndTime = reservation.EndDate.ToString(),
+                Location = reservation.Location,
+                Body =
+                    "Please don't forget to leave the key at the reception and <a href=\"https://carwashu.azurewebsites.net\">confirm drop-off & vehicle location by clicking here</a>!"
+            };
+        }
+    }
+
+    internal class Event
+    {
+        [JsonProperty("id")]
+        public string Id { get; set; }
+
+        [JsonProperty("subject")]
+        public string Subject { get; set; }
+
+        [JsonProperty("isCancelled")]
+        public bool IsCancelled { get; set; }
+
+        [JsonProperty("to")]
+        public string To { get; set; }
+
+        [JsonProperty("startTime")]
+        public string StartTime { get; set; }
+
+        [JsonProperty("endTime")]
+        public string EndTime { get; set; }
+
+        [JsonProperty("location")]
+        public string Location { get; set; }
+
+        [JsonProperty("body")]
+        public string Body { get; set; }
     }
 }
 
