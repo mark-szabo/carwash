@@ -585,8 +585,9 @@ class CarwashDetailsDialog extends React.Component {
                                     }}
                                 >
                                     <MenuItem value="M">M</MenuItem>
-                                    <MenuItem value="G">G</MenuItem>
                                     <MenuItem value="S1">S1</MenuItem>
+                                    <MenuItem value="GS">GS</MenuItem>
+                                    <MenuItem value="HX">HX</MenuItem>
                                 </Select>
                             </FormControl>
                             {garage !== '' && (
