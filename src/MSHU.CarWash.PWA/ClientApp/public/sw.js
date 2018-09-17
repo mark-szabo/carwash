@@ -66,6 +66,14 @@ workbox.routing.registerRoute(
     })
 );
 
+// [CACHE FIRST] Cache current user from 'GET /api/reservations/lastsettings'
+workbox.routing.registerRoute(
+    ({ url }) => url.pathname === '/api/reservations/lastsettings',
+    workbox.strategies.cacheFirst({
+        cacheName: 'api-cache',
+    })
+);
+
 // [CACHE FIRST] Cache Google Fonts
 workbox.routing.registerRoute(
     new RegExp('https://fonts.(?:googleapis|gstatic).com/(.*)'),

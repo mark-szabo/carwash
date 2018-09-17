@@ -485,9 +485,20 @@ class Reserve extends TrackedComponent {
                 });
                 this.props.openSnackbar('Reservation successfully saved.');
 
-                // Add new / update reservation to reservations
+                // Add new / update reservation
                 if (apiMethod === 'PUT') this.props.removeReservation(data.id);
                 this.props.addReservation(data);
+
+                // Delete cached response for /api/reservations/lastsettings
+                // Not perfect solution as it seems Safari does not supports this
+                // https://developer.mozilla.org/en-US/docs/Web/API/Cache/delete#Browser_compatibility
+                try {
+                    caches.open('api-cache').then(cache => {
+                        cache.delete('/api/reservations/lastsettings');
+                    });
+                } catch (error) {
+                    console.error(`Cannot delete user data from cache: ${error}`);
+                }
             },
             error => {
                 this.setState({ loading: false });
