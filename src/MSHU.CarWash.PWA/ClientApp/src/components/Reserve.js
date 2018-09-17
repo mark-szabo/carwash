@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import TrackedComponent from './TrackedComponent';
 import { Redirect } from 'react-router';
@@ -489,6 +489,7 @@ class Reserve extends TrackedComponent {
                 if (apiMethod === 'PUT') this.props.removeReservation(data.id);
                 this.props.addReservation(data);
 
+                // Refresh last settings
                 // Delete cached response for /api/reservations/lastsettings
                 // Not perfect solution as it seems Safari does not supports this
                 // https://developer.mozilla.org/en-US/docs/Web/API/Cache/delete#Browser_compatibility
@@ -496,6 +497,7 @@ class Reserve extends TrackedComponent {
                     caches.open('api-cache').then(cache => {
                         cache.delete('/api/reservations/lastsettings');
                     });
+                    this.props.loadLastSettings();
                 } catch (error) {
                     console.error(`Cannot delete user data from cache: ${error}`);
                 }
@@ -726,6 +728,7 @@ class Reserve extends TrackedComponent {
                                         required
                                         error={validationErrors.vehiclePlateNumber}
                                         id="vehiclePlateNumber"
+                                        name="vehiclePlateNumber"
                                         label="Plate number"
                                         value={vehiclePlateNumber}
                                         className={classes.textField}
@@ -846,6 +849,7 @@ Reserve.propTypes = {
     addReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func,
     lastSettings: PropTypes.object, // eslint-disable-line react/forbid-prop-types
+    loadLastSettings: PropTypes.func.isRequired,
     openSnackbar: PropTypes.func.isRequired,
     openNotificationDialog: PropTypes.func.isRequired,
 };
