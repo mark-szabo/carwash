@@ -118,7 +118,7 @@ export default class App extends Component {
                 }
             },
             error => {
-                this.props.openSnackbar(error);
+                this.openSnackbar(error);
             }
         );
 
