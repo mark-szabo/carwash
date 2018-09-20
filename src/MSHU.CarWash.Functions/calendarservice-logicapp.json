@@ -1,211 +1,199 @@
 {
-    "$connections": {
-        "value": {
-            "office365_1": {
-                "connectionId": "/subscriptions/a984fd43-e460-42c7-957c-a023cf7f8241/resourceGroups/carwash/providers/Microsoft.Web/connections/office365-1",
-                "connectionName": "office365-1",
-                "id": "/subscriptions/a984fd43-e460-42c7-957c-a023cf7f8241/providers/Microsoft.Web/locations/westeurope/managedApis/office365"
-            }
-        }
-    },
-    "definition": {
-        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
-        "actions": {
-            "Is_it_cancelled": {
-                "actions": {
-                    "Delete_event": {
-                        "inputs": {
-                            "host": {
-                                "connection": {
-                                    "name": "@parameters('$connections')['office365_1']['connectionId']"
-                                }
-                            },
-                            "method": "delete",
-                            "path": "/datasets/calendars/tables/@{encodeURIComponent(encodeURIComponent('AQMkADFkYjZiNDlhLTY5Y2QtNGE5NC04YTRlLTdkNTZlM2IwNzZmYQBGAAADPTIgPTpADE_7YkO1JvFOUQcAbwmNPzCmr02o_mZzogjmUwAAAgEGAAAAbwmNPzCmr02o_mZzogjmUwAAAj-qAAAA'))}/items/@{encodeURIComponent(encodeURIComponent(triggerBody()?['id']))}"
-                        },
-                        "runAfter": {},
-                        "type": "ApiConnection"
-                    },
-                    "DeletedResponse": {
-                        "inputs": {
-                            "statusCode": 202
-                        },
-                        "kind": "http",
-                        "runAfter": {
-                            "Delete_event": [
-                                "Succeeded"
-                            ]
-                        },
-                        "type": "Response"
-                    }
-                },
-                "else": {
-                    "actions": {
-                        "Is_it_a_new_event": {
-                            "actions": {
-                                "Create_event_(V2)": {
-                                    "inputs": {
-                                        "body": {
-                                            "Body": "@triggerBody()?['body']",
-                                            "End": "@triggerBody()?['endTime']",
-                                            "Importance": "Low",
-                                            "IsAllDay": false,
-                                            "IsHtml": true,
-                                            "Location": "@triggerBody()?['location']",
-                                            "Recurrence": "None",
-                                            "Reminder": 30,
-                                            "RequiredAttendees": "@triggerBody()?['to']",
-                                            "ResponseRequested": false,
-                                            "ShowAs": "Free",
-                                            "Start": "@triggerBody()?['startTime']",
-                                            "Subject": "@triggerBody()?['subject']",
-                                            "TimeZone": "(UTC+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague"
-                                        },
-                                        "host": {
-                                            "connection": {
-                                                "name": "@parameters('$connections')['office365_1']['connectionId']"
-                                            }
-                                        },
-                                        "method": "post",
-                                        "path": "/datasets/calendars/v2/tables/@{encodeURIComponent(encodeURIComponent('AQMkADFkYjZiNDlhLTY5Y2QtNGE5NC04YTRlLTdkNTZlM2IwNzZmYQBGAAADPTIgPTpADE_7YkO1JvFOUQcAbwmNPzCmr02o_mZzogjmUwAAAgEGAAAAbwmNPzCmr02o_mZzogjmUwAAAj-qAAAA'))}/items"
-                                    },
-                                    "runAfter": {},
-                                    "type": "ApiConnection"
-                                },
-                                "CreatedResponse": {
-                                    "inputs": {
-                                        "body": "@body('Create_event_(V2)')?['Id']",
-                                        "statusCode": 202
-                                    },
-                                    "kind": "http",
-                                    "runAfter": {
-                                        "Create_event_(V2)": [
-                                            "Succeeded"
-                                        ]
-                                    },
-                                    "type": "Response"
-                                }
-                            },
-                            "else": {
-                                "actions": {
-                                    "Update_event_(V2)": {
-                                        "inputs": {
-                                            "body": {
-                                                "Body": "@triggerBody()?['body']",
-                                                "End": "@triggerBody()?['endTime']",
-                                                "Importance": "Low",
-                                                "IsAllDay": false,
-                                                "IsHtml": true,
-                                                "Location": "@triggerBody()?['location']",
-                                                "Recurrence": "None",
-                                                "Reminder": 30,
-                                                "RequiredAttendees": "@triggerBody()?['to']",
-                                                "ResponseRequested": false,
-                                                "ShowAs": "Free",
-                                                "Start": "@triggerBody()?['startTime']",
-                                                "Subject": "@triggerBody()?['subject']",
-                                                "TimeZone": "(UTC+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague"
-                                            },
-                                            "host": {
-                                                "connection": {
-                                                    "name": "@parameters('$connections')['office365_1']['connectionId']"
-                                                }
-                                            },
-                                            "method": "patch",
-                                            "path": "/datasets/calendars/v2/tables/@{encodeURIComponent(encodeURIComponent('AQMkADFkYjZiNDlhLTY5Y2QtNGE5NC04YTRlLTdkNTZlM2IwNzZmYQBGAAADPTIgPTpADE_7YkO1JvFOUQcAbwmNPzCmr02o_mZzogjmUwAAAgEGAAAAbwmNPzCmr02o_mZzogjmUwAAAj-qAAAA'))}/items/@{encodeURIComponent(encodeURIComponent(triggerBody()?['id']))}"
-                                        },
-                                        "runAfter": {},
-                                        "type": "ApiConnection"
-                                    },
-                                    "UpdatedResponse": {
-                                      "inputs": {
-                                        "body": "@body('Update_event_(V2)')?['Id']",
-                                        "statusCode": 202
-                                      },
-                                        "kind": "http",
-                                        "runAfter": {
-                                            "Update_event_(V2)": [
-                                                "Succeeded"
-                                            ]
-                                        },
-                                        "type": "Response"
-                                    }
-                                }
-                            },
-                            "expression": {
-                                "and": [
-                                    {
-                                        "equals": [
-                                            "@triggerBody()?['id']",
-                                            "@null"
-                                        ]
-                                    }
-                                ]
-                            },
-                            "runAfter": {},
-                            "type": "If"
-                        }
-                    }
-                },
-                "expression": {
-                    "and": [
-                        {
-                            "equals": [
-                                "@triggerBody()?['isCancelled']",
-                                true
-                            ]
-                        }
-                    ]
-                },
-                "runAfter": {},
-                "type": "If"
-            }
-        },
-        "contentVersion": "1.0.0.0",
-        "outputs": {},
-        "parameters": {
-            "$connections": {
-                "defaultValue": {},
-                "type": "Object"
-            }
-        },
-        "triggers": {
-            "manual": {
-                "inputs": {
-                    "method": "POST",
-                    "schema": {
-                        "properties": {
-                            "body": {
-                                "type": "string"
-                            },
-                            "endTime": {
-                                "type": "string"
-                            },
-                            "id": {
-                                "type": "string"
-                            },
-                            "isCancelled": {
-                                "type": "boolean"
-                            },
-                            "location": {
-                                "type": "string"
-                            },
-                            "startTime": {
-                                "type": "string"
-                            },
-                            "subject": {
-                                "type": "string"
-                            },
-                            "to": {
-                                "type": "string"
-                            }
-                        },
-                        "type": "object"
-                    }
-                },
-                "kind": "Http",
-                "type": "Request"
-            }
-        }
+  "$connections": {
+    "value": {
+      "office365": {
+        "connectionId": "/subscriptions/a984fd43-e460-42c7-957c-a023cf7f8241/resourceGroups/carwash/providers/Microsoft.Web/connections/office365",
+        "connectionName": "office365",
+        "id": "/subscriptions/a984fd43-e460-42c7-957c-a023cf7f8241/providers/Microsoft.Web/locations/westeurope/managedApis/office365"
+      }
     }
+  },
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "actions": {
+      "Is_it_cancelled": {
+        "actions": {
+          "Delete_event": {
+            "inputs": {
+              "host": {
+                "connection": {
+                  "name": "@parameters('$connections')['office365']['connectionId']"
+                }
+              },
+              "method": "delete",
+              "path": "/datasets/calendars/tables/@{encodeURIComponent(encodeURIComponent('AAMkADJjNTljNWQ2LTY0ODctNDczZS1iYjEzLTlmM2RjYzc0N2M0ZABGAAAAAAC7MGBTHYJETaA2UF4klR5TBwCxhLyFA82KSbYWddHQCFsXAAAAAAEGAACxhLyFA82KSbYWddHQCFsXAAAAACh5AAA='))}/items/@{encodeURIComponent(encodeURIComponent(triggerBody()?['id']))}"
+            },
+            "runAfter": {},
+            "type": "ApiConnection"
+          },
+          "DeletedResponse": {
+            "inputs": {
+              "statusCode": 202
+            },
+            "kind": "Http",
+            "runAfter": {
+              "Delete_event": ["Succeeded"]
+            },
+            "type": "Response"
+          }
+        },
+        "else": {
+          "actions": {
+            "Is_it_a_new_event": {
+              "actions": {
+                "Create_event_(V2)": {
+                  "inputs": {
+                    "body": {
+                      "Body": "@triggerBody()?['body']",
+                      "End": "@triggerBody()?['endTime']",
+                      "Importance": "Low",
+                      "IsAllDay": false,
+                      "IsHtml": true,
+                      "Location": "@triggerBody()?['location']",
+                      "Recurrence": "None",
+                      "Reminder": 30,
+                      "RequiredAttendees": "@triggerBody()?['to']",
+                      "ResponseRequested": false,
+                      "ShowAs": "Free",
+                      "Start": "@triggerBody()?['startTime']",
+                      "Subject": "@triggerBody()?['subject']",
+                      "TimeZone": "(UTC+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague"
+                    },
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['office365']['connectionId']"
+                      }
+                    },
+                    "method": "post",
+                    "path": "/datasets/calendars/v2/tables/@{encodeURIComponent(encodeURIComponent('AAMkADJjNTljNWQ2LTY0ODctNDczZS1iYjEzLTlmM2RjYzc0N2M0ZABGAAAAAAC7MGBTHYJETaA2UF4klR5TBwCxhLyFA82KSbYWddHQCFsXAAAAAAEGAACxhLyFA82KSbYWddHQCFsXAAAAACh5AAA='))}/items"
+                  },
+                  "runAfter": {},
+                  "type": "ApiConnection"
+                },
+                "CreatedResponse": {
+                  "inputs": {
+                    "body": "@body('Create_event_(V2)')?['Id']",
+                    "statusCode": 202
+                  },
+                  "kind": "Http",
+                  "runAfter": {
+                    "Create_event_(V2)": ["Succeeded"]
+                  },
+                  "type": "Response"
+                }
+              },
+              "else": {
+                "actions": {
+                  "Update_event_(V2)": {
+                    "inputs": {
+                      "body": {
+                        "Body": "@triggerBody()?['body']",
+                        "End": "@triggerBody()?['endTime']",
+                        "Importance": "Low",
+                        "IsAllDay": false,
+                        "IsHtml": true,
+                        "Location": "@triggerBody()?['location']",
+                        "Recurrence": "None",
+                        "Reminder": 30,
+                        "RequiredAttendees": "@triggerBody()?['to']",
+                        "ResponseRequested": false,
+                        "ShowAs": "Free",
+                        "Start": "@triggerBody()?['startTime']",
+                        "Subject": "@triggerBody()?['subject']",
+                        "TimeZone": "(UTC+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague"
+                      },
+                      "host": {
+                        "connection": {
+                          "name": "@parameters('$connections')['office365']['connectionId']"
+                        }
+                      },
+                      "method": "patch",
+                      "path": "/datasets/calendars/v2/tables/@{encodeURIComponent(encodeURIComponent('AAMkADJjNTljNWQ2LTY0ODctNDczZS1iYjEzLTlmM2RjYzc0N2M0ZABGAAAAAAC7MGBTHYJETaA2UF4klR5TBwCxhLyFA82KSbYWddHQCFsXAAAAAAEGAACxhLyFA82KSbYWddHQCFsXAAAAACh5AAA='))}/items/@{encodeURIComponent(encodeURIComponent(triggerBody()?['id']))}"
+                    },
+                    "runAfter": {},
+                    "type": "ApiConnection"
+                  },
+                  "UpdatedResponse": {
+                    "inputs": {
+                      "body": "@body('Update_event_(V2)')?['Id']",
+                      "statusCode": 202
+                    },
+                    "kind": "Http",
+                    "runAfter": {
+                      "Update_event_(V2)": ["Succeeded"]
+                    },
+                    "type": "Response"
+                  }
+                }
+              },
+              "expression": {
+                "and": [
+                  {
+                    "equals": ["@triggerBody()?['id']", "@null"]
+                  }
+                ]
+              },
+              "runAfter": {},
+              "type": "If"
+            }
+          }
+        },
+        "expression": {
+          "and": [
+            {
+              "equals": ["@triggerBody()?['isCancelled']", true]
+            }
+          ]
+        },
+        "runAfter": {},
+        "type": "If"
+      }
+    },
+    "contentVersion": "1.0.0.0",
+    "outputs": {},
+    "parameters": {
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
+      }
+    },
+    "triggers": {
+      "manual": {
+        "inputs": {
+          "method": "POST",
+          "schema": {
+            "properties": {
+              "body": {
+                "type": "string"
+              },
+              "endTime": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "isCancelled": {
+                "type": "boolean"
+              },
+              "location": {
+                "type": "string"
+              },
+              "startTime": {
+                "type": "string"
+              },
+              "subject": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "kind": "Http",
+        "type": "Request"
+      }
+    }
+  }
 }
