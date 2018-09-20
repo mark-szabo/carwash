@@ -89,11 +89,11 @@ namespace MSHU.CarWash.Functions
             var email = new Email
             {
                 To = reservation.User.Email,
-                Subject = "CarWash account deleted",
+                Subject = "CarWash reminder",
                 Body = $@"Hi {reservation.User.FirstName}, 
 It's time to leave the key at the reception and <a href='https://carwashu.azurewebsites.net'>confirm drop-off & vehicle location by clicking here</a>!
 
-If don't want to get email reminders in the future, you can <a href='https://carwashu.azurewebsites.net'>disable it in the settings</a>."
+If don't want to get email reminders in the future, you can <a href='https://carwashu.azurewebsites.net/settings'>disable it in the settings</a>."
             };
 
             try { await email.Send(); }
