@@ -57,7 +57,6 @@ namespace MSHU.CarWash.PWA
             services.AddSingleton(Configuration);
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<UsersController, UsersController>();
-            services.AddScoped<IGraphService, GraphService>();
             services.AddScoped<ICalendarService, CalendarService>();
             services.AddScoped<IPushService, PushService>();
 
@@ -144,11 +143,6 @@ namespace MSHU.CarWash.PWA
                                 new Claim("carwashadmin", user.IsCarwashAdmin.ToString())
                             };
                             context.Principal.AddIdentity(new ClaimsIdentity(claims));
-
-                            // Save Graph access token to the service
-                            var accessToken = context.Request.Headers["X-Graph-Token"];
-                            var graphService = context.HttpContext.RequestServices.GetRequiredService<IGraphService>();
-                            graphService.SaveAccessToken(accessToken);
                         },
                         OnAuthenticationFailed = context =>
                         {
