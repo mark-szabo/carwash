@@ -171,10 +171,12 @@ namespace MSHU.CarWash.PWA.Controllers
             }
 
             #region Input validation
-            if (dbReservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin)) return Forbid();
-            if ((reservation.UserId != _user.Id || reservation.UserId != null) &&
-                !(_user.IsAdmin || _user.IsCarwashAdmin))
-                return BadRequest("Cannot modify user of registration. Yo need to re-create it.");
+            if (dbReservation.UserId != _user.Id && !_user.IsAdmin && !_user.IsCarwashAdmin) return Forbid();
+            if (reservation.UserId != _user.Id && 
+                reservation.UserId != null &&
+                !_user.IsAdmin && 
+                !_user.IsCarwashAdmin)
+                return BadRequest("Cannot modify user of registration. You need to re-create it.");
             if (reservation.Services == null) return BadRequest("No service chosen.");
             #endregion
 

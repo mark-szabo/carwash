@@ -485,9 +485,22 @@ class Reserve extends TrackedComponent {
                 });
                 this.props.openSnackbar('Reservation successfully saved.');
 
-                // Add new / update reservation to reservations
+                // Add new / update reservation
                 if (apiMethod === 'PUT') this.props.removeReservation(data.id);
                 this.props.addReservation(data);
+
+                // Refresh last settings
+                // Delete cached response for /api/reservations/lastsettings
+                // Not perfect solution as it seems Safari does not supports this
+                // https://developer.mozilla.org/en-US/docs/Web/API/Cache/delete#Browser_compatibility
+                try {
+                    caches.open('api-cache').then(cache => {
+                        cache.delete('/api/reservations/lastsettings');
+                    });
+                    this.props.loadLastSettings();
+                } catch (error) {
+                    console.error(`Cannot delete user data from cache: ${error}`);
+                }
             },
             error => {
                 this.setState({ loading: false });
@@ -715,6 +728,7 @@ class Reserve extends TrackedComponent {
                                         required
                                         error={validationErrors.vehiclePlateNumber}
                                         id="vehiclePlateNumber"
+                                        name="vehiclePlateNumber"
                                         label="Plate number"
                                         value={vehiclePlateNumber}
                                         className={classes.textField}
@@ -746,8 +760,9 @@ class Reserve extends TrackedComponent {
                                                 }}
                                             >
                                                 <MenuItem value="M">M</MenuItem>
-                                                <MenuItem value="G">G</MenuItem>
                                                 <MenuItem value="S1">S1</MenuItem>
+                                                <MenuItem value="GS">GS</MenuItem>
+                                                <MenuItem value="HX">HX</MenuItem>
                                             </Select>
                                         </FormControl>
                                         {garage && (
@@ -835,6 +850,7 @@ Reserve.propTypes = {
     addReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func,
     lastSettings: PropTypes.object, // eslint-disable-line react/forbid-prop-types
+    loadLastSettings: PropTypes.func.isRequired,
     openSnackbar: PropTypes.func.isRequired,
     openNotificationDialog: PropTypes.func.isRequired,
 };

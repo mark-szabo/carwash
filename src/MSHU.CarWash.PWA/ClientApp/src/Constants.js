@@ -34,8 +34,9 @@ export const NotificationChannel = Object.freeze({
 
 export const Garages = {
     M: ['-1', '-2', '-2.5', '-3', '-3.5', 'outdoor'],
-    G: ['-1', 'outdoor'],
     S1: ['-1', '-2', '-3'],
+    GS: ['-1', 'outdoor'],
+    HX: ['-3'],
 };
 
 export function getStateName(state) {
