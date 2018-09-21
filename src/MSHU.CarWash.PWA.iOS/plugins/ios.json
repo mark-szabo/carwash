@@ -1,0 +1,22 @@
+{
+    "prepare_queue": {
+        "installed": [],
+        "uninstalled": []
+    },
+    "config_munge": {
+        "files": {}
+    },
+    "installed_plugins": {
+        "cordova-plugin-hostedwebapp": {
+            "PACKAGE_NAME": "net.azurewebsites.carwashu"
+        },
+        "cordova-plugin-whitelist": {
+            "PACKAGE_NAME": "net.azurewebsites.carwashu"
+        }
+    },
+    "dependent_plugins": {
+        "cordova-plugin-network-information": {
+            "PACKAGE_NAME": "net.azurewebsites.carwashu"
+        }
+    }
+}
