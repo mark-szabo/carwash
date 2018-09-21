@@ -574,7 +574,7 @@ class CarwashDetailsDialog extends React.Component {
                     ) : (
                         <React.Fragment>
                             <FormControl className={classes.formControl} error={validationErrors.garage}>
-                                <InputLabel htmlFor="garage">Garage</InputLabel>
+                                <InputLabel htmlFor="garage">Building</InputLabel>
                                 <Select
                                     required
                                     value={garage}

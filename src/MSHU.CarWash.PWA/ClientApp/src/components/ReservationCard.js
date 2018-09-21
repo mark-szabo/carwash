@@ -304,7 +304,7 @@ class ReservationCard extends Component {
                     <DialogContent>
                         <DialogContentText>Please drop-off the key at the reception and confirm vehicle location!</DialogContentText>
                         <FormControl className={classes.formControl} error={validationErrors.garage}>
-                            <InputLabel htmlFor="garage">Garage</InputLabel>
+                            <InputLabel htmlFor="garage">Building</InputLabel>
                             <Select
                                 required
                                 value={garage}
