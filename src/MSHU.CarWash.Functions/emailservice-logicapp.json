@@ -30,9 +30,7 @@
           }
         },
         "runAfter": {
-          "Send_an_email": [
-            "Succeeded"
-          ]
+          "Send_an_email": ["Succeeded"]
         },
         "type": "ApiConnection"
       },
@@ -61,7 +59,7 @@
         "inputs": {
           "body": {
             "Body": "@body('Parse_JSON')?['body']",
-            "From": "carwashapp@microsoft.com",
+            "IsHtml": true,
             "Subject": "@body('Parse_JSON')?['subject']",
             "To": "@body('Parse_JSON')?['to']"
           },
@@ -74,9 +72,7 @@
           "path": "/Mail"
         },
         "runAfter": {
-          "Parse_JSON": [
-            "Succeeded"
-          ]
+          "Parse_JSON": ["Succeeded"]
         },
         "type": "ApiConnection"
       }

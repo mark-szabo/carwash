@@ -1,11 +1,10 @@
-﻿using System.Threading.Tasks;
-using MSHU.CarWash.ClassLibrary;
-using MSHU.CarWash.ClassLibrary.Models;
+﻿using MSHU.CarWash.ClassLibrary.Models;
+using System.Threading.Tasks;
 
 namespace MSHU.CarWash.PWA.Services
 {
     /// <summary>
-    /// Defines a service to create, update and remove Outlook events using Microsoft Graph
+    /// Defines a service to create, update and remove Outlook events using a Logic App
     /// </summary>
     public interface ICalendarService
     {
@@ -26,7 +25,7 @@ namespace MSHU.CarWash.PWA.Services
         /// <summary>
         /// Delete an Outlook event by id
         /// </summary>
-        /// <param name="outlookEventId">Outlook event id</param>
-        Task DeleteEventAsync(string outlookEventId);
+        /// <param name="reservation">Reservation to delete event for</param>
+        Task DeleteEventAsync(Reservation reservation);
     }
 }
