@@ -1118,6 +1118,7 @@ namespace MSHU.CarWash.PWA.Controllers
                 worksheet.Cells[1, 9].Value = "Services";
                 worksheet.Cells[1, 10].Value = "Comment";
                 worksheet.Cells[1, 11].Value = "Carwash comment";
+                worksheet.Cells[1, 12].Value = "Price (computed)";
 
                 // Add values
                 var i = 2;
@@ -1147,6 +1148,8 @@ namespace MSHU.CarWash.PWA.Controllers
                     worksheet.Cells[i, 10].Value = reservation.Comment;
 
                     worksheet.Cells[i, 11].Value = reservation.CarwashComment;
+
+                    worksheet.Cells[i, 12].Value = reservation.Price;
 
                     i++;
                 }
