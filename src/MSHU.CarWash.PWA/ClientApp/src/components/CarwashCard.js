@@ -19,7 +19,7 @@ import red from '@material-ui/core/colors/red';
 import CarwashCardHeader from './CarwashCardHeader';
 import CarwashDetailsDialog from './CarwashDetailsDialog';
 import { getAdminStateName, getServiceName } from '../Constants';
-import { formatLocation } from '../Helpers';
+import { formatLocation, formatDate } from '../Helpers';
 import Comments from './Comments';
 
 const styles = theme => ({
@@ -61,25 +61,6 @@ const styles = theme => ({
         overflow: 'initial',
     },
 });
-
-function getDate(reservation) {
-    const from = new Intl.DateTimeFormat('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-    }).format(new Date(reservation.startDate));
-
-    const to = new Intl.DateTimeFormat('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-    }).format(new Date(reservation.endDate));
-
-    const date = new Intl.DateTimeFormat('en-US', {
-        month: 'long',
-        day: 'numeric',
-    }).format(new Date(reservation.startDate));
-
-    return `${from} - ${to} • ${date}`;
-}
 
 class CarwashCard extends Component {
     state = {
@@ -160,7 +141,7 @@ class CarwashCard extends Component {
                                 title={reservation.vehiclePlateNumber}
                                 private={reservation.private}
                                 subheader={getAdminStateName(reservation.state)}
-                                subheaderSecondLine={getDate(reservation)}
+                                subheaderSecondLine={formatDate(reservation)}
                             />
                             <CardContent>
                                 <Typography variant="caption" gutterBottom>

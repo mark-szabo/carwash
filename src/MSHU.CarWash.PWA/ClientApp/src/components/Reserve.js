@@ -25,6 +25,7 @@ import InfiniteCalendar from 'react-infinite-calendar';
 import CloudOffIcon from '@material-ui/icons/CloudOff';
 import ErrorOutlineIcon from '@material-ui/icons/ErrorOutline';
 import Grid from '@material-ui/core/Grid';
+import * as moment from 'moment';
 import { Garages, Service, NotificationChannel } from '../Constants';
 import 'react-infinite-calendar/styles.css';
 import './Reserve.css';
@@ -116,22 +117,6 @@ const styles = theme => ({
     },
 });
 
-const timeFormat = new Intl.DateTimeFormat('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-});
-const dateFormat = new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: '2-digit',
-});
-
-function addDays(date, days) {
-    const newDate = new Date(date);
-    newDate.setDate(newDate.getDate() + days);
-    return newDate;
-}
-
 class Reserve extends TrackedComponent {
     displayName = Reserve.name;
 
@@ -159,7 +144,7 @@ class Reserve extends TrackedComponent {
                 garage: false,
                 floor: false,
             },
-            selectedDate: new Date(),
+            selectedDate: moment(),
             vehiclePlateNumber: '',
             garage: '',
             floor: '',
@@ -204,7 +189,7 @@ class Reserve extends TrackedComponent {
                     floor = floor || '';
                     seat = seat || '';
 
-                    const date = new Date(data.startDate);
+                    const date = moment(data.startDate);
                     this.setState({
                         services,
                         selectedDate: date,
@@ -218,8 +203,8 @@ class Reserve extends TrackedComponent {
                             .filter(s => s.selected)
                             .map(s => s.name)
                             .join(', '),
-                        dateStepLabel: dateFormat.format(date),
-                        timeStepLabel: timeFormat.format(date),
+                        dateStepLabel: date.format('MMMM D, YYYY'),
+                        timeStepLabel: date.format('hh:mm A'),
                         loadingReservation: false,
                     });
                 },
@@ -245,12 +230,12 @@ class Reserve extends TrackedComponent {
                     const { dates, times } = data;
                     for (const i in dates) {
                         if (dates.hasOwnProperty(i)) {
-                            dates[i] = new Date(dates[i]);
+                            dates[i] = moment(dates[i]).toDate();
                         }
                     }
                     for (const i in times) {
                         if (times.hasOwnProperty(i)) {
-                            times[i] = new Date(times[i]);
+                            times[i] = moment(times[i]);
                         }
                     }
                     this.setState({
@@ -334,15 +319,16 @@ class Reserve extends TrackedComponent {
 
     handleDateSelectionComplete = date => {
         if (!date) return;
+        const selectedDate = moment(date);
 
         this.setState({
             activeStep: 2,
-            selectedDate: date,
-            disabledSlots: [this.isTimeNotAvailable(date, 8), this.isTimeNotAvailable(date, 11), this.isTimeNotAvailable(date, 14)],
-            dateStepLabel: dateFormat.format(date),
+            selectedDate,
+            disabledSlots: [this.isTimeNotAvailable(selectedDate, 8), this.isTimeNotAvailable(selectedDate, 11), this.isTimeNotAvailable(selectedDate, 14)],
+            dateStepLabel: selectedDate.format('MMMM D, YYYY'),
         });
 
-        apiFetch(`api/reservations/reservationpercentage?date=${date.toJSON()}`).then(
+        apiFetch(`api/reservations/reservationpercentage?date=${selectedDate.toJSON()}`).then(
             data => {
                 this.setState({
                     reservationPercentage: data,
@@ -364,19 +350,18 @@ class Reserve extends TrackedComponent {
 
     handleTimeSelectionComplete = event => {
         const time = event.target.value;
-        const dateTime = new Date(this.state.selectedDate);
-        dateTime.setHours(time);
+        const dateTime = moment(this.state.selectedDate);
+        dateTime.hours(time);
         this.setState({
             activeStep: 3,
             selectedDate: dateTime,
-            timeStepLabel: timeFormat.format(dateTime),
+            timeStepLabel: dateTime.format('hh:mm A'),
         });
     };
 
     isTimeNotAvailable = (date, time) => {
-        const dateTime = new Date(date);
-        dateTime.setHours(time);
-        return this.state.notAvailableTimes.filter(notAvailableTime => notAvailableTime.getTime() === dateTime.getTime()).length > 0;
+        date.hours(time);
+        return this.state.notAvailableTimes.filter(notAvailableTime => notAvailableTime.isSame(date, 'hour')).length > 0;
     };
 
     handlePlateNumberChange = event => {
@@ -531,7 +516,7 @@ class Reserve extends TrackedComponent {
             locationKnown,
             dropoffPreConfirmed,
         } = this.state;
-        const today = new Date();
+        const today = moment();
 
         if (this.state.reservationCompleteRedirect) {
             return <Redirect to="/" />;
@@ -623,9 +608,9 @@ class Reserve extends TrackedComponent {
                             <InfiniteCalendar
                                 onSelect={date => this.handleDateSelectionComplete(date)}
                                 selected={null}
-                                min={today}
-                                minDate={today}
-                                max={addDays(today, 365)}
+                                min={today.toDate()}
+                                minDate={today.toDate()}
+                                max={today.add(365, 'days').toDate()}
                                 locale={{ weekStartsOn: 1 }}
                                 disabledDays={[0, 6, 7]}
                                 disabledDates={notAvailableDates}

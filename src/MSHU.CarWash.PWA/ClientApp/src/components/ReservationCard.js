@@ -26,7 +26,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import red from '@material-ui/core/colors/red';
 import { getStateName, getServiceName, State, Garages } from '../Constants';
-import { formatLocation } from '../Helpers';
+import { formatLocation, formatDate2 } from '../Helpers';
 import Comments from './Comments';
 
 const styles = theme => ({
@@ -67,22 +67,6 @@ const styles = theme => ({
         },
     },
 });
-
-function getDate(reservation) {
-    const from = new Intl.DateTimeFormat('en-US', {
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    }).format(new Date(reservation.startDate));
-
-    const to = new Intl.DateTimeFormat('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-    }).format(new Date(reservation.endDate));
-
-    return `${from} - ${to}`;
-}
 
 class ReservationCard extends Component {
     state = {
@@ -239,7 +223,7 @@ class ReservationCard extends Component {
                         <CardHeader
                             action={reservation.private ? <LockIcon alt="Private" style={{ margin: '8px 16px 0 0' }} /> : null}
                             title={getStateName(reservation.state)}
-                            subheader={getDate(reservation)}
+                            subheader={formatDate2(reservation)}
                         />
                         <CardContent>
                             <Typography variant="caption" gutterBottom>

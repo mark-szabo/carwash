@@ -28,7 +28,7 @@ import MoneyOffIcon from '@material-ui/icons/MoneyOff';
 import SendIcon from '@material-ui/icons/Send';
 import SaveIcon from '@material-ui/icons/Save';
 import { State, getServiceName, getAdminStateName, Garages, Service } from '../Constants';
-import { formatLocation } from '../Helpers';
+import { formatLocation, formatDate } from '../Helpers';
 import Comments from './Comments';
 
 const styles = theme => ({
@@ -108,25 +108,6 @@ const styles = theme => ({
     },
     pushActionsUp: {},
 });
-
-function getDate(reservation) {
-    const from = new Intl.DateTimeFormat('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-    }).format(new Date(reservation.startDate));
-
-    const to = new Intl.DateTimeFormat('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-    }).format(new Date(reservation.endDate));
-
-    const date = new Intl.DateTimeFormat('en-US', {
-        month: 'long',
-        day: 'numeric',
-    }).format(new Date(reservation.startDate));
-
-    return `${from} - ${to} • ${date}`;
-}
 
 class CarwashDetailsDialog extends React.Component {
     state = {
@@ -561,7 +542,7 @@ class CarwashDetailsDialog extends React.Component {
                     </div>
                     <Typography variant="display2">{reservation.vehiclePlateNumber}</Typography>
                     <Typography variant="body1" color="textSecondary" component="span" style={{ margin: '8px 0' }}>
-                        {getAdminStateName(reservation.state)} • {getDate(reservation)} • {reservation.user.firstName} {reservation.user.lastName} •{' '}
+                        {getAdminStateName(reservation.state)} • {formatDate(reservation)} • {reservation.user.firstName} {reservation.user.lastName} •{' '}
                         {reservation.user.company}
                     </Typography>
                     {!editLocation ? (
