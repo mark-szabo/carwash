@@ -1105,7 +1105,7 @@ namespace MSHU.CarWash.PWA.Controllers
             {
                 // Add a new worksheet to the empty workbook
                 var worksheet = package.Workbook.Worksheets.Add($"{startDateNonNull.Year}-{startDateNonNull.Month}");
-
+                
                 // Add the headers
                 worksheet.Cells[1, 1].Value = "Date";
                 worksheet.Cells[1, 2].Value = "Start time";
@@ -1154,6 +1154,26 @@ namespace MSHU.CarWash.PWA.Controllers
                     i++;
                 }
 
+                // Format as table
+                var table = worksheet.Tables.Add(worksheet.Cells[1, 1, i-1, 12],
+                    $"reservations-{startDateNonNull.Year}-{startDateNonNull.Month}");
+                table.ShowTotal = false;
+                table.ShowHeader = true;
+                table.ShowFilter = true;
+
+                // Column auto-width
+                worksheet.Column(1).AutoFit();
+                worksheet.Column(2).AutoFit();
+                worksheet.Column(3).AutoFit();
+                worksheet.Column(4).AutoFit();
+                worksheet.Column(5).AutoFit();
+                worksheet.Column(6).AutoFit();
+                worksheet.Column(7).AutoFit();
+                worksheet.Column(8).AutoFit();
+                worksheet.Column(9).AutoFit();
+                worksheet.Column(12).AutoFit();
+
+                // Convert to stream
                 var stream = new MemoryStream(package.GetAsByteArray());
 
                 return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"carwash-export-{startDateNonNull.Year}-{startDateNonNull.Month}-{startDateNonNull.Day}.xlsx");
