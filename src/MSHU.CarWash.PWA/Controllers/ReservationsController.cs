@@ -172,9 +172,9 @@ namespace MSHU.CarWash.PWA.Controllers
 
             #region Input validation
             if (dbReservation.UserId != _user.Id && !_user.IsAdmin && !_user.IsCarwashAdmin) return Forbid();
-            if (reservation.UserId != _user.Id && 
+            if (reservation.UserId != _user.Id &&
                 reservation.UserId != null &&
-                !_user.IsAdmin && 
+                !_user.IsAdmin &&
                 !_user.IsCarwashAdmin)
                 return BadRequest("Cannot modify user of registration. You need to re-create it.");
             if (reservation.Services == null) return BadRequest("No service chosen.");
@@ -1105,7 +1105,7 @@ namespace MSHU.CarWash.PWA.Controllers
             {
                 // Add a new worksheet to the empty workbook
                 var worksheet = package.Workbook.Worksheets.Add($"{startDateNonNull.Year}-{startDateNonNull.Month}");
-                
+
                 // Add the headers
                 worksheet.Cells[1, 1].Value = "Date";
                 worksheet.Cells[1, 2].Value = "Start time";
@@ -1155,8 +1155,8 @@ namespace MSHU.CarWash.PWA.Controllers
                 }
 
                 // Format as table
-                var table = worksheet.Tables.Add(worksheet.Cells[1, 1, i-1, 12],
-                    $"reservations-{startDateNonNull.Year}-{startDateNonNull.Month}");
+                var dataRange = worksheet.Cells[1, 1, i - 1, 12];
+                var table = worksheet.Tables.Add(dataRange, $"reservations_{startDateNonNull.Year}_{startDateNonNull.Month}");
                 table.ShowTotal = false;
                 table.ShowHeader = true;
                 table.ShowFilter = true;
@@ -1170,8 +1170,16 @@ namespace MSHU.CarWash.PWA.Controllers
                 worksheet.Column(6).AutoFit();
                 worksheet.Column(7).AutoFit();
                 worksheet.Column(8).AutoFit();
-                worksheet.Column(9).AutoFit();
+                worksheet.Column(9).AutoFit(); //don't do it for comment fields
                 worksheet.Column(12).AutoFit();
+
+                // Pivot table
+                var pivotSheet = package.Workbook.Worksheets.Add($"{startDateNonNull.Year}-{startDateNonNull.Month} pivot");
+                var pivot = pivotSheet.PivotTables.Add(pivotSheet.Cells[1, 1], dataRange, "Employee pivot");
+                if (_user.IsCarwashAdmin) pivot.RowFields.Add(pivot.Fields["Company"]);
+                pivot.RowFields.Add(pivot.Fields["Name"]);
+                pivot.DataFields.Add(pivot.Fields["Price (computed)"]);
+                pivot.DataOnRows = true;
 
                 // Convert to stream
                 var stream = new MemoryStream(package.GetAsByteArray());
