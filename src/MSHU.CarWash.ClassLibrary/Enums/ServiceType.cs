@@ -35,12 +35,12 @@ namespace MSHU.CarWash.ClassLibrary.Enums
             new Service {Type = Polishing, TimeInMinutes = 0, Price = 4498, PriceMpv = 4498, Hidden = false},
             new Service {Type = AcCleaningOzon, TimeInMinutes = 0, Price = 8033, PriceMpv = 8033, Hidden = false},
             new Service {Type = AcCleaningBomba, TimeInMinutes = 0, Price = 6426, PriceMpv = 6426, Hidden = false},
-            new Service {Type = BugRemoval, TimeInMinutes = 0, Price = 0, PriceMpv = 0, Hidden = true},
-            new Service {Type = WheelCleaning, TimeInMinutes = 0, Price = 0, PriceMpv = 0, Hidden = true},
-            new Service {Type = TireCare, TimeInMinutes = 0, Price = 0, PriceMpv = 0, Hidden = true},
-            new Service {Type = LeatherCare, TimeInMinutes = 0, Price = 0, PriceMpv = 0, Hidden = true},
-            new Service {Type = PlasticCare, TimeInMinutes = 0, Price = 0, PriceMpv = 0, Hidden = true},
-            new Service {Type = PreWash, TimeInMinutes = 0, Price = 0, PriceMpv = 0, Hidden = true}
+            new Service {Type = BugRemoval, TimeInMinutes = 0, Price = 804, PriceMpv = 804, Hidden = true},
+            new Service {Type = WheelCleaning, TimeInMinutes = 0, Price = 964, PriceMpv = 964, Hidden = true},
+            new Service {Type = TireCare, TimeInMinutes = 0, Price = 804, PriceMpv = 804, Hidden = true},
+            new Service {Type = LeatherCare, TimeInMinutes = 0, Price = 8033, PriceMpv = 8033, Hidden = true},
+            new Service {Type = PlasticCare, TimeInMinutes = 0, Price = 7230, PriceMpv = 7230, Hidden = true},
+            new Service {Type = PreWash, TimeInMinutes = 0, Price = 804, PriceMpv = 804, Hidden = true}
         };
     }
 
