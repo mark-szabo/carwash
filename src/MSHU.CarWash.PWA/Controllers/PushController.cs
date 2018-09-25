@@ -17,7 +17,6 @@ namespace MSHU.CarWash.PWA.Controllers
     [ApiController]
     public class PushController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
         private readonly User _user;
         private readonly IHostingEnvironment _env;
         private readonly IPushService _pushService;
@@ -25,7 +24,6 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <inheritdoc />
         public PushController(ApplicationDbContext context, UsersController usersController, IHostingEnvironment hostingEnvironment, IPushService pushService)
         {
-            _context = context;
             _user = usersController.GetCurrentUser();
             _env = hostingEnvironment;
             _pushService = pushService;
@@ -38,9 +36,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>VAPID Public Key</returns>
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
-        [ProducesResponseType(typeof(string), 200)]
         [HttpGet, Route("vapidpublickey")]
-        public IActionResult GetVapidPublicKey()
+        public ActionResult<string> GetVapidPublicKey()
         {
             return Ok(_pushService.GetVapidPublicKey());
         }
@@ -53,9 +50,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="204">NoContent</response>
         /// <response code="400">BadRequest if subscription is null or invalid.</response>
         /// <response code="401">Unauthorized</response>
-        [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] PushSubscriptionViewModel subscription)
+        public async Task<ActionResult<NoContentResult>> Register([FromBody] PushSubscriptionViewModel subscription)
         {
             var dbSubscription = new PushSubscription
             {
@@ -80,9 +76,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="202">Accepted</response>
         /// <response code="400">BadRequest if subscription is null or invalid.</response>
         /// <response code="401">Unauthorized</response>
-        [ProducesResponseType(typeof(AcceptedResult), 202)]
         [HttpPost("send/{userId}")]
-        public async Task<IActionResult> Send([FromRoute] string userId, [FromBody] Notification notification)
+        public async Task<ActionResult<AcceptedResult>> Send([FromRoute] string userId, [FromBody] Notification notification)
         {
             if (!_env.IsDevelopment()) return Forbid();
 
