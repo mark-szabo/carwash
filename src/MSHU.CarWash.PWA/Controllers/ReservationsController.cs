@@ -1058,8 +1058,9 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <param name="startDate">start date (default: a month before today)</param>
         /// <param name="endDate">end date (default: today)</param>
         /// <returns>An Excel file of the list of reservations</returns>
+        [ProducesResponseType(typeof(FileStreamResult), 200)]
         [HttpGet, Route("export")]
-        public async Task<ActionResult<FileStreamResult>> Export(DateTime? startDate, DateTime? endDate)
+        public async Task<IActionResult> Export(DateTime? startDate, DateTime? endDate)
         {
             var startDateNonNull = startDate ?? DateTime.Today.AddMonths(-1);
             var endDateNonNull = endDate ?? DateTime.Today;
