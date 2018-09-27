@@ -5,6 +5,7 @@ import apiFetch from './Auth';
 import registerPush from './PushService';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Snackbar from '@material-ui/core/Snackbar';
+import * as moment from 'moment';
 import Layout from './components/Layout';
 import Home from './components/Home';
 import Reserve from './components/Reserve';
@@ -216,7 +217,7 @@ export default class App extends Component {
             data => {
                 const backlog = data;
                 for (let i = 0; i < backlog.length; i++) {
-                    backlog[i].startDate = new Date(backlog[i].startDate);
+                    backlog[i].startDate = moment(backlog[i].startDate);
                 }
                 this.setState({ backlog, backlogLoading: false });
                 if (refresh) this.openSnackbar('Refreshed.');

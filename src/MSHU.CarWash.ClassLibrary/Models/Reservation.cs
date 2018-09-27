@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace MSHU.CarWash.ClassLibrary.Models
 {
@@ -54,5 +55,24 @@ namespace MSHU.CarWash.ClassLibrary.Models
         public DateTime CreatedOn { get; set; }
 
         public string OutlookEventId { get; set; }
+
+        [NotMapped]
+        public int Price
+        {
+            get
+            {
+                var sum = 0;
+
+                foreach (var service in Services)
+                {
+                    var serviceCosts = ServiceTypes.Types.SingleOrDefault(s => s.Type == service);
+                    if (serviceCosts == null) throw new Exception("Invalid service. No price found.");
+
+                    sum += Mpv ? serviceCosts.PriceMpv : serviceCosts.Price;
+                }
+
+                return sum;
+            }
+        }
     }
 }

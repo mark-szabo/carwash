@@ -107,9 +107,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to get another user's reservation.</response>
         /// <response code="404">NotFound if reservation not found.</response>
-        [ProducesResponseType(typeof(ReservationViewModel), 200)]
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetReservation([FromRoute] string id)
+        public async Task<ActionResult<ReservationViewModel>> GetReservation([FromRoute] string id)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -134,9 +133,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="400">BadRequest if no service choosen / StartDate and EndDate isn't on the same day / a Date is in the past / StartDate and EndDate are not valid slot start/end times / user/company limit has been met / there is no more time in that slot.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to update another user's reservation.</response>
-        [ProducesResponseType(typeof(ReservationViewModel), 200)]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutReservation([FromRoute] string id, [FromBody] Reservation reservation, [FromQuery] bool dropoffConfirmed = false)
+        public async Task<ActionResult<ReservationViewModel>> PutReservation([FromRoute] string id, [FromBody] Reservation reservation, [FromQuery] bool dropoffConfirmed = false)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -172,9 +170,9 @@ namespace MSHU.CarWash.PWA.Controllers
 
             #region Input validation
             if (dbReservation.UserId != _user.Id && !_user.IsAdmin && !_user.IsCarwashAdmin) return Forbid();
-            if (reservation.UserId != _user.Id && 
+            if (reservation.UserId != _user.Id &&
                 reservation.UserId != null &&
-                !_user.IsAdmin && 
+                !_user.IsAdmin &&
                 !_user.IsCarwashAdmin)
                 return BadRequest("Cannot modify user of registration. You need to re-create it.");
             if (reservation.Services == null) return BadRequest("No service chosen.");
@@ -249,9 +247,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="400">BadRequest if no service chosen / StartDate and EndDate isn't on the same day / a Date is in the past / StartDate and EndDate are not valid slot start/end times / user/company limit has been met / there is no more time in that slot.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to reserve for another user.</response>
-        [ProducesResponseType(typeof(ReservationViewModel), 201)]
         [HttpPost]
-        public async Task<IActionResult> PostReservation([FromBody] Reservation reservation, [FromQuery] bool dropoffConfirmed = false)
+        public async Task<ActionResult<ReservationViewModel>> PostReservation([FromBody] Reservation reservation, [FromQuery] bool dropoffConfirmed = false)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -346,9 +343,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to delete another user's reservation.</response>
         /// <response code="404">NotFound if reservation not found.</response>
-        [ProducesResponseType(typeof(ReservationViewModel), 200)]
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteReservation([FromRoute] string id)
+        public async Task<ActionResult<ReservationViewModel>> DeleteReservation([FromRoute] string id)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -374,9 +370,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin.</response>
-        [ProducesResponseType(typeof(IEnumerable<AdminReservationViewModel>), 200)]
         [HttpGet, Route("company")]
-        public async Task<IActionResult> GetCompanyReservations()
+        public async Task<ActionResult<IEnumerable<AdminReservationViewModel>>> GetCompanyReservations()
         {
             if (!_user.IsAdmin) return Forbid();
 
@@ -421,9 +416,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
-        [ProducesResponseType(typeof(IEnumerable<AdminReservationViewModel>), 200)]
         [HttpGet, Route("backlog")]
-        public async Task<IActionResult> GetBacklog()
+        public async Task<ActionResult<IEnumerable<AdminReservationViewModel>>> GetBacklog()
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 
@@ -471,9 +465,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="400">BadRequest if id or location param is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to update another user's reservation.</response>
-        [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/confirmdropoff")]
-        public async Task<IActionResult> ConfirmDropoff([FromRoute] string id, [FromBody] string location)
+        public async Task<ActionResult<NoContentResult>> ConfirmDropoff([FromRoute] string id, [FromBody] string location)
         {
             if (id == null) return BadRequest("Reservation id cannot be null.");
             if (location == null) return BadRequest("Reservation location cannot be null.");
@@ -516,9 +509,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="400">BadRequest if id is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
-        [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/startwash")]
-        public async Task<IActionResult> StartWash([FromRoute] string id)
+        public async Task<ActionResult<NoContentResult>> StartWash([FromRoute] string id)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 
@@ -559,9 +551,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="400">BadRequest if id is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
-        [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/completewash")]
-        public async Task<IActionResult> CompleteWash([FromRoute] string id)
+        public async Task<ActionResult<NoContentResult>> CompleteWash([FromRoute] string id)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 
@@ -629,9 +620,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="400">BadRequest if id is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
-        [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/confirmpayment")]
-        public async Task<IActionResult> ConfirmPayment([FromRoute] string id)
+        public async Task<ActionResult<NoContentResult>> ConfirmPayment([FromRoute] string id)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 
@@ -675,9 +665,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="400">BadRequest if id or location param is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
-        [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/state/{state}")]
-        public async Task<IActionResult> SetState([FromRoute] string id, [FromRoute] State state)
+        public async Task<ActionResult<NoContentResult>> SetState([FromRoute] string id, [FromRoute] State state)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 
@@ -719,9 +708,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="400">BadRequest if id or comment is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
-        [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/carwashcomment")]
-        public async Task<IActionResult> AddCarwashComment([FromRoute] string id, [FromBody] string comment)
+        public async Task<ActionResult<NoContentResult>> AddCarwashComment([FromRoute] string id, [FromBody] string comment)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 
@@ -784,9 +772,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="400">BadRequest if id is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
-        [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/mpv")]
-        public async Task<IActionResult> SetMpv([FromRoute] string id, [FromBody] bool mpv)
+        public async Task<ActionResult<NoContentResult>> SetMpv([FromRoute] string id, [FromBody] bool mpv)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 
@@ -828,9 +815,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="400">BadRequest if id or services param is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
-        [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/services")]
-        public async Task<IActionResult> UpdateServices([FromRoute] string id, [FromBody] List<ServiceType> services)
+        public async Task<ActionResult<NoContentResult>> UpdateServices([FromRoute] string id, [FromBody] List<ServiceType> services)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 
@@ -873,9 +859,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="400">BadRequest if id or services param is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
-        [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPost("{id}/location")]
-        public async Task<IActionResult> UpdateLocation([FromRoute] string id, [FromBody] string location)
+        public async Task<ActionResult<NoContentResult>> UpdateLocation([FromRoute] string id, [FromBody] string location)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 
@@ -915,9 +900,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>List of <see cref="ReservationViewModel"/></returns>
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
-        [ProducesResponseType(typeof(IEnumerable<ObfuscatedReservationViewModel>), 200)]
         [HttpGet, Route("obfuscated")]
-        public IEnumerable<object> GetObfuscatedReservations(int daysAhead = 365)
+        public IEnumerable<ObfuscatedReservationViewModel> GetObfuscatedReservations(int daysAhead = 365)
         {
             return _context.Reservation
                 .Where(r => r.EndDate >= DateTime.Now && r.StartDate <= DateTime.Now.AddDays(daysAhead))
@@ -940,9 +924,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <returns>List of <see cref="DateTime"/></returns>
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
-        [ProducesResponseType(typeof(NotAvailableDatesAndTimesViewModel), 200)]
         [HttpGet, Route("notavailabledates")]
-        public async Task<object> GetNotAvailableDatesAndTimes(int daysAhead = 365)
+        public async Task<NotAvailableDatesAndTimesViewModel> GetNotAvailableDatesAndTimes(int daysAhead = 365)
         {
             if (_user.IsCarwashAdmin) return new NotAvailableDatesAndTimesViewModel { Dates = new List<DateTime>(), Times = new List<DateTime>() };
 
@@ -1017,9 +1000,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="200">OK</response>
         /// <response code="204">NoContent if user has no reservation yet.</response>
         /// <response code="401">Unauthorized</response>
-        [ProducesResponseType(typeof(LastSettingsViewModel), 200)]
         [HttpGet, Route("lastsettings")]
-        public async Task<IActionResult> GetLastSettings()
+        public async Task<ActionResult<LastSettingsViewModel>> GetLastSettings()
         {
             var lastReservation = await _context.Reservation
                 .Where(r => r.UserId == _user.Id)
@@ -1041,9 +1023,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// </summary>
         /// <param name="date">the date to filter on</param>
         /// <returns>List of <see cref="ReservationPercentageViewModel"/></returns>
-        [ProducesResponseType(typeof(List<ReservationPercentageViewModel>), 200)]
         [HttpGet, Route("reservationpercentage")]
-        public async Task<IActionResult> GetReservationPercentage(DateTime date)
+        public async Task<ActionResult<IEnumerable<ReservationPercentageViewModel>>> GetReservationPercentage(DateTime date)
         {
             var slotReservationAggregate = await _context.Reservation
                 .Where(r => r.StartDate.Date == date.Date)
@@ -1077,9 +1058,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <param name="startDate">start date (default: a month before today)</param>
         /// <param name="endDate">end date (default: today)</param>
         /// <returns>An Excel file of the list of reservations</returns>
-        [ProducesResponseType(typeof(FileStreamResult), 200)]
         [HttpGet, Route("export")]
-        public async Task<IActionResult> Export(DateTime? startDate, DateTime? endDate)
+        public async Task<ActionResult<FileStreamResult>> Export(DateTime? startDate, DateTime? endDate)
         {
             var startDateNonNull = startDate ?? DateTime.Today.AddMonths(-1);
             var endDateNonNull = endDate ?? DateTime.Today;
@@ -1118,6 +1098,7 @@ namespace MSHU.CarWash.PWA.Controllers
                 worksheet.Cells[1, 9].Value = "Services";
                 worksheet.Cells[1, 10].Value = "Comment";
                 worksheet.Cells[1, 11].Value = "Carwash comment";
+                worksheet.Cells[1, 12].Value = "Price (computed)";
 
                 // Add values
                 var i = 2;
@@ -1148,9 +1129,39 @@ namespace MSHU.CarWash.PWA.Controllers
 
                     worksheet.Cells[i, 11].Value = reservation.CarwashComment;
 
+                    worksheet.Cells[i, 12].Value = reservation.Price;
+
                     i++;
                 }
 
+                // Format as table
+                var dataRange = worksheet.Cells[1, 1, i - 1, 12];
+                var table = worksheet.Tables.Add(dataRange, $"reservations_{startDateNonNull.Year}_{startDateNonNull.Month}");
+                table.ShowTotal = false;
+                table.ShowHeader = true;
+                table.ShowFilter = true;
+
+                // Column auto-width
+                worksheet.Column(1).AutoFit();
+                worksheet.Column(2).AutoFit();
+                worksheet.Column(3).AutoFit();
+                worksheet.Column(4).AutoFit();
+                worksheet.Column(5).AutoFit();
+                worksheet.Column(6).AutoFit();
+                worksheet.Column(7).AutoFit();
+                worksheet.Column(8).AutoFit();
+                worksheet.Column(9).AutoFit(); //don't do it for comment fields
+                worksheet.Column(12).AutoFit();
+
+                // Pivot table
+                var pivotSheet = package.Workbook.Worksheets.Add($"{startDateNonNull.Year}-{startDateNonNull.Month} pivot");
+                var pivot = pivotSheet.PivotTables.Add(pivotSheet.Cells[1, 1], dataRange, "Employee pivot");
+                if (_user.IsCarwashAdmin) pivot.RowFields.Add(pivot.Fields["Company"]);
+                pivot.RowFields.Add(pivot.Fields["Name"]);
+                pivot.DataFields.Add(pivot.Fields["Price (computed)"]);
+                pivot.DataOnRows = true;
+
+                // Convert to stream
                 var stream = new MemoryStream(package.GetAsByteArray());
 
                 return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"carwash-export-{startDateNonNull.Year}-{startDateNonNull.Month}-{startDateNonNull.Day}.xlsx");
@@ -1360,7 +1371,8 @@ namespace MSHU.CarWash.PWA.Controllers
         }
     }
 
-    internal class ReservationViewModel
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    public class ReservationViewModel
     {
         public ReservationViewModel() { }
 
@@ -1394,7 +1406,7 @@ namespace MSHU.CarWash.PWA.Controllers
         public string CarwashComment { get; set; }
     }
 
-    internal class AdminReservationViewModel
+    public class AdminReservationViewModel
     {
         public string Id { get; set; }
         public string UserId { get; set; }
@@ -1411,7 +1423,7 @@ namespace MSHU.CarWash.PWA.Controllers
         public string CarwashComment { get; set; }
     }
 
-    internal class ObfuscatedReservationViewModel
+    public class ObfuscatedReservationViewModel
     {
         public string Company { get; set; }
         public List<ServiceType> Services { get; set; }
@@ -1420,23 +1432,24 @@ namespace MSHU.CarWash.PWA.Controllers
         public DateTime EndDate { get; set; }
     }
 
-    internal class NotAvailableDatesAndTimesViewModel
+    public class NotAvailableDatesAndTimesViewModel
     {
         public IEnumerable<DateTime> Dates { get; set; }
         public IEnumerable<DateTime> Times { get; set; }
     }
 
-    internal class LastSettingsViewModel
+    public class LastSettingsViewModel
     {
         public string VehiclePlateNumber { get; set; }
         public string Location { get; set; }
     }
 
-    internal class ReservationPercentageViewModel
+    public class ReservationPercentageViewModel
     {
         public DateTime StartTime { get; set; }
         public double Percentage { get; set; }
     }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
     internal class Slot
     {

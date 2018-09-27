@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using MSHU.CarWash.ClassLibrary;
 using MSHU.CarWash.PWA.Extensions;
 using System;
 using System.Collections.Generic;
@@ -45,9 +44,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin.</response>
-        [ProducesResponseType(typeof(IEnumerable<UserViewModel>), 200)]
         [HttpGet]
-        public IActionResult GetUsers()
+        public ActionResult<IEnumerable<UserViewModel>> GetUsers()
         {
             if (!_user.IsAdmin) return Forbid();
             return Ok(_context.Users
@@ -64,9 +62,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin.</response>
-        [ProducesResponseType(typeof(Dictionary<string, string>), 200)]
         [HttpGet, Route("dictionary")]
-        public async Task<IActionResult> GetUserDictionary()
+        public async Task<ActionResult<Dictionary<string, string>>> GetUserDictionary()
         {
             if (!_user.IsAdmin) return Forbid();
 
@@ -90,9 +87,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to get another user's information or user is admin but tries to get a user from another company.</response>
         /// <response code="404">NotFound if user not found.</response>
-        [ProducesResponseType(typeof(UserViewModel), 200)]
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetUser([FromRoute] string id)
+        public async Task<ActionResult<UserViewModel>> GetUser([FromRoute] string id)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -118,9 +114,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="404">NotFound if user not found.</response>
-        [ProducesResponseType(typeof(UserViewModel), 200)]
         [HttpGet, Route("me")]
-        public IActionResult GetMe()
+        public ActionResult<UserViewModel> GetMe()
         {
             if (_user == null) return NotFound();
 
@@ -137,9 +132,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="204">NoContent</response>
         /// <response code="400">BadRequest if setting key is not valid or value param is null.</response>
         /// <response code="401">Unauthorized</response>
-        [ProducesResponseType(typeof(NoContentResult), 204)]
         [HttpPut("settings/{key}")]
-        public async Task<IActionResult> PutSettings([FromRoute] string key, [FromBody] object value)
+        public async Task<ActionResult<NoContentResult>> PutSettings([FromRoute] string key, [FromBody] object value)
         {
             if (value == null) return BadRequest("Setting value cannot be null.");
 
@@ -191,9 +185,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="404">NotFound if user not found.</response>
-        [ProducesResponseType(typeof(object), 200)]
         [HttpGet, Route("downloadpersonaldata")]
-        public async Task<IActionResult> DownloadPersonalData()
+        public async Task<ActionResult<object>> DownloadPersonalData()
         {
             if (_user == null) return NotFound();
 
@@ -231,9 +224,8 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to delete another user or user is admin but tries to delete a user from another company.</response>
         /// <response code="404">NotFound if user not found.</response>
-        [ProducesResponseType(typeof(UserViewModel), 200)]
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser([FromRoute] string id)
+        public async Task<ActionResult<UserViewModel>> DeleteUser([FromRoute] string id)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -283,7 +275,8 @@ Please keep in mind, that we are required to continue storing your previous rese
         internal User GetCurrentUser() => _user;
     }
 
-    internal class UserViewModel
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    public class UserViewModel
     {
         public UserViewModel() { }
 
@@ -308,4 +301,5 @@ Please keep in mind, that we are required to continue storing your previous rese
         public bool CalendarIntegration { get; set; }
         public NotificationChannel NotificationChannel { get; set; }
     }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }
