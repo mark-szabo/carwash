@@ -348,7 +348,7 @@ namespace MSHU.CarWash.PWA.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var reservation = await _context.Reservation.FindAsync(id);
+            var reservation = await _context.Reservation.Include(r => r.User).SingleOrDefaultAsync(r => r.Id == id);
             if (reservation == null) return NotFound();
 
             if (reservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin)) return Forbid();
