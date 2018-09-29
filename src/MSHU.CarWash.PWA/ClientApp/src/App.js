@@ -17,6 +17,7 @@ import CarwashAdmin from './components/CarwashAdmin';
 import NotificationDialog from './components/NotificationDialog';
 import { NotificationChannel, BacklogHubMethods } from './Constants';
 import Spinner from './components/Spinner';
+import { sleep } from './Helpers';
 
 // A theme with custom primary and secondary color.
 const theme = createMuiTheme({
@@ -332,6 +333,12 @@ export default class App extends Component {
                 this.loadBacklog().then(() => this.openSnackbar('A key was just dropped off!'));
             });
         }
+
+        this.backlogHubConnection.onclose(error => {
+            console.error(`SignalR: Connection to the hub was closed. Reconnecting... (${error})`);
+            if (this.state.user.isCarwashAdmin) this.loadBacklog();
+            sleep(5000).then(() => this.backlogHubConnection.start().catch(e => console.error(e.toString())));
+        });
 
         this.backlogHubConnection.start().catch(e => console.error(e.toString()));
     };
