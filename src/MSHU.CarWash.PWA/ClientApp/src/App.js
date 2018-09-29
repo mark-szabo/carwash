@@ -6,6 +6,7 @@ import registerPush from './PushService';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Snackbar from '@material-ui/core/Snackbar';
 import * as moment from 'moment';
+import * as signalR from '@aspnet/signalr';
 import Layout from './components/Layout';
 import Home from './components/Home';
 import Reserve from './components/Reserve';
@@ -14,8 +15,9 @@ import Admin from './components/Admin';
 import Settings from './components/Settings';
 import CarwashAdmin from './components/CarwashAdmin';
 import NotificationDialog from './components/NotificationDialog';
-import { NotificationChannel } from './Constants';
+import { NotificationChannel, BacklogHubMethods } from './Constants';
 import Spinner from './components/Spinner';
+import { sleep } from './Helpers';
 
 // A theme with custom primary and secondary color.
 const theme = createMuiTheme({
@@ -62,6 +64,8 @@ export default class App extends Component {
         snackbarOpen: false,
         snackbarMessage: '',
         notificationDialogOpen: false,
+        skipNextSignalrEventId: '',
+        skipNextSignalrEventMethod: '',
     };
 
     componentDidMount() {
@@ -92,6 +96,9 @@ export default class App extends Component {
 
                 if (data.isCarwashAdmin) {
                     this.loadBacklog();
+
+                    // Initiate SignalR connection to Backlog Hub
+                    sleep(5000).then(() => this.connectToBacklogHub());
                 }
             },
             error => {
@@ -210,10 +217,10 @@ export default class App extends Component {
     loadBacklog = refresh => {
         if (refresh && !navigator.onLine) {
             this.openSnackbar('You are offline.');
-            return;
+            return null;
         }
 
-        apiFetch('api/reservations/backlog').then(
+        return apiFetch('api/reservations/backlog').then(
             data => {
                 const backlog = data;
                 for (let i = 0; i < backlog.length; i++) {
@@ -301,6 +308,61 @@ export default class App extends Component {
         });
     };
 
+    skipNextSignalrEvent = (method, id) => {
+        this.setState({
+            skipNextSignalrEventId: id,
+            skipNextSignalrEventMethod: method,
+        });
+    };
+
+    shouldSkipSignalrEvent = (method, id) => {
+        if (this.state.skipNextSignalrEventId === id && this.state.skipNextSignalrEventMethod === method) {
+            this.setState({
+                skipNextSignalrEventId: '',
+                skipNextSignalrEventMethod: '',
+            });
+            console.log('SignalR: event was initiated on the same client; skipping handler.');
+
+            return true;
+        }
+
+        this.setState({
+            skipNextSignalrEventId: '',
+            skipNextSignalrEventMethod: '',
+        });
+        console.log('SignalR: event was initiated on another client; forwarding to handler.');
+
+        return false;
+    };
+
+    connectToBacklogHub = () => {
+        const backlogConnection = new signalR.HubConnectionBuilder().withUrl('/hub/backlog').build();
+
+        backlogConnection.on(BacklogHubMethods.ReservationCreated, id => {
+            console.log(`SignalR: new reservation (${id})`);
+            if (this.shouldSkipSignalrEvent(BacklogHubMethods.ReservationCreated, 'new')) return;
+            this.loadBacklog().then(() => this.openSnackbar('New reservation!'));
+        });
+        backlogConnection.on(BacklogHubMethods.ReservationUpdated, id => {
+            console.log(`SignalR: a reservation was just updated (${id})`);
+            if (this.shouldSkipSignalrEvent(BacklogHubMethods.ReservationUpdated, id)) return;
+            this.loadBacklog();
+        });
+        backlogConnection.on(BacklogHubMethods.ReservationDeleted, id => {
+            console.log(`SignalR: a reservation was just deleted (${id})`);
+            if (this.shouldSkipSignalrEvent(BacklogHubMethods.ReservationDeleted, id)) return;
+            this.loadBacklog().then(() => this.openSnackbar('A reservation was just deleted.'));
+        });
+        backlogConnection.on(BacklogHubMethods.ReservationDropoffConfirmed, id => {
+            console.log(`SignalR: a key was just dropped off (${id})`);
+            if (this.shouldSkipSignalrEvent(BacklogHubMethods.ReservationDropoffConfirmed, id)) return;
+            this.loadBacklog().then(() => this.openSnackbar('A key was just dropped off!'));
+        });
+
+        // Additional handlers omitted
+        backlogConnection.start().catch(e => console.error(e.toString()));
+    };
+
     render() {
         const {
             user,
@@ -328,6 +390,7 @@ export default class App extends Component {
                                 reservationsLoading={reservationsLoading}
                                 removeReservation={this.removeReservation}
                                 updateReservation={this.updateReservation}
+                                skipNextSignalrEvent={this.skipNextSignalrEvent}
                                 lastSettings={lastSettings}
                                 openSnackbar={this.openSnackbar}
                                 {...props}
@@ -344,6 +407,7 @@ export default class App extends Component {
                                     user={user}
                                     reservations={reservations}
                                     addReservation={this.addReservation}
+                                    skipNextSignalrEvent={this.skipNextSignalrEvent}
                                     lastSettings={lastSettings}
                                     loadLastSettings={this.loadLastSettings}
                                     openSnackbar={this.openSnackbar}
@@ -365,6 +429,7 @@ export default class App extends Component {
                                     reservations={reservations}
                                     addReservation={this.addReservation}
                                     removeReservation={this.removeReservation}
+                                    skipNextSignalrEvent={this.skipNextSignalrEvent}
                                     loadLastSettings={this.loadLastSettings}
                                     openSnackbar={this.openSnackbar}
                                     openNotificationDialog={this.openNotificationDialog}
@@ -391,6 +456,7 @@ export default class App extends Component {
                                 reservationsLoading={companyReservationsLoading}
                                 removeReservation={this.removeReservationFromCompanyReservations}
                                 updateReservation={this.updateCompanyReservation}
+                                skipNextSignalrEvent={this.skipNextSignalrEvent}
                                 lastSettings={lastSettings}
                                 openSnackbar={this.openSnackbar}
                                 {...props}
@@ -407,6 +473,7 @@ export default class App extends Component {
                                 backlog={backlog}
                                 backlogLoading={backlogLoading}
                                 backlogUpdateFound={backlogUpdateFound}
+                                skipNextSignalrEvent={this.skipNextSignalrEvent}
                                 snackbarOpen={this.state.snackbarOpen}
                                 openSnackbar={this.openSnackbar}
                                 updateBacklogItem={this.updateBacklogItem}
