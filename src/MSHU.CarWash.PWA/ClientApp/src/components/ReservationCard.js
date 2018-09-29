@@ -132,7 +132,6 @@ class ReservationCard extends Component {
 
     handleCancelConfirmed = () => {
         this.setState({ cancelDialogOpen: false });
-        this.props.skipNextSignalrEvent(BacklogHubMethods.ReservationDeleted, this.props.reservation.id);
 
         apiFetch(`api/reservations/${this.props.reservation.id}`, {
             method: 'DELETE',
@@ -142,6 +141,9 @@ class ReservationCard extends Component {
 
                 // Remove deleted reservation from reservations
                 this.props.removeReservation(this.props.reservation.id);
+
+                // Broadcast using SignalR
+                this.props.invokeBacklogHub(BacklogHubMethods.ReservationDeleted, this.props.reservation.id);
             },
             error => {
                 this.props.openSnackbar(error);
@@ -176,7 +178,6 @@ class ReservationCard extends Component {
         this.setState({ dropoffDialogOpen: false });
 
         this.props.updateReservation(reservation);
-        this.props.skipNextSignalrEvent(BacklogHubMethods.ReservationDropoffConfirmed, this.props.reservation.id);
 
         apiFetch(`api/reservations/${this.props.reservation.id}/confirmdropoff`, {
             method: 'POST',
@@ -187,6 +188,9 @@ class ReservationCard extends Component {
         }).then(
             () => {
                 this.props.openSnackbar('Drop-off and location confirmed.');
+
+                // Broadcast using SignalR
+                this.props.invokeBacklogHub(BacklogHubMethods.ReservationDropoffConfirmed, this.props.reservation.id);
             },
             error => {
                 reservation.state = oldState;
@@ -356,7 +360,7 @@ ReservationCard.propTypes = {
     reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
     updateReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func.isRequired,
-    skipNextSignalrEvent: PropTypes.func.isRequired,
+    invokeBacklogHub: PropTypes.func.isRequired,
     lastSettings: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
     admin: PropTypes.bool,

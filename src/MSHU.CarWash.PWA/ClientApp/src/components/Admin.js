@@ -7,7 +7,7 @@ export default class Admin extends TrackedComponent {
     displayName = Admin.name;
 
     render() {
-        const { reservations, reservationsLoading, removeReservation, updateReservation, skipNextSignalrEvent, openSnackbar, lastSettings } = this.props;
+        const { reservations, reservationsLoading, removeReservation, updateReservation, invokeBacklogHub, openSnackbar, lastSettings } = this.props;
 
         return (
             <ReservationGrid
@@ -15,7 +15,7 @@ export default class Admin extends TrackedComponent {
                 reservationsLoading={reservationsLoading}
                 removeReservation={removeReservation}
                 updateReservation={updateReservation}
-                skipNextSignalrEvent={skipNextSignalrEvent}
+                invokeBacklogHub={invokeBacklogHub}
                 lastSettings={lastSettings}
                 openSnackbar={openSnackbar}
                 admin
@@ -29,7 +29,7 @@ Admin.propTypes = {
     reservationsLoading: PropTypes.bool.isRequired,
     removeReservation: PropTypes.func.isRequired,
     updateReservation: PropTypes.func.isRequired,
-    skipNextSignalrEvent: PropTypes.func.isRequired,
+    invokeBacklogHub: PropTypes.func.isRequired,
     lastSettings: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
 };

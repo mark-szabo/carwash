@@ -87,13 +87,15 @@ class CarwashCard extends Component {
 
     handleCancelConfirmed = () => {
         this.setState({ cancelDialogOpen: false });
-        this.props.skipNextSignalrEvent(BacklogHubMethods.ReservationDeleted, this.props.reservation.id);
 
         apiFetch(`api/reservations/${this.props.reservation.id}`, {
             method: 'DELETE',
         }).then(
             () => {
                 this.props.openSnackbar('Reservation successfully canceled.');
+
+                // Broadcast using SignalR
+                this.props.invokeBacklogHub(BacklogHubMethods.ReservationDeleted, this.props.reservation.id);
 
                 // Remove deleted reservation from reservations
                 // this.props.removeReservation(this.props.reservation.id);
@@ -177,7 +179,7 @@ class CarwashCard extends Component {
                     open={detailsDialogOpen}
                     handleClose={this.handleDetailsDialogClose}
                     updateReservation={this.props.updateReservation}
-                    skipNextSignalrEvent={this.props.skipNextSignalrEvent}
+                    invokeBacklogHub={this.props.invokeBacklogHub}
                     snackbarOpen={this.props.snackbarOpen}
                     openSnackbar={this.props.openSnackbar}
                 />
@@ -206,7 +208,7 @@ CarwashCard.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     reservation: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     updateReservation: PropTypes.func.isRequired,
-    skipNextSignalrEvent: PropTypes.func.isRequired,
+    invokeBacklogHub: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
 };

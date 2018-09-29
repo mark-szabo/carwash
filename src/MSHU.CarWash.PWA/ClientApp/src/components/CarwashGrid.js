@@ -44,7 +44,7 @@ class CarwashGrid extends Component {
     }
 
     render() {
-        const { classes, backlog, backlogLoading, updateBacklogItem, skipNextSignalrEvent, openSnackbar } = this.props;
+        const { classes, backlog, backlogLoading, updateBacklogItem, invokeBacklogHub, openSnackbar } = this.props;
 
         if (backlogLoading) {
             return <Spinner />;
@@ -91,7 +91,7 @@ class CarwashGrid extends Component {
                                 reservation={reservation}
                                 snackbarOpen={this.props.snackbarOpen}
                                 updateReservation={updateBacklogItem}
-                                skipNextSignalrEvent={skipNextSignalrEvent}
+                                invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
                             />
                         </Grid>
@@ -104,7 +104,7 @@ class CarwashGrid extends Component {
                                 reservation={reservation}
                                 snackbarOpen={this.props.snackbarOpen}
                                 updateReservation={updateBacklogItem}
-                                skipNextSignalrEvent={skipNextSignalrEvent}
+                                invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
                             />
                         </Grid>
@@ -123,7 +123,7 @@ class CarwashGrid extends Component {
                                 reservation={reservation}
                                 snackbarOpen={this.props.snackbarOpen}
                                 updateReservation={updateBacklogItem}
-                                skipNextSignalrEvent={skipNextSignalrEvent}
+                                invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
                             />
                         </Grid>
@@ -136,7 +136,7 @@ class CarwashGrid extends Component {
                                 reservation={reservation}
                                 snackbarOpen={this.props.snackbarOpen}
                                 updateReservation={updateBacklogItem}
-                                skipNextSignalrEvent={skipNextSignalrEvent}
+                                invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
                             />
                         </Grid>
@@ -149,7 +149,7 @@ class CarwashGrid extends Component {
                                 reservation={reservation}
                                 snackbarOpen={this.props.snackbarOpen}
                                 updateReservation={updateBacklogItem}
-                                skipNextSignalrEvent={skipNextSignalrEvent}
+                                invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
                             />
                         </Grid>
@@ -165,7 +165,7 @@ CarwashGrid.propTypes = {
     backlog: PropTypes.arrayOf(PropTypes.object).isRequired,
     backlogLoading: PropTypes.bool.isRequired,
     updateBacklogItem: PropTypes.func.isRequired,
-    skipNextSignalrEvent: PropTypes.func.isRequired,
+    invokeBacklogHub: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
 };

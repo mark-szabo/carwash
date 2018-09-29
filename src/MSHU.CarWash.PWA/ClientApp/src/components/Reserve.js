@@ -448,9 +448,6 @@ class Reserve extends TrackedComponent {
         if (payload.id) {
             apiUrl = `api/reservations/${payload.id}`;
             apiMethod = 'PUT';
-            this.props.skipNextSignalrEvent(BacklogHubMethods.ReservationUpdated, payload.id);
-        } else {
-            this.props.skipNextSignalrEvent(BacklogHubMethods.ReservationCreated, 'new');
         }
 
         if (this.state.dropoffPreConfirmed) apiUrl += '?dropoffconfirmed=true';
@@ -471,9 +468,20 @@ class Reserve extends TrackedComponent {
                 });
                 this.props.openSnackbar('Reservation successfully saved.');
 
-                // Add new / update reservation
-                if (apiMethod === 'PUT') this.props.removeReservation(data.id);
-                this.props.addReservation(data);
+                if (apiMethod === 'PUT') {
+                    // Update reservation locally
+                    this.props.removeReservation(data.id);
+                    this.props.addReservation(data);
+
+                    // Broadcast using SignalR
+                    this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, data.id);
+                } else {
+                    // Add new reservation locally
+                    this.props.addReservation(data);
+
+                    // Broadcast using SignalR
+                    this.props.invokeBacklogHub(BacklogHubMethods.ReservationCreated, data.id);
+                }
 
                 // Refresh last settings
                 // Delete cached response for /api/reservations/lastsettings

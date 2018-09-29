@@ -56,7 +56,7 @@ class ReservationGrid extends Component {
             reservationsLoading,
             removeReservation,
             updateReservation,
-            skipNextSignalrEvent,
+            invokeBacklogHub,
             openSnackbar,
             lastSettings,
             admin,
@@ -87,7 +87,7 @@ class ReservationGrid extends Component {
                             reservations={reservations}
                             removeReservation={removeReservation}
                             updateReservation={updateReservation}
-                            skipNextSignalrEvent={skipNextSignalrEvent}
+                            invokeBacklogHub={invokeBacklogHub}
                             lastSettings={lastSettings}
                             openSnackbar={openSnackbar}
                             admin={admin}
@@ -105,7 +105,7 @@ ReservationGrid.propTypes = {
     reservationsLoading: PropTypes.bool.isRequired,
     removeReservation: PropTypes.func.isRequired,
     updateReservation: PropTypes.func.isRequired,
-    skipNextSignalrEvent: PropTypes.func.isRequired,
+    invokeBacklogHub: PropTypes.func.isRequired,
     lastSettings: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
     admin: PropTypes.bool,

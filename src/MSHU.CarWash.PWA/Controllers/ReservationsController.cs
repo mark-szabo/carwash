@@ -237,9 +237,6 @@ namespace MSHU.CarWash.PWA.Controllers
                 }
             }
 
-            // SignalR broadcast
-            await _backlogHub.Clients.All.SendAsync(BacklogHub.Methods.ReservationUpdated, dbReservation.Id);
-
             return Ok(new ReservationViewModel(dbReservation));
         }
 
@@ -336,9 +333,6 @@ namespace MSHU.CarWash.PWA.Controllers
             _context.Reservation.Add(reservation);
             await _context.SaveChangesAsync();
 
-            // SignalR broadcast
-            await _backlogHub.Clients.All.SendAsync(BacklogHub.Methods.ReservationCreated, reservation.Id);
-
             return CreatedAtAction("GetReservation", new { id = reservation.Id }, new ReservationViewModel(reservation));
         }
 
@@ -368,9 +362,6 @@ namespace MSHU.CarWash.PWA.Controllers
 
             // Delete calendar event using Microsoft Graph
             await _calendarService.DeleteEventAsync(reservation);
-
-            // SignalR broadcast
-            await _backlogHub.Clients.All.SendAsync(BacklogHub.Methods.ReservationDeleted, reservation.Id);
 
             return Ok(new ReservationViewModel(reservation));
         }
@@ -509,9 +500,6 @@ namespace MSHU.CarWash.PWA.Controllers
                 }
             }
 
-            // SignalR broadcast
-            await _backlogHub.Clients.All.SendAsync(BacklogHub.Methods.ReservationDropoffConfirmed, reservation.Id);
-
             return NoContent();
         }
 
@@ -553,9 +541,6 @@ namespace MSHU.CarWash.PWA.Controllers
                     throw;
                 }
             }
-
-            // SignalR broadcast
-            await _backlogHub.Clients.All.SendAsync(BacklogHub.Methods.ReservationUpdated, reservation.Id);
 
             return NoContent();
         }
@@ -626,9 +611,6 @@ namespace MSHU.CarWash.PWA.Controllers
                     throw new ArgumentOutOfRangeException();
             }
 
-            // SignalR broadcast
-            await _backlogHub.Clients.All.SendAsync(BacklogHub.Methods.ReservationUpdated, reservation.Id);
-
             return NoContent();
         }
 
@@ -673,9 +655,6 @@ namespace MSHU.CarWash.PWA.Controllers
                 }
             }
 
-            // SignalR broadcast
-            await _backlogHub.Clients.All.SendAsync(BacklogHub.Methods.ReservationUpdated, reservation.Id);
-
             return NoContent();
         }
 
@@ -718,9 +697,6 @@ namespace MSHU.CarWash.PWA.Controllers
                     throw;
                 }
             }
-
-            // SignalR broadcast
-            await _backlogHub.Clients.All.SendAsync(BacklogHub.Methods.ReservationUpdated, reservation.Id);
 
             return NoContent();
         }
@@ -786,9 +762,6 @@ namespace MSHU.CarWash.PWA.Controllers
                     throw new ArgumentOutOfRangeException();
             }
 
-            // SignalR broadcast
-            await _backlogHub.Clients.All.SendAsync(BacklogHub.Methods.ReservationUpdated, reservation.Id);
-
             return NoContent();
         }
 
@@ -831,9 +804,6 @@ namespace MSHU.CarWash.PWA.Controllers
                     throw;
                 }
             }
-
-            // SignalR broadcast
-            await _backlogHub.Clients.All.SendAsync(BacklogHub.Methods.ReservationUpdated, reservation.Id);
 
             return NoContent();
         }
@@ -879,9 +849,6 @@ namespace MSHU.CarWash.PWA.Controllers
                 }
             }
 
-            // SignalR broadcast
-            await _backlogHub.Clients.All.SendAsync(BacklogHub.Methods.ReservationUpdated, reservation.Id);
-
             return NoContent();
         }
 
@@ -925,9 +892,6 @@ namespace MSHU.CarWash.PWA.Controllers
                     throw;
                 }
             }
-
-            // SignalR broadcast
-            await _backlogHub.Clients.All.SendAsync(BacklogHub.Methods.ReservationUpdated, reservation.Id);
 
             return NoContent();
         }

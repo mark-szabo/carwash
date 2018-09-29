@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using System.Threading.Tasks;
 
 namespace MSHU.CarWash.PWA.Hubs
 {
@@ -8,16 +9,39 @@ namespace MSHU.CarWash.PWA.Hubs
     public class BacklogHub : Hub
     {
         /// <summary>
-        /// Method constants for Backlog events
+        /// Broadcast ReservationCreated message to all devices except caller's
         /// </summary>
-        public class Methods
+        /// <param name="id">reservation id</param>
+        public async Task ReservationCreated(string id)
         {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-            public const string ReservationCreated = "ReservationCreated";
-            public const string ReservationUpdated = "ReservationUpdated";
-            public const string ReservationDeleted = "ReservationDeleted";
-            public const string ReservationDropoffConfirmed = "ReservationDropoffConfirmed";
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+            await Clients.Others.SendAsync(nameof(ReservationCreated), id);
+        }
+
+        /// <summary>
+        /// Broadcast ReservationUpdated message to all devices except caller's
+        /// </summary>
+        /// <param name="id">reservation id</param>
+        public async Task ReservationUpdated(string id)
+        {
+            await Clients.Others.SendAsync(nameof(ReservationUpdated), id);
+        }
+
+        /// <summary>
+        /// Broadcast ReservationDeleted message to all devices except caller's
+        /// </summary>
+        /// <param name="id">reservation id</param>
+        public async Task ReservationDeleted(string id)
+        {
+            await Clients.Others.SendAsync(nameof(ReservationDeleted), id);
+        }
+
+        /// <summary>
+        /// Broadcast ReservationDropoffConfirmed message to all devices except caller's
+        /// </summary>
+        /// <param name="id">reservation id</param>
+        public async Task ReservationDropoffConfirmed(string id)
+        {
+            await Clients.Others.SendAsync(nameof(ReservationDropoffConfirmed), id);
         }
     }
 }
