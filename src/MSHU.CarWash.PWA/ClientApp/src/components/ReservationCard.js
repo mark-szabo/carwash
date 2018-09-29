@@ -25,7 +25,7 @@ import TextField from '@material-ui/core/TextField';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import red from '@material-ui/core/colors/red';
-import { getStateName, getServiceName, State, Garages } from '../Constants';
+import { getStateName, getServiceName, State, Garages, BacklogHubMethods } from '../Constants';
 import { formatLocation, formatDate2 } from '../Helpers';
 import Comments from './Comments';
 
@@ -132,6 +132,7 @@ class ReservationCard extends Component {
 
     handleCancelConfirmed = () => {
         this.setState({ cancelDialogOpen: false });
+        this.props.skipNextSignalrEvent(BacklogHubMethods.ReservationDeleted, this.props.reservation.id);
 
         apiFetch(`api/reservations/${this.props.reservation.id}`, {
             method: 'DELETE',
@@ -175,6 +176,7 @@ class ReservationCard extends Component {
         this.setState({ dropoffDialogOpen: false });
 
         this.props.updateReservation(reservation);
+        this.props.skipNextSignalrEvent(BacklogHubMethods.ReservationDropoffConfirmed, this.props.reservation.id);
 
         apiFetch(`api/reservations/${this.props.reservation.id}/confirmdropoff`, {
             method: 'POST',
@@ -354,6 +356,7 @@ ReservationCard.propTypes = {
     reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
     updateReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func.isRequired,
+    skipNextSignalrEvent: PropTypes.func.isRequired,
     lastSettings: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
     admin: PropTypes.bool,

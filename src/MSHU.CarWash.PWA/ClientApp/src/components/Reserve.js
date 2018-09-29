@@ -26,7 +26,7 @@ import CloudOffIcon from '@material-ui/icons/CloudOff';
 import ErrorOutlineIcon from '@material-ui/icons/ErrorOutline';
 import Grid from '@material-ui/core/Grid';
 import * as moment from 'moment';
-import { Garages, Service, NotificationChannel } from '../Constants';
+import { Garages, Service, NotificationChannel, BacklogHubMethods } from '../Constants';
 import 'react-infinite-calendar/styles.css';
 import './Reserve.css';
 import ServiceDetailsTable from './ServiceDetailsTable';
@@ -430,9 +430,7 @@ class Reserve extends TrackedComponent {
             return;
         }
 
-        this.setState({
-            loading: true,
-        });
+        this.setState({ loading: true });
 
         const payload = {
             id: this.props.match.params.id,
@@ -450,6 +448,9 @@ class Reserve extends TrackedComponent {
         if (payload.id) {
             apiUrl = `api/reservations/${payload.id}`;
             apiMethod = 'PUT';
+            this.props.skipNextSignalrEvent(BacklogHubMethods.ReservationUpdated, payload.id);
+        } else {
+            this.props.skipNextSignalrEvent(BacklogHubMethods.ReservationCreated, 'new');
         }
 
         if (this.state.dropoffPreConfirmed) apiUrl += '?dropoffconfirmed=true';
