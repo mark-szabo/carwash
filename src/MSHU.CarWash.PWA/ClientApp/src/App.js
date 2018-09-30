@@ -5,6 +5,7 @@ import apiFetch from './Auth';
 import registerPush from './PushService';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Snackbar from '@material-ui/core/Snackbar';
+import Button from '@material-ui/core/Button';
 import * as moment from 'moment';
 import * as signalR from '@aspnet/signalr';
 import Layout from './components/Layout';
@@ -63,6 +64,7 @@ export default class App extends Component {
         lastSettings: {},
         snackbarOpen: false,
         snackbarMessage: '',
+        snackbarAction: null,
         notificationDialogOpen: false,
     };
 
@@ -112,14 +114,17 @@ export default class App extends Component {
 
         /* Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key */
         AppInsights.downloadAndSetup({ instrumentationKey: 'd1ce1965-2171-4a11-9438-66114b31f88f' });
+
+        this.keyboardListener();
     }
 
     backlogHubConnection;
 
-    openSnackbar = message => {
+    openSnackbar = (message, action) => {
         this.setState({
             snackbarOpen: true,
             snackbarMessage: message,
+            snackbarAction: action,
         });
     };
 
@@ -343,6 +348,34 @@ export default class App extends Component {
         this.backlogHubConnection.start().catch(e => console.error(e.toString()));
     };
 
+    keyboardListener = () => {
+        const keys = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        document.addEventListener('keydown', event => {
+            keys.shift();
+            keys.push(event.keyCode);
+            if (
+                keys[0] === 38 &&
+                keys[1] === 38 &&
+                keys[2] === 40 &&
+                keys[3] === 40 &&
+                keys[4] === 37 &&
+                keys[5] === 39 &&
+                keys[6] === 37 &&
+                keys[7] === 39 &&
+                keys[8] === 66 &&
+                keys[9] === 65 &&
+                keys[10] === 13
+            ) {
+                this.openSnackbar(
+                    'Nice catch! Shoot me a message - I owe you a bier!',
+                    <Button href="https://www.linkedin.com/in/mark-szabo/" color="secondary" size="small">
+                        Contact
+                    </Button>
+                );
+            }
+        });
+    };
+
     render() {
         const {
             user,
@@ -475,6 +508,7 @@ export default class App extends Component {
                         'aria-describedby': 'message-id',
                     }}
                     message={<span id="message-id">{getSafeString(this.state.snackbarMessage)}</span>}
+                    action={this.state.snackbarAction}
                 />
                 <NotificationDialog
                     open={this.state.notificationDialogOpen}
