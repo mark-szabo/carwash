@@ -78,9 +78,16 @@ class Layout extends React.Component {
     getNavbarName() {
         let name;
         this.props.children.map(child => {
-            if (window.location.pathname.includes(child.props.path)) {
-                name = child.props.navbarName;
+            try {
+                if (window.location.pathname.includes(child.props.path)) {
+                    name = child.props.navbarName;
+                }
+            } catch (e) {
+                if (window.location.pathname.indexOf(child.props.path) !== -1) {
+                    name = child.props.navbarName;
+                }
             }
+
             return null;
         });
 
@@ -90,9 +97,16 @@ class Layout extends React.Component {
     getRefreshFunc() {
         let func;
         this.props.children.map(child => {
-            if (window.location.pathname.includes(child.props.path)) {
-                func = child.props.refresh;
+            try {
+                if (window.location.pathname.includes(child.props.path)) {
+                    func = child.props.refresh;
+                }
+            } catch (e) {
+                if (window.location.pathname.indexOf(child.props.path) !== -1) {
+                    func = child.props.refresh;
+                }
             }
+
             return null;
         });
 
