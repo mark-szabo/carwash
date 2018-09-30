@@ -12,6 +12,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR;
+using MSHU.CarWash.PWA.Hubs;
 
 namespace MSHU.CarWash.PWA.Controllers
 {
@@ -26,6 +28,7 @@ namespace MSHU.CarWash.PWA.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly User _user;
+        private readonly IHubContext<BacklogHub> _backlogHub;
         private readonly ICalendarService _calendarService;
         private readonly IPushService _pushService;
 
@@ -71,10 +74,11 @@ namespace MSHU.CarWash.PWA.Controllers
         };
 
         /// <inheritdoc />
-        public ReservationsController(ApplicationDbContext context, UsersController usersController, ICalendarService calendarService, IPushService pushService)
+        public ReservationsController(ApplicationDbContext context, UsersController usersController, IHubContext<BacklogHub> backlogHub, ICalendarService calendarService, IPushService pushService)
         {
             _context = context;
             _user = usersController.GetCurrentUser();
+            _backlogHub = backlogHub;
             _calendarService = calendarService;
             _pushService = pushService;
         }

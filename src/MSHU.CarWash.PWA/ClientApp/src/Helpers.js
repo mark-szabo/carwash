@@ -39,3 +39,13 @@ export function formatDate2(reservation) {
 
     return `${startTime} - ${endTime}`;
 }
+
+/**
+ * Sleep for the given milliseconds
+ * @param {int} ms milliseconds to sleep
+ * @returns {Promise} Promise
+ * @example sleep(5000).then(() => { foo(); })
+ */
+export function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
