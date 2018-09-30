@@ -26,7 +26,7 @@ import CloudOffIcon from '@material-ui/icons/CloudOff';
 import ErrorOutlineIcon from '@material-ui/icons/ErrorOutline';
 import Grid from '@material-ui/core/Grid';
 import * as moment from 'moment';
-import { Garages, Service, NotificationChannel } from '../Constants';
+import { Garages, Service, NotificationChannel, BacklogHubMethods } from '../Constants';
 import 'react-infinite-calendar/styles.css';
 import './Reserve.css';
 import ServiceDetailsTable from './ServiceDetailsTable';
@@ -430,9 +430,7 @@ class Reserve extends TrackedComponent {
             return;
         }
 
-        this.setState({
-            loading: true,
-        });
+        this.setState({ loading: true });
 
         const payload = {
             id: this.props.match.params.id,
@@ -470,9 +468,20 @@ class Reserve extends TrackedComponent {
                 });
                 this.props.openSnackbar('Reservation successfully saved.');
 
-                // Add new / update reservation
-                if (apiMethod === 'PUT') this.props.removeReservation(data.id);
-                this.props.addReservation(data);
+                if (apiMethod === 'PUT') {
+                    // Update reservation locally
+                    this.props.removeReservation(data.id);
+                    this.props.addReservation(data);
+
+                    // Broadcast using SignalR
+                    this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, data.id);
+                } else {
+                    // Add new reservation locally
+                    this.props.addReservation(data);
+
+                    // Broadcast using SignalR
+                    this.props.invokeBacklogHub(BacklogHubMethods.ReservationCreated, data.id);
+                }
 
                 // Refresh last settings
                 // Delete cached response for /api/reservations/lastsettings

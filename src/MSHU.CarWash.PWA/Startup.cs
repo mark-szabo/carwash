@@ -28,6 +28,7 @@ using System.Net;
 using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using MSHU.CarWash.PWA.Hubs;
 
 namespace MSHU.CarWash.PWA
 {
@@ -192,6 +193,9 @@ namespace MSHU.CarWash.PWA
                 options.MaxAge = TimeSpan.FromDays(365);
             });
 
+            // Configure SignalR
+            services.AddSignalR();
+
             // Swagger API Documentation generator
             if (Environment.IsDevelopment()) services.AddSwaggerGen(c =>
             {
@@ -261,6 +265,13 @@ namespace MSHU.CarWash.PWA
                 }
             });
             app.UseSpaStaticFiles();
+
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<BacklogHub>("/hub/backlog");
+            });
+
+            app.UseMvc();
 
             app.UseMvc(routes =>
             {

@@ -5,8 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="theme-color" content="#80d8ff">
-    <meta name="description" content="This app is intended to help employees working in Graphisoft park (Budapest, Hungary) reserve car washing services."
-    />
+    <meta name="description" content="This app is intended to help employees working in Graphisoft park (Budapest, Hungary) reserve car washing services." />
     <meta name="apple-mobile-web-app-title" content="CarWash">
     <meta name="application-name" content="CarWash">
     <meta name="msapplication-TileColor" content="#80d8ff">
@@ -102,10 +101,10 @@
         <div style="display:flex;justify-content:center;align-items:center;width:700px;">
             <div class="left">
                 <p>
-                    This app works with modern browsers only. Internet Explorer was a great browser in the early 00's, with about 95% market
-                    share but that time has passed, and it is no longer a maintained browser, lucking a lot of modern features.
-                    Please swith to Edge, Chrome, Firefox or any other modern browser as this app is depending on features
-                    not supported by Internet Explorer!
+                    This app works with modern browsers only. Internet Explorer was a great browser in the early 00's,
+                    with about 95% market share but that time has passed, and it is no longer a maintained browser,
+                    lucking a lot of modern features. Please swith to Edge, Chrome, Firefox or any other modern browser
+                    as this app is depending on features not supported by Internet Explorer!
                 </p>
                 <a href="/?surpassieblock=true" class="button">
                     <span class="buttonText">Continue in IE (Not recommended)</span>
@@ -117,6 +116,12 @@
             </div>
         </div>
     </div>
+    <script>
+        if ('serviceWorker' in navigator) {
+            console.log("This browser does support Service Workers, so it is for sure not IE. Redirecting.");
+            window.location = '/';
+        }
+    </script>
 </body>
 
 </html>

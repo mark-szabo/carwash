@@ -32,12 +32,19 @@ export const NotificationChannel = Object.freeze({
     Push: 3,
 });
 
-export const Garages = {
+export const Garages = Object.freeze({
     M: ['-1', '-2', '-2.5', '-3', '-3.5', 'outdoor'],
     S1: ['-1', '-2', '-3'],
     GS: ['-1', 'outdoor'],
     HX: ['-3'],
-};
+});
+
+export const BacklogHubMethods = Object.freeze({
+    ReservationCreated: 'ReservationCreated',
+    ReservationUpdated: 'ReservationUpdated',
+    ReservationDeleted: 'ReservationDeleted',
+    ReservationDropoffConfirmed: 'ReservationDropoffConfirmed',
+});
 
 export function getStateName(state) {
     switch (state) {

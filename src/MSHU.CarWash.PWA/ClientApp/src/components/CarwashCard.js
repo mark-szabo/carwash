@@ -18,7 +18,7 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import red from '@material-ui/core/colors/red';
 import CarwashCardHeader from './CarwashCardHeader';
 import CarwashDetailsDialog from './CarwashDetailsDialog';
-import { getAdminStateName, getServiceName } from '../Constants';
+import { getAdminStateName, getServiceName, BacklogHubMethods } from '../Constants';
 import { formatLocation, formatDate } from '../Helpers';
 import Comments from './Comments';
 
@@ -93,6 +93,9 @@ class CarwashCard extends Component {
         }).then(
             () => {
                 this.props.openSnackbar('Reservation successfully canceled.');
+
+                // Broadcast using SignalR
+                this.props.invokeBacklogHub(BacklogHubMethods.ReservationDeleted, this.props.reservation.id);
 
                 // Remove deleted reservation from reservations
                 // this.props.removeReservation(this.props.reservation.id);
@@ -175,9 +178,10 @@ class CarwashCard extends Component {
                     reservation={reservation}
                     open={detailsDialogOpen}
                     handleClose={this.handleDetailsDialogClose}
+                    updateReservation={this.props.updateReservation}
+                    invokeBacklogHub={this.props.invokeBacklogHub}
                     snackbarOpen={this.props.snackbarOpen}
                     openSnackbar={this.props.openSnackbar}
-                    updateReservation={this.props.updateReservation}
                 />
                 <Dialog
                     open={this.state.cancelDialogOpen}
@@ -203,9 +207,10 @@ class CarwashCard extends Component {
 CarwashCard.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     reservation: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+    updateReservation: PropTypes.func.isRequired,
+    invokeBacklogHub: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
-    updateReservation: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(CarwashCard);
