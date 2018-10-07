@@ -53,7 +53,7 @@
     <MinimumVisualStudioVersion>$(VersionNumberMajor).$(VersionNumberMinor)</MinimumVisualStudioVersion>
     <DefaultLanguage>en-US</DefaultLanguage>
     <PackageCertificateKeyFile>MSHU.CarWash.PWA.Windows_StoreKey.pfx</PackageCertificateKeyFile>
-    <PackageCertificateThumbprint>FDC026D8F043FF661C5D3B5AF59553FC3A00A0D4</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>D13F8595031D0F4E9BE1C5DC48C566CAF8C3C289</PackageCertificateThumbprint>
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxBundle>Always</AppxBundle>
