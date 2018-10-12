@@ -759,7 +759,7 @@ class Reserve extends TrackedComponent {
                                                 <MenuItem value="HX">HX</MenuItem>
                                             </Select>
                                         </FormControl>
-                                        {garage && (
+                                        {garage && Garages[garage] && (
                                             <FormControl className={classes.formControl} error={validationErrors.floor}>
                                                 <InputLabel htmlFor="floor">Floor</InputLabel>
                                                 <Select
