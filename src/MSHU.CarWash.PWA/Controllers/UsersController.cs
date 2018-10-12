@@ -248,7 +248,7 @@ Please keep in mind, that we are required to continue storing your previous rese
 
             user.FirstName = "[deleted user]";
             user.LastName = null;
-            user.Email = null;
+            user.Email = $"[deleted on {DateTime.Now}]";
             user.IsAdmin = false;
             user.IsCarwashAdmin = false;
 
