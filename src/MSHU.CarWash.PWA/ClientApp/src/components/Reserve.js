@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import TrackedComponent from './TrackedComponent';
 import { Redirect } from 'react-router';
@@ -24,6 +24,7 @@ import Select from '@material-ui/core/Select';
 import InfiniteCalendar from 'react-infinite-calendar';
 import CloudOffIcon from '@material-ui/icons/CloudOff';
 import ErrorOutlineIcon from '@material-ui/icons/ErrorOutline';
+import WarningIcon from '@material-ui/icons/Warning';
 import Grid from '@material-ui/core/Grid';
 import * as moment from 'moment';
 import { Garages, Service, NotificationChannel, BacklogHubMethods } from '../Constants';
@@ -803,6 +804,12 @@ class Reserve extends TrackedComponent {
                                                     label="I have already left the key at the reception"
                                                 />
                                             </FormGroup>
+                                            {dropoffPreConfirmed && (
+                                                <Typography variant="body1" color="textSecondary" component="span" style={{ margin: '8px 0 0 8px' }}>
+                                                    <WarningIcon style={{ verticalAlign: 'middle' }} /> You won't be able to modify your reservation after you
+                                                    click Reserve!
+                                                </Typography>
+                                            )}
                                         </div>
                                     </React.Fragment>
                                 )}
