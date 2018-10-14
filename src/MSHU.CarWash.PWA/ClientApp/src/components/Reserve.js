@@ -328,7 +328,7 @@ class Reserve extends TrackedComponent {
             dateStepLabel: selectedDate.format('MMMM D, YYYY'),
         });
 
-        apiFetch(`api/reservations/reservationpercentage?date=${selectedDate.toJSON()}`).then(
+        apiFetch(`api/reservations/reservationcapacity?date=${selectedDate.toJSON()}`).then(
             data => {
                 this.setState({
                     reservationPercentage: data,
@@ -344,8 +344,8 @@ class Reserve extends TrackedComponent {
 
     getSlotReservationPercentage = slot => {
         if (!this.state.reservationPercentageDataArrived) return '';
-        if (!this.state.reservationPercentage[slot]) return '(0%)';
-        return `(${this.state.reservationPercentage[slot].percentage * 100}%)`;
+        if (!this.state.reservationPercentage[slot]) return '(unknown free slots)';
+        return `(~${this.state.reservationPercentage[slot].freeCapacity} free slots)`;
     };
 
     handleTimeSelectionComplete = event => {
