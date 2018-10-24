@@ -282,6 +282,12 @@ class Reserve extends TrackedComponent {
     handleBack = () => {
         this.setState(state => ({
             activeStep: state.activeStep - 1,
+        }));
+    };
+
+    handleBackFromTimeSelection = () => {
+        this.setState(state => ({
+            activeStep: state.activeStep - 1,
             reservationPercentageDataArrived: false,
         }));
     };
@@ -673,7 +679,7 @@ class Reserve extends TrackedComponent {
                         </FormControl>
                         <div className={classes.actionsContainer}>
                             <div>
-                                <Button onClick={this.handleBack} className={classes.button}>
+                                <Button onClick={this.handleBackFromTimeSelection} className={classes.button}>
                                     Back
                                 </Button>
                                 <Button disabled variant="contained" color="primary" className={classes.button}>
