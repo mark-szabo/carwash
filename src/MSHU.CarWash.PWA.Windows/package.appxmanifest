@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
-  <Identity Name="65462MarkSzabo.602807DA653B6" Version="2.0.5.0" Publisher="CN=F8823879-DBD1-481A-A00C-12C50CA900A5" />
+  <Identity Name="65462MarkSzabo.602807DA653B6" Version="2.0.6.0" Publisher="CN=F8823879-DBD1-481A-A00C-12C50CA900A5" />
   <mp:PhoneIdentity PhoneProductId="3a0ecb78-0e53-43c9-bfbf-5413123e72a8" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>CarWash</DisplayName>
@@ -50,6 +50,5 @@
   <Capabilities>
     <Capability Name="internetClient" />
     <Capability Name="privateNetworkClientServer" />
-    <uap:Capability Name="sharedUserCertificates" />
   </Capabilities>
 </Package>
