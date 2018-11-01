@@ -72,8 +72,18 @@ namespace MSHU.CarWash.Functions
                         log.LogInformation($"Email notification was sent to the user ({reservation.User.Id}) about the reservation with id: {reservation.Id}. ({watch.ElapsedMilliseconds}ms)");
                         break;
                     case NotificationChannel.Push:
-                        await SendPushReminder(reservation, context);
-                        log.LogInformation($"Push notification was sent to the user ({reservation.User.Id}) about the reservation with id: {reservation.Id}. ({watch.ElapsedMilliseconds}ms)");
+                        try
+                        {
+                            await SendPushReminder(reservation, context);
+                            log.LogInformation($"Push notification was sent to the user ({reservation.User.Id}) about the reservation with id: {reservation.Id}. ({watch.ElapsedMilliseconds}ms)");
+                        }
+                        catch (Exception e)
+                        {
+                            log.LogError(e, "Push notification cannot be sent. Failover to email.");
+                            await SendEmailReminder(reservation);
+                            log.LogInformation($"Email notification was sent to the user ({reservation.User.Id}) about the reservation with id: {reservation.Id}. ({watch.ElapsedMilliseconds}ms)");
+                        }
+
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();

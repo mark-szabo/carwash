@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights;
 
 namespace MSHU.CarWash.PWA.Controllers
 {
@@ -28,9 +29,9 @@ namespace MSHU.CarWash.PWA.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly User _user;
-        private readonly IHubContext<BacklogHub> _backlogHub;
         private readonly ICalendarService _calendarService;
         private readonly IPushService _pushService;
+        private readonly TelemetryClient _telemetryClient;
 
         /// <summary>
         /// Wash time unit in minutes
@@ -74,13 +75,13 @@ namespace MSHU.CarWash.PWA.Controllers
         };
 
         /// <inheritdoc />
-        public ReservationsController(ApplicationDbContext context, UsersController usersController, IHubContext<BacklogHub> backlogHub, ICalendarService calendarService, IPushService pushService)
+        public ReservationsController(ApplicationDbContext context, UsersController usersController, ICalendarService calendarService, IPushService pushService)
         {
             _context = context;
             _user = usersController.GetCurrentUser();
-            _backlogHub = backlogHub;
             _calendarService = calendarService;
             _pushService = pushService;
+            _telemetryClient = new TelemetryClient();
         }
 
         // GET: api/reservations
@@ -605,7 +606,14 @@ namespace MSHU.CarWash.PWA.Controllers
                         Body = $"You can find it here: {reservation.Location}",
                         Tag = NotificationTag.Done
                     };
-                    await _pushService.Send(reservation.UserId, notification);
+                    try
+                    {
+                        await _pushService.Send(reservation.UserId, notification);
+                    }
+                    catch (Exception e)
+                    {
+                        _telemetryClient.TrackException(e);
+                    }
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -756,7 +764,14 @@ namespace MSHU.CarWash.PWA.Controllers
                         Body = reservation.CarwashComment,
                         Tag = NotificationTag.Comment
                     };
-                    await _pushService.Send(reservation.UserId, notification);
+                    try
+                    {
+                        await _pushService.Send(reservation.UserId, notification);
+                    }
+                    catch (Exception e)
+                    {
+                        _telemetryClient.TrackException(e);
+                    }
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
