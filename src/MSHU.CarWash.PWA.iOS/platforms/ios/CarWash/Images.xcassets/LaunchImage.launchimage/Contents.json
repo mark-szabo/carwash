@@ -63,7 +63,7 @@
     {
       "orientation" : "portrait",
       "idiom" : "ipad",
-      "filename" : "apple-splash-1536x2048.png",
+      "filename" : "apple-splash-1536x2048-2.png",
       "extent" : "full-screen",
       "minimum-system-version" : "7.0",
       "scale" : "2x"
@@ -71,7 +71,7 @@
     {
       "orientation" : "landscape",
       "idiom" : "ipad",
-      "filename" : "apple-splash-2048x1536.png",
+      "filename" : "apple-splash-2048x1536-2.png",
       "extent" : "full-screen",
       "minimum-system-version" : "7.0",
       "scale" : "2x"
@@ -101,14 +101,14 @@
     {
       "orientation" : "portrait",
       "idiom" : "ipad",
-      "filename" : "apple-splash-768x1004-1.png",
+      "filename" : "apple-splash-768x1004.png",
       "extent" : "to-status-bar",
       "scale" : "1x"
     },
     {
       "orientation" : "portrait",
       "idiom" : "ipad",
-      "filename" : "apple-splash-768x1024-2.png",
+      "filename" : "apple-splash-768x1024-1.png",
       "extent" : "full-screen",
       "scale" : "1x"
     },
@@ -136,21 +136,21 @@
     {
       "orientation" : "portrait",
       "idiom" : "ipad",
-      "filename" : "apple-splash-1536x2048-1.png",
+      "filename" : "apple-splash-1536x2048.png",
       "extent" : "full-screen",
       "scale" : "2x"
     },
     {
       "orientation" : "landscape",
       "idiom" : "ipad",
-      "filename" : "apple-splash-2048x1496.png",
+      "filename" : "apple-splash-2048x1496-2.png",
       "extent" : "to-status-bar",
       "scale" : "2x"
     },
     {
       "orientation" : "landscape",
       "idiom" : "ipad",
-      "filename" : "apple-splash-2048x1536-1.png",
+      "filename" : "apple-splash-2048x1536.png",
       "extent" : "full-screen",
       "scale" : "2x"
     }

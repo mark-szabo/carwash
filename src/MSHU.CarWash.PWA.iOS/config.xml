@@ -1,12 +1,12 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="net.azurewebsites.carwashu" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.graphisoft.carwash" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <allow-navigation href="*" />
     <name>CarWash</name>
     <description>
-        A sample Apache Cordova application that responds to the deviceready event.
+        This app is intended to help employees working in Graphisoft park (Budapest, Hungary) reserve car washing services.
     </description>
-    <author email="dev@cordova.apache.org" href="http://cordova.io">
-        Apache Cordova Team
+    <author email="carwashapp@microsoft.com" href="https://www.microsoft.com">
+        Microsoft
     </author>
     <content src="https://carwashu.azurewebsites.net/" />
     <plugin name="cordova-plugin-whitelist" spec="1" />
@@ -36,7 +36,18 @@
     </platform>
     <preference name="Orientation" value="default" />
     <preference name="Fullscreen" value="false" />
-    <allow-navigation hap-rule="yes" href="https://carwashu.azurewebsites.net/*" />
+    <allow-navigation href="https://carwashu.azurewebsites.net/*" />
+    <allow-navigation href="https://login.microsoftonline.com/*" />
+    <allow-navigation href="https://login.live.com/*" />
+    <allow-navigation href="https://*.microsoft.com/*" />
+    <allow-navigation href="https://*.*.microsoft.com/*" />
+    <allow-navigation href="https://*.*.*.microsoft.com/*" />
+    <allow-navigation href="https://*.corp.sap/*" />
+    <allow-navigation href="https://*.*.corp.sap/*" />
+    <allow-navigation href="https://*.*.*.corp.sap/*" />
+    <allow-navigation href="https://*.graphisoft.hu/*" />
+    <allow-navigation href="https://*.*.graphisoft.hu/*" />
+    <allow-navigation href="https://*.*.*.graphisoft.hu/*" />
     <platform name="windows">
         <icon height="44" src="/images/icon44.png" width="44" />
         <icon height="50" src="/images/icon50.png" width="50" />

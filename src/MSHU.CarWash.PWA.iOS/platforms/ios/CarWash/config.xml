@@ -1,7 +1,18 @@
 <?xml version='1.0' encoding='utf-8'?>
-
-<widget id="net.azurewebsites.carwashu" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <allow-navigation href="*" />
+<widget id="com.graphisoft.carwash" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <allow-navigation href="https://carwashu.azurewebsites.net/*" />
+    <allow-navigation href="https://login.microsoftonline.com/*" />
+    <allow-navigation href="https://login.live.com/*" />
+    <allow-navigation href="https://*.microsoft.com/*" />
+    <allow-navigation href="https://*.*.microsoft.com/*" />
+    <allow-navigation href="https://*.*.*.microsoft.com/*" />
+    <allow-navigation href="https://*.corp.sap/*" />
+    <allow-navigation href="https://*.*.corp.sap/*" />
+    <allow-navigation href="https://*.*.*.corp.sap/*" />
+    <allow-navigation href="https://*.graphisoft.hu/*" />
+    <allow-navigation href="https://*.*.graphisoft.hu/*" />
+    <allow-navigation href="https://*.*.*.graphisoft.hu/*" />
+ 
     <feature name="LocalStorage">
         <param name="ios-package" value="CDVLocalStorage" />
     </feature>
@@ -32,10 +43,10 @@
     </feature>
     <name>CarWash</name>
     <description>
-        A sample Apache Cordova application that responds to the deviceready event.
+        This app is intended to help employees working in Graphisoft park (Budapest, Hungary) reserve car washing services.
     </description>
-    <author email="dev@cordova.apache.org" href="http://cordova.io">
-        Apache Cordova Team
+    <author email="carwashapp@microsoft.com" href="https://www.microsoft.com">
+        Microsoft
     </author>
     <content src="https://carwashu.azurewebsites.net/" />
     <access origin="*" />
