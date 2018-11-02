@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using MSHU.CarWash.ClassLibrary.Enums;
 using MSHU.CarWash.ClassLibrary.Models;
 using MSHU.CarWash.ClassLibrary.Services;
 using MSHU.CarWash.PWA.Extensions;
+using MSHU.CarWash.PWA.Hubs;
 using MSHU.CarWash.PWA.Services;
 using OfficeOpenXml;
 using System;
@@ -12,8 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.SignalR;
-using MSHU.CarWash.PWA.Hubs;
+using Microsoft.ApplicationInsights;
 
 namespace MSHU.CarWash.PWA.Controllers
 {
@@ -28,9 +29,9 @@ namespace MSHU.CarWash.PWA.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly User _user;
-        private readonly IHubContext<BacklogHub> _backlogHub;
         private readonly ICalendarService _calendarService;
         private readonly IPushService _pushService;
+        private readonly TelemetryClient _telemetryClient;
 
         /// <summary>
         /// Wash time unit in minutes
@@ -74,13 +75,13 @@ namespace MSHU.CarWash.PWA.Controllers
         };
 
         /// <inheritdoc />
-        public ReservationsController(ApplicationDbContext context, UsersController usersController, IHubContext<BacklogHub> backlogHub, ICalendarService calendarService, IPushService pushService)
+        public ReservationsController(ApplicationDbContext context, UsersController usersController, ICalendarService calendarService, IPushService pushService)
         {
             _context = context;
             _user = usersController.GetCurrentUser();
-            _backlogHub = backlogHub;
             _calendarService = calendarService;
             _pushService = pushService;
+            _telemetryClient = new TelemetryClient();
         }
 
         // GET: api/reservations
@@ -605,7 +606,14 @@ namespace MSHU.CarWash.PWA.Controllers
                         Body = $"You can find it here: {reservation.Location}",
                         Tag = NotificationTag.Done
                     };
-                    await _pushService.Send(reservation.UserId, notification);
+                    try
+                    {
+                        await _pushService.Send(reservation.UserId, notification);
+                    }
+                    catch (Exception e)
+                    {
+                        _telemetryClient.TrackException(e);
+                    }
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -756,7 +764,14 @@ namespace MSHU.CarWash.PWA.Controllers
                         Body = reservation.CarwashComment,
                         Tag = NotificationTag.Comment
                     };
-                    await _pushService.Send(reservation.UserId, notification);
+                    try
+                    {
+                        await _pushService.Send(reservation.UserId, notification);
+                    }
+                    catch (Exception e)
+                    {
+                        _telemetryClient.TrackException(e);
+                    }
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -1027,6 +1042,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// </summary>
         /// <param name="date">the date to filter on</param>
         /// <returns>List of <see cref="ReservationPercentageViewModel"/></returns>
+        [Obsolete("Use GetReservationCapacity instead.")]
         [HttpGet, Route("reservationpercentage")]
         public async Task<ActionResult<IEnumerable<ReservationPercentageViewModel>>> GetReservationPercentage(DateTime date)
         {
@@ -1053,6 +1069,54 @@ namespace MSHU.CarWash.PWA.Controllers
             }
 
             return Ok(slotReservationPercentage);
+        }
+
+        // GET: api/reservations/reservationcapacity
+        /// <summary>
+        /// Gets a list of slots and their free reservation capacity on a given date
+        /// </summary>
+        /// <param name="date">the date to filter on</param>
+        /// <returns>List of <see cref="ReservationCapacityViewModel"/></returns>
+        [HttpGet, Route("reservationcapacity")]
+        public async Task<ActionResult<IEnumerable<ReservationCapacityViewModel>>> GetReservationCapacity(DateTime date)
+        {
+            var slotReservationAggregate = await _context.Reservation
+                .Where(r => r.StartDate.Date == date.Date)
+                .GroupBy(r => r.StartDate)
+                .Select(g => new
+                {
+                    DateTime = g.Key,
+                    TimeSum = g.Sum(r => r.TimeRequirement)
+                })
+                .ToListAsync();
+
+            var slotFreeCapacity = new List<ReservationCapacityViewModel>();
+            foreach (var a in slotReservationAggregate)
+            {
+                var slotCapacity = Slots.Find(s => s.StartTime == a.DateTime.Hour)?.Capacity;
+                if (slotCapacity == null) continue;
+                var reservedCapacity = (int)Math.Ceiling((double)a.TimeSum / TimeUnit);
+                slotFreeCapacity.Add(new ReservationCapacityViewModel
+                {
+                    StartTime = a.DateTime,
+                    FreeCapacity = (int)slotCapacity - reservedCapacity
+                });
+            }
+
+            // Add slots with no reservations yet
+            foreach (var slot in Slots)
+            {
+                // ReSharper disable SimplifyLinqExpression
+                if (!slotFreeCapacity.Any(s => s.StartTime.Hour == slot.StartTime))
+                    slotFreeCapacity.Add(new ReservationCapacityViewModel
+                    {
+                        StartTime = new DateTime(date.Year, date.Month, date.Day, slot.StartTime, 0, 0),
+                        FreeCapacity = slot.Capacity
+                    });
+                // ReSharper restore SimplifyLinqExpression
+            }
+
+            return Ok(slotFreeCapacity.OrderBy(s => s.StartTime));
         }
 
         // GET: api/reservations/export
@@ -1453,6 +1517,12 @@ namespace MSHU.CarWash.PWA.Controllers
     {
         public DateTime StartTime { get; set; }
         public double Percentage { get; set; }
+    }
+
+    public class ReservationCapacityViewModel
+    {
+        public DateTime StartTime { get; set; }
+        public int FreeCapacity { get; set; }
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 

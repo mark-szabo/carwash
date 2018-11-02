@@ -598,7 +598,7 @@ class CarwashDetailsDialog extends React.Component {
                                     <MenuItem value="HX">HX</MenuItem>
                                 </Select>
                             </FormControl>
-                            {garage !== '' && (
+                            {garage && Garages[garage] && (
                                 <FormControl className={classes.formControl} error={validationErrors.floor}>
                                     <InputLabel htmlFor="floor">Floor</InputLabel>
                                     <Select
@@ -618,7 +618,7 @@ class CarwashDetailsDialog extends React.Component {
                                     </Select>
                                 </FormControl>
                             )}
-                            {floor !== '' && (
+                            {floor && (
                                 <React.Fragment>
                                     <TextField
                                         id="seat"

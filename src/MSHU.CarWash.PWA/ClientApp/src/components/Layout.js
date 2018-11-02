@@ -48,6 +48,10 @@ const styles = theme => ({
             position: 'relative',
         },
     },
+    drawer: {
+        height: '100%',
+        position: 'relative',
+    },
     content: {
         flexGrow: 1,
         overflow: 'auto',
@@ -57,6 +61,17 @@ const styles = theme => ({
     appTitle: {
         height: 60,
         padding: '16px 24px',
+    },
+    footer: {
+        position: 'absolute',
+        bottom: 0,
+        padding: 24,
+    },
+    link: {
+        textDecoration: 'underline',
+        color: 'rgba(0, 0, 0, 0.54)',
+        fontSize: '0.8125rem',
+        fontWeight: 400,
     },
 });
 
@@ -118,7 +133,7 @@ class Layout extends React.Component {
         const refresh = this.getRefreshFunc();
 
         const drawer = (
-            <div>
+            <div className={classes.drawer}>
                 <div className={classes.toolbar}>
                     <Link to="/" onClick={this.handleDrawerClose}>
                         <img src={'/images/carwash.svg'} alt="CarWash" height="20px" className={classes.appTitle} />
@@ -128,6 +143,15 @@ class Layout extends React.Component {
                 <List>{drawerItems(this.handleDrawerClose, user)}</List>
                 <Divider />
                 <List>{otherDrawerItems(this.handleDrawerClose)}</List>
+                <div className={classes.footer}>
+                    <a href="https://go.microsoft.com/fwlink/?LinkID=206977" className={classes.link}>
+                        Terms of use
+                    </a>
+                    <br />
+                    <a href="https://go.microsoft.com/fwlink/?LinkId=521839" className={classes.link}>
+                        Privacy & cookies policy
+                    </a>
+                </div>
             </div>
         );
 

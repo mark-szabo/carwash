@@ -299,7 +299,7 @@ class Settings extends TrackedComponent {
                 )}
                 <Paper className={classes.paper} elevation={1}>
                     <Typography variant="headline" component="h3">
-                        Thanks to GDPR...
+                        We take your privacy seriously!
                     </Typography>
                     <Typography component="p">
                         By using this app, you agree to Microsoft's{' '}

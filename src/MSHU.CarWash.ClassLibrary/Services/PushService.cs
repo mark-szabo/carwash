@@ -81,10 +81,16 @@ namespace MSHU.CarWash.ClassLibrary.Services
         /// <inheritdoc />
         public async Task Send(string userId, Notification notification)
         {
-            foreach (var subscription in await GetUserSubscriptions(userId))
+            var notificationSentSuccessfully = false;
+
+            var subscriptions = await GetUserSubscriptions(userId);
+            if (subscriptions.Count == 0) throw new Exception("No active subscription found for user.");
+
+            foreach (var subscription in subscriptions)
                 try
                 {
                     _client.SendNotification(subscription.ToWebPushSubscription(), JsonConvert.SerializeObject(notification), _vapidDetails);
+                    notificationSentSuccessfully = true;
                 }
                 catch (WebPushException e)
                 {
@@ -98,6 +104,8 @@ namespace MSHU.CarWash.ClassLibrary.Services
                         _telemetryClient.TrackException(e);
                     }
                 }
+
+            if (!notificationSentSuccessfully) throw new Exception("No push notification was sent successfully.");
         }
 
         /// <inheritdoc />
