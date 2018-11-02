@@ -20,6 +20,7 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DeleteForeverIcon from '@material-ui/icons/DeleteForever';
 import red from '@material-ui/core/colors/red';
 import * as download from 'downloadjs';
+import * as moment from 'moment';
 import { NotificationChannel } from '../Constants';
 import registerPush, { askPermission } from '../PushService';
 import Spinner from './Spinner';
@@ -117,7 +118,7 @@ class Settings extends TrackedComponent {
             data => {
                 const dataString = JSON.stringify(data);
                 const name = this.props.user.firstName.toLowerCase() + this.props.user.lastName.toLowerCase();
-                const date = new Date().toISOString().split('T')[0]; // get the current date in this format: yyyy-mm-dd
+                const date = moment().format('YYYY-MM-DD'); // get the current date in this format: yyyy-mm-dd
                 download(dataString, `carwash_${name}_${date}.json`, 'text/json');
             },
             error => {
@@ -298,7 +299,7 @@ class Settings extends TrackedComponent {
                 )}
                 <Paper className={classes.paper} elevation={1}>
                     <Typography variant="headline" component="h3">
-                        Thanks to GDPR...
+                        We take your privacy seriously!
                     </Typography>
                     <Typography component="p">
                         By using this app, you agree to Microsoft's{' '}

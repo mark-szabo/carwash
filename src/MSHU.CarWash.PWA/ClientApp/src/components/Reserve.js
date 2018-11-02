@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import TrackedComponent from './TrackedComponent';
 import { Redirect } from 'react-router';
@@ -24,8 +24,10 @@ import Select from '@material-ui/core/Select';
 import InfiniteCalendar from 'react-infinite-calendar';
 import CloudOffIcon from '@material-ui/icons/CloudOff';
 import ErrorOutlineIcon from '@material-ui/icons/ErrorOutline';
+import WarningIcon from '@material-ui/icons/Warning';
 import Grid from '@material-ui/core/Grid';
-import { Garages, Service, NotificationChannel } from '../Constants';
+import * as moment from 'moment';
+import { Garages, Service, NotificationChannel, BacklogHubMethods } from '../Constants';
 import 'react-infinite-calendar/styles.css';
 import './Reserve.css';
 import ServiceDetailsTable from './ServiceDetailsTable';
@@ -116,22 +118,6 @@ const styles = theme => ({
     },
 });
 
-const timeFormat = new Intl.DateTimeFormat('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-});
-const dateFormat = new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: '2-digit',
-});
-
-function addDays(date, days) {
-    const newDate = new Date(date);
-    newDate.setDate(newDate.getDate() + days);
-    return newDate;
-}
-
 class Reserve extends TrackedComponent {
     displayName = Reserve.name;
 
@@ -159,7 +145,7 @@ class Reserve extends TrackedComponent {
                 garage: false,
                 floor: false,
             },
-            selectedDate: new Date(),
+            selectedDate: moment(),
             vehiclePlateNumber: '',
             garage: '',
             floor: '',
@@ -204,7 +190,7 @@ class Reserve extends TrackedComponent {
                     floor = floor || '';
                     seat = seat || '';
 
-                    const date = new Date(data.startDate);
+                    const date = moment(data.startDate);
                     this.setState({
                         services,
                         selectedDate: date,
@@ -218,8 +204,8 @@ class Reserve extends TrackedComponent {
                             .filter(s => s.selected)
                             .map(s => s.name)
                             .join(', '),
-                        dateStepLabel: dateFormat.format(date),
-                        timeStepLabel: timeFormat.format(date),
+                        dateStepLabel: date.format('MMMM D, YYYY'),
+                        timeStepLabel: date.format('hh:mm A'),
                         loadingReservation: false,
                     });
                 },
@@ -245,12 +231,12 @@ class Reserve extends TrackedComponent {
                     const { dates, times } = data;
                     for (const i in dates) {
                         if (dates.hasOwnProperty(i)) {
-                            dates[i] = new Date(dates[i]);
+                            dates[i] = moment(dates[i]).toDate();
                         }
                     }
                     for (const i in times) {
                         if (times.hasOwnProperty(i)) {
-                            times[i] = new Date(times[i]);
+                            times[i] = moment(times[i]);
                         }
                     }
                     this.setState({
@@ -296,6 +282,12 @@ class Reserve extends TrackedComponent {
     handleBack = () => {
         this.setState(state => ({
             activeStep: state.activeStep - 1,
+        }));
+    };
+
+    handleBackFromTimeSelection = () => {
+        this.setState(state => ({
+            activeStep: state.activeStep - 1,
             reservationPercentageDataArrived: false,
         }));
     };
@@ -334,15 +326,16 @@ class Reserve extends TrackedComponent {
 
     handleDateSelectionComplete = date => {
         if (!date) return;
+        const selectedDate = moment(date);
 
         this.setState({
             activeStep: 2,
-            selectedDate: date,
-            disabledSlots: [this.isTimeNotAvailable(date, 8), this.isTimeNotAvailable(date, 11), this.isTimeNotAvailable(date, 14)],
-            dateStepLabel: dateFormat.format(date),
+            selectedDate,
+            disabledSlots: [this.isTimeNotAvailable(selectedDate, 8), this.isTimeNotAvailable(selectedDate, 11), this.isTimeNotAvailable(selectedDate, 14)],
+            dateStepLabel: selectedDate.format('MMMM D, YYYY'),
         });
 
-        apiFetch(`api/reservations/reservationpercentage?date=${date.toJSON()}`).then(
+        apiFetch(`api/reservations/reservationcapacity?date=${selectedDate.toJSON()}`).then(
             data => {
                 this.setState({
                     reservationPercentage: data,
@@ -358,25 +351,24 @@ class Reserve extends TrackedComponent {
 
     getSlotReservationPercentage = slot => {
         if (!this.state.reservationPercentageDataArrived) return '';
-        if (!this.state.reservationPercentage[slot]) return '(0%)';
-        return `(${this.state.reservationPercentage[slot].percentage * 100}%)`;
+        if (!this.state.reservationPercentage[slot]) return '(unknown free slots)';
+        return `(~${this.state.reservationPercentage[slot].freeCapacity} free slots)`;
     };
 
     handleTimeSelectionComplete = event => {
         const time = event.target.value;
-        const dateTime = new Date(this.state.selectedDate);
-        dateTime.setHours(time);
+        const dateTime = moment(this.state.selectedDate);
+        dateTime.hours(time);
         this.setState({
             activeStep: 3,
             selectedDate: dateTime,
-            timeStepLabel: timeFormat.format(dateTime),
+            timeStepLabel: dateTime.format('hh:mm A'),
         });
     };
 
     isTimeNotAvailable = (date, time) => {
-        const dateTime = new Date(date);
-        dateTime.setHours(time);
-        return this.state.notAvailableTimes.filter(notAvailableTime => notAvailableTime.getTime() === dateTime.getTime()).length > 0;
+        date.hours(time);
+        return this.state.notAvailableTimes.filter(notAvailableTime => notAvailableTime.isSame(date, 'hour')).length > 0;
     };
 
     handlePlateNumberChange = event => {
@@ -445,9 +437,7 @@ class Reserve extends TrackedComponent {
             return;
         }
 
-        this.setState({
-            loading: true,
-        });
+        this.setState({ loading: true });
 
         const payload = {
             id: this.props.match.params.id,
@@ -485,9 +475,20 @@ class Reserve extends TrackedComponent {
                 });
                 this.props.openSnackbar('Reservation successfully saved.');
 
-                // Add new / update reservation
-                if (apiMethod === 'PUT') this.props.removeReservation(data.id);
-                this.props.addReservation(data);
+                if (apiMethod === 'PUT') {
+                    // Update reservation locally
+                    this.props.removeReservation(data.id);
+                    this.props.addReservation(data);
+
+                    // Broadcast using SignalR
+                    this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, data.id);
+                } else {
+                    // Add new reservation locally
+                    this.props.addReservation(data);
+
+                    // Broadcast using SignalR
+                    this.props.invokeBacklogHub(BacklogHubMethods.ReservationCreated, data.id);
+                }
 
                 // Refresh last settings
                 // Delete cached response for /api/reservations/lastsettings
@@ -531,7 +532,7 @@ class Reserve extends TrackedComponent {
             locationKnown,
             dropoffPreConfirmed,
         } = this.state;
-        const today = new Date();
+        const today = moment();
 
         if (this.state.reservationCompleteRedirect) {
             return <Redirect to="/" />;
@@ -623,9 +624,9 @@ class Reserve extends TrackedComponent {
                             <InfiniteCalendar
                                 onSelect={date => this.handleDateSelectionComplete(date)}
                                 selected={null}
-                                min={today}
-                                minDate={today}
-                                max={addDays(today, 365)}
+                                min={today.toDate()}
+                                minDate={today.toDate()}
+                                max={today.add(365, 'days').toDate()}
                                 locale={{ weekStartsOn: 1 }}
                                 disabledDays={[0, 6, 7]}
                                 disabledDates={notAvailableDates}
@@ -678,7 +679,7 @@ class Reserve extends TrackedComponent {
                         </FormControl>
                         <div className={classes.actionsContainer}>
                             <div>
-                                <Button onClick={this.handleBack} className={classes.button}>
+                                <Button onClick={this.handleBackFromTimeSelection} className={classes.button}>
                                     Back
                                 </Button>
                                 <Button disabled variant="contained" color="primary" className={classes.button}>
@@ -749,7 +750,7 @@ class Reserve extends TrackedComponent {
                                 {locationKnown && (
                                     <React.Fragment>
                                         <FormControl className={classes.formControl} error={validationErrors.garage}>
-                                            <InputLabel htmlFor="garage">Garage</InputLabel>
+                                            <InputLabel htmlFor="garage">Building</InputLabel>
                                             <Select
                                                 required
                                                 value={garage}
@@ -765,7 +766,7 @@ class Reserve extends TrackedComponent {
                                                 <MenuItem value="HX">HX</MenuItem>
                                             </Select>
                                         </FormControl>
-                                        {garage && (
+                                        {garage && Garages[garage] && (
                                             <FormControl className={classes.formControl} error={validationErrors.floor}>
                                                 <InputLabel htmlFor="floor">Floor</InputLabel>
                                                 <Select
@@ -809,6 +810,12 @@ class Reserve extends TrackedComponent {
                                                     label="I have already left the key at the reception"
                                                 />
                                             </FormGroup>
+                                            {dropoffPreConfirmed && (
+                                                <Typography variant="body1" color="textSecondary" component="span" style={{ margin: '8px 0 0 8px' }}>
+                                                    <WarningIcon style={{ verticalAlign: 'middle' }} /> You won't be able to modify your reservation after you
+                                                    click Reserve!
+                                                </Typography>
+                                            )}
                                         </div>
                                     </React.Fragment>
                                 )}

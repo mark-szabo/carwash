@@ -7,15 +7,16 @@ export default class CarwashAdmin extends TrackedComponent {
     displayName = CarwashAdmin.name;
 
     render() {
-        const { backlog, backlogLoading, openSnackbar, updateBacklogItem } = this.props;
+        const { backlog, backlogLoading, updateBacklogItem, invokeBacklogHub, openSnackbar } = this.props;
 
         return (
             <CarwashGrid
                 backlog={backlog}
                 backlogLoading={backlogLoading}
+                updateBacklogItem={updateBacklogItem}
+                invokeBacklogHub={invokeBacklogHub}
                 snackbarOpen={this.props.snackbarOpen}
                 openSnackbar={openSnackbar}
-                updateBacklogItem={updateBacklogItem}
             />
         );
     }
@@ -24,7 +25,8 @@ export default class CarwashAdmin extends TrackedComponent {
 CarwashAdmin.propTypes = {
     backlog: PropTypes.arrayOf(PropTypes.object).isRequired, // eslint-disable-line react/forbid-prop-types
     backlogLoading: PropTypes.bool.isRequired,
+    updateBacklogItem: PropTypes.func.isRequired,
+    invokeBacklogHub: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
-    updateBacklogItem: PropTypes.func.isRequired,
 };

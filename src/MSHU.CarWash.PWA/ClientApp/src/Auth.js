@@ -94,7 +94,7 @@ function parseJson(response) {
                 filename = matches[1].replace(/['"]/g, '');
             }
         }
-        download(response.blob(), filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        response.blob().then(blob => download(blob, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'));
 
         return {
             status: response.status,

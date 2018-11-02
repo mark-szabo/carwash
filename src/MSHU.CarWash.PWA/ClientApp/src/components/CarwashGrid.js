@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
+import * as moment from 'moment';
 import CarwashCard from './CarwashCard';
 import CardSection from './CardSection';
 import { State } from '../Constants';
@@ -43,28 +44,43 @@ class CarwashGrid extends Component {
     }
 
     render() {
-        const { classes, backlog, backlogLoading, openSnackbar, updateBacklogItem } = this.props;
+        const { classes, backlog, backlogLoading, updateBacklogItem, invokeBacklogHub, openSnackbar } = this.props;
 
         if (backlogLoading) {
             return <Spinner />;
         }
 
-        const yesterdayMidnight = new Date();
-        yesterdayMidnight.setHours(0, 0, 0);
-        const todayMidnight = new Date();
-        todayMidnight.setDate(todayMidnight.getDate() + 1);
-        todayMidnight.setHours(0, 0, 0);
-        const tomorrowMidnight = new Date();
-        tomorrowMidnight.setDate(tomorrowMidnight.getDate() + 2);
-        tomorrowMidnight.setHours(0, 0, 0);
+        const yesterdayMidnight = moment()
+            .hours(0)
+            .minutes(0)
+            .seconds(0);
+        const todayMidnight = moment()
+            .hours(0)
+            .minutes(0)
+            .seconds(0)
+            .add(1, 'days');
+        const tomorrowMidnight = moment()
+            .hours(0)
+            .minutes(0)
+            .seconds(0)
+            .add(2, 'days');
 
-        const earlier = backlog.filter(r => r.startDate < yesterdayMidnight);
-        const done = backlog.filter(r => (r.state === State.Done || r.state === State.NotYetPaid) && r.startDate < todayMidnight);
-        const today = backlog.filter(
-            r => r.state !== State.Done && r.state !== State.NotYetPaid && r.startDate < todayMidnight && r.startDate > yesterdayMidnight
+        const earlier = backlog.filter(r => moment(r.startDate).isBefore(yesterdayMidnight));
+        const done = backlog.filter(
+            r =>
+                (r.state === State.Done || r.state === State.NotYetPaid) &&
+                moment(r.startDate).isAfter(yesterdayMidnight) &&
+                moment(r.startDate).isBefore(todayMidnight)
         );
-        const tomorrow = backlog.filter(r => r.startDate > todayMidnight && r.startDate < tomorrowMidnight);
-        const later = backlog.filter(r => r.startDate > tomorrowMidnight);
+        const today = backlog.filter(
+            r =>
+                r.state !== State.Done &&
+                r.state !== State.NotYetPaid &&
+                moment(r.startDate).isAfter(yesterdayMidnight) &&
+                moment(r.startDate).isBefore(todayMidnight)
+        );
+        const tomorrow = backlog.filter(r => moment(r.startDate).isAfter(todayMidnight) && moment(r.startDate).isBefore(tomorrowMidnight));
+        const later = backlog.filter(r => moment(r.startDate).isAfter(tomorrowMidnight));
 
         return (
             <Grid container direction="row" justify="flex-start" alignItems="flex-start" spacing={16} className={classes.grid}>
@@ -74,8 +90,9 @@ class CarwashGrid extends Component {
                             <CarwashCard
                                 reservation={reservation}
                                 snackbarOpen={this.props.snackbarOpen}
-                                openSnackbar={openSnackbar}
                                 updateReservation={updateBacklogItem}
+                                invokeBacklogHub={invokeBacklogHub}
+                                openSnackbar={openSnackbar}
                             />
                         </Grid>
                     ))}
@@ -86,8 +103,9 @@ class CarwashGrid extends Component {
                             <CarwashCard
                                 reservation={reservation}
                                 snackbarOpen={this.props.snackbarOpen}
-                                openSnackbar={openSnackbar}
                                 updateReservation={updateBacklogItem}
+                                invokeBacklogHub={invokeBacklogHub}
+                                openSnackbar={openSnackbar}
                             />
                         </Grid>
                     ))}
@@ -104,8 +122,9 @@ class CarwashGrid extends Component {
                             <CarwashCard
                                 reservation={reservation}
                                 snackbarOpen={this.props.snackbarOpen}
-                                openSnackbar={openSnackbar}
                                 updateReservation={updateBacklogItem}
+                                invokeBacklogHub={invokeBacklogHub}
+                                openSnackbar={openSnackbar}
                             />
                         </Grid>
                     ))}
@@ -116,8 +135,9 @@ class CarwashGrid extends Component {
                             <CarwashCard
                                 reservation={reservation}
                                 snackbarOpen={this.props.snackbarOpen}
-                                openSnackbar={openSnackbar}
                                 updateReservation={updateBacklogItem}
+                                invokeBacklogHub={invokeBacklogHub}
+                                openSnackbar={openSnackbar}
                             />
                         </Grid>
                     ))}
@@ -128,8 +148,9 @@ class CarwashGrid extends Component {
                             <CarwashCard
                                 reservation={reservation}
                                 snackbarOpen={this.props.snackbarOpen}
-                                openSnackbar={openSnackbar}
                                 updateReservation={updateBacklogItem}
+                                invokeBacklogHub={invokeBacklogHub}
+                                openSnackbar={openSnackbar}
                             />
                         </Grid>
                     ))}
@@ -143,9 +164,10 @@ CarwashGrid.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     backlog: PropTypes.arrayOf(PropTypes.object).isRequired,
     backlogLoading: PropTypes.bool.isRequired,
+    updateBacklogItem: PropTypes.func.isRequired,
+    invokeBacklogHub: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
-    updateBacklogItem: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(CarwashGrid);

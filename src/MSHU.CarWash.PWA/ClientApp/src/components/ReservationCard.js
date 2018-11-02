@@ -25,8 +25,8 @@ import TextField from '@material-ui/core/TextField';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import red from '@material-ui/core/colors/red';
-import { getStateName, getServiceName, State, Garages } from '../Constants';
-import { formatLocation } from '../Helpers';
+import { getStateName, getServiceName, State, Garages, BacklogHubMethods } from '../Constants';
+import { formatLocation, formatDate2 } from '../Helpers';
 import Comments from './Comments';
 
 const styles = theme => ({
@@ -67,22 +67,6 @@ const styles = theme => ({
         },
     },
 });
-
-function getDate(reservation) {
-    const from = new Intl.DateTimeFormat('en-US', {
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    }).format(new Date(reservation.startDate));
-
-    const to = new Intl.DateTimeFormat('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-    }).format(new Date(reservation.endDate));
-
-    return `${from} - ${to}`;
-}
 
 class ReservationCard extends Component {
     state = {
@@ -157,6 +141,9 @@ class ReservationCard extends Component {
 
                 // Remove deleted reservation from reservations
                 this.props.removeReservation(this.props.reservation.id);
+
+                // Broadcast using SignalR
+                this.props.invokeBacklogHub(BacklogHubMethods.ReservationDeleted, this.props.reservation.id);
             },
             error => {
                 this.props.openSnackbar(error);
@@ -201,6 +188,9 @@ class ReservationCard extends Component {
         }).then(
             () => {
                 this.props.openSnackbar('Drop-off and location confirmed.');
+
+                // Broadcast using SignalR
+                this.props.invokeBacklogHub(BacklogHubMethods.ReservationDropoffConfirmed, this.props.reservation.id);
             },
             error => {
                 reservation.state = oldState;
@@ -239,7 +229,7 @@ class ReservationCard extends Component {
                         <CardHeader
                             action={reservation.private ? <LockIcon alt="Private" style={{ margin: '8px 16px 0 0' }} /> : null}
                             title={getStateName(reservation.state)}
-                            subheader={getDate(reservation)}
+                            subheader={formatDate2(reservation)}
                         />
                         <CardContent>
                             <Typography variant="caption" gutterBottom>
@@ -304,7 +294,7 @@ class ReservationCard extends Component {
                     <DialogContent>
                         <DialogContentText>Please drop-off the key at the reception and confirm vehicle location!</DialogContentText>
                         <FormControl className={classes.formControl} error={validationErrors.garage}>
-                            <InputLabel htmlFor="garage">Garage</InputLabel>
+                            <InputLabel htmlFor="garage">Building</InputLabel>
                             <Select
                                 required
                                 value={garage}
@@ -320,7 +310,7 @@ class ReservationCard extends Component {
                                 <MenuItem value="HX">HX</MenuItem>
                             </Select>
                         </FormControl>
-                        {garage && (
+                        {garage && Garages[garage] && (
                             <FormControl className={classes.formControl} error={validationErrors.floor}>
                                 <InputLabel htmlFor="floor">Floor</InputLabel>
                                 <Select
@@ -370,6 +360,7 @@ ReservationCard.propTypes = {
     reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
     updateReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func.isRequired,
+    invokeBacklogHub: PropTypes.func.isRequired,
     lastSettings: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
     admin: PropTypes.bool,

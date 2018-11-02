@@ -5,6 +5,9 @@ import apiFetch from './Auth';
 import registerPush from './PushService';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Snackbar from '@material-ui/core/Snackbar';
+import Button from '@material-ui/core/Button';
+import * as moment from 'moment';
+import * as signalR from '@aspnet/signalr';
 import Layout from './components/Layout';
 import Home from './components/Home';
 import Reserve from './components/Reserve';
@@ -13,8 +16,9 @@ import Admin from './components/Admin';
 import Settings from './components/Settings';
 import CarwashAdmin from './components/CarwashAdmin';
 import NotificationDialog from './components/NotificationDialog';
-import { NotificationChannel } from './Constants';
+import { NotificationChannel, BacklogHubMethods } from './Constants';
 import Spinner from './components/Spinner';
+import { sleep } from './Helpers';
 
 // A theme with custom primary and secondary color.
 const theme = createMuiTheme({
@@ -60,6 +64,7 @@ export default class App extends Component {
         lastSettings: {},
         snackbarOpen: false,
         snackbarMessage: '',
+        snackbarAction: null,
         notificationDialogOpen: false,
     };
 
@@ -92,6 +97,9 @@ export default class App extends Component {
                 if (data.isCarwashAdmin) {
                     this.loadBacklog();
                 }
+
+                // Initiate SignalR connection to Backlog Hub
+                this.connectToBacklogHub();
             },
             error => {
                 this.openSnackbar(error);
@@ -106,12 +114,17 @@ export default class App extends Component {
 
         /* Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key */
         AppInsights.downloadAndSetup({ instrumentationKey: 'd1ce1965-2171-4a11-9438-66114b31f88f' });
+
+        this.keyboardListener();
     }
 
-    openSnackbar = message => {
+    backlogHubConnection;
+
+    openSnackbar = (message, action) => {
         this.setState({
             snackbarOpen: true,
             snackbarMessage: message,
+            snackbarAction: action,
         });
     };
 
@@ -209,14 +222,14 @@ export default class App extends Component {
     loadBacklog = refresh => {
         if (refresh && !navigator.onLine) {
             this.openSnackbar('You are offline.');
-            return;
+            return null;
         }
 
-        apiFetch('api/reservations/backlog').then(
+        return apiFetch('api/reservations/backlog').then(
             data => {
                 const backlog = data;
                 for (let i = 0; i < backlog.length; i++) {
-                    backlog[i].startDate = new Date(backlog[i].startDate);
+                    backlog[i].startDate = moment(backlog[i].startDate);
                 }
                 this.setState({ backlog, backlogLoading: false });
                 if (refresh) this.openSnackbar('Refreshed.');
@@ -300,6 +313,69 @@ export default class App extends Component {
         });
     };
 
+    invokeBacklogHub = (method, id) => {
+        this.backlogHubConnection.invoke(method, id);
+    };
+
+    connectToBacklogHub = () => {
+        this.backlogHubConnection = new signalR.HubConnectionBuilder().withUrl('/hub/backlog').build();
+
+        if (this.state.user.isCarwashAdmin) {
+            this.backlogHubConnection.on(BacklogHubMethods.ReservationCreated, id => {
+                console.log(`SignalR: new reservation (${id})`);
+                this.loadBacklog().then(() => this.openSnackbar('New reservation!'));
+            });
+            this.backlogHubConnection.on(BacklogHubMethods.ReservationUpdated, id => {
+                console.log(`SignalR: a reservation was just updated (${id})`);
+                this.loadBacklog();
+            });
+            this.backlogHubConnection.on(BacklogHubMethods.ReservationDeleted, id => {
+                console.log(`SignalR: a reservation was just deleted (${id})`);
+                this.loadBacklog().then(() => this.openSnackbar('A reservation was just deleted.'));
+            });
+            this.backlogHubConnection.on(BacklogHubMethods.ReservationDropoffConfirmed, id => {
+                console.log(`SignalR: a key was just dropped off (${id})`);
+                this.loadBacklog().then(() => this.openSnackbar('A key was just dropped off!'));
+            });
+        }
+
+        this.backlogHubConnection.onclose(error => {
+            console.error(`SignalR: Connection to the hub was closed. Reconnecting... (${error})`);
+            if (this.state.user.isCarwashAdmin) this.loadBacklog();
+            sleep(5000).then(() => this.backlogHubConnection.start().catch(e => console.error(e.toString())));
+        });
+
+        this.backlogHubConnection.start().catch(e => console.error(e.toString()));
+    };
+
+    keyboardListener = () => {
+        const keys = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        document.addEventListener('keydown', event => {
+            keys.shift();
+            keys.push(event.keyCode);
+            if (
+                keys[0] === 38 &&
+                keys[1] === 38 &&
+                keys[2] === 40 &&
+                keys[3] === 40 &&
+                keys[4] === 37 &&
+                keys[5] === 39 &&
+                keys[6] === 37 &&
+                keys[7] === 39 &&
+                keys[8] === 66 &&
+                keys[9] === 65 &&
+                keys[10] === 13
+            ) {
+                this.openSnackbar(
+                    'Nice catch! Shoot me a message - I owe you a bier!',
+                    <Button href="https://www.linkedin.com/in/mark-szabo/" color="secondary" size="small">
+                        Contact
+                    </Button>
+                );
+            }
+        });
+    };
+
     render() {
         const {
             user,
@@ -327,6 +403,7 @@ export default class App extends Component {
                                 reservationsLoading={reservationsLoading}
                                 removeReservation={this.removeReservation}
                                 updateReservation={this.updateReservation}
+                                invokeBacklogHub={this.invokeBacklogHub}
                                 lastSettings={lastSettings}
                                 openSnackbar={this.openSnackbar}
                                 {...props}
@@ -343,6 +420,7 @@ export default class App extends Component {
                                     user={user}
                                     reservations={reservations}
                                     addReservation={this.addReservation}
+                                    invokeBacklogHub={this.invokeBacklogHub}
                                     lastSettings={lastSettings}
                                     loadLastSettings={this.loadLastSettings}
                                     openSnackbar={this.openSnackbar}
@@ -364,6 +442,7 @@ export default class App extends Component {
                                     reservations={reservations}
                                     addReservation={this.addReservation}
                                     removeReservation={this.removeReservation}
+                                    invokeBacklogHub={this.invokeBacklogHub}
                                     loadLastSettings={this.loadLastSettings}
                                     openSnackbar={this.openSnackbar}
                                     openNotificationDialog={this.openNotificationDialog}
@@ -390,6 +469,7 @@ export default class App extends Component {
                                 reservationsLoading={companyReservationsLoading}
                                 removeReservation={this.removeReservationFromCompanyReservations}
                                 updateReservation={this.updateCompanyReservation}
+                                invokeBacklogHub={this.invokeBacklogHub}
                                 lastSettings={lastSettings}
                                 openSnackbar={this.openSnackbar}
                                 {...props}
@@ -406,6 +486,7 @@ export default class App extends Component {
                                 backlog={backlog}
                                 backlogLoading={backlogLoading}
                                 backlogUpdateFound={backlogUpdateFound}
+                                invokeBacklogHub={this.invokeBacklogHub}
                                 snackbarOpen={this.state.snackbarOpen}
                                 openSnackbar={this.openSnackbar}
                                 updateBacklogItem={this.updateBacklogItem}
@@ -427,6 +508,7 @@ export default class App extends Component {
                         'aria-describedby': 'message-id',
                     }}
                     message={<span id="message-id">{getSafeString(this.state.snackbarMessage)}</span>}
+                    action={this.state.snackbarAction}
                 />
                 <NotificationDialog
                     open={this.state.notificationDialogOpen}
