@@ -26,7 +26,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSHU.CarWash.ClassLibrary",
 EndProject
 Project("{262852C6-CD72-467D-83FE-5EEB1973A190}") = "MSHU.CarWash.PWA.Windows", "MSHU.CarWash.PWA.Windows\MSHU.CarWash.PWA.Windows.jsproj", "{880ECB1F-978C-4CF2-96B7-36EA720F7F3B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSHU.CarWash.Functions", "MSHU.CarWash.Functions\MSHU.CarWash.Functions.csproj", "{629F392E-FC51-49D9-9433-DF1994C17D86}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSHU.CarWash.Functions", "MSHU.CarWash.Functions\MSHU.CarWash.Functions.csproj", "{629F392E-FC51-49D9-9433-DF1994C17D86}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSHU.CarWash.Bot", "MSHU.CarWash.Bot\MSHU.CarWash.Bot.csproj", "{C589339E-8174-4F1F-B2C1-36C63B5E7D48}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -198,6 +200,22 @@ Global
 		{629F392E-FC51-49D9-9433-DF1994C17D86}.Release|x64.Build.0 = Release|Any CPU
 		{629F392E-FC51-49D9-9433-DF1994C17D86}.Release|x86.ActiveCfg = Release|Any CPU
 		{629F392E-FC51-49D9-9433-DF1994C17D86}.Release|x86.Build.0 = Release|Any CPU
+		{C589339E-8174-4F1F-B2C1-36C63B5E7D48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C589339E-8174-4F1F-B2C1-36C63B5E7D48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C589339E-8174-4F1F-B2C1-36C63B5E7D48}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{C589339E-8174-4F1F-B2C1-36C63B5E7D48}.Debug|ARM.Build.0 = Debug|Any CPU
+		{C589339E-8174-4F1F-B2C1-36C63B5E7D48}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C589339E-8174-4F1F-B2C1-36C63B5E7D48}.Debug|x64.Build.0 = Debug|Any CPU
+		{C589339E-8174-4F1F-B2C1-36C63B5E7D48}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C589339E-8174-4F1F-B2C1-36C63B5E7D48}.Debug|x86.Build.0 = Debug|Any CPU
+		{C589339E-8174-4F1F-B2C1-36C63B5E7D48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C589339E-8174-4F1F-B2C1-36C63B5E7D48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C589339E-8174-4F1F-B2C1-36C63B5E7D48}.Release|ARM.ActiveCfg = Release|Any CPU
+		{C589339E-8174-4F1F-B2C1-36C63B5E7D48}.Release|ARM.Build.0 = Release|Any CPU
+		{C589339E-8174-4F1F-B2C1-36C63B5E7D48}.Release|x64.ActiveCfg = Release|Any CPU
+		{C589339E-8174-4F1F-B2C1-36C63B5E7D48}.Release|x64.Build.0 = Release|Any CPU
+		{C589339E-8174-4F1F-B2C1-36C63B5E7D48}.Release|x86.ActiveCfg = Release|Any CPU
+		{C589339E-8174-4F1F-B2C1-36C63B5E7D48}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
