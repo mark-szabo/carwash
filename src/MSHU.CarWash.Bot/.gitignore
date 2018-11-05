@@ -2,3 +2,4 @@
 *.pdb
 runtimes/
 *.bot
+*.qnamakerrc

@@ -1,17 +1,17 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Schema;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Bot.Builder;
-using Microsoft.Bot.Builder.Dialogs;
-using Microsoft.Bot.Schema;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
 namespace MSHU.CarWash.Bot
 {
@@ -31,6 +31,7 @@ namespace MSHU.CarWash.Bot
         /// In the .bot file, multiple instances of LUIS can be configured.
         /// </summary>
         public static readonly string LuisConfiguration = "BasicBotLuisApplication";
+        public static readonly string QnAMakerConfiguration = "carwashufaq";
 
         private readonly IStatePropertyAccessor<GreetingState> _greetingStateAccessor;
         private readonly IStatePropertyAccessor<DialogState> _dialogStateAccessor;
@@ -51,6 +52,12 @@ namespace MSHU.CarWash.Bot
 
             _greetingStateAccessor = _userState.CreateProperty<GreetingState>(nameof(GreetingState));
             _dialogStateAccessor = _conversationState.CreateProperty<DialogState>(nameof(DialogState));
+
+            // Verify QnAMaker configuration.
+            if (!_services.QnAServices.ContainsKey(QnAMakerConfiguration))
+            {
+                throw new ArgumentException($"Invalid configuration. Please check your '.bot' file for a QnA service named '{QnAMakerConfiguration}'.");
+            }
 
             // Verify LUIS configuration.
             if (!_services.LuisServices.ContainsKey(LuisConfiguration))
@@ -79,6 +86,13 @@ namespace MSHU.CarWash.Bot
 
             if (activity.Type == ActivityTypes.Message)
             {
+                // Check QnA Maker model
+                var response = await _services.QnAServices[QnAMakerConfiguration].GetAnswersAsync(turnContext);
+                if (response != null && response.Length > 0)
+                {
+                    await turnContext.SendActivityAsync(response[0].Answer, cancellationToken: cancellationToken);
+                }
+
                 // Perform a call to LUIS to retrieve results for the current activity message.
                 var luisResults = await _services.LuisServices[LuisConfiguration].RecognizeAsync(dc.Context, cancellationToken).ConfigureAwait(false);
 
