@@ -14,6 +14,7 @@
         },
         {
             "type": "blob",
+            "name": "carwashstorage", 
             "connectionString": "XJYwZfkYBVUXTY5wENLFYA==!O9h6hkqAJRd5sVaqU8zGtyDX7irsbIvTYuPzDG1nvlV2UXjAG0vnC3I+l11p7aGpjyhWIjjp+BoPDUwKd9s1Sf5lyLv1rqbO3ihRWuzGtnwJ/iHwDF0YGaf9HBcxUneLIk2nhMU3yn30RBZAX2wcUr5rp6FxdJSvZr8ZmYflBjqRqS+0WrDnnKC8iZDbt9K2xXY8nwWtcwhiQLkaTvNJLA==",
             "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
             "subscriptionId": "a984fd43-e460-42c7-957c-a023cf7f8241",
