@@ -47,7 +47,7 @@ namespace MSHU.CarWash.Bot
         /// <param name="services">Bot services.</param>
         /// <param name="userState">User state.</param>
         /// <param name="conversationState">Conversation state.</param>
-        /// <param name="loggerFactory">Logger</param>
+        /// <param name="loggerFactory">Logger.</param>
         public CarWashBot(BotServices services, UserState userState, ConversationState conversationState, ILoggerFactory loggerFactory)
         {
             _services = services ?? throw new ArgumentNullException(nameof(services));
@@ -86,7 +86,7 @@ namespace MSHU.CarWash.Bot
             var activity = turnContext.Activity;
 
             // Create a dialog context
-            var dc = await Dialogs.CreateContextAsync(turnContext);
+            var dc = await Dialogs.CreateContextAsync(turnContext, cancellationToken);
 
             switch (activity.Type)
             {
@@ -97,26 +97,24 @@ namespace MSHU.CarWash.Bot
 
                         // If any entities were updated, treat as interruption.
                         // For example, "no my name is tony" will manifest as an update of the name to be "tony".
-                        var topScoringIntent = luisResults?.GetTopScoringIntent();
-
-                        var topIntent = topScoringIntent.Value.intent;
+                        var topScoringIntent = luisResults?.GetTopScoringIntent().intent;
 
                         // update greeting state with any entities captured
                         await UpdateGreetingState(luisResults, dc.Context);
 
                         // Handle conversation interrupts first.
-                        var interrupted = await IsTurnInterruptedAsync(dc, topIntent);
+                        var interrupted = await IsTurnInterruptedAsync(dc, topScoringIntent);
                         if (interrupted)
                         {
                             // Bypass the dialog.
                             // Save state before the next turn.
-                            await _conversationState.SaveChangesAsync(turnContext);
-                            await _userState.SaveChangesAsync(turnContext);
+                            await _conversationState.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
+                            await _userState.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
                             return;
                         }
 
                         // Continue the current dialog
-                        var dialogResult = await dc.ContinueDialogAsync();
+                        var dialogResult = await dc.ContinueDialogAsync(cancellationToken);
 
                         // if no one has responded,
                         if (!dc.Context.Responded)
@@ -125,22 +123,22 @@ namespace MSHU.CarWash.Bot
                             switch (dialogResult.Status)
                             {
                                 case DialogTurnStatus.Empty:
-                                    switch (topIntent)
+                                    switch (topScoringIntent)
                                     {
                                         case NewReservationIntent:
-                                            await dc.BeginDialogAsync(nameof(GreetingDialog));
+                                            await dc.BeginDialogAsync(nameof(GreetingDialog), cancellationToken: cancellationToken);
                                             break;
 
                                         case EditReservationIntent:
-                                            await dc.BeginDialogAsync(nameof(GreetingDialog));
+                                            await dc.BeginDialogAsync(nameof(GreetingDialog), cancellationToken: cancellationToken);
                                             break;
 
                                         case CancelReservationIntent:
-                                            await dc.BeginDialogAsync(nameof(GreetingDialog));
+                                            await dc.BeginDialogAsync(nameof(GreetingDialog), cancellationToken: cancellationToken);
                                             break;
 
                                         case FindReservationIntent:
-                                            await dc.BeginDialogAsync(nameof(GreetingDialog));
+                                            await dc.BeginDialogAsync(nameof(GreetingDialog), cancellationToken: cancellationToken);
                                             break;
 
                                         case NoneIntent:
@@ -156,7 +154,7 @@ namespace MSHU.CarWash.Bot
                                         default:
                                             // Help or no intent identified, either way, let's provide some help.
                                             // to the user
-                                            await dc.Context.SendActivityAsync("I didn't understand what you just said to me.");
+                                            await dc.Context.SendActivityAsync("I didn't understand what you just said to me.", cancellationToken: cancellationToken);
                                             break;
                                     }
 
@@ -167,12 +165,11 @@ namespace MSHU.CarWash.Bot
                                     break;
 
                                 case DialogTurnStatus.Complete:
-                                    await dc.EndDialogAsync();
+                                    await dc.EndDialogAsync(cancellationToken: cancellationToken);
                                     break;
 
-                                case DialogTurnStatus.Cancelled:
                                 default:
-                                    await dc.CancelAllDialogsAsync();
+                                    await dc.CancelAllDialogsAsync(cancellationToken);
                                     break;
                             }
                         }
@@ -189,44 +186,41 @@ namespace MSHU.CarWash.Bot
                             {
                                 // Greet anyone that was not the target (recipient) of this message.
                                 // To learn more about Adaptive Cards, see https://aka.ms/msbot-adaptivecards for more details.
-                                if (member.Id != activity.Recipient.Id)
-                                {
-                                    var welcomeCard = CreateAdaptiveCardAttachment();
-                                    var response = CreateResponse(activity, welcomeCard);
-                                    await dc.Context.SendActivityAsync(response).ConfigureAwait(false);
-                                }
+                                if (member.Id == activity.Recipient.Id) continue;
+                                var welcomeCard = CreateAdaptiveCardAttachment();
+                                var response = CreateResponse(activity, welcomeCard);
+                                await dc.Context.SendActivityAsync(response, cancellationToken).ConfigureAwait(false);
                             }
                         }
 
                         break;
                     }
-
-                default:
-                    break;
             }
 
-            await _conversationState.SaveChangesAsync(turnContext);
-            await _userState.SaveChangesAsync(turnContext);
+            await _conversationState.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
+            await _userState.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
         }
 
         // Determine if an interruption has occured before we dispatch to any active dialog.
         private async Task<bool> IsTurnInterruptedAsync(DialogContext dc, string topIntent)
         {
+            /*
             // See if there are any conversation interrupts we need to handle.
-            //if (topIntent.Equals(CancelIntent))
-            //{
-            //    if (dc.ActiveDialog != null)
-            //    {
-            //        await dc.CancelAllDialogsAsync();
-            //        await dc.Context.SendActivityAsync("Ok. I've cancelled our last activity.");
-            //    }
-            //    else
-            //    {
-            //        await dc.Context.SendActivityAsync("I don't have anything to cancel.");
-            //    }
+            if (topIntent.Equals(CancelIntent))
+            {
+                if (dc.ActiveDialog != null)
+                {
+                    await dc.CancelAllDialogsAsync();
+                    await dc.Context.SendActivityAsync("Ok. I've cancelled our last activity.");
+                }
+                else
+                {
+                    await dc.Context.SendActivityAsync("I don't have anything to cancel.");
+                }
 
-            //    return true;        // Handled the interrupt.
-            //}
+                return true;        // Handled the interrupt.
+            }
+            */
 
             if (topIntent.Equals(HelpIntent))
             {
@@ -244,7 +238,7 @@ namespace MSHU.CarWash.Bot
         }
 
         // Create an attachment message response.
-        private Activity CreateResponse(Activity activity, Attachment attachment)
+        private static Activity CreateResponse(Activity activity, Attachment attachment)
         {
             var response = activity.CreateReply();
             response.Attachments = new List<Attachment> { attachment };
@@ -252,10 +246,10 @@ namespace MSHU.CarWash.Bot
         }
 
         // Load attachment from file.
-        private Attachment CreateAdaptiveCardAttachment()
+        private static Attachment CreateAdaptiveCardAttachment()
         {
             var adaptiveCard = File.ReadAllText(@".\Dialogs\Welcome\Resources\welcomeCard.json");
-            return new Attachment()
+            return new Attachment
             {
                 ContentType = "application/vnd.microsoft.card.adaptive",
                 Content = JsonConvert.DeserializeObject(adaptiveCard),

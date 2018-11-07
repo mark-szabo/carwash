@@ -1,18 +1,18 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License
 
+using System;
+using System.Collections.Generic;
 using Microsoft.Bot.Builder.AI.Luis;
 using Microsoft.Bot.Builder.AI.QnA;
 using Microsoft.Bot.Configuration;
-using System;
-using System.Collections.Generic;
 
 namespace MSHU.CarWash.Bot
 {
     /// <summary>
     /// Represents references to external services.
     ///
-    /// For example, LUIS services are kept here as a singleton.  This external service is configured
+    /// For example, LUIS services are kept here as a singleton. This external service is configured
     /// using the <see cref="BotConfiguration"/> class.
     /// </summary>
     /// <seealso cref="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-2.1"/>
@@ -22,7 +22,7 @@ namespace MSHU.CarWash.Bot
         /// <summary>
         /// Initializes a new instance of the <see cref="BotServices"/> class.
         /// </summary>
-        /// <param name="luisServices">A dictionary of named <see cref="LuisRecognizer"/> instances for usage within the bot.</param>
+        /// <param name="botConfiguration">Parsed .bot configuration file.</param>
         public BotServices(BotConfiguration botConfiguration)
         {
             foreach (var service in botConfiguration.Services)
@@ -34,10 +34,6 @@ namespace MSHU.CarWash.Bot
                             // Create a QnA Maker that is initialized and suitable for passing
                             // into the IBot-derived class (QnABot).
                             var qna = (QnAMakerService)service;
-                            if (qna == null)
-                            {
-                                throw new InvalidOperationException("The QnA service is not configured correctly in your '.bot' file.");
-                            }
 
                             if (string.IsNullOrWhiteSpace(qna.KbId))
                             {
@@ -62,7 +58,7 @@ namespace MSHU.CarWash.Bot
                             };
 
                             var qnaMaker = new QnAMaker(qnaEndpoint);
-                            this.QnAServices.Add(qna.Name, qnaMaker);
+                            QnAServices.Add(qna.Name, qnaMaker);
 
                             break;
                         }
@@ -70,14 +66,11 @@ namespace MSHU.CarWash.Bot
                     case ServiceTypes.Luis:
                         {
                             var luis = (LuisService)service;
-                            if (luis == null)
-                            {
-                                throw new InvalidOperationException("The LUIS service is not configured correctly in your '.bot' file.");
-                            }
 
                             var app = new LuisApplication(luis.AppId, luis.AuthoringKey, luis.GetEndpoint());
                             var recognizer = new LuisRecognizer(app);
-                            this.LuisServices.Add(luis.Name, recognizer);
+                            LuisServices.Add(luis.Name, recognizer);
+
                             break;
                         }
                 }

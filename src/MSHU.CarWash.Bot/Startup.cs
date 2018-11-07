@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using System;
@@ -20,8 +20,8 @@ namespace MSHU.CarWash.Bot
     /// </summary>
     public class Startup
     {
+        private readonly bool _isProduction;
         private ILoggerFactory _loggerFactory;
-        private bool _isProduction = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Startup"/> class.
@@ -61,7 +61,7 @@ namespace MSHU.CarWash.Bot
             var botFilePath = Configuration.GetSection("botFilePath")?.Value;
 
             // Loads .bot configuration file and adds a singleton that your Bot can access through dependency injection.
-            BotConfiguration botConfig = null;
+            BotConfiguration botConfig;
             try
             {
                 botConfig = BotConfiguration.Load(botFilePath ?? @".\carwashubot.bot", secretKey);
@@ -84,7 +84,7 @@ namespace MSHU.CarWash.Bot
 
             // Retrieve current endpoint.
             var environment = _isProduction ? "production" : "development";
-            var service = botConfig.Services.Where(s => s.Type == "endpoint" && s.Name == environment).FirstOrDefault();
+            var service = botConfig.Services.FirstOrDefault(s => s.Type == "endpoint" && s.Name == environment);
             if (!(service is EndpointService endpointService))
             {
                 throw new InvalidOperationException($"The .bot file does not contain an endpoint with name '{environment}'.");
