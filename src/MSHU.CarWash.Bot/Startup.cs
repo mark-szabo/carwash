@@ -3,6 +3,7 @@
 
 using System;
 using System.Linq;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Bot.Builder;
@@ -21,6 +22,7 @@ namespace MSHU.CarWash.Bot
     public class Startup
     {
         private readonly bool _isProduction;
+        private readonly TelemetryClient _telemetryClient;
         private ILoggerFactory _loggerFactory;
 
         /// <summary>
@@ -41,6 +43,7 @@ namespace MSHU.CarWash.Bot
                 .AddEnvironmentVariables();
 
             Configuration = builder.Build();
+            _telemetryClient = new TelemetryClient();
         }
 
         /// <summary>
@@ -123,6 +126,7 @@ namespace MSHU.CarWash.Bot
                 ILogger logger = _loggerFactory.CreateLogger<CarWashBot>();
                 options.OnTurnError = async (context, exception) =>
                 {
+                    _telemetryClient.TrackException(exception);
                     logger.LogError($"Exception caught : {exception}");
                     await context.SendActivityAsync("Sorry, it looks like something went wrong.");
                 };
