@@ -12,6 +12,7 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
+using MSHU.CarWash.Bot.Services;
 using Newtonsoft.Json;
 
 namespace MSHU.CarWash.Bot
@@ -89,7 +90,8 @@ namespace MSHU.CarWash.Bot
             // Add the OAuth prompts and related dialogs into the dialog set
             Dialogs.Add(Prompt(AuthConnectionName));
             Dialogs.Add(new ConfirmPrompt(DisplayTokenPrompt));
-            Dialogs.Add(new WaterfallDialog(AuthDialog, new WaterfallStep[] { PromptStepAsync, LoginStepAsync, DisplayTokenAsync }));
+            //Dialogs.Add(new WaterfallDialog(AuthDialog, new WaterfallStep[] { PromptStepAsync, LoginStepAsync, DisplayTokenAsync }));
+            Dialogs.Add(new WaterfallDialog(AuthDialog, new WaterfallStep[] { PromptStepAsync, LoginStepAsync }));
         }
 
         private DialogSet Dialogs { get; set; }
@@ -182,7 +184,22 @@ namespace MSHU.CarWash.Bot
                                             break;
 
                                         case FindReservationIntent:
-                                            await dc.BeginDialogAsync(nameof(GreetingDialog), cancellationToken: cancellationToken);
+                                            var token = await GetToken(dc, cancellationToken);
+                                            var api = new CarwashService(token);
+                                            var reservations = await api.GetMyActiveReservations();
+                                            switch (reservations.Count)
+                                            {
+                                                case 0:
+                                                    await turnContext.SendActivityAsync("No pending reservations. Get started by making a new reservation!", cancellationToken: cancellationToken);
+                                                    break;
+                                                case 1:
+                                                    await turnContext.SendActivityAsync("I have found an active reservation!", cancellationToken: cancellationToken);
+                                                    break;
+                                                default:
+                                                    await turnContext.SendActivityAsync($"Nice! You have {reservations.Count} reservations in-progress.", cancellationToken: cancellationToken);
+                                                    break;
+                                            }
+
                                             break;
 
                                         case NoneIntent:
@@ -263,8 +280,16 @@ namespace MSHU.CarWash.Bot
             await _userState.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
         }
 
+        private static async Task<string> GetToken(DialogContext dc, CancellationToken cancellationToken)
+        {
+            var prompt = await dc.BeginDialogAsync(LoginPrompt, cancellationToken: cancellationToken);
+            var tokenResponse = (TokenResponse)prompt.Result;
+
+            return tokenResponse?.Token;
+        }
+
         // Determine if an interruption has occured before we dispatch to any active dialog.
-        private async Task<bool> IsTurnInterruptedAsync(DialogContext dc, string topIntent)
+        private static async Task<bool> IsTurnInterruptedAsync(DialogContext dc, string topIntent)
         {
             /*
             // See if there are any conversation interrupts we need to handle.
@@ -366,14 +391,32 @@ namespace MSHU.CarWash.Bot
             }
 
             await step.Context.SendActivityAsync("You are now logged in.", cancellationToken: cancellationToken);
-            return await step.PromptAsync(
-                DisplayTokenPrompt,
-                new PromptOptions
-                {
-                    Prompt = MessageFactory.Text("Would you like to view your token?"),
-                    Choices = new List<Choice> { new Choice("Yes"), new Choice("No") },
-                },
-                cancellationToken);
+
+            var api = new CarwashService(tokenResponse.Token);
+            var reservations = await api.GetMyActiveReservations();
+            switch (reservations.Count)
+            {
+                case 0:
+                    await step.Context.SendActivityAsync("No pending reservations. Get started by making a new reservation!", cancellationToken: cancellationToken);
+                    break;
+                case 1:
+                    await step.Context.SendActivityAsync("I have found an active reservation!", cancellationToken: cancellationToken);
+                    break;
+                default:
+                    await step.Context.SendActivityAsync($"Nice! You have {reservations.Count} reservations in-progress.", cancellationToken: cancellationToken);
+                    break;
+            }
+
+            return Dialog.EndOfTurn;
+
+            //return await step.PromptAsync(
+            //    DisplayTokenPrompt,
+            //    new PromptOptions
+            //    {
+            //        Prompt = MessageFactory.Text("Would you like to view your token?"),
+            //        Choices = new List<Choice> { new Choice("Yes"), new Choice("No") },
+            //    },
+            //    cancellationToken);
         }
 
         /// <summary>

@@ -41,4 +41,8 @@
     <Folder Include="Dialogs\Greeting\Resources\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\MSHU.CarWash.ClassLibrary\MSHU.CarWash.ClassLibrary.csproj" />
+  </ItemGroup>
+
 </Project>
