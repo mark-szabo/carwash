@@ -1,28 +1,30 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using Microsoft.Bot.Builder;
-using Microsoft.Bot.Builder.Dialogs;
-using Microsoft.Bot.Schema;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Schema;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace MSHU.CarWash.Bot
 {
     /// <summary>
     /// Main entry point and orchestration for bot.
     /// </summary>
-    public class BasicBot : IBot
+    public class CarWashBot : IBot
     {
         // Supported LUIS Intents
-        public const string GreetingIntent = "Greeting";
-        public const string CancelIntent = "Cancel";
+        public const string NewReservationIntent = "Reservation_Add";
+        public const string CancelReservationIntent = "Reservation_Delete";
+        public const string EditReservationIntent = "Reservation_Edit";
+        public const string FindReservationIntent = "Reservation_Find";
         public const string HelpIntent = "Help";
         public const string NoneIntent = "None";
 
@@ -30,7 +32,7 @@ namespace MSHU.CarWash.Bot
         /// Key in the bot config (.bot file) for the LUIS instance.
         /// In the .bot file, multiple instances of LUIS can be configured.
         /// </summary>
-        public static readonly string LuisConfiguration = "BasicBotLuisApplication";
+        public static readonly string LuisConfiguration = "carwashubot";
         public static readonly string QnAMakerConfiguration = "carwashufaq";
 
         private readonly IStatePropertyAccessor<GreetingState> _greetingStateAccessor;
@@ -40,11 +42,13 @@ namespace MSHU.CarWash.Bot
         private readonly BotServices _services;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BasicBot"/> class.
+        /// Initializes a new instance of the <see cref="CarWashBot"/> class.
         /// </summary>
-        /// <param name="botServices">Bot services.</param>
-        /// <param name="accessors">Bot State Accessors.</param>
-        public BasicBot(BotServices services, UserState userState, ConversationState conversationState, ILoggerFactory loggerFactory)
+        /// <param name="services">Bot services.</param>
+        /// <param name="userState">User state.</param>
+        /// <param name="conversationState">Conversation state.</param>
+        /// <param name="loggerFactory">Logger</param>
+        public CarWashBot(BotServices services, UserState userState, ConversationState conversationState, ILoggerFactory loggerFactory)
         {
             _services = services ?? throw new ArgumentNullException(nameof(services));
             _userState = userState ?? throw new ArgumentNullException(nameof(userState));
@@ -84,95 +88,121 @@ namespace MSHU.CarWash.Bot
             // Create a dialog context
             var dc = await Dialogs.CreateContextAsync(turnContext);
 
-            if (activity.Type == ActivityTypes.Message)
+            switch (activity.Type)
             {
-                // Check QnA Maker model
-                var response = await _services.QnAServices[QnAMakerConfiguration].GetAnswersAsync(turnContext);
-                if (response != null && response.Length > 0)
-                {
-                    await turnContext.SendActivityAsync(response[0].Answer, cancellationToken: cancellationToken);
-                }
-
-                // Perform a call to LUIS to retrieve results for the current activity message.
-                var luisResults = await _services.LuisServices[LuisConfiguration].RecognizeAsync(dc.Context, cancellationToken).ConfigureAwait(false);
-
-                // If any entities were updated, treat as interruption.
-                // For example, "no my name is tony" will manifest as an update of the name to be "tony".
-                var topScoringIntent = luisResults?.GetTopScoringIntent();
-
-                var topIntent = topScoringIntent.Value.intent;
-
-                // update greeting state with any entities captured
-                await UpdateGreetingState(luisResults, dc.Context);
-
-                // Handle conversation interrupts first.
-                var interrupted = await IsTurnInterruptedAsync(dc, topIntent);
-                if (interrupted)
-                {
-                    // Bypass the dialog.
-                    // Save state before the next turn.
-                    await _conversationState.SaveChangesAsync(turnContext);
-                    await _userState.SaveChangesAsync(turnContext);
-                    return;
-                }
-
-                // Continue the current dialog
-                var dialogResult = await dc.ContinueDialogAsync();
-
-                // if no one has responded,
-                if (!dc.Context.Responded)
-                {
-                    // examine results from active dialog
-                    switch (dialogResult.Status)
+                case ActivityTypes.Message:
                     {
-                        case DialogTurnStatus.Empty:
-                            switch (topIntent)
+                        // Perform a call to LUIS to retrieve results for the current activity message.
+                        var luisResults = await _services.LuisServices[LuisConfiguration].RecognizeAsync(dc.Context, cancellationToken).ConfigureAwait(false);
+
+                        // If any entities were updated, treat as interruption.
+                        // For example, "no my name is tony" will manifest as an update of the name to be "tony".
+                        var topScoringIntent = luisResults?.GetTopScoringIntent();
+
+                        var topIntent = topScoringIntent.Value.intent;
+
+                        // update greeting state with any entities captured
+                        await UpdateGreetingState(luisResults, dc.Context);
+
+                        // Handle conversation interrupts first.
+                        var interrupted = await IsTurnInterruptedAsync(dc, topIntent);
+                        if (interrupted)
+                        {
+                            // Bypass the dialog.
+                            // Save state before the next turn.
+                            await _conversationState.SaveChangesAsync(turnContext);
+                            await _userState.SaveChangesAsync(turnContext);
+                            return;
+                        }
+
+                        // Continue the current dialog
+                        var dialogResult = await dc.ContinueDialogAsync();
+
+                        // if no one has responded,
+                        if (!dc.Context.Responded)
+                        {
+                            // examine results from active dialog
+                            switch (dialogResult.Status)
                             {
-                                case GreetingIntent:
-                                    await dc.BeginDialogAsync(nameof(GreetingDialog));
+                                case DialogTurnStatus.Empty:
+                                    switch (topIntent)
+                                    {
+                                        case NewReservationIntent:
+                                            await dc.BeginDialogAsync(nameof(GreetingDialog));
+                                            break;
+
+                                        case EditReservationIntent:
+                                            await dc.BeginDialogAsync(nameof(GreetingDialog));
+                                            break;
+
+                                        case CancelReservationIntent:
+                                            await dc.BeginDialogAsync(nameof(GreetingDialog));
+                                            break;
+
+                                        case FindReservationIntent:
+                                            await dc.BeginDialogAsync(nameof(GreetingDialog));
+                                            break;
+
+                                        case NoneIntent:
+                                            // Check QnA Maker model
+                                            var response = await _services.QnAServices[QnAMakerConfiguration].GetAnswersAsync(turnContext);
+                                            if (response != null && response.Length > 0)
+                                            {
+                                                await turnContext.SendActivityAsync(response[0].Answer, cancellationToken: cancellationToken);
+                                            }
+
+                                            break;
+
+                                        default:
+                                            // Help or no intent identified, either way, let's provide some help.
+                                            // to the user
+                                            await dc.Context.SendActivityAsync("I didn't understand what you just said to me.");
+                                            break;
+                                    }
+
                                     break;
 
-                                case NoneIntent:
+                                case DialogTurnStatus.Waiting:
+                                    // The active dialog is waiting for a response from the user, so do nothing.
+                                    break;
+
+                                case DialogTurnStatus.Complete:
+                                    await dc.EndDialogAsync();
+                                    break;
+
+                                case DialogTurnStatus.Cancelled:
                                 default:
-                                    // Help or no intent identified, either way, let's provide some help.
-                                    // to the user
-                                    await dc.Context.SendActivityAsync("I didn't understand what you just said to me.");
+                                    await dc.CancelAllDialogsAsync();
                                     break;
                             }
-
-                            break;
-
-                        case DialogTurnStatus.Waiting:
-                            // The active dialog is waiting for a response from the user, so do nothing.
-                            break;
-
-                        case DialogTurnStatus.Complete:
-                            await dc.EndDialogAsync();
-                            break;
-
-                        default:
-                            await dc.CancelAllDialogsAsync();
-                            break;
-                    }
-                }
-            }
-            else if (activity.Type == ActivityTypes.ConversationUpdate)
-            {
-                if (activity.MembersAdded.Any())
-                {
-                    // Iterate over all new members added to the conversation.
-                    foreach (var member in activity.MembersAdded)
-                    {
-                        // Greet anyone that was not the target (recipient) of this message.
-                        // To learn more about Adaptive Cards, see https://aka.ms/msbot-adaptivecards for more details.
-                        if (member.Id != activity.Recipient.Id)
-                        {
-                            var welcomeCard = CreateAdaptiveCardAttachment();
-                            var response = CreateResponse(activity, welcomeCard);
-                            await dc.Context.SendActivityAsync(response).ConfigureAwait(false);
                         }
+
+                        break;
                     }
-                }
+
+                case ActivityTypes.ConversationUpdate:
+                    {
+                        if (activity.MembersAdded.Any())
+                        {
+                            // Iterate over all new members added to the conversation.
+                            foreach (var member in activity.MembersAdded)
+                            {
+                                // Greet anyone that was not the target (recipient) of this message.
+                                // To learn more about Adaptive Cards, see https://aka.ms/msbot-adaptivecards for more details.
+                                if (member.Id != activity.Recipient.Id)
+                                {
+                                    var welcomeCard = CreateAdaptiveCardAttachment();
+                                    var response = CreateResponse(activity, welcomeCard);
+                                    await dc.Context.SendActivityAsync(response).ConfigureAwait(false);
+                                }
+                            }
+                        }
+
+                        break;
+                    }
+
+                default:
+                    break;
             }
 
             await _conversationState.SaveChangesAsync(turnContext);
@@ -183,20 +213,20 @@ namespace MSHU.CarWash.Bot
         private async Task<bool> IsTurnInterruptedAsync(DialogContext dc, string topIntent)
         {
             // See if there are any conversation interrupts we need to handle.
-            if (topIntent.Equals(CancelIntent))
-            {
-                if (dc.ActiveDialog != null)
-                {
-                    await dc.CancelAllDialogsAsync();
-                    await dc.Context.SendActivityAsync("Ok. I've cancelled our last activity.");
-                }
-                else
-                {
-                    await dc.Context.SendActivityAsync("I don't have anything to cancel.");
-                }
+            //if (topIntent.Equals(CancelIntent))
+            //{
+            //    if (dc.ActiveDialog != null)
+            //    {
+            //        await dc.CancelAllDialogsAsync();
+            //        await dc.Context.SendActivityAsync("Ok. I've cancelled our last activity.");
+            //    }
+            //    else
+            //    {
+            //        await dc.Context.SendActivityAsync("I don't have anything to cancel.");
+            //    }
 
-                return true;        // Handled the interrupt.
-            }
+            //    return true;        // Handled the interrupt.
+            //}
 
             if (topIntent.Equals(HelpIntent))
             {
@@ -217,7 +247,7 @@ namespace MSHU.CarWash.Bot
         private Activity CreateResponse(Activity activity, Attachment attachment)
         {
             var response = activity.CreateReply();
-            response.Attachments = new List<Attachment>() { attachment };
+            response.Attachments = new List<Attachment> { attachment };
             return response;
         }
 

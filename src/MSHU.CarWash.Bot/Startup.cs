@@ -64,9 +64,9 @@ namespace MSHU.CarWash.Bot
             BotConfiguration botConfig = null;
             try
             {
-                botConfig = BotConfiguration.Load(botFilePath ?? @".\BotConfiguration.bot", secretKey);
+                botConfig = BotConfiguration.Load(botFilePath ?? @".\carwashubot.bot", secretKey);
             }
-            catch
+            catch (Exception)
             {
                 var msg = @"Error reading bot file. Please ensure you have valid botFilePath and botFileSecret set for your environment.
     - You can find the botFilePath and botFileSecret in the Azure App Service application settings.
@@ -119,13 +119,13 @@ namespace MSHU.CarWash.Bot
             var userState = new UserState(dataStore);
             services.AddSingleton(userState);
 
-            services.AddBot<BasicBot>(options =>
+            services.AddBot<CarWashBot>(options =>
             {
                 options.CredentialProvider = new SimpleCredentialProvider(endpointService.AppId, endpointService.AppPassword);
 
                 // Catches any errors that occur during a conversation turn and logs them to currently
                 // configured ILogger.
-                ILogger logger = _loggerFactory.CreateLogger<BasicBot>();
+                ILogger logger = _loggerFactory.CreateLogger<CarWashBot>();
                 options.OnTurnError = async (context, exception) =>
                 {
                     logger.LogError($"Exception caught : {exception}");
