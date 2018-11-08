@@ -5,15 +5,18 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
-using Microsoft.Bot.Builder.Dialogs.Choices;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
+using MSHU.CarWash.Bot.Dialogs.Auth;
 using MSHU.CarWash.Bot.Services;
 using Newtonsoft.Json;
+using Reservation = MSHU.CarWash.ClassLibrary.Models.Reservation;
 
 namespace MSHU.CarWash.Bot
 {
@@ -37,24 +40,12 @@ namespace MSHU.CarWash.Bot
         public const string LuisConfiguration = "carwashubot";
         public const string QnAMakerConfiguration = "carwashufaq";
 
-        /// <summary>
-        /// The name of your connection. It can be found on Azure in
-        /// your Bot Channels Registration on the settings blade.
-        /// </summary>
-        public const string AuthConnectionName = "adal";
-
-        // Dialogs
-        private const string AuthDialog = "authDialog";
-
-        // Prompts
-        private const string LoginPrompt = "loginPrompt";
-        private const string DisplayTokenPrompt = "displayTokenPrompt";
-
         private readonly IStatePropertyAccessor<GreetingState> _greetingStateAccessor;
         private readonly IStatePropertyAccessor<DialogState> _dialogStateAccessor;
         private readonly UserState _userState;
         private readonly ConversationState _conversationState;
         private readonly BotServices _services;
+        private readonly TelemetryClient _telemetryClient;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CarWashBot"/> class.
@@ -72,6 +63,8 @@ namespace MSHU.CarWash.Bot
             _greetingStateAccessor = _userState.CreateProperty<GreetingState>(nameof(GreetingState));
             _dialogStateAccessor = _conversationState.CreateProperty<DialogState>(nameof(DialogState));
 
+            _telemetryClient = new TelemetryClient();
+
             // Verify QnAMaker configuration.
             if (!_services.QnAServices.ContainsKey(QnAMakerConfiguration))
             {
@@ -87,11 +80,8 @@ namespace MSHU.CarWash.Bot
             Dialogs = new DialogSet(_dialogStateAccessor);
             Dialogs.Add(new GreetingDialog(_greetingStateAccessor, loggerFactory));
 
-            // Add the OAuth prompts and related dialogs into the dialog set
-            Dialogs.Add(Prompt(AuthConnectionName));
-            Dialogs.Add(new ConfirmPrompt(DisplayTokenPrompt));
-            //Dialogs.Add(new WaterfallDialog(AuthDialog, new WaterfallStep[] { PromptStepAsync, LoginStepAsync, DisplayTokenAsync }));
-            Dialogs.Add(new WaterfallDialog(AuthDialog, new WaterfallStep[] { PromptStepAsync, LoginStepAsync }));
+            Dialogs.Add(new AuthDialog());
+            Dialogs.Add(AuthDialog.LoginPromptDialog());
         }
 
         private DialogSet Dialogs { get; set; }
@@ -125,7 +115,7 @@ namespace MSHU.CarWash.Bot
                         if (text == "login")
                         {
                             // Start the Login process.
-                            await dc.BeginDialogAsync(AuthDialog, cancellationToken: cancellationToken);
+                            await dc.BeginDialogAsync(nameof(AuthDialog), cancellationToken: cancellationToken);
                             break;
                         }
 
@@ -133,7 +123,7 @@ namespace MSHU.CarWash.Bot
                         {
                             // The bot adapter encapsulates the authentication processes.
                             var botAdapter = (BotFrameworkAdapter)turnContext.Adapter;
-                            await botAdapter.SignOutUserAsync(turnContext, AuthConnectionName, cancellationToken: cancellationToken);
+                            await botAdapter.SignOutUserAsync(turnContext, AuthDialog.AuthConnectionName, cancellationToken: cancellationToken);
                             await turnContext.SendActivityAsync("You have been signed out.", cancellationToken: cancellationToken);
                             break;
                         }
@@ -184,9 +174,25 @@ namespace MSHU.CarWash.Bot
                                             break;
 
                                         case FindReservationIntent:
-                                            var token = await GetToken(dc, cancellationToken);
-                                            var api = new CarwashService(token);
-                                            var reservations = await api.GetMyActiveReservations();
+                                            var token = await AuthDialog.GetToken(dc, cancellationToken);
+                                            var reservations = new List<Reservation>();
+                                            try
+                                            {
+                                                var api = new CarwashService(token);
+                                                reservations = await api.GetMyActiveReservations();
+                                            }
+                                            catch (AuthenticationException)
+                                            {
+                                                await turnContext.SendActivityAsync("You have to be authenticated first.", cancellationToken: cancellationToken);
+                                                break;
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                _telemetryClient.TrackException(e);
+                                                await turnContext.SendActivityAsync("I am not able to access your reservations right now.", cancellationToken: cancellationToken);
+                                                break;
+                                            }
+
                                             switch (reservations.Count)
                                             {
                                                 case 0:
@@ -249,7 +255,7 @@ namespace MSHU.CarWash.Bot
                     await dc.ContinueDialogAsync(cancellationToken);
                     if (!turnContext.Responded)
                     {
-                        await dc.BeginDialogAsync(AuthDialog, cancellationToken: cancellationToken);
+                        await dc.BeginDialogAsync(nameof(AuthDialog), cancellationToken: cancellationToken);
                     }
 
                     break;
@@ -278,14 +284,6 @@ namespace MSHU.CarWash.Bot
 
             await _conversationState.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
             await _userState.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
-        }
-
-        private static async Task<string> GetToken(DialogContext dc, CancellationToken cancellationToken)
-        {
-            var prompt = await dc.BeginDialogAsync(LoginPrompt, cancellationToken: cancellationToken);
-            var tokenResponse = (TokenResponse)prompt.Result;
-
-            return tokenResponse?.Token;
         }
 
         // Determine if an interruption has occured before we dispatch to any active dialog.
@@ -339,115 +337,6 @@ namespace MSHU.CarWash.Bot
             await turnContext.SendActivityAsync("I'm your bot 🤖 who will help you reserve car washing services and answer your questions.", cancellationToken: cancellationToken);
             await turnContext.SendActivityAsync("Ask me questions like 'How to use the app?' or 'What does interior cleaning cost?'.", cancellationToken: cancellationToken);
             await turnContext.SendActivityAsync("Or I can make reservations for you. But before that you need to log in by typing 'login'.", cancellationToken: cancellationToken);
-        }
-
-        /// <summary>
-        /// Prompts the user to login using the OAuth provider specified by the connection name.
-        /// </summary>
-        /// <param name="connectionName"> The name of your connection. It can be found on Azure in
-        /// your Bot Channels Registration on the settings blade. </param>
-        /// <returns> An <see cref="OAuthPrompt"/> the user may use to log in.</returns>
-        private static OAuthPrompt Prompt(string connectionName)
-        {
-            return new OAuthPrompt(
-                LoginPrompt,
-                new OAuthPromptSettings
-                {
-                    ConnectionName = connectionName,
-                    Text = "Click to sign in!",
-                    Title = "Sign in",
-                    Timeout = 300000, // User has 5 minutes to login (1000 * 60 * 5)
-                });
-        }
-
-        /// <summary>
-        /// This <see cref="WaterfallStep"/> prompts the user to log in.
-        /// </summary>
-        /// <param name="step">A <see cref="WaterfallStepContext"/> provides context for the current waterfall step.</param>
-        /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
-        /// or threads to receive notice of cancellation.</param>
-        /// <returns>A <see cref="Task"/> representing the operation result of the operation.</returns>
-        private static async Task<DialogTurnResult> PromptStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
-        {
-            return await step.BeginDialogAsync(LoginPrompt, cancellationToken: cancellationToken);
-        }
-
-        /// <summary>
-        /// In this step we check that a token was received and prompt the user as needed.
-        /// </summary>
-        /// <param name="step">A <see cref="WaterfallStepContext"/> provides context for the current waterfall step.</param>
-        /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
-        /// or threads to receive notice of cancellation.</param>
-        /// <returns>A <see cref="Task"/> representing the operation result of the operation.</returns>
-        private static async Task<DialogTurnResult> LoginStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
-        {
-            // Get the token from the previous step. Note that we could also have gotten the
-            // token directly from the prompt itself. There is an example of this in the next method.
-            var tokenResponse = (TokenResponse)step.Result;
-            if (tokenResponse == null)
-            {
-                await step.Context.SendActivityAsync("Login was not successful, please try again.", cancellationToken: cancellationToken);
-                return Dialog.EndOfTurn;
-            }
-
-            await step.Context.SendActivityAsync("You are now logged in.", cancellationToken: cancellationToken);
-
-            var api = new CarwashService(tokenResponse.Token);
-            var reservations = await api.GetMyActiveReservations();
-            switch (reservations.Count)
-            {
-                case 0:
-                    await step.Context.SendActivityAsync("No pending reservations. Get started by making a new reservation!", cancellationToken: cancellationToken);
-                    break;
-                case 1:
-                    await step.Context.SendActivityAsync("I have found an active reservation!", cancellationToken: cancellationToken);
-                    break;
-                default:
-                    await step.Context.SendActivityAsync($"Nice! You have {reservations.Count} reservations in-progress.", cancellationToken: cancellationToken);
-                    break;
-            }
-
-            return Dialog.EndOfTurn;
-
-            //return await step.PromptAsync(
-            //    DisplayTokenPrompt,
-            //    new PromptOptions
-            //    {
-            //        Prompt = MessageFactory.Text("Would you like to view your token?"),
-            //        Choices = new List<Choice> { new Choice("Yes"), new Choice("No") },
-            //    },
-            //    cancellationToken);
-        }
-
-        /// <summary>
-        /// Fetch the token and display it for the user if they asked to see it.
-        /// </summary>
-        /// <param name="step">A <see cref="WaterfallStepContext"/> provides context for the current waterfall step.</param>
-        /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
-        /// or threads to receive notice of cancellation.</param>
-        /// <returns>A <see cref="Task"/> representing the operation result of the operation.</returns>
-        private static async Task<DialogTurnResult> DisplayTokenAsync(WaterfallStepContext step, CancellationToken cancellationToken)
-        {
-            var result = (bool)step.Result;
-            if (result)
-            {
-                // Call the prompt again because we need the token. The reasons for this are:
-                // 1. If the user is already logged in we do not need to store the token locally in the bot and worry
-                // about refreshing it. We can always just call the prompt again to get the token.
-                // 2. We never know how long it will take a user to respond. By the time the
-                // user responds the token may have expired. The user would then be prompted to login again.
-                //
-                // There is no reason to store the token locally in the bot because we can always just call
-                // the OAuth prompt to get the token or get a new token if needed.
-                var prompt = await step.BeginDialogAsync(LoginPrompt, cancellationToken: cancellationToken);
-                var tokenResponse = (TokenResponse)prompt.Result;
-                if (tokenResponse != null)
-                {
-                    await step.Context.SendActivityAsync($"Here is your token {tokenResponse.Token}", cancellationToken: cancellationToken);
-                }
-            }
-
-            return Dialog.EndOfTurn;
         }
 
         // Create an attachment message response.

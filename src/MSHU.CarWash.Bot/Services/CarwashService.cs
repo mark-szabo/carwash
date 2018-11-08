@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Authentication;
 using System.Threading.Tasks;
 using MSHU.CarWash.ClassLibrary.Enums;
 using MSHU.CarWash.ClassLibrary.Models;
@@ -16,6 +17,8 @@ namespace MSHU.CarWash.Bot.Services
 
         public CarwashService(string token)
         {
+            if (string.IsNullOrEmpty(token)) throw new AuthenticationException("Not authenticated.");
+
             _client = new HttpClient();
             _client.BaseAddress = new Uri("https://carwashu.azurewebsites.net/");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
