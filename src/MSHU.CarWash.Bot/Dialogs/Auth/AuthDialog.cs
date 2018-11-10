@@ -52,7 +52,7 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
         /// <returns>token string</returns>
-        public static async Task<string> GetToken(DialogContext dc, CancellationToken cancellationToken)
+        public static async Task<string> GetToken(DialogContext dc, CancellationToken cancellationToken = default(CancellationToken))
         {
             // Prompts the user to login using the OAuth provider specified by the connection name.
             var prompt = await dc.BeginDialogAsync(LoginPrompt, cancellationToken: cancellationToken);
@@ -87,7 +87,7 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
         /// <returns>A <see cref="Task"/> representing the operation result of the operation.</returns>
-        private static async Task<DialogTurnResult> PromptStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
+        private static async Task<DialogTurnResult> PromptStepAsync(WaterfallStepContext step, CancellationToken cancellationToken = default(CancellationToken))
         {
             return await step.BeginDialogAsync(LoginPrompt, cancellationToken: cancellationToken);
         }
@@ -99,7 +99,7 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
         /// <returns>A <see cref="Task"/> representing the operation result of the operation.</returns>
-        private static async Task<DialogTurnResult> LoginStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
+        private static async Task<DialogTurnResult> LoginStepAsync(WaterfallStepContext step, CancellationToken cancellationToken = default(CancellationToken))
         {
             // Get the token from the previous step. Note that we could also have gotten the
             // token directly from the prompt itself. There is an example of this in the next method.
@@ -113,7 +113,7 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
             await step.Context.SendActivityAsync("You are now logged in.", cancellationToken: cancellationToken);
 
             var api = new CarwashService(tokenResponse.Token);
-            var reservations = await api.GetMyActiveReservations();
+            var reservations = await api.GetMyActiveReservations(cancellationToken);
             switch (reservations.Count)
             {
                 case 0:
@@ -146,7 +146,7 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
         /// <returns>A <see cref="Task"/> representing the operation result of the operation.</returns>
-        private static async Task<DialogTurnResult> DisplayTokenAsync(WaterfallStepContext step, CancellationToken cancellationToken)
+        private static async Task<DialogTurnResult> DisplayTokenAsync(WaterfallStepContext step, CancellationToken cancellationToken = default(CancellationToken))
         {
             var result = (bool)step.Result;
             if (result)

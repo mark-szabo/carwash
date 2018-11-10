@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
@@ -14,9 +13,8 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
 using MSHU.CarWash.Bot.Dialogs.Auth;
-using MSHU.CarWash.Bot.Services;
+using MSHU.CarWash.Bot.Dialogs.FindReservation;
 using Newtonsoft.Json;
-using Reservation = MSHU.CarWash.ClassLibrary.Models.Reservation;
 
 namespace MSHU.CarWash.Bot
 {
@@ -79,6 +77,7 @@ namespace MSHU.CarWash.Bot
 
             Dialogs = new DialogSet(_dialogStateAccessor);
             Dialogs.Add(new GreetingDialog(_greetingStateAccessor, loggerFactory));
+            Dialogs.Add(new FindReservationDialog());
 
             Dialogs.Add(new AuthDialog());
             Dialogs.Add(AuthDialog.LoginPromptDialog());
@@ -174,38 +173,7 @@ namespace MSHU.CarWash.Bot
                                             break;
 
                                         case FindReservationIntent:
-                                            var token = await AuthDialog.GetToken(dc, cancellationToken);
-                                            var reservations = new List<Reservation>();
-                                            try
-                                            {
-                                                var api = new CarwashService(token);
-                                                reservations = await api.GetMyActiveReservations();
-                                            }
-                                            catch (AuthenticationException)
-                                            {
-                                                await turnContext.SendActivityAsync("You have to be authenticated first.", cancellationToken: cancellationToken);
-                                                break;
-                                            }
-                                            catch (Exception e)
-                                            {
-                                                _telemetryClient.TrackException(e);
-                                                await turnContext.SendActivityAsync("I am not able to access your reservations right now.", cancellationToken: cancellationToken);
-                                                break;
-                                            }
-
-                                            switch (reservations.Count)
-                                            {
-                                                case 0:
-                                                    await turnContext.SendActivityAsync("No pending reservations. Get started by making a new reservation!", cancellationToken: cancellationToken);
-                                                    break;
-                                                case 1:
-                                                    await turnContext.SendActivityAsync("I have found an active reservation!", cancellationToken: cancellationToken);
-                                                    break;
-                                                default:
-                                                    await turnContext.SendActivityAsync($"Nice! You have {reservations.Count} reservations in-progress.", cancellationToken: cancellationToken);
-                                                    break;
-                                            }
-
+                                            await dc.BeginDialogAsync(nameof(FindReservationDialog), cancellationToken: cancellationToken);
                                             break;
 
                                         case NoneIntent:
@@ -214,6 +182,10 @@ namespace MSHU.CarWash.Bot
                                             if (response != null && response.Length > 0)
                                             {
                                                 await turnContext.SendActivityAsync(response[0].Answer, cancellationToken: cancellationToken);
+                                            }
+                                            else
+                                            {
+                                                await dc.Context.SendActivityAsync("I didn't understand what you just said to me.", cancellationToken: cancellationToken);
                                             }
 
                                             break;
