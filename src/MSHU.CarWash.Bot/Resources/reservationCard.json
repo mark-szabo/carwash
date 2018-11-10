@@ -6,9 +6,9 @@
       "id": "stateimage",
       "horizontalAlignment": "Center",
       "spacing": "None",
-      "url": "https://carwashu.azurewebsites.net/images/state5.png",
+      "url": "https://carwashu.azurewebsites.net/images/state0.png",
       "size": "Stretch",
-      "altText": "Done"
+      "altText": "Scheduled"
     },
     {
       "type": "Container",
@@ -24,7 +24,7 @@
                   "id": "state",
                   "size": "ExtraLarge",
                   "weight": "Bolder",
-                  "text": "Done",
+                  "text": "Scheduled",
                   "maxLines": 1
                 }
               ],
@@ -101,7 +101,8 @@
       "type": "Action.Submit",
       "id": "dropoff",
       "data": {
-        "action": "dropoff"
+        "action": "dropoff",
+        "id":  "" 
       },
       "title": "Confirm key dop-off"
     },
@@ -109,7 +110,8 @@
       "type": "Action.Submit",
       "id": "edit",
       "data": {
-        "action": "edit"
+        "action": "edit",
+        "id": ""
       },
       "title": "Edit"
     },
@@ -117,7 +119,8 @@
       "type": "Action.Submit",
       "id": "cancel",
       "data": {
-        "action": "cancel"
+        "action": "cancel",
+        "id": ""
       },
       "title": "Cancel"
     }

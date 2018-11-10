@@ -103,7 +103,14 @@ namespace MSHU.CarWash.Bot
                 case ActivityTypes.Message:
                     {
                         // This bot is not case sensitive.
-                        var text = turnContext.Activity.Text.ToLowerInvariant();
+                        var text = turnContext.Activity.Text?.ToLowerInvariant();
+
+                        if (text == null)
+                        {
+                            string action = ((dynamic)turnContext.Activity.Value)?.action;
+                            string id = ((dynamic)turnContext.Activity.Value)?.id;
+                            break;
+                        }
 
                         if (text == "help")
                         {
