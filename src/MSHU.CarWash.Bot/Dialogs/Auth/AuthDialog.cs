@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
-using MSHU.CarWash.Bot.Services;
+using MSHU.CarWash.Bot.Dialogs.FindReservation;
 
 namespace MSHU.CarWash.Bot.Dialogs.Auth
 {
@@ -41,6 +41,7 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
             // Add the OAuth prompts and related dialogs into the dialog set
             AddDialog(new WaterfallDialog(Name, dialogSteps));
             AddDialog(LoginPromptDialog());
+            AddDialog(new FindReservationDialog());
             //AddDialog(new ConfirmPrompt(DisplayTokenPrompt));
             //AddDialog(new WaterfallDialog(Name, new WaterfallStep[] { PromptStepAsync, LoginStepAsync, DisplayTokenAsync }));
         }
@@ -112,22 +113,10 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
 
             await step.Context.SendActivityAsync("You are now logged in.", cancellationToken: cancellationToken);
 
-            var api = new CarwashService(tokenResponse.Token);
-            var reservations = await api.GetMyActiveReservations(cancellationToken);
-            switch (reservations.Count)
-            {
-                case 0:
-                    await step.Context.SendActivityAsync("No pending reservations. Get started by making a new reservation!", cancellationToken: cancellationToken);
-                    break;
-                case 1:
-                    await step.Context.SendActivityAsync("I have found an active reservation!", cancellationToken: cancellationToken);
-                    break;
-                default:
-                    await step.Context.SendActivityAsync($"Nice! You have {reservations.Count} reservations in-progress.", cancellationToken: cancellationToken);
-                    break;
-            }
+            // Display user's active reservations after login
+            await step.BeginDialogAsync(nameof(FindReservationDialog), tokenResponse.Token, cancellationToken: cancellationToken);
 
-            return EndOfTurn;
+            return await step.EndDialogAsync(cancellationToken: cancellationToken);
 
             //return await step.PromptAsync(
             //    DisplayTokenPrompt,

@@ -119,6 +119,8 @@ namespace MSHU.CarWash.Bot
 
             services.AddBot<CarWashBot>(options =>
             {
+                options.Middleware.Add(new TeamsAuthWorkaroundMiddleware());
+
                 options.CredentialProvider = new SimpleCredentialProvider(endpointService.AppId, endpointService.AppPassword);
 
                 // Catches any errors that occur during a conversation turn and logs them to currently
