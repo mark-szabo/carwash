@@ -10,18 +10,28 @@ namespace MSHU.CarWash.Bot
     {
         public async Task OnTurnAsync(ITurnContext turnContext, NextDelegate next, CancellationToken cancellationToken = new CancellationToken())
         {
-            await next(cancellationToken);
-
-            if (turnContext.Activity.ChannelId == "msteams")
+            // hook up onSend pipeline
+            turnContext.OnSendActivities(async (ctx, activities, nextSend) =>
             {
-                if (turnContext.Activity.Attachments.Any() && turnContext.Activity.Attachments[0].ContentType == "application/vnd.microsoft.card.signin")
+                foreach (var activity in activities)
                 {
-                    if (turnContext.Activity.Attachments[0].Content is SigninCard card && card.Buttons is CardAction[] buttons && buttons.Any())
-                    {
-                        buttons[0].Type = ActionTypes.OpenUrl;
-                    }
+                    if (activity.ChannelId != ChannelIds.Msteams) continue;
+                    if (activity.Attachments == null) continue;
+                    if (!activity.Attachments.Any()) continue;
+                    if (activity.Attachments[0].ContentType != "application/vnd.microsoft.card.signin") continue;
+                    if (!(activity.Attachments[0].Content is SigninCard card)) continue;
+                    if (!(card.Buttons is CardAction[] buttons)) continue;
+                    if (!buttons.Any()) continue;
+
+                    // Modify button type to openUrl as signIn is not working in teams
+                    buttons[0].Type = ActionTypes.OpenUrl;
                 }
-            }
+
+                // run full pipeline
+                return await nextSend().ConfigureAwait(false);
+            });
+
+            await next(cancellationToken);
         }
     }
 }
