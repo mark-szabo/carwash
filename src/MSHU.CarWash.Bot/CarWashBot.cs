@@ -13,6 +13,7 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
 using MSHU.CarWash.Bot.Dialogs.Auth;
+using MSHU.CarWash.Bot.Dialogs.ConfirmDropoff;
 using MSHU.CarWash.Bot.Dialogs.FindReservation;
 using Newtonsoft.Json;
 
@@ -30,6 +31,11 @@ namespace MSHU.CarWash.Bot
         public const string FindReservationIntent = "Reservation_Find";
         public const string HelpIntent = "Help";
         public const string NoneIntent = "None";
+
+        // Card actions
+        public const string DropoffAction = "dropoff";
+        public const string EditAction = "edit";
+        public const string CancelAction = "cancel";
 
         /// <summary>
         /// Key in the bot config (.bot file) for the LUIS instance.
@@ -109,6 +115,20 @@ namespace MSHU.CarWash.Bot
                         {
                             string action = ((dynamic)turnContext.Activity.Value)?.action;
                             string id = ((dynamic)turnContext.Activity.Value)?.id;
+
+                            switch (action)
+                            {
+                                case DropoffAction:
+                                    await dc.BeginDialogAsync(nameof(ConfirmDropoffDialog), id, cancellationToken: cancellationToken);
+                                    break;
+                                case EditAction:
+                                    await dc.BeginDialogAsync(nameof(ConfirmDropoffDialog), id, cancellationToken: cancellationToken);
+                                    break;
+                                case CancelAction:
+                                    await dc.BeginDialogAsync(nameof(ConfirmDropoffDialog), id, cancellationToken: cancellationToken);
+                                    break;
+                            }
+
                             break;
                         }
 
@@ -168,15 +188,15 @@ namespace MSHU.CarWash.Bot
                                     switch (topScoringIntent)
                                     {
                                         case NewReservationIntent:
-                                            await dc.BeginDialogAsync(nameof(GreetingDialog), cancellationToken: cancellationToken);
+                                            await dc.BeginDialogAsync(nameof(FindReservationDialog), cancellationToken: cancellationToken);
                                             break;
 
                                         case EditReservationIntent:
-                                            await dc.BeginDialogAsync(nameof(GreetingDialog), cancellationToken: cancellationToken);
+                                            await dc.BeginDialogAsync(nameof(FindReservationDialog), cancellationToken: cancellationToken);
                                             break;
 
                                         case CancelReservationIntent:
-                                            await dc.BeginDialogAsync(nameof(GreetingDialog), cancellationToken: cancellationToken);
+                                            await dc.BeginDialogAsync(nameof(FindReservationDialog), cancellationToken: cancellationToken);
                                             break;
 
                                         case FindReservationIntent:
@@ -311,30 +331,11 @@ namespace MSHU.CarWash.Bot
         /// <returns>A <see cref="Task"/> representing the operation result of the Turn operation.</returns>
         private static async Task SendWelcomeMessageAsync(ITurnContext turnContext, CancellationToken cancellationToken, string name = null)
         {
-            var greeting = name == null ? "Hi!" : $"Hi {name}";
+            var greeting = name == null ? "Hi!" : $"Hi {name}!";
             await turnContext.SendActivityAsync(greeting, cancellationToken: cancellationToken);
             await turnContext.SendActivityAsync("I'm your bot 🤖 who will help you reserve car washing services and answer your questions.", cancellationToken: cancellationToken);
             await turnContext.SendActivityAsync("Ask me questions like 'How to use the app?' or 'What does interior cleaning cost?'.", cancellationToken: cancellationToken);
             await turnContext.SendActivityAsync("Or I can make reservations for you. But before that you need to log in by typing 'login'.", cancellationToken: cancellationToken);
-        }
-
-        // Create an attachment message response.
-        private static Activity CreateResponse(Activity activity, Attachment attachment)
-        {
-            var response = activity.CreateReply();
-            response.Attachments = new List<Attachment> { attachment };
-            return response;
-        }
-
-        // Load attachment from file.
-        private static Attachment CreateAdaptiveCardAttachment()
-        {
-            var adaptiveCard = File.ReadAllText(@".\Dialogs\Welcome\Resources\welcomeCard.json");
-            return new Attachment
-            {
-                ContentType = "application/vnd.microsoft.card.adaptive",
-                Content = JsonConvert.DeserializeObject(adaptiveCard),
-            };
         }
 
         /// <summary>

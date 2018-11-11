@@ -57,7 +57,7 @@ namespace MSHU.CarWash.Bot.Dialogs.FindReservation
             {
                 var token = (string)step.Options;
                 var api = token == null ? new CarwashService(step, cancellationToken) : new CarwashService(token);
-                reservations = await api.GetMyActiveReservations(cancellationToken);
+                reservations = await api.GetMyActiveReservationsAsync(cancellationToken);
             }
             catch (AuthenticationException)
             {

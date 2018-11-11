@@ -55,7 +55,7 @@ namespace MSHU.CarWash.Bot.Services
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
         /// <returns>List of active reservations.</returns>
-        public async Task<List<Reservation>> GetMyActiveReservations(CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<List<Reservation>> GetMyActiveReservationsAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             var reservations = await GetAsync<List<Reservation>>("/api/reservations", cancellationToken);
 
@@ -63,9 +63,22 @@ namespace MSHU.CarWash.Bot.Services
         }
 
         /// <summary>
+        /// Get the user's active (not done) reservations.
+        /// </summary>
+        /// <param name="id">Reservation id.</param>
+        /// <param name="location">Reservation location.</param>
+        /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
+        /// or threads to receive notice of cancellation.</param>
+        /// <returns>List of active reservations.</returns>
+        public async Task ConfirmDropoffAsync(string id, string location, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            await PostAsync<object>($"/api/reservations/{id}/confirmdropoff", new StringContent(location), cancellationToken);
+        }
+
+        /// <summary>
         /// Makes a GET request to the api endpoint specified in the parameter and returns the parsed response.
         /// </summary>
-        /// <typeparam name="T">Ty the API response should be parsed to.</typeparam>
+        /// <typeparam name="T">Type the API response should be parsed to.</typeparam>
         /// <param name="endpoint">API endpoint (eg. "/api/reservations").</param>
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
@@ -77,6 +90,23 @@ namespace MSHU.CarWash.Bot.Services
             var content = await response.Content.ReadAsStringAsync();
 
             return JsonConvert.DeserializeObject<T>(content);
+        }
+
+        /// <summary>
+        /// Makes a POST request to the api endpoint specified in the parameter and returns the parsed response.
+        /// </summary>
+        /// <typeparam name="T">Type the API response should be parsed to.</typeparam>
+        /// <param name="endpoint">API endpoint (eg. "/api/reservations").</param>
+        /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
+        /// or threads to receive notice of cancellation.</param>
+        /// <returns>Parsed response.</returns>
+        private async Task<T> PostAsync<T>(string endpoint, HttpContent content, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var response = await _client.PostAsync(endpoint, content, cancellationToken);
+            response.EnsureSuccessStatusCode();
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            return JsonConvert.DeserializeObject<T>(responseContent);
         }
     }
 }
