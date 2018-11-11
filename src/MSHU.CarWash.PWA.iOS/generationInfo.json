@@ -1,0 +1,10 @@
+{
+    "generationTool": "pwabuilder-api",
+    "generationToolVersion": "2.0.1-rc.0",
+    "platformId": "cordova",
+    "platformPackage": "pwabuilder-cordova",
+    "platformVersion": "2.0.0-rc.1",
+    "generatedFrom": "Website Wizard",
+    "generationDate": "2018-11-01 19:18:40 Z",
+    "generatedURL": "https://carwashu.azurewebsites.net/manifest.json"
+}

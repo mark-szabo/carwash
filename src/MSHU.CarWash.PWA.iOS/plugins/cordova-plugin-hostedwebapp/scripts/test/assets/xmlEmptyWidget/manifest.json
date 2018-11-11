@@ -1,0 +1,11 @@
+{
+    "start_url": "http://wat-docs.azurewebsites.net/",
+    "name": "WAT Documentation",
+	"orientation": "landscape",
+	"display": "fullscreen",
+	"scope": "/scope-path/",
+	"mjs_extended_scope": [
+		"whitelist-rule-1",
+		"whitelist-rule-2"
+	]
+}
