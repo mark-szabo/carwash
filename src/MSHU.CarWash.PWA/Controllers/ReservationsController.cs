@@ -1,16 +1,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using MSHU.CarWash.ClassLibrary.Enums;
 using MSHU.CarWash.ClassLibrary.Models;
 using MSHU.CarWash.ClassLibrary.Services;
 using MSHU.CarWash.PWA.Extensions;
-using MSHU.CarWash.PWA.Hubs;
 using MSHU.CarWash.PWA.Services;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -203,6 +202,10 @@ namespace MSHU.CarWash.PWA.Controllers
             if (!IsInSlot(dbReservation.StartDate, dbReservation.EndDate))
                 return BadRequest("Reservation can be made to slots only.");
 
+            // Checks if the date/time is blocked
+            if (await IsBlocked(reservation.StartDate, reservation.EndDate))
+                return BadRequest("This time is blocked.");
+
             // Check if there is enough time on that day
             if (!IsEnoughTimeOnDate(dbReservation.StartDate, dbReservation.TimeRequirement))
                 return BadRequest("Company limit has been met for this day or there is not enough time at all.");
@@ -311,6 +314,10 @@ namespace MSHU.CarWash.PWA.Controllers
             // Checks whether user has met the active concurrent reservation limit
             if (await IsUserConcurrentReservationLimitMetAsync())
                 return BadRequest($"Cannot have more than {UserConcurrentReservationLimit} concurrent active reservations.");
+
+            // Checks if the date/time is blocked
+            if (await IsBlocked(reservation.StartDate, reservation.EndDate))
+                return BadRequest("This time is blocked.");
 
             // Check if there is enough time on that day
             if (!IsEnoughTimeOnDate(reservation.StartDate, reservation.TimeRequirement))
@@ -1007,6 +1014,33 @@ namespace MSHU.CarWash.PWA.Controllers
                 }
             }
             #endregion
+            
+            #region Check blockers
+            var blockers = await _context.Blocker
+                .Where(b => b.EndDate >= DateTime.Now)
+                .ToListAsync();
+
+            foreach (var blocker in blockers)
+            {
+                var date = blocker.StartDate.Date;
+
+                Debug.Assert(blocker.EndDate != null, "blocker.EndDate != null");
+                if (blocker.EndDate == null) continue;
+
+                while (date != ((DateTime)blocker.EndDate).Date)
+                {
+                    notAvailableDates.Add(date);
+                    date = date.AddDays(1);
+
+                    foreach (var slot in Slots)
+                    {
+                        var slotStart = new DateTime(date.Year, date.Month, date.Day, slot.StartTime, 0, 0);
+                        var slotEnd = new DateTime(date.Year, date.Month, date.Day, slot.EndTime, 0, 0);
+                        if (slotStart > blocker.StartDate && slotEnd < blocker.EndDate) notAvailableTimes.Add(slotStart);
+                    }
+                }
+            }
+            #endregion
 
             return new NotAvailableDatesAndTimesViewModel { Dates = notAvailableDates, Times = notAvailableTimes };
         }
@@ -1423,6 +1457,19 @@ namespace MSHU.CarWash.PWA.Controllers
 
             return reservedTimeInSlot + timeRequirement <=
                    Slots.Find(s => s.StartTime == dateTime.Hour)?.Capacity * TimeUnit;
+        }
+
+        /// <summary>
+        /// Checks if the date/time is blocked
+        /// </summary>
+        /// <param name="startTime">start date and time</param>
+        /// <param name="endTime">end date and time</param>
+        /// <returns>true if date/time is blocked and user is not carwash admin</returns>
+        private async Task<bool> IsBlocked(DateTime startTime, DateTime? endTime)
+        {
+            if (_user.IsCarwashAdmin) return false;
+
+            return await _context.Blocker.AnyAsync(b => b.StartDate < startTime && b.EndDate > endTime);
         }
 
         /// <summary>
