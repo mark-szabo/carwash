@@ -39,7 +39,7 @@ namespace MSHU.CarWash.PWA.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Blocker>>> GetBlocker()
         {
-            if (!_user.IsAdmin || !_user.IsCarwashAdmin) return Forbid();
+            if (!_user.IsAdmin && !_user.IsCarwashAdmin) return Forbid();
 
             return await _context.Blocker.OrderByDescending(b => b.StartDate).ToListAsync();
         }
@@ -48,7 +48,7 @@ namespace MSHU.CarWash.PWA.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Blocker>> GetBlocker([FromRoute] string id)
         {
-            if (!_user.IsAdmin || !_user.IsCarwashAdmin) return Forbid();
+            if (!_user.IsAdmin && !_user.IsCarwashAdmin) return Forbid();
 
             if (!ModelState.IsValid) return BadRequest(ModelState);
 

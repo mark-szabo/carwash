@@ -16,6 +16,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import Spinner from './Spinner';
 import TrackedComponent from './TrackedComponent';
 import { format2Dates } from '../Helpers';
+import { Typography } from '@material-ui/core';
 
 const styles = theme => ({
     list: {
@@ -126,7 +127,7 @@ class Blockers extends TrackedComponent {
     };
 
     render() {
-        const { classes, openSnackbar } = this.props;
+        const { classes, openSnackbar, user } = this.props;
         const { loading, blockers } = this.state;
 
         if (loading) {
@@ -135,45 +136,49 @@ class Blockers extends TrackedComponent {
 
         return (
             <React.Fragment>
-                <div>
-                    <div className={classes.formControl}>
-                        <TextField
-                            required
-                            id="newBlockerStartDate"
-                            label="Start date"
-                            type="datetime-local"
-                            InputLabelProps={{
-                                shrink: true,
-                            }}
-                            onChange={this.handleChange('newBlockerStartDate')}
-                        />
+                {user.isCarwashAdmin && (
+                    <div>
+                        <div className={classes.formControl}>
+                            <TextField
+                                required
+                                id="newBlockerStartDate"
+                                label="Start date"
+                                type="datetime-local"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                onChange={this.handleChange('newBlockerStartDate')}
+                            />
+                        </div>
+                        <div className={classes.formControl}>
+                            <TextField
+                                id="newBlockerEndDate"
+                                label="End date"
+                                type="datetime-local"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                onChange={this.handleChange('newBlockerEndDate')}
+                            />
+                        </div>
+                        <div className={classes.formControl}>
+                            <TextField required id="newBlockerComment" label="Comment" margin="normal" onChange={this.handleChange('newBlockerComment')} />
+                        </div>
+                        <div className={classes.formControl}>
+                            <Button variant="contained" color="primary" className={classes.primaryButtonContained} onClick={this.handleAddNewBlockerClick}>
+                                Save
+                            </Button>
+                        </div>
                     </div>
-                    <div className={classes.formControl}>
-                        <TextField
-                            id="newBlockerEndDate"
-                            label="End date"
-                            type="datetime-local"
-                            InputLabelProps={{
-                                shrink: true,
-                            }}
-                            onChange={this.handleChange('newBlockerEndDate')}
-                        />
-                    </div>
-                    <div className={classes.formControl}>
-                        <TextField required id="newBlockerComment" label="Comment" margin="normal" onChange={this.handleChange('newBlockerComment')} />
-                    </div>
-                    <div className={classes.formControl}>
-                        <Button variant="contained" color="primary" className={classes.primaryButtonContained} onClick={this.handleAddNewBlockerClick}>
-                            Save
-                        </Button>
-                    </div>
-                </div>
-                {blockers.length > 0 && (
+                )}
+                {blockers.length > 0 ? (
                     <List className={classes.list}>
                         {blockers.map(blocker => (
-                            <BlockerListItem key={blocker.id} blocker={blocker} handleDelete={this.handleDelete} openSnackbar={openSnackbar} />
+                            <BlockerListItem key={blocker.id} blocker={blocker} user={user} handleDelete={this.handleDelete} openSnackbar={openSnackbar} />
                         ))}
                     </List>
+                ) : (
+                    <Typography>No blockers.</Typography>
                 )}
             </React.Fragment>
         );
@@ -182,6 +187,7 @@ class Blockers extends TrackedComponent {
 
 Blockers.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+    user: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
 };
@@ -189,7 +195,7 @@ Blockers.propTypes = {
 export default withStyles(styles)(Blockers);
 
 function BlockerListItem(props) {
-    const { blocker, handleDelete } = props;
+    const { blocker, user, handleDelete } = props;
 
     return (
         <ListItem>
@@ -197,11 +203,13 @@ function BlockerListItem(props) {
                 <Avatar>{moment(blocker.startDate).format('D')}</Avatar>
             </ListItemAvatar>
             <ListItemText primary={format2Dates(blocker.startDate, blocker.endDate)} secondary={blocker.comment} />
-            <ListItemSecondaryAction>
-                <IconButton aria-label="Delete" onClick={() => handleDelete(blocker.id)}>
-                    <DeleteIcon />
-                </IconButton>
-            </ListItemSecondaryAction>
+            {user.isCarwashAdmin && (
+                <ListItemSecondaryAction>
+                    <IconButton aria-label="Delete" onClick={() => handleDelete(blocker.id)}>
+                        <DeleteIcon />
+                    </IconButton>
+                </ListItemSecondaryAction>
+            )}
         </ListItem>
     );
 }

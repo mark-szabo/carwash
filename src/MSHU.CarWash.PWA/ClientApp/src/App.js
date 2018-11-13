@@ -499,7 +499,7 @@ export default class App extends Component {
                         exact
                         path="/blockers"
                         navbarName="Blockers"
-                        render={props => <Blockers snackbarOpen={this.state.snackbarOpen} openSnackbar={this.openSnackbar} {...props} />}
+                        render={props => <Blockers user={user} snackbarOpen={this.state.snackbarOpen} openSnackbar={this.openSnackbar} {...props} />}
                     />
                     <Route exact path="/support" navbarName="Support" component={Support} />
                 </Layout>
