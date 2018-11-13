@@ -1029,15 +1029,19 @@ namespace MSHU.CarWash.PWA.Controllers
 
                 while (date <= ((DateTime)blocker.EndDate).Date)
                 {
-                    notAvailableDates.Add(date);
-                    date = date.AddDays(1);
+                    var dateBlocked = true;
 
                     foreach (var slot in Slots)
                     {
                         var slotStart = new DateTime(date.Year, date.Month, date.Day, slot.StartTime, 0, 0);
                         var slotEnd = new DateTime(date.Year, date.Month, date.Day, slot.EndTime, 0, 0);
-                        if (slotStart > blocker.StartDate && slotEnd < blocker.EndDate) notAvailableTimes.Add(slotStart);
+                        if (slotStart > blocker.StartDate && slotEnd < blocker.EndDate)
+                            notAvailableTimes.Add(slotStart);
+                        else dateBlocked = false;
                     }
+                    if (dateBlocked) notAvailableDates.Add(date);
+
+                    date = date.AddDays(1);
                 }
             }
             #endregion
