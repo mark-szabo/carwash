@@ -11,6 +11,7 @@ namespace MSHU.CarWash.ClassLibrary.Models
 
         public DbSet<Reservation> Reservation { get; set; }
         public DbSet<PushSubscription> PushSubscription { get; set; }
+        public DbSet<Blocker> Blocker { get; set; }
 
         /** 
          * WORKAROUND:

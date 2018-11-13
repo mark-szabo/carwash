@@ -19,6 +19,7 @@ import NotificationDialog from './components/NotificationDialog';
 import { NotificationChannel, BacklogHubMethods } from './Constants';
 import Spinner from './components/Spinner';
 import { sleep } from './Helpers';
+import Blockers from './components/Blockers';
 
 // A theme with custom primary and secondary color.
 const theme = createMuiTheme({
@@ -493,6 +494,12 @@ export default class App extends Component {
                                 {...props}
                             />
                         )}
+                    />
+                    <Route
+                        exact
+                        path="/blockers"
+                        navbarName="Blockers"
+                        render={props => <Blockers user={user} snackbarOpen={this.state.snackbarOpen} openSnackbar={this.openSnackbar} {...props} />}
                     />
                     <Route exact path="/support" navbarName="Support" component={Support} />
                 </Layout>

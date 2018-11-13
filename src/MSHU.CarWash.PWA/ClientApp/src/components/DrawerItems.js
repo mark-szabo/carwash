@@ -11,6 +11,7 @@ import BuildIcon from '@material-ui/icons/Build';
 import SettingsIcon from '@material-ui/icons/SettingsRounded';
 import HelpIcon from '@material-ui/icons/Help';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+import BlockIcon from '@material-ui/icons/Block';
 import { signOut } from '../Auth';
 
 function DrawerItem(props) {
@@ -40,6 +41,7 @@ export function drawerItems(closeDrawer, user) {
             <DrawerItem path="/" icon={<ListIcon />} title="My reservations" closeDrawer={closeDrawer} />
             {user.isCarwashAdmin && <DrawerItem path="/carwashadmin" icon={<LocalCarWashIcon />} title="CarWash admin" closeDrawer={closeDrawer} />}
             {user.isAdmin && <DrawerItem path="/admin" icon={<BuildIcon />} title="Admin" closeDrawer={closeDrawer} />}
+            {(user.isAdmin || user.isCarwashAdmin) && <DrawerItem path="/blockers" icon={<BlockIcon />} title="Blockers" closeDrawer={closeDrawer} />}
         </div>
     );
 }

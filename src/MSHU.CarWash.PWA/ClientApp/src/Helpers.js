@@ -41,6 +41,19 @@ export function formatDate2(reservation) {
 }
 
 /**
+ * Format 2 dates for display
+ * @param {Date} date1 date 1
+ * @param {Date} date2 date 2
+ * @returns {string} date in the format like 'September 21, 2:00 PM - September 22, 5:00 PM'
+ */
+export function format2Dates(date1, date2) {
+    const startTime = moment(date1).format('MMMM D, h:mm A');
+    const endTime = moment(date2).format('MMMM D, h:mm A');
+
+    return `${startTime} - ${endTime}`;
+}
+
+/**
  * Sleep for the given milliseconds
  * @param {int} ms milliseconds to sleep
  * @returns {Promise} Promise
