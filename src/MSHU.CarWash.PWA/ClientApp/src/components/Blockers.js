@@ -50,12 +50,6 @@ class Blockers extends TrackedComponent {
     componentDidMount() {
         super.componentDidMount();
 
-        this.loadBlockers();
-    }
-
-    loadBlockers = () => {
-        this.setState({ loading: true });
-
         apiFetch('api/blockers').then(
             data => {
                 this.setState({
@@ -68,7 +62,7 @@ class Blockers extends TrackedComponent {
                 this.props.openSnackbar(error);
             }
         );
-    };
+    }
 
     handleChange = name => event => {
         this.setState({
@@ -93,8 +87,15 @@ class Blockers extends TrackedComponent {
             },
         }).then(
             data => {
-                this.loadBlockers();
+                this.setState(state => {
+                    const blockers = [...state.blockers];
+                    blockers.unshift(data);
+
+                    return { blockers };
+                });
+
                 this.props.openSnackbar('Blocker successfully saved.');
+                this.setState({ loading: false });
             },
             error => {
                 this.setState({ loading: false });
@@ -108,8 +109,15 @@ class Blockers extends TrackedComponent {
             method: 'DELETE',
         }).then(
             () => {
-                this.loadBlockers();
+                this.setState(state => {
+                    let blockers = [...state.blockers];
+                    blockers = blockers.filter(b => b.id !== blockerId);
+
+                    return { blockers };
+                });
+
                 this.props.openSnackbar('Blocker successfully deleted.');
+                this.setState({ loading: false });
             },
             error => {
                 this.props.openSnackbar(error);
@@ -160,11 +168,13 @@ class Blockers extends TrackedComponent {
                         </Button>
                     </div>
                 </div>
-                <List className={classes.list}>
-                    {blockers.map(blocker => (
-                        <BlockerListItem key={blocker.id} blocker={blocker} handleDelete={this.handleDelete} openSnackbar={openSnackbar} />
-                    ))}
-                </List>
+                {blockers.length > 0 && (
+                    <List className={classes.list}>
+                        {blockers.map(blocker => (
+                            <BlockerListItem key={blocker.id} blocker={blocker} handleDelete={this.handleDelete} openSnackbar={openSnackbar} />
+                        ))}
+                    </List>
+                )}
             </React.Fragment>
         );
     }
@@ -178,22 +188,20 @@ Blockers.propTypes = {
 
 export default withStyles(styles)(Blockers);
 
-class BlockerListItem extends React.Component {
-    render() {
-        const { blocker, handleDelete } = this.props;
+function BlockerListItem(props) {
+    const { blocker, handleDelete } = props;
 
-        return (
-            <ListItem>
-                <ListItemAvatar>
-                    <Avatar>{moment(blocker.startDate).format('D')}</Avatar>
-                </ListItemAvatar>
-                <ListItemText primary={format2Dates(blocker.startDate, blocker.endDate)} secondary={blocker.comment} />
-                <ListItemSecondaryAction>
-                    <IconButton aria-label="Delete" onClick={handleDelete(blocker.id)}>
-                        <DeleteIcon />
-                    </IconButton>
-                </ListItemSecondaryAction>
-            </ListItem>
-        );
-    }
+    return (
+        <ListItem>
+            <ListItemAvatar>
+                <Avatar>{moment(blocker.startDate).format('D')}</Avatar>
+            </ListItemAvatar>
+            <ListItemText primary={format2Dates(blocker.startDate, blocker.endDate)} secondary={blocker.comment} />
+            <ListItemSecondaryAction>
+                <IconButton aria-label="Delete" onClick={() => handleDelete(blocker.id)}>
+                    <DeleteIcon />
+                </IconButton>
+            </ListItemSecondaryAction>
+        </ListItem>
+    );
 }
