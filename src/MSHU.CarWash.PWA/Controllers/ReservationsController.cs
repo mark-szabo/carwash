@@ -1027,7 +1027,7 @@ namespace MSHU.CarWash.PWA.Controllers
                 Debug.Assert(blocker.EndDate != null, "blocker.EndDate != null");
                 if (blocker.EndDate == null) continue;
 
-                while (date != ((DateTime)blocker.EndDate).Date)
+                while (date <= ((DateTime)blocker.EndDate).Date)
                 {
                     notAvailableDates.Add(date);
                     date = date.AddDays(1);

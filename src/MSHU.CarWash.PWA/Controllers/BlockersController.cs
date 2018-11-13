@@ -67,6 +67,8 @@ namespace MSHU.CarWash.PWA.Controllers
 
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
+            blocker.CreatedById = _user.Id;
+            blocker.CreatedOn = DateTime.Now;
             if (blocker.EndDate == null) blocker.EndDate = new DateTime(blocker.StartDate.Year, blocker.StartDate.Month, blocker.StartDate.Day, 23, 59, 59);
 
             // Check for overlapping blocker
