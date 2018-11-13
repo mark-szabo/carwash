@@ -71,13 +71,17 @@ namespace MSHU.CarWash.PWA.Controllers
             blocker.CreatedOn = DateTime.Now;
             if (blocker.EndDate == null) blocker.EndDate = new DateTime(blocker.StartDate.Year, blocker.StartDate.Month, blocker.StartDate.Day, 23, 59, 59);
 
+            if (blocker.EndDate <= blocker.StartDate)
+                return BadRequest("Blocker end time should be after the start time.");
+
             // Check for overlapping blocker
             var overLappingBlockerCount = await _context.Blocker
                 .Where(b =>
                     b.StartDate < blocker.StartDate && b.EndDate > blocker.StartDate || //an existing blocker is overlapping with the beginning of the new blocker
                     b.StartDate < blocker.EndDate && b.EndDate > blocker.EndDate || //an existing blocker is overlapping with the end of the new blocker
                     b.StartDate > blocker.StartDate && b.EndDate < blocker.EndDate || //an existing blocker is a subset of the new blocker
-                    b.StartDate < blocker.StartDate && b.EndDate > blocker.EndDate //an existing blocker is a superset of the new blocker
+                    b.StartDate < blocker.StartDate && b.EndDate > blocker.EndDate || //an existing blocker is a superset of the new blocker
+                    b.StartDate == blocker.StartDate && b.EndDate == blocker.EndDate //an existing blocker is the same as the new
                 )
                 .CountAsync();
 
