@@ -79,7 +79,7 @@ namespace MSHU.CarWash.PWA.Controllers
             if (_user.IsCarwashAdmin)
             {
                 var dictionary = await _context.Users
-                    .Where(u => u.Company != _user.Company && u.FirstName != "[deleted user]")
+                    .Where(u => u.FirstName != "[deleted user]")
                     .Select(u => new { u.Id, FullName = $"{u.FullName} ({u.Company})" })
                     .OrderBy(u => u.FullName)
                     .ToDictionaryAsync(u => u.Id, u => u.FullName);

@@ -155,7 +155,7 @@ export default class App extends Component {
 
                 return { reservations };
             });
-        } else {
+        } else if (this.state.user.isAdmin) {
             this.setState({
                 companyReservationsLoading: true,
             });
