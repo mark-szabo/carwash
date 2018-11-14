@@ -252,7 +252,7 @@ class Reserve extends TrackedComponent {
             );
         }
 
-        if (this.props.user.isAdmin) {
+        if (this.props.user.isAdmin || this.props.user.isCarwashAdmin) {
             apiFetch('api/users/dictionary').then(
                 data => {
                     this.setState({
@@ -704,7 +704,7 @@ class Reserve extends TrackedComponent {
                                         />
                                     </FormGroup>
                                 </div>
-                                {user.isAdmin && (
+                                {(user.isAdmin || user.isCarwashAdmin) && (
                                     <FormControl className={classes.formControl}>
                                         <InputLabel htmlFor="user">User</InputLabel>
                                         <Select
