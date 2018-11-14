@@ -44,7 +44,7 @@ class CarwashGrid extends Component {
     }
 
     render() {
-        const { classes, backlog, backlogLoading, updateBacklogItem, invokeBacklogHub, openSnackbar } = this.props;
+        const { classes, backlog, backlogLoading, updateBacklogItem, removeBacklogItem, invokeBacklogHub, openSnackbar, snackbarOpen } = this.props;
 
         if (backlogLoading) {
             return <Spinner />;
@@ -89,8 +89,9 @@ class CarwashGrid extends Component {
                         <Grid item key={reservation.id} className={classes.card}>
                             <CarwashCard
                                 reservation={reservation}
-                                snackbarOpen={this.props.snackbarOpen}
+                                snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
+                                removeReservation={removeBacklogItem}
                                 invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
                             />
@@ -102,8 +103,9 @@ class CarwashGrid extends Component {
                         <Grid item key={reservation.id} className={classes.card}>
                             <CarwashCard
                                 reservation={reservation}
-                                snackbarOpen={this.props.snackbarOpen}
+                                snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
+                                removeReservation={removeBacklogItem}
                                 invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
                             />
@@ -121,8 +123,9 @@ class CarwashGrid extends Component {
                         <Grid item key={reservation.id} className={classes.card}>
                             <CarwashCard
                                 reservation={reservation}
-                                snackbarOpen={this.props.snackbarOpen}
+                                snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
+                                removeReservation={removeBacklogItem}
                                 invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
                             />
@@ -134,8 +137,9 @@ class CarwashGrid extends Component {
                         <Grid item key={reservation.id} className={classes.card}>
                             <CarwashCard
                                 reservation={reservation}
-                                snackbarOpen={this.props.snackbarOpen}
+                                snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
+                                removeReservation={removeBacklogItem}
                                 invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
                             />
@@ -147,8 +151,9 @@ class CarwashGrid extends Component {
                         <Grid item key={reservation.id} className={classes.card}>
                             <CarwashCard
                                 reservation={reservation}
-                                snackbarOpen={this.props.snackbarOpen}
+                                snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
+                                removeReservation={removeBacklogItem}
                                 invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
                             />
@@ -165,6 +170,7 @@ CarwashGrid.propTypes = {
     backlog: PropTypes.arrayOf(PropTypes.object).isRequired,
     backlogLoading: PropTypes.bool.isRequired,
     updateBacklogItem: PropTypes.func.isRequired,
+    removeBacklogItem: PropTypes.func.isRequired,
     invokeBacklogHub: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,

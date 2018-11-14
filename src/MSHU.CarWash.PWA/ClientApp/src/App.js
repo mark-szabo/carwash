@@ -294,6 +294,15 @@ export default class App extends Component {
         });
     };
 
+    removeBacklogItem = backlogItemId => {
+        this.setState(state => {
+            let backlog = state.backlog;
+            backlog = backlog.filter(item => item.id !== backlogItemId);
+
+            return { backlog };
+        });
+    };
+
     updateReservation = reservation => {
         this.setState(state => {
             const reservations = state.reservations;
@@ -487,10 +496,11 @@ export default class App extends Component {
                                 backlog={backlog}
                                 backlogLoading={backlogLoading}
                                 backlogUpdateFound={backlogUpdateFound}
+                                updateBacklogItem={this.updateBacklogItem}
+                                removeBacklogItem={this.removeBacklogItem}
                                 invokeBacklogHub={this.invokeBacklogHub}
                                 snackbarOpen={this.state.snackbarOpen}
                                 openSnackbar={this.openSnackbar}
-                                updateBacklogItem={this.updateBacklogItem}
                                 {...props}
                             />
                         )}

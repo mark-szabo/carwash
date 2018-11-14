@@ -179,6 +179,7 @@ class CarwashCard extends Component {
                     open={detailsDialogOpen}
                     handleClose={this.handleDetailsDialogClose}
                     updateReservation={this.props.updateReservation}
+                    removeReservation={this.props.removeReservation}
                     invokeBacklogHub={this.props.invokeBacklogHub}
                     snackbarOpen={this.props.snackbarOpen}
                     openSnackbar={this.props.openSnackbar}
@@ -208,6 +209,7 @@ CarwashCard.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     reservation: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     updateReservation: PropTypes.func.isRequired,
+    removeReservation: PropTypes.func.isRequired,
     invokeBacklogHub: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
