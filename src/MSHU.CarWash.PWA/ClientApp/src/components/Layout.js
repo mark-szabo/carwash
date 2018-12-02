@@ -49,7 +49,7 @@ const styles = theme => ({
         },
     },
     drawer: {
-        height: '100%',
+        height: '100vh',
         position: 'relative',
     },
     content: {
