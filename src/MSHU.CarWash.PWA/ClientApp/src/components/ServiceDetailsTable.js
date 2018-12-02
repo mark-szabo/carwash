@@ -74,7 +74,6 @@ const styles = theme => {
         root: {
             width: 'calc(100% - 8px)',
             margin: 4,
-            overflowX: 'auto',
         },
         table: {
             minWidth: 200,
