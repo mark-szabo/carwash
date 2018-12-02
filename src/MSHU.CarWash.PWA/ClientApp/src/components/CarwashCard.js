@@ -147,16 +147,16 @@ class CarwashCard extends Component {
                                 subheaderSecondLine={formatDate(reservation)}
                             />
                             <CardContent>
-                                <Typography variant="caption" gutterBottom>
+                                <Typography variant="caption" color="textSecondary" gutterBottom>
                                     Location
                                 </Typography>
-                                <Typography variant="body1" gutterBottom>
+                                <Typography gutterBottom>
                                     {reservation.location ? formatLocation(reservation.location) : 'Not set'}
                                 </Typography>
-                                <Typography variant="caption" gutterBottom style={{ marginTop: '8px' }}>
+                                <Typography variant="caption" color="textSecondary" gutterBottom style={{ marginTop: '8px' }}>
                                     Name
                                 </Typography>
-                                <Typography variant="body1" gutterBottom>
+                                <Typography gutterBottom>
                                     {reservation.user.firstName} {reservation.user.lastName}
                                 </Typography>
                                 <Comments
@@ -166,7 +166,7 @@ class CarwashCard extends Component {
                                     incomingFirst
                                 />
                                 <Divider className={classes.divider} />
-                                <Typography variant="subheading">Selected services</Typography>
+                                <Typography variant="subtitle1">Selected services</Typography>
                                 {reservation.services.map(service => (
                                     <Chip label={getServiceName(service)} className={classes.chip} key={service} />
                                 ))}

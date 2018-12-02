@@ -37,6 +37,7 @@ const theme = createMuiTheme({
     },
     typography: {
         fontFamily: ['"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'].join(','),
+        useNextVariants: true,
     },
 });
 

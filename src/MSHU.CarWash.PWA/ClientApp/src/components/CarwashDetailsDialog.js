@@ -610,13 +610,13 @@ class CarwashDetailsDialog extends React.Component {
                                 <CloseIcon />
                             </IconButton>
                         </div>
-                        <Typography variant="display2">{reservation.vehiclePlateNumber}</Typography>
-                        <Typography variant="body1" color="textSecondary" component="span" style={{ margin: '8px 0' }}>
+                        <Typography variant="h3">{reservation.vehiclePlateNumber}</Typography>
+                        <Typography color="textSecondary" component="span" style={{ margin: '8px 0' }}>
                             {getAdminStateName(reservation.state)} • {formatDate(reservation)} • {reservation.user.firstName} {reservation.user.lastName} •{' '}
                             {reservation.user.company}
                         </Typography>
                         {!editLocation ? (
-                            <Typography variant="subheading" gutterBottom>
+                            <Typography variant="subtitle1" gutterBottom>
                                 {reservation.location ? formatLocation(reservation.location) : 'Location not set'}
                                 <IconButton onClick={this.handleEditLocation} aria-label="Edit location">
                                     <EditIcon />
@@ -706,7 +706,7 @@ class CarwashDetailsDialog extends React.Component {
                                 />
                             </FormControl>
                         </div>
-                        <Typography variant="subheading" className={classes.subheader}>
+                        <Typography variant="subtitle1" className={classes.subheader}>
                             Selected services
                         </Typography>
                         {!editServices ? (
