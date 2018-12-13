@@ -63,13 +63,25 @@ namespace MSHU.CarWash.Bot.Services
         }
 
         /// <summary>
-        /// Get the user's active (not done) reservations.
+        /// Get reservation by id.
+        /// </summary>
+        /// <param name="id">Reservation id.</param>
+        /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
+        /// or threads to receive notice of cancellation.</param>
+        /// <returns>Reservation object.</returns>
+        public async Task<Reservation> GetReservationAsync(string id, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return await GetAsync<Reservation>($"/api/reservations/{id}", cancellationToken);
+        }
+
+        /// <summary>
+        /// Confirm key drop-off and location for a reservation.
         /// </summary>
         /// <param name="id">Reservation id.</param>
         /// <param name="location">Reservation location.</param>
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
-        /// <returns>List of active reservations.</returns>
+        /// <returns>Void.</returns>
         public async Task ConfirmDropoffAsync(string id, string location, CancellationToken cancellationToken = default(CancellationToken))
         {
             await PostAsync<object>($"/api/reservations/{id}/confirmdropoff", new StringContent(location), cancellationToken);
