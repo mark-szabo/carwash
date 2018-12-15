@@ -1,10 +1,10 @@
-﻿using AdaptiveCards;
+﻿using System.Collections.Generic;
+using System.IO;
+using AdaptiveCards;
 using Microsoft.Bot.Schema;
 using MSHU.CarWash.ClassLibrary.Enums;
 using MSHU.CarWash.ClassLibrary.Models;
 using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.IO;
 
 namespace MSHU.CarWash.Bot.Resources
 {

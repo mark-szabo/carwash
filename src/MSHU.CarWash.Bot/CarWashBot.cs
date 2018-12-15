@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,7 +13,6 @@ using Microsoft.Extensions.Logging;
 using MSHU.CarWash.Bot.Dialogs.Auth;
 using MSHU.CarWash.Bot.Dialogs.ConfirmDropoff;
 using MSHU.CarWash.Bot.Dialogs.FindReservation;
-using Newtonsoft.Json;
 
 namespace MSHU.CarWash.Bot
 {
@@ -64,9 +61,6 @@ namespace MSHU.CarWash.Bot
             _userState = userState ?? throw new ArgumentNullException(nameof(userState));
             _conversationState = conversationState ?? throw new ArgumentNullException(nameof(conversationState));
 
-            _greetingStateAccessor = _userState.CreateProperty<GreetingState>(nameof(GreetingState));
-            _dialogStateAccessor = _conversationState.CreateProperty<DialogState>(nameof(DialogState));
-
             _telemetryClient = new TelemetryClient();
 
             // Verify QnAMaker configuration.
@@ -81,8 +75,15 @@ namespace MSHU.CarWash.Bot
                 throw new InvalidOperationException($"The bot configuration does not contain a service type of `luis` with the id `{LuisConfiguration}`.");
             }
 
+            _dialogStateAccessor = _conversationState.CreateProperty<DialogState>(nameof(DialogState));
             Dialogs = new DialogSet(_dialogStateAccessor);
+
+            _greetingStateAccessor = _userState.CreateProperty<GreetingState>(nameof(GreetingState));
             Dialogs.Add(new GreetingDialog(_greetingStateAccessor, loggerFactory));
+
+            var confirmDropoffStateAccessor = _conversationState.CreateProperty<ConfirmDropoffState>(nameof(ConfirmDropoffState));
+            Dialogs.Add(new ConfirmDropoffDialog(confirmDropoffStateAccessor));
+
             Dialogs.Add(new FindReservationDialog());
 
             Dialogs.Add(new AuthDialog());
