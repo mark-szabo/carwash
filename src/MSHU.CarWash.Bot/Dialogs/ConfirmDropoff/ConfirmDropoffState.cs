@@ -1,7 +1,7 @@
 ﻿namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
 {
     /// <summary>
-    /// User state properties for drop-off confirmation.
+    /// State properties ('conversation' scope) for drop-off confirmation.
     /// </summary>
     public class ConfirmDropoffState
     {

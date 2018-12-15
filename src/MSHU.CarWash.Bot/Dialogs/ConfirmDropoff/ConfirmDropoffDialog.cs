@@ -1,4 +1,10 @@
-﻿using Microsoft.ApplicationInsights;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Authentication;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.ApplicationInsights;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
@@ -8,12 +14,6 @@ using MSHU.CarWash.Bot.Resources;
 using MSHU.CarWash.Bot.Services;
 using MSHU.CarWash.ClassLibrary.Enums;
 using MSHU.CarWash.ClassLibrary.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Authentication;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
 {
@@ -79,11 +79,12 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
         private async Task<DialogTurnResult> SelectReservationStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
         {
             var state = await StateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
+            var reservationId = step.Options as string;
 
             List<Reservation> reservations;
             try
             {
-                // Workaround
+                // Workaround: https://github.com/Microsoft/botbuilder-dotnet/pull/1243
                 step.Context.Activity.Text = "workaround";
                 var api = new CarwashService(step, cancellationToken);
 

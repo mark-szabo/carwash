@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using AdaptiveCards;
 using Microsoft.Bot.Schema;
 using MSHU.CarWash.ClassLibrary.Enums;
@@ -31,12 +32,17 @@ namespace MSHU.CarWash.Bot.Resources
             if (string.IsNullOrWhiteSpace(reservation.CarwashComment)) ((FactSet)((Container)_card.Body[2]).Items[0]).Facts.RemoveAt(4);
             if (string.IsNullOrWhiteSpace(reservation.Location)) ((FactSet)((Container)_card.Body[2]).Items[0]).Facts.RemoveAt(1);
 
-            foreach (dynamic action in _card.Actions) action.Data.id = reservation.Id;
+            ((OpenUrlAction)_card.Actions.Single(a => a.Title == "Edit")).Url = $"https://carwashu.azurewebsites.net/reserve/{reservation.Id}";
+
+            foreach (var action in _card.Actions)
+            {
+                if (action is SubmitAction submitAction) ((dynamic)submitAction.Data).id = reservation.Id;
+            }
         }
 
         public ReservationCard DisableDropoffAction()
         {
-            _card.Actions.Remove(_card.Actions.Find(a => a.Title == "Confirm key drop-off"));
+            _card.Actions.Remove(_card.Actions.Single(a => a.Title == "Confirm key drop-off"));
 
             return this;
         }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,7 +32,6 @@ namespace MSHU.CarWash.Bot
 
         // Card actions
         public const string DropoffAction = "dropoff";
-        public const string EditAction = "edit";
         public const string CancelAction = "cancel";
 
         /// <summary>
@@ -122,9 +122,6 @@ namespace MSHU.CarWash.Bot
                                 case DropoffAction:
                                     await dc.BeginDialogAsync(nameof(ConfirmDropoffDialog), id, cancellationToken: cancellationToken);
                                     break;
-                                case EditAction:
-                                    await dc.BeginDialogAsync(nameof(ConfirmDropoffDialog), id, cancellationToken: cancellationToken);
-                                    break;
                                 case CancelAction:
                                     await dc.BeginDialogAsync(nameof(ConfirmDropoffDialog), id, cancellationToken: cancellationToken);
                                     break;
@@ -193,11 +190,17 @@ namespace MSHU.CarWash.Bot
                                             break;
 
                                         case EditReservationIntent:
-                                            await dc.BeginDialogAsync(nameof(FindReservationDialog), cancellationToken: cancellationToken);
+                                            var reply = turnContext.Activity.CreateReply();
+                                            reply.Attachments.Add(new HeroCard
+                                            {
+                                                Text = "Please open the app to make modifications to your reservations.",
+                                                Buttons = new List<CardAction> { new CardAction(ActionTypes.OpenUrl, "Open the app", value: "https://carwashu.azurewebsites.net/") },
+                                            }.ToAttachment());
+                                            await turnContext.SendActivityAsync(reply, cancellationToken);
                                             break;
 
                                         case CancelReservationIntent:
-                                            await dc.BeginDialogAsync(nameof(FindReservationDialog), cancellationToken: cancellationToken);
+                                            await dc.BeginDialogAsync(nameof(ConfirmDropoffDialog), cancellationToken: cancellationToken);
                                             break;
 
                                         case FindReservationIntent:

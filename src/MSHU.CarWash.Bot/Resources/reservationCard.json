@@ -5,7 +5,7 @@
       "type": "Image",
       "id": "stateimage",
       "horizontalAlignment": "Center",
-      "spacing": "None",
+      "spacing": "none",
       "url": "https://carwashu.azurewebsites.net/images/state0.png",
       "size": "Stretch",
       "altText": "Scheduled"
@@ -107,12 +107,9 @@
       "title": "Confirm key drop-off"
     },
     {
-      "type": "Action.Submit",
+      "type": "Action.OpenUrl",
+      "url": "https://carwashu.azurewebsites.net/",
       "id": "edit",
-      "data": {
-        "action": "edit",
-        "id": ""
-      },
       "title": "Edit"
     },
     {
