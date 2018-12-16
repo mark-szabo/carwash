@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Authentication;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
@@ -84,7 +85,8 @@ namespace MSHU.CarWash.Bot.Services
         /// <returns>Void.</returns>
         public async Task ConfirmDropoffAsync(string id, string location, CancellationToken cancellationToken = default(CancellationToken))
         {
-            await PostAsync<object>($"/api/reservations/{id}/confirmdropoff", new StringContent(location), cancellationToken);
+            var content = new StringContent(JsonConvert.SerializeObject(location), Encoding.UTF8, "application/json");
+            await PostAsync<object>($"/api/reservations/{id}/confirmdropoff", content, cancellationToken);
         }
 
         /// <summary>
@@ -109,6 +111,7 @@ namespace MSHU.CarWash.Bot.Services
         /// </summary>
         /// <typeparam name="T">Type the API response should be parsed to.</typeparam>
         /// <param name="endpoint">API endpoint (eg. "/api/reservations").</param>
+        /// <param name="content">HTTP request content.</param>
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
         /// <returns>Parsed response.</returns>

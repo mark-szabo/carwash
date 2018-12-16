@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using System.Threading;
@@ -62,8 +62,6 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
         /// <summary>
         /// Prompts the user to login using the OAuth provider specified by the connection name.
         /// </summary>
-        /// <param name="connectionName"> The name of your connection. It can be found on Azure in
-        /// your Bot Channels Registration on the settings blade. </param>
         /// <returns> An <see cref="OAuthPrompt"/> the user may use to log in.</returns>
         public static OAuthPrompt LoginPromptDialog()
         {

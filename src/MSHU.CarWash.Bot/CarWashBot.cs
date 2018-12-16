@@ -222,8 +222,7 @@ namespace MSHU.CarWash.Bot
                                             break;
 
                                         default:
-                                            // Help or no intent identified, either way, let's provide some help.
-                                            // to the user
+                                            // Help or no intent identified, either way, let's provide some help to the user
                                             await dc.Context.SendActivityAsync("I didn't understand what you just said to me.", cancellationToken: cancellationToken);
                                             break;
                                     }
@@ -273,11 +272,6 @@ namespace MSHU.CarWash.Bot
                                 // Greet anyone that was not the target (recipient) of this message.
                                 if (member.Id == activity.Recipient.Id) continue;
                                 await SendWelcomeMessageAsync(turnContext, cancellationToken, member.Name);
-
-                                // To learn more about Adaptive Cards, see https://aka.ms/msbot-adaptivecards for more details.
-                                //var welcomeCard = CreateAdaptiveCardAttachment();
-                                //var response = CreateResponse(activity, welcomeCard);
-                                //await dc.Context.SendActivityAsync(response, cancellationToken).ConfigureAwait(false);
                             }
                         }
 
