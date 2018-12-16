@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AdaptiveCards;
@@ -38,13 +39,22 @@ namespace MSHU.CarWash.Bot.Resources
             {
                 if (action is SubmitAction submitAction) ((dynamic)submitAction.Data).id = reservation.Id;
             }
-        }
 
-        public ReservationCard DisableDropoffAction()
-        {
-            _card.Actions.Remove(_card.Actions.Single(a => a.Title == "Confirm key drop-off"));
-
-            return this;
+            // Remove Drop-off, Edit and Cancel buttons if the key was already dropped off
+            switch (reservation.State)
+            {
+                case State.SubmittedNotActual:
+                case State.ReminderSentWaitingForKey:
+                    break;
+                case State.DropoffAndLocationConfirmed:
+                case State.WashInProgress:
+                case State.NotYetPaid:
+                case State.Done:
+                    _card.Actions = null;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         public Attachment ToAttachment()

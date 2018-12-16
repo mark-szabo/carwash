@@ -300,10 +300,8 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
                 return await step.EndDialogAsync(cancellationToken: cancellationToken);
             }
 
-            var card = new ReservationCard(reservation).DisableDropoffAction();
-
             var response = step.Context.Activity.CreateReply();
-            response.Attachments = card.ToAttachmentList();
+            response.Attachments = new ReservationCard(reservation).ToAttachmentList();
 
             await step.Context.SendActivityAsync(response, cancellationToken).ConfigureAwait(false);
 
