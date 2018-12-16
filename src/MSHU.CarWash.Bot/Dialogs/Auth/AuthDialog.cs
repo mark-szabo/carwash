@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using System.Threading;
@@ -55,10 +55,7 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
         /// <returns>token string</returns>
         public static async Task<string> GetToken(DialogContext dc, CancellationToken cancellationToken = default(CancellationToken))
         {
-            // Prompts the user to login using the OAuth provider specified by the connection name.
-            var prompt = await dc.BeginDialogAsync(LoginPrompt, cancellationToken: cancellationToken);
-            var tokenResponse = (TokenResponse)prompt.Result;
-
+            var tokenResponse = await LoginPromptDialog().GetUserTokenAsync(dc.Context, cancellationToken);
             return tokenResponse?.Token;
         }
 
