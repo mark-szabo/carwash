@@ -1,20 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
-using AdaptiveCards;
 using Microsoft.ApplicationInsights;
 using Microsoft.Bot.Builder.Dialogs;
-using Microsoft.Bot.Schema;
 using MSHU.CarWash.Bot.Dialogs.Auth;
 using MSHU.CarWash.Bot.Resources;
 using MSHU.CarWash.Bot.Services;
-using MSHU.CarWash.ClassLibrary.Enums;
 using MSHU.CarWash.ClassLibrary.Models;
-using Newtonsoft.Json;
 
 namespace MSHU.CarWash.Bot.Dialogs.FindReservation
 {

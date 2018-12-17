@@ -10,6 +10,7 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
 using Microsoft.Bot.Schema;
 using MSHU.CarWash.Bot.Dialogs.Auth;
+using MSHU.CarWash.Bot.Dialogs.FindReservation;
 using MSHU.CarWash.Bot.Resources;
 using MSHU.CarWash.Bot.Services;
 using MSHU.CarWash.ClassLibrary.Enums;
@@ -22,14 +23,13 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
     /// </summary>
     public class ConfirmDropoffDialog : ComponentDialog
     {
-        // TODO: to private
-        public IStatePropertyAccessor<ConfirmDropoffState> StateAccessor { get; }
-
         // Dialogs
         private const string Name = "confirmDropoff";
         private const string BuildingPromptName = "buildingPrompt";
         private const string FloorPromptName = "floorPrompt";
+        private const string SeatPromptName = "seatPrompt";
 
+        private readonly IStatePropertyAccessor<ConfirmDropoffState> _stateAccessor;
         private readonly TelemetryClient _telemetryClient;
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
         /// <param name="stateAccessor">The <see cref="ConversationState"/> for storing properties at conversation-scope.</param>
         public ConfirmDropoffDialog(IStatePropertyAccessor<ConfirmDropoffState> stateAccessor) : base(nameof(ConfirmDropoffDialog))
         {
-            StateAccessor = stateAccessor ?? throw new ArgumentNullException(nameof(stateAccessor));
+            _stateAccessor = stateAccessor ?? throw new ArgumentNullException(nameof(stateAccessor));
             _telemetryClient = new TelemetryClient();
 
             var dialogSteps = new WaterfallStep[]
@@ -53,23 +53,25 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
 
             AddDialog(new WaterfallDialog(Name, dialogSteps));
             AddDialog(AuthDialog.LoginPromptDialog());
+            AddDialog(new FindReservationDialog());
 
-            AddDialog(new TextPrompt(BuildingPromptName));
-            AddDialog(new TextPrompt(FloorPromptName));
+            AddDialog(new ChoicePrompt(BuildingPromptName));
+            AddDialog(new ChoicePrompt(FloorPromptName));
+            AddDialog(new TextPrompt(SeatPromptName, ValidateSeat));
         }
 
         private async Task<DialogTurnResult> InitializeStateStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
         {
-            var state = await StateAccessor.GetAsync(step.Context, () => null, cancellationToken);
+            var state = await _stateAccessor.GetAsync(step.Context, () => null, cancellationToken);
             if (state == null)
             {
                 if (step.Options is ConfirmDropoffState options)
                 {
-                    await StateAccessor.SetAsync(step.Context, options, cancellationToken);
+                    await _stateAccessor.SetAsync(step.Context, options, cancellationToken);
                 }
                 else
                 {
-                    await StateAccessor.SetAsync(step.Context, new ConfirmDropoffState(), cancellationToken);
+                    await _stateAccessor.SetAsync(step.Context, new ConfirmDropoffState(), cancellationToken);
                 }
             }
 
@@ -78,7 +80,7 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
 
         private async Task<DialogTurnResult> SelectReservationStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
         {
-            var state = await StateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
+            var state = await _stateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
             var reservationId = step.Options as string;
 
             List<Reservation> reservations;
@@ -114,10 +116,18 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
                 return await step.EndDialogAsync(cancellationToken: cancellationToken);
             }
 
+            if (reservations.Any(r => r.Id == reservationId))
+            {
+                state.ReservationId = reservationId;
+                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
+
+                return await step.NextAsync(cancellationToken: cancellationToken);
+            }
+
             if (reservations.Count == 1)
             {
                 state.ReservationId = reservations[0].Id;
-                await StateAccessor.SetAsync(step.Context, state, cancellationToken);
+                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
 
                 return await step.NextAsync(cancellationToken: cancellationToken);
             }
@@ -125,27 +135,31 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
             if (reservations.Count(r => r.State == State.ReminderSentWaitingForKey) == 1)
             {
                 state.ReservationId = reservations.Single(r => r.State == State.ReminderSentWaitingForKey).Id;
-                await StateAccessor.SetAsync(step.Context, state, cancellationToken);
+                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
 
                 return await step.NextAsync(cancellationToken: cancellationToken);
             }
 
-            var activity = MessageFactory.Carousel(new ReservationCarousel(reservations).ToAttachmentList());
+            /*
+             * var activity = MessageFactory.Carousel(new ReservationCarousel(reservations).ToAttachmentList());
+             * await step.Context.SendActivityAsync("Please choose one reservation!", cancellationToken: cancellationToken);
+             * await step.Context.SendActivityAsync(activity, cancellationToken);
+             * return await step.NextAsync(cancellationToken: cancellationToken);
+             */
 
-            await step.Context.SendActivityAsync("Please choose one reservation!", cancellationToken: cancellationToken);
-            await step.Context.SendActivityAsync(activity, cancellationToken);
+            await step.Context.SendActivityAsync("I wasn't able to find your reservation. These are your active reservations, please choose one:", cancellationToken: cancellationToken);
 
-            return await step.NextAsync(cancellationToken: cancellationToken);
+            return await step.ReplaceDialogAsync(nameof(FindReservationDialog), cancellationToken: cancellationToken);
         }
 
         private async Task<DialogTurnResult> PromptForBuildingStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
         {
-            var state = await StateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
+            var state = await _stateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
 
             if (string.IsNullOrWhiteSpace(state.ReservationId))
             {
                 state.ReservationId = step.Result as string;
-                await StateAccessor.SetAsync(step.Context, state, cancellationToken);
+                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
             }
 
             Reservation reservation;
@@ -191,12 +205,12 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
 
         private async Task<DialogTurnResult> PromptForFloorStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
         {
-            var state = await StateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
+            var state = await _stateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
 
-            if (string.IsNullOrWhiteSpace(state.Building) && step.Result is string building)
+            if (string.IsNullOrWhiteSpace(state.Building) && step.Result is FoundChoice choice)
             {
-                state.Building = building.ToUpper();
-                await StateAccessor.SetAsync(step.Context, state, cancellationToken);
+                state.Building = choice.Value.ToUpper();
+                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
             }
 
             if (!string.IsNullOrWhiteSpace(state.Floor)) return await step.NextAsync(cancellationToken: cancellationToken);
@@ -221,7 +235,7 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
             if (floors.Count == 1)
             {
                 state.Floor = floors[0];
-                await StateAccessor.SetAsync(step.Context, state, cancellationToken);
+                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
 
                 return await step.NextAsync(cancellationToken: cancellationToken);
             }
@@ -244,35 +258,40 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
 
         private async Task<DialogTurnResult> PromptForSeatStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
         {
-            var state = await StateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
+            var state = await _stateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
 
-            if (string.IsNullOrWhiteSpace(state.Floor))
+            if (string.IsNullOrWhiteSpace(state.Floor) && step.Result is FoundChoice choice)
             {
-                state.Floor = step.Result as string;
-                await StateAccessor.SetAsync(step.Context, state, cancellationToken);
+                state.Floor = choice.Value;
+                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
             }
 
-            var reply = step.Context.Activity.CreateReply("Which seat? If you don't know, just say skip.");
-            reply.SuggestedActions = new SuggestedActions
+            var prompt = MessageFactory.Text("Which seat? If you don't know, just say skip.");
+            prompt.SuggestedActions = new SuggestedActions
             {
                 Actions = new List<CardAction>
                 {
                     new CardAction { Title = "skip", Type = ActionTypes.ImBack, Value = "skip" },
                 },
             };
-            await step.Context.SendActivityAsync(reply, cancellationToken);
 
-            return await step.NextAsync(cancellationToken: cancellationToken);
+            return await step.PromptAsync(
+                SeatPromptName,
+                new PromptOptions
+                {
+                    Prompt = prompt,
+                },
+                cancellationToken);
         }
 
         private async Task<DialogTurnResult> DisplayDropoffConfirmationStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
         {
-            var state = await StateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
+            var state = await _stateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
 
             if (string.IsNullOrWhiteSpace(state.Seat) && step.Result is string seat && seat.ToLower() != "skip")
             {
                 state.Seat = seat;
-                await StateAccessor.SetAsync(step.Context, state, cancellationToken);
+                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
             }
 
             Reservation reservation;
@@ -285,6 +304,13 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
 
                 // Get reservation object for displaying
                 reservation = await api.GetReservationAsync(state.ReservationId, cancellationToken);
+
+                // Reset state
+                state.ReservationId = null;
+                state.Building = null;
+                state.Floor = null;
+                state.Seat = null;
+                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
             }
             catch (AuthenticationException)
             {
@@ -306,6 +332,29 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
             await step.Context.SendActivityAsync(response, cancellationToken).ConfigureAwait(false);
 
             return await step.EndDialogAsync(cancellationToken: cancellationToken);
+        }
+
+        /// <summary>
+        /// Validator function to verify if seat number is a whole number or the string "skip".
+        /// </summary>
+        /// <param name="promptContext">Context for this prompt.</param>
+        /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used by other objects
+        /// or threads to receive notice of cancellation.</param>
+        /// <returns>A <see cref="Task"/> that represents the work queued to execute.</returns>
+        private async Task<bool> ValidateSeat(PromptValidatorContext<string> promptContext, CancellationToken cancellationToken)
+        {
+            if (promptContext.Recognized.Value.ToLower() == "skip") return true;
+
+            if (int.TryParse(promptContext.Recognized.Value, out var value))
+            {
+                promptContext.Recognized.Value = value.ToString();
+                return true;
+            }
+            else
+            {
+                await promptContext.Context.SendActivityAsync($"Please enter a number.").ConfigureAwait(false);
+                return false;
+            }
         }
     }
 }
