@@ -23,22 +23,7 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
 
         // Dialogs
         private const string Name = "auth";
-
-        // Prompts
-        private const string LoginPrompt = "loginPrompt";
-        private const string DisplayTokenPrompt = "displayTokenPrompt";
-
-        public static Activity NotAuthenticatedMessage { get; } = new Activity
-        {
-            Text = "You are not authenticated. Log in by typing 'login'.",
-            SuggestedActions = new SuggestedActions
-            {
-                Actions = new List<CardAction>
-                {
-                    new CardAction { Title = "login", Type = ActionTypes.ImBack, Value = "login" },
-                },
-            },
-        };
+        private const string LoginPromptName = "loginPrompt";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthDialog"/> class.
@@ -55,9 +40,27 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
             AddDialog(new WaterfallDialog(Name, dialogSteps));
             AddDialog(LoginPromptDialog());
             AddDialog(new FindReservationDialog());
-            //AddDialog(new ConfirmPrompt(DisplayTokenPrompt));
-            //AddDialog(new WaterfallDialog(Name, new WaterfallStep[] { PromptStepAsync, LoginStepAsync, DisplayTokenAsync }));
         }
+
+        /// <summary>
+        /// Gets the message to be sent out when the user is not authenticated.
+        /// </summary>
+        /// <value>
+        /// You are not authenticated. Log in by typing 'login'.
+        /// </value>
+        public static Activity NotAuthenticatedMessage { get; } = new Activity
+        {
+            Type = ActivityTypes.Message,
+            InputHint = InputHints.AcceptingInput,
+            Text = "You are not authenticated. Log in by typing 'login'.",
+            SuggestedActions = new SuggestedActions
+            {
+                Actions = new List<CardAction>
+                {
+                    new CardAction { Title = "login", Type = ActionTypes.ImBack, Value = "login" },
+                },
+            },
+        };
 
         /// <summary>
         /// Get a token from prompt.
@@ -65,7 +68,7 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
         /// <param name="dc">Dialog context.</param>
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
-        /// <returns>token string</returns>
+        /// <returns>Token string.</returns>
         public static async Task<string> GetToken(DialogContext dc, CancellationToken cancellationToken = default(CancellationToken))
         {
             var tokenResponse = await LoginPromptDialog().GetUserTokenAsync(dc.Context, cancellationToken);
@@ -79,7 +82,7 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
         public static OAuthPrompt LoginPromptDialog()
         {
             return new OAuthPrompt(
-                LoginPrompt,
+                LoginPromptName,
                 new OAuthPromptSettings
                 {
                     ConnectionName = AuthConnectionName,
@@ -98,7 +101,7 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
         /// <returns>A <see cref="Task"/> representing the operation result of the operation.</returns>
         private static async Task<DialogTurnResult> PromptStepAsync(WaterfallStepContext step, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return await step.BeginDialogAsync(LoginPrompt, cancellationToken: cancellationToken);
+            return await step.BeginDialogAsync(LoginPromptName, cancellationToken: cancellationToken);
         }
 
         /// <summary>
@@ -122,49 +125,7 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
             await step.Context.SendActivityAsync("You are now logged in.", cancellationToken: cancellationToken);
 
             // Display user's active reservations after login
-            await step.BeginDialogAsync(nameof(FindReservationDialog), tokenResponse.Token, cancellationToken: cancellationToken);
-
-            return await step.EndDialogAsync(cancellationToken: cancellationToken);
-
-            //return await step.PromptAsync(
-            //    DisplayTokenPrompt,
-            //    new PromptOptions
-            //    {
-            //        Prompt = MessageFactory.Text("Would you like to view your token?"),
-            //        Choices = new List<Choice> { new Choice("Yes"), new Choice("No") },
-            //    },
-            //    cancellationToken);
-        }
-
-        /// <summary>
-        /// Fetch the token and display it for the user if they asked to see it.
-        /// </summary>
-        /// <param name="step">A <see cref="WaterfallStepContext"/> provides context for the current waterfall step.</param>
-        /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
-        /// or threads to receive notice of cancellation.</param>
-        /// <returns>A <see cref="Task"/> representing the operation result of the operation.</returns>
-        private static async Task<DialogTurnResult> DisplayTokenAsync(WaterfallStepContext step, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            var result = (bool)step.Result;
-            if (result)
-            {
-                // Call the prompt again because we need the token. The reasons for this are:
-                // 1. If the user is already logged in we do not need to store the token locally in the bot and worry
-                // about refreshing it. We can always just call the prompt again to get the token.
-                // 2. We never know how long it will take a user to respond. By the time the
-                // user responds the token may have expired. The user would then be prompted to login again.
-                //
-                // There is no reason to store the token locally in the bot because we can always just call
-                // the OAuth prompt to get the token or get a new token if needed.
-                var prompt = await step.BeginDialogAsync(LoginPrompt, cancellationToken: cancellationToken);
-                var tokenResponse = (TokenResponse)prompt.Result;
-                if (tokenResponse != null)
-                {
-                    await step.Context.SendActivityAsync($"Here is your token {tokenResponse.Token}", cancellationToken: cancellationToken);
-                }
-            }
-
-            return EndOfTurn;
+            return await step.ReplaceDialogAsync(nameof(FindReservationDialog), tokenResponse.Token, cancellationToken: cancellationToken);
         }
     }
 }

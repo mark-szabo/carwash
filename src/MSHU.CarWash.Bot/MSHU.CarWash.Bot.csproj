@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <CodeAnalysisRuleSet>BasicBot.ruleset</CodeAnalysisRuleSet>
+    <UserSecretsId>464d5f9c-25f9-4dbc-8a78-5d4896584026</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
