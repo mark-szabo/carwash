@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
@@ -26,6 +27,18 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
         // Prompts
         private const string LoginPrompt = "loginPrompt";
         private const string DisplayTokenPrompt = "displayTokenPrompt";
+
+        public static Activity NotAuthenticatedMessage { get; } = new Activity
+        {
+            Text = "You are not authenticated. Log in by typing 'login'.",
+            SuggestedActions = new SuggestedActions
+            {
+                Actions = new List<CardAction>
+                {
+                    new CardAction { Title = "login", Type = ActionTypes.ImBack, Value = "login" },
+                },
+            },
+        };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthDialog"/> class.

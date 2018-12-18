@@ -334,6 +334,21 @@ namespace MSHU.CarWash.Bot
             await turnContext.SendActivityAsync("I'm your bot 🤖 who will help you reserve car washing services and answer your questions.", cancellationToken: cancellationToken);
             await turnContext.SendActivityAsync("Ask me questions like 'How to use the app?' or 'What does interior cleaning cost?'.", cancellationToken: cancellationToken);
             await turnContext.SendActivityAsync("Or I can make reservations for you. But before that you need to log in by typing 'login'.", cancellationToken: cancellationToken);
+            await turnContext.SendActivityAsync(
+                new Activity
+                {
+                    Text = "Or I can make reservations for you. But before that you need to log in by typing 'login'.",
+                    SuggestedActions = new SuggestedActions
+                    {
+                        Actions = new List<CardAction>
+                        {
+                            new CardAction { Title = "login", Type = ActionTypes.ImBack, Value = "login" },
+                            new CardAction { Title = "How to use the app?", Type = ActionTypes.ImBack, Value = "How to use the app?" },
+                            new CardAction { Title = "What does interior cleaning cost?", Type = ActionTypes.ImBack, Value = "What does interior cleaning cost?" },
+                        },
+                    },
+                },
+                cancellationToken: cancellationToken);
         }
 
         /// <summary>

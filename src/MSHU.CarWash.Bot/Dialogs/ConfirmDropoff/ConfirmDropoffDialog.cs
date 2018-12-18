@@ -97,7 +97,7 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
             }
             catch (AuthenticationException)
             {
-                await step.Context.SendActivityAsync("You are not authenticated.", cancellationToken: cancellationToken);
+                await step.Context.SendActivityAsync(AuthDialog.NotAuthenticatedMessage, cancellationToken: cancellationToken);
 
                 return await step.EndDialogAsync(cancellationToken: cancellationToken);
             }
@@ -171,7 +171,7 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
             }
             catch (AuthenticationException)
             {
-                await step.Context.SendActivityAsync("You are not authenticated.", cancellationToken: cancellationToken);
+                await step.Context.SendActivityAsync(AuthDialog.NotAuthenticatedMessage, cancellationToken: cancellationToken);
 
                 return await step.EndDialogAsync(cancellationToken: cancellationToken);
             }
@@ -314,7 +314,7 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
             }
             catch (AuthenticationException)
             {
-                await step.Context.SendActivityAsync("You are not authenticated.", cancellationToken: cancellationToken);
+                await step.Context.SendActivityAsync(AuthDialog.NotAuthenticatedMessage, cancellationToken: cancellationToken);
 
                 return await step.EndDialogAsync(cancellationToken: cancellationToken);
             }
@@ -325,6 +325,10 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
 
                 return await step.EndDialogAsync(cancellationToken: cancellationToken);
             }
+
+            await step.Context.SendActivityAsync("OK, I have confirmed that you've dropped off the key.", cancellationToken: cancellationToken);
+            await step.Context.SendActivityAsync("Thanks! 👌", cancellationToken: cancellationToken);
+            await step.Context.SendActivityAsync("Here is the current state of your reservation. I'll let you know when it changes.", cancellationToken: cancellationToken);
 
             var response = step.Context.Activity.CreateReply();
             response.Attachments = new ReservationCard(reservation).ToAttachmentList();
