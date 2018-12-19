@@ -123,7 +123,7 @@ namespace MSHU.CarWash.Bot
                                     await dc.BeginDialogAsync(nameof(ConfirmDropoffDialog), id, cancellationToken: cancellationToken);
                                     break;
                                 case CancelAction:
-                                    await dc.BeginDialogAsync(nameof(ConfirmDropoffDialog), id, cancellationToken: cancellationToken);
+                                    await turnContext.SendActivityAsync("This feature is not yet implemented. Check back after christmas! 😉", cancellationToken: cancellationToken);
                                     break;
                             }
 
@@ -186,7 +186,7 @@ namespace MSHU.CarWash.Bot
                                     switch (topScoringIntent)
                                     {
                                         case NewReservationIntent:
-                                            await dc.BeginDialogAsync(nameof(FindReservationDialog), cancellationToken: cancellationToken);
+                                            await turnContext.SendActivityAsync("This feature is not yet implemented. Check back after christmas! 😉", cancellationToken: cancellationToken);
                                             break;
 
                                         case EditReservationIntent:
@@ -200,7 +200,7 @@ namespace MSHU.CarWash.Bot
                                             break;
 
                                         case CancelReservationIntent:
-                                            await dc.BeginDialogAsync(nameof(ConfirmDropoffDialog), cancellationToken: cancellationToken);
+                                            await turnContext.SendActivityAsync("This feature is not yet implemented. Check back after christmas! 😉", cancellationToken: cancellationToken);
                                             break;
 
                                         case FindReservationIntent:
@@ -307,7 +307,7 @@ namespace MSHU.CarWash.Bot
             if (topIntent.Equals(HelpIntent))
             {
                 await dc.Context.SendActivityAsync("Let me try to provide some help.");
-                await dc.Context.SendActivityAsync("I understand greetings, being asked for help, or being asked to cancel what I am doing.");
+                await dc.Context.SendActivityAsync("You can ask me about the state of your reservations, ask to make a new reservation for you or confirm the key drop-off.");
                 if (dc.ActiveDialog != null)
                 {
                     await dc.RepromptDialogAsync();
