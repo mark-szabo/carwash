@@ -9,11 +9,15 @@ using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Configuration;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
 using MSHU.CarWash.Bot.Dialogs.Auth;
 using MSHU.CarWash.Bot.Dialogs.ConfirmDropoff;
 using MSHU.CarWash.Bot.Dialogs.FindReservation;
+using Newtonsoft.Json;
 
 namespace MSHU.CarWash.Bot
 {
@@ -42,6 +46,7 @@ namespace MSHU.CarWash.Bot
         public const string QnAMakerConfiguration = "carwashufaq";
 
         private readonly StateAccessors _accessors;
+        private readonly BotConfiguration _botConfig;
         private readonly BotServices _services;
         private readonly TelemetryClient _telemetryClient;
 
@@ -52,11 +57,13 @@ namespace MSHU.CarWash.Bot
         /// Initializes a new instance of the <see cref="CarWashBot"/> class.
         /// </summary>
         /// <param name="accessors">State accessors.</param>
+        /// <param name="botConfig">Bot configuration.</param>
         /// <param name="services">Bot services.</param>
         /// <param name="loggerFactory">Logger.</param>
-        public CarWashBot(StateAccessors accessors, BotServices services, ILoggerFactory loggerFactory)
+        public CarWashBot(StateAccessors accessors, BotConfiguration botConfig, BotServices services, ILoggerFactory loggerFactory)
         {
             _accessors = accessors ?? throw new ArgumentNullException(nameof(accessors));
+            _botConfig = botConfig ?? throw new ArgumentNullException(nameof(botConfig));
             _services = services ?? throw new ArgumentNullException(nameof(services));
 
             _telemetryClient = new TelemetryClient();
@@ -145,6 +152,8 @@ namespace MSHU.CarWash.Bot
                             await turnContext.SendActivityAsync("You have been signed out.", cancellationToken: cancellationToken);
                             break;
                         }
+
+                        if (text == "debug.generatetranscripts") await GenerateTranscriptsAsync(turnContext);
 
                         // Perform a call to LUIS to retrieve results for the current activity message.
                         var luisResults = await _services.LuisServices[LuisConfiguration].RecognizeAsync(dc.Context, cancellationToken).ConfigureAwait(false);
@@ -393,6 +402,88 @@ namespace MSHU.CarWash.Bot
                 // Set the new values into state.
                 await _greetingStateAccessor.SetAsync(turnContext, greetingState);
             }
+        }
+
+        /// <summary>
+        /// Generates .transcript files for consuming in Bot Framework Emulator
+        /// </summary>
+        /// <param name="turnContext">Turn context.</param>
+        private async Task GenerateTranscriptsAsync(ITurnContext turnContext)
+        {
+            var blobConfig = _botConfig.FindServiceByNameOrId("carwashstorage");
+            if (!(blobConfig is BlobStorageService blobStorageConfig)) return;
+
+            var storage = CloudStorageAccount.Parse(blobStorageConfig.ConnectionString);
+            var blobClient = storage.CreateCloudBlobClient();
+            var container = blobClient.GetContainerReference("transcripts");
+
+            // List channels (level 1 folders)
+            var channels = new List<CloudBlobDirectory>();
+            BlobContinuationToken continuationToken = null;
+            do
+            {
+                var response = await container.ListBlobsSegmentedAsync(continuationToken);
+                continuationToken = response.ContinuationToken;
+                foreach (var directory in response.Results.OfType<CloudBlobDirectory>())
+                {
+                    channels.Add(directory);
+                }
+            }
+            while (continuationToken != null);
+
+            foreach (var channel in channels)
+            {
+                // List conversations (level 2 folders)
+                var conversations = new List<CloudBlobDirectory>();
+                continuationToken = null;
+                do
+                {
+                    var response = await channel.ListBlobsSegmentedAsync(continuationToken);
+                    continuationToken = response.ContinuationToken;
+                    foreach (var directory in response.Results.OfType<CloudBlobDirectory>())
+                    {
+                        conversations.Add(directory);
+                    }
+                }
+                while (continuationToken != null);
+
+                foreach (var conversation in conversations)
+                {
+                    // List blobs on level 3
+                    var activityBlobs = new List<CloudBlockBlob>();
+                    continuationToken = null;
+                    do
+                    {
+                        var response = await conversation.ListBlobsSegmentedAsync(continuationToken);
+                        continuationToken = response.ContinuationToken;
+                        foreach (var blob in response.Results.OfType<CloudBlockBlob>())
+                        {
+                            activityBlobs.Add(blob);
+                        }
+                    }
+                    while (continuationToken != null);
+
+                    // Order by timestamp
+                    activityBlobs.OrderBy(a => DateTime.Parse(a.Metadata.FirstOrDefault(m => m.Key == "Timestamp").Value));
+
+                    // Deserialize blobs to an Activity list
+                    var activities = new List<Activity>();
+                    foreach (var blob in activityBlobs)
+                    {
+                        var activityJson = await blob.DownloadTextAsync();
+                        activities.Add(JsonConvert.DeserializeObject<Activity>(activityJson));
+
+                        // Delete original blob
+                        await blob.DeleteAsync();
+                    }
+
+                    // Serialize and upload activity List
+                    var transcriptBlob = container.GetBlockBlobReference($"{conversation.Prefix.TrimEnd('/')}.transcript");
+                    await transcriptBlob.UploadTextAsync(JsonConvert.SerializeObject(activities, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }));
+                }
+            }
+
+            await turnContext.SendActivityAsync("Done");
         }
     }
 }
