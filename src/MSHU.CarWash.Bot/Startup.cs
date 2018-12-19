@@ -7,12 +7,14 @@ using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Bot.Configuration;
 using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MSHU.CarWash.Bot.Dialogs.ConfirmDropoff;
 
 namespace MSHU.CarWash.Bot
 {
@@ -132,6 +134,31 @@ namespace MSHU.CarWash.Bot
                     logger.LogError($"Exception caught : {exception}");
                     await context.SendActivityAsync("Sorry, it looks like something went wrong.");
                 };
+            });
+
+            // Create and register state accessors.
+            // Accessors created here are passed into the IBot-derived class on every turn.
+            services.AddSingleton<StateAccessors>(sp =>
+            {
+                if (conversationState == null)
+                {
+                    throw new InvalidOperationException("ConversationState must be defined and added before adding conversation-scoped state accessors.");
+                }
+
+                if (userState == null)
+                {
+                    throw new InvalidOperationException("UserState must be defined and added before adding user-scoped state accessors.");
+                }
+
+                // Create the custom state accessor.
+                // State accessors enable other components to read and write individual properties of state.
+                var accessors = new StateAccessors(conversationState, userState)
+                {
+                    DialogStateAccessor = conversationState.CreateProperty<DialogState>(nameof(DialogState)),
+                    ConfirmDropoffStateAccessor = conversationState.CreateProperty<ConfirmDropoffState>(nameof(ConfirmDropoffState)),
+                };
+
+                return accessors;
             });
         }
 

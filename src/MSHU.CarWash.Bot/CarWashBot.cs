@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using System;
@@ -41,25 +41,23 @@ namespace MSHU.CarWash.Bot
         public const string LuisConfiguration = "carwashubot";
         public const string QnAMakerConfiguration = "carwashufaq";
 
-        private readonly IStatePropertyAccessor<GreetingState> _greetingStateAccessor;
-        private readonly IStatePropertyAccessor<DialogState> _dialogStateAccessor;
-        private readonly UserState _userState;
-        private readonly ConversationState _conversationState;
+        private readonly StateAccessors _accessors;
         private readonly BotServices _services;
         private readonly TelemetryClient _telemetryClient;
+
+        // TODO: remove
+        private readonly IStatePropertyAccessor<GreetingState> _greetingStateAccessor;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CarWashBot"/> class.
         /// </summary>
+        /// <param name="accessors">State accessors.</param>
         /// <param name="services">Bot services.</param>
-        /// <param name="userState">User state.</param>
-        /// <param name="conversationState">Conversation state.</param>
         /// <param name="loggerFactory">Logger.</param>
-        public CarWashBot(BotServices services, UserState userState, ConversationState conversationState, ILoggerFactory loggerFactory)
+        public CarWashBot(StateAccessors accessors, BotServices services, ILoggerFactory loggerFactory)
         {
+            _accessors = accessors ?? throw new ArgumentNullException(nameof(accessors));
             _services = services ?? throw new ArgumentNullException(nameof(services));
-            _userState = userState ?? throw new ArgumentNullException(nameof(userState));
-            _conversationState = conversationState ?? throw new ArgumentNullException(nameof(conversationState));
 
             _telemetryClient = new TelemetryClient();
 
@@ -75,19 +73,15 @@ namespace MSHU.CarWash.Bot
                 throw new InvalidOperationException($"The bot configuration does not contain a service type of `luis` with the id `{LuisConfiguration}`.");
             }
 
-            _dialogStateAccessor = _conversationState.CreateProperty<DialogState>(nameof(DialogState));
-            Dialogs = new DialogSet(_dialogStateAccessor);
-
-            _greetingStateAccessor = _userState.CreateProperty<GreetingState>(nameof(GreetingState));
-            Dialogs.Add(new GreetingDialog(_greetingStateAccessor, loggerFactory));
-
-            var confirmDropoffStateAccessor = _conversationState.CreateProperty<ConfirmDropoffState>(nameof(ConfirmDropoffState));
-            Dialogs.Add(new ConfirmDropoffDialog(confirmDropoffStateAccessor));
-
+            Dialogs = new DialogSet(_accessors.DialogStateAccessor);
+            Dialogs.Add(new ConfirmDropoffDialog(_accessors.ConfirmDropoffStateAccessor));
             Dialogs.Add(new FindReservationDialog());
-
             Dialogs.Add(new AuthDialog());
             Dialogs.Add(AuthDialog.LoginPromptDialog());
+
+            // TODO: remove
+            _greetingStateAccessor = _accessors.UserState.CreateProperty<GreetingState>(nameof(GreetingState));
+            Dialogs.Add(new GreetingDialog(_greetingStateAccessor, loggerFactory));
         }
 
         private DialogSet Dialogs { get; set; }
@@ -168,8 +162,8 @@ namespace MSHU.CarWash.Bot
                         {
                             // Bypass the dialog.
                             // Save state before the next turn.
-                            await _conversationState.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
-                            await _userState.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
+                            await _accessors.ConversationState.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
+                            await _accessors.UserState.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
                             return;
                         }
 
@@ -279,8 +273,8 @@ namespace MSHU.CarWash.Bot
                     }
             }
 
-            await _conversationState.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
-            await _userState.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
+            await _accessors.ConversationState.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
+            await _accessors.UserState.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
         }
 
         // Determine if an interruption has occured before we dispatch to any active dialog.
