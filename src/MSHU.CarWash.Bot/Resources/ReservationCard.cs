@@ -50,7 +50,7 @@ namespace MSHU.CarWash.Bot.Resources
                 case State.WashInProgress:
                 case State.NotYetPaid:
                 case State.Done:
-                    _card.Actions = null;
+                    _card.Actions.RemoveAll(a => true);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

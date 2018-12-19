@@ -7,6 +7,7 @@ using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Azure;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Bot.Configuration;
@@ -110,7 +111,7 @@ namespace MSHU.CarWash.Bot
             // Default container name.
             const string defaultBotContainer = "botstate";
             var storageContainer = string.IsNullOrWhiteSpace(blobStorageConfig.Container) ? defaultBotContainer : blobStorageConfig.Container;
-            IStorage dataStore = new Microsoft.Bot.Builder.Azure.AzureBlobStorage(blobStorageConfig.ConnectionString, storageContainer);
+            IStorage dataStore = new AzureBlobStorage(blobStorageConfig.ConnectionString, storageContainer);
 
             // Create and add conversation state.
             var conversationState = new ConversationState(dataStore);
@@ -122,6 +123,10 @@ namespace MSHU.CarWash.Bot
             services.AddBot<CarWashBot>(options =>
             {
                 options.CredentialProvider = new SimpleCredentialProvider(endpointService.AppId, endpointService.AppPassword);
+
+                // Enable the conversation transcript middleware.
+                var transcriptStore = new AzureBlobTranscriptStore(blobStorageConfig.ConnectionString, "transcripts");
+                options.Middleware.Add(new TranscriptLoggerMiddleware(transcriptStore));
 
                 options.Middleware.Add(new TeamsAuthWorkaroundMiddleware());
 
