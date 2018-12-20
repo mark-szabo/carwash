@@ -334,7 +334,7 @@ namespace MSHU.CarWash.Bot
         {
             var greeting = name == null ? "Hi!" : $"Hi {name}!";
             await turnContext.SendActivityAsync(greeting, cancellationToken: cancellationToken);
-            await turnContext.SendActivityAsync("I'm your bot 🤖 who will help you reserve car washing services and answer your questions.", cancellationToken: cancellationToken);
+            await turnContext.SendActivityAsync("My name is C.I.C.A. (Cool and Intelligent Carwash Assistant) and I'm your bot 🤖 who will help you reserve car washing services and answer your questions.", cancellationToken: cancellationToken);
             await turnContext.SendActivityAsync("Ask me questions like 'How to use the app?' or 'What does interior cleaning cost?'.", cancellationToken: cancellationToken);
             await turnContext.SendActivityAsync(
                 new Activity
