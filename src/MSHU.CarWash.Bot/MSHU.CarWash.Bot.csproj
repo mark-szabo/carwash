@@ -4,6 +4,8 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <CodeAnalysisRuleSet>BasicBot.ruleset</CodeAnalysisRuleSet>
     <UserSecretsId>464d5f9c-25f9-4dbc-8a78-5d4896584026</UserSecretsId>
+    <ApplicationInsightsResourceId>/subscriptions/a984fd43-e460-42c7-957c-a023cf7f8241/resourcegroups/carwash/providers/microsoft.insights/components/carwashubot4fj5z2</ApplicationInsightsResourceId>
+    <ApplicationInsightsAnnotationResourceId>/subscriptions/a984fd43-e460-42c7-957c-a023cf7f8241/resourcegroups/carwash/providers/microsoft.insights/components/carwashubot4fj5z2</ApplicationInsightsAnnotationResourceId>
   </PropertyGroup>
 
   <ItemGroup>

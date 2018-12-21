@@ -96,6 +96,9 @@ namespace MSHU.CarWash.Bot
                 throw new InvalidOperationException($"The .bot file does not contain an endpoint with name '{environment}'.");
             }
 
+            // Configure AppInsights
+            services.AddApplicationInsightsTelemetry(Configuration);
+
             // Memory Storage is for local bot debugging only. When the bot
             // is restarted, everything stored in memory will be gone.
             // IStorage dataStore = new MemoryStorage();

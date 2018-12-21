@@ -219,12 +219,40 @@ namespace MSHU.CarWash.Bot
                                             }
                                             else
                                             {
+                                                _telemetryClient.TrackEvent(
+                                                    "Understanding user failed",
+                                                    new Dictionary<string, string>
+                                                    {
+                                                    { "Event Name", "Understanding user failed" },
+                                                    { "Activity Type", turnContext.Activity.Type },
+                                                    { "Message", text },
+                                                    { "Channel ID", turnContext.Activity.ChannelId },
+                                                    { "Conversation ID", turnContext.Activity.Conversation.Id },
+                                                    { "From ID", turnContext.Activity.From.Id },
+                                                    { "Recipient ID", turnContext.Activity.Recipient.Id },
+                                                    { "Value", JsonConvert.SerializeObject(turnContext.Activity.Value) },
+                                                    });
+
                                                 await dc.Context.SendActivityAsync("I didn't understand what you just said to me.", cancellationToken: cancellationToken);
                                             }
 
                                             break;
 
                                         default:
+                                            _telemetryClient.TrackEvent(
+                                                "Understanding user failed",
+                                                new Dictionary<string, string>
+                                                {
+                                                    { "Event Name", "Understanding user failed" },
+                                                    { "Activity Type", turnContext.Activity.Type },
+                                                    { "Message", text },
+                                                    { "Channel ID", turnContext.Activity.ChannelId },
+                                                    { "Conversation ID", turnContext.Activity.Conversation.Id },
+                                                    { "From ID", turnContext.Activity.From.Id },
+                                                    { "Recipient ID", turnContext.Activity.Recipient.Id },
+                                                    { "Value", JsonConvert.SerializeObject(turnContext.Activity.Value) },
+                                                });
+
                                             // Help or no intent identified, either way, let's provide some help to the user
                                             await dc.Context.SendActivityAsync("I didn't understand what you just said to me.", cancellationToken: cancellationToken);
                                             break;
@@ -405,7 +433,7 @@ namespace MSHU.CarWash.Bot
         }
 
         /// <summary>
-        /// Generates .transcript files for consuming in Bot Framework Emulator
+        /// Generates .transcript files for consuming in Bot Framework Emulator.
         /// </summary>
         /// <param name="turnContext">Turn context.</param>
         private async Task GenerateTranscriptsAsync(ITurnContext turnContext)
@@ -477,8 +505,10 @@ namespace MSHU.CarWash.Bot
                         await blob.DeleteAsync();
                     }
 
+                    var username = activities.FirstOrDefault(a => a.From.Name != null && a.From.Name != "CarWash")?.From.Name.Split('(')[0].Trim().Replace(' ', '_');
+
                     // Serialize and upload activity List
-                    var transcriptBlob = container.GetBlockBlobReference($"{conversation.Prefix.TrimEnd('/')}.transcript");
+                    var transcriptBlob = container.GetBlockBlobReference($"{conversation.Parent.Prefix}{username}_{activities[0].Timestamp.Value.ToString("s")}.transcript");
                     await transcriptBlob.UploadTextAsync(JsonConvert.SerializeObject(activities, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }));
                 }
             }
