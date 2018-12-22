@@ -1,17 +1,17 @@
 {
   "name": "mshu_carwash_pwa",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "private": true,
   "description": "This app is intended to help employees working in Graphisoft park (Budapest, Hungary) reserve car washing services.",
   "repository": {
     "type": "git",
-    "url": "https://jovadker.visualstudio.com/_git/CarWash"
+    "url": "https://github.com/mark-szabo/carwash"
   },
   "homepage": "https://carwashu.azurewebsites.net",
   "keywords": [
     "pwa",
     "react",
-    "aspnetcore2.1"
+    "aspnetcore2.2"
   ],
   "author": {
     "name": "Microsoft",

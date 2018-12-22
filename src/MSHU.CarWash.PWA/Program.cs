@@ -14,7 +14,10 @@ namespace MSHU.CarWash.PWA
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseApplicationInsights()
-                .UseKestrel(c => c.AddServerHeader = false)
+                .ConfigureKestrel((context, options) =>
+                {
+                    options.AddServerHeader = false;
+                })
                 .UseStartup<Startup>();
     }
 }
