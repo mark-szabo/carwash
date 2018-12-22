@@ -1,9 +1,0 @@
-﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="MSHU.CarWash.EmailJob.Properties" GeneratedClassName="Settings">
-  <Profiles />
-  <Settings>
-    <Setting Name="Emails" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">jozsef.vadkerti@microsoft.com; a-libill@microsoft.com;euromotorsportkft@gmail.com</Value>
-    </Setting>
-  </Settings>
-</SettingsFile>

@@ -2,14 +2,14 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MSHU.CarWash.ClassLibrary.Enums;
+using MSHU.CarWash.ClassLibrary.Models;
 using MSHU.CarWash.PWA.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using MSHU.CarWash.ClassLibrary.Enums;
-using MSHU.CarWash.ClassLibrary.Models;
 using User = MSHU.CarWash.ClassLibrary.Models.User;
 
 namespace MSHU.CarWash.PWA.Controllers
@@ -65,15 +65,29 @@ namespace MSHU.CarWash.PWA.Controllers
         [HttpGet, Route("dictionary")]
         public async Task<ActionResult<Dictionary<string, string>>> GetUserDictionary()
         {
-            if (!_user.IsAdmin) return Forbid();
-
-            var dictionary = await _context.Users
+            if (_user.IsAdmin)
+            {
+                var dictionary = await _context.Users
                 .Where(u => u.Company == _user.Company && u.FirstName != "[deleted user]")
                 .Select(u => new { u.Id, u.FullName })
                 .OrderBy(u => u.FullName)
                 .ToDictionaryAsync(u => u.Id, u => u.FullName);
 
-            return Ok(dictionary);
+                return Ok(dictionary);
+            }
+
+            if (_user.IsCarwashAdmin)
+            {
+                var dictionary = await _context.Users
+                    .Where(u => u.FirstName != "[deleted user]")
+                    .Select(u => new { u.Id, FullName = $"{u.FullName} ({u.Company})" })
+                    .OrderBy(u => u.FullName)
+                    .ToDictionaryAsync(u => u.Id, u => u.FullName);
+
+                return Ok(dictionary);
+            }
+
+            return Forbid();
         }
 
         // GET: api/users/{id}
@@ -133,7 +147,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="400">BadRequest if setting key is not valid or value param is null.</response>
         /// <response code="401">Unauthorized</response>
         [HttpPut("settings/{key}")]
-        public async Task<ActionResult<NoContentResult>> PutSettings([FromRoute] string key, [FromBody] object value)
+        public async Task<IActionResult> PutSettings([FromRoute] string key, [FromBody] object value)
         {
             if (value == null) return BadRequest("Setting value cannot be null.");
 

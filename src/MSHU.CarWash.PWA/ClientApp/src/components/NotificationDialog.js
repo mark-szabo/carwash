@@ -65,18 +65,18 @@ export default class NotificationDialog extends React.Component {
     render() {
         const { open, handleClose } = this.props;
 
-        if (!('Notification' in window) || !('PushManager' in window)) {
-            // Push isn't supported on this browser, disable or hide UI.
-            return null;
-        }
+        // Push isn't supported on this browser, disable or hide UI.
+        if (!('Notification' in window) || !('PushManager' in window)) return null;
 
-        if (Notification.permission === 'denied') {
-            return null;
-        }
+        // There is a bug in the Windows wrapper app, that deletes the notification permission
+        // every time the user closes the app, which means that the app will ask to enable it
+        // every time the user opens the app, which is a horrible UX.
+        // Azure DevOps bug id: #1250
+        if (navigator.userAgent.includes('MSAppHost/')) return null;
 
-        if (Notification.permission === 'granted') {
-            return null;
-        }
+        if (Notification.permission === 'denied') return null;
+
+        if (Notification.permission === 'granted') return null;
 
         return (
             <Dialog open={open} onClose={handleClose} aria-labelledby="notification-dialog-title" aria-describedby="notification-dialog-title">

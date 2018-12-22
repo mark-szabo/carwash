@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.graphisoft.carwash" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <allow-navigation href="*" />
+    <name>CarWash</name>
+    <description>
+        This app is intended to help employees working in Graphisoft park (Budapest, Hungary) reserve car washing services.
+    </description>
+    <author email="carwashapp@microsoft.com" href="https://www.microsoft.com">
+        Microsoft
+    </author>
+    <content src="https://carwashu.azurewebsites.net/" />
+    <plugin name="cordova-plugin-whitelist" spec="1" />
+    <access origin="*" />
+    <allow-intent href="tel:*" />
+    <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
+    <allow-intent href="geo:*" />
+    <platform name="android">
+        <allow-intent href="market:*" />
+        <icon density="xxxhdpi" src="/images/icon192.png" />
+        <icon density="ldpi" src="/images/icon36.png" />
+        <icon density="mdpi" src="/images/icon48.png" />
+        <icon density="hdpi" src="/images/icon72.png" />
+        <icon density="xhdpi" src="/images/icon96.png" />
+        <icon density="xxhdpi" src="/images/icon144.png" />
+    </platform>
+    <platform name="ios">
+        <allow-intent href="itms:*" />
+        <allow-intent href="itms-apps:*" />
+        <icon height="50" src="/images/icon50.png" width="50" />
+        <icon height="72" src="/images/icon72.png" width="72" />
+        <icon height="76" src="/images/icon76.png" width="76" />
+        <icon height="144" src="/images/icon144.png" width="144" />
+        <icon height="152" src="/images/icon152.png" width="152" />
+        <icon height="180" src="/images/icon180.png" width="180" />
+    </platform>
+    <preference name="Orientation" value="default" />
+    <preference name="Fullscreen" value="false" />
+    <allow-navigation href="https://carwashu.azurewebsites.net/*" />
+    <allow-navigation href="https://login.microsoftonline.com/*" />
+    <allow-navigation href="https://login.live.com/*" />
+    <allow-navigation href="https://*.microsoft.com/*" />
+    <allow-navigation href="https://*.*.microsoft.com/*" />
+    <allow-navigation href="https://*.*.*.microsoft.com/*" />
+    <allow-navigation href="https://*.corp.sap/*" />
+    <allow-navigation href="https://*.*.corp.sap/*" />
+    <allow-navigation href="https://*.*.*.corp.sap/*" />
+    <allow-navigation href="https://*.graphisoft.hu/*" />
+    <allow-navigation href="https://*.*.graphisoft.hu/*" />
+    <allow-navigation href="https://*.*.*.graphisoft.hu/*" />
+    <platform name="windows">
+        <icon height="44" src="/images/icon44.png" width="44" />
+        <icon height="50" src="/images/icon50.png" width="50" />
+    </platform>
+    <platform name="wp8">
+    </platform>
+</widget>

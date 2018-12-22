@@ -69,7 +69,7 @@ class ReservationGrid extends Component {
         if (reservations.length <= 0) {
             return (
                 <div className={classes.center}>
-                    <Typography variant="title" gutterBottom className={classes.lonelyTitle}>
+                    <Typography variant="h6" gutterBottom className={classes.lonelyTitle}>
                         Your reservations will show up here...
                     </Typography>
                     <Typography className={classes.lonelyText}>Tap the Reserve button on the left to get started.</Typography>

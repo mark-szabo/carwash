@@ -70,20 +70,76 @@ export function signOut() {
 }
 
 /**
- * Parses the JSON returned by a network request
- * @param {object} response A response from a network request
- * @return {object} The parsed JSON, status from the response
+ * Requests a URL, returning the deserialized response body
+ * @param {string} url The URL we want to request
+ * @param {object} options The options we want to pass to "fetch"
+ * @param {bool} errorIfOffline Indicates whether the function should reject the Promise if offline (default: false)
+ * @return {Promise} The deserialized response body (Promise)
  */
-function parseJson(response) {
-    // NoContent and Accepted would throw a JSON parsing error as they have no response body
-    if (response.status === 204 || response.status === 202) {
-        return {
-            status: response.status,
-            ok: response.ok,
-            json: {},
-        };
+export default async function apiFetch(url, options, errorIfOffline = false) {
+    if (errorIfOffline && !navigator.onLine) {
+        console.error('NETWORK ERROR: Disconnected from network.');
+        return Promise.reject('You are offline.');
     }
 
+    const token = await adalGetToken(adalConfig.endpoints.api);
+    const o = options || {};
+    if (!(o.headers instanceof Headers)) o.headers = new Headers();
+    o.headers.append('Content-Type', 'application/json');
+    o.headers.append('Authorization', `Bearer ${token}`);
+
+    let response;
+    try {
+        response = await window.fetch(url, o);
+    } catch (e) {
+        if (!navigator.onLine) {
+            console.error('NETWORK ERROR: Disconnected from network.');
+            return Promise.reject('You are offline.');
+        }
+
+        console.error(`NETWORK ERROR: ${e.message}`);
+        return Promise.reject('Network error. Are you offline?');
+    }
+
+    // Check for HTTP error codes
+    if (!response.ok) {
+        switch (response.status) {
+            case 400:
+                console.error(`BAD REQUEST: ${url}`);
+                console.info(response);
+                try {
+                    const errorMessage = await response.json();
+                    return Promise.reject(`An error has occured: ${errorMessage}`);
+                } catch (jsonError) {
+                    return Promise.reject('An error has occured.');
+                }
+            case 401:
+                console.error(`UNAUTHORIZED: ${url}`);
+                console.info(response);
+                return Promise.reject('You are not authorized. Please refresh the page!');
+            case 403:
+                console.error(`FORBIDDEN: ${url}`);
+                console.info(response);
+                return Promise.reject('You do not have permission!');
+            case 404:
+                console.error(`NOT FOUND: ${url}`);
+                console.info(response);
+                return Promise.reject('Not found.');
+            case 500:
+                console.error(`SERVER ERROR: ${url}`);
+                console.info(response);
+                return Promise.reject('A server error has occured.');
+            default:
+                console.error(`UNKNOWN ERROR: ${url}`);
+                console.info(response);
+                return Promise.reject('An error has occured.');
+        }
+    }
+
+    // NoContent and Accepted would throw a JSON parsing error as they have no response body
+    if (response.status === 204 || response.status === 202) return {};
+
+    // Excel export file download
     if (response.headers.get('content-type').indexOf('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') !== -1) {
         let filename = 'carwash-export.xlsx';
         const disposition = response.headers.get('content-disposition');
@@ -94,97 +150,20 @@ function parseJson(response) {
                 filename = matches[1].replace(/['"]/g, '');
             }
         }
-        response.blob().then(blob => download(blob, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'));
 
-        return {
-            status: response.status,
-            ok: response.ok,
-            json: {},
-        };
+        const blob = await response.blob();
+        download(blob, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        return {};
     }
 
-    return new window.Promise((resolve, reject) =>
-        response
-            .json()
-            .then(json =>
-                resolve({
-                    status: response.status,
-                    ok: response.ok,
-                    json,
-                })
-            )
-            .catch(error => reject(error.message))
-    );
-}
-
-/**
- * Requests a URL, returning a promise
- * @param {string} url The URL we want to request
- * @param {object} options The options we want to pass to "fetch"
- * @param {bool} errorIfOffline Indicates whether the function should reject the Promise if offline (default: false)
- * @return {Promise} The request promise
- */
-export default function apiFetch(url, options, errorIfOffline = false) {
-    if (errorIfOffline && !navigator.onLine) {
-        return new window.Promise((_resolve, reject) => reject('You are offline.'));
+    try {
+        const body = await response.json();
+        return body;
+    } catch (jsonError) {
+        console.error(`JSON PARSING ERROR: ${jsonError.message}`);
+        return Promise.reject('A server error has occured.');
     }
-
-    return adalGetToken(adalConfig.endpoints.api).then(token => {
-        const o = options || {};
-        if (!(o.headers instanceof Headers)) o.headers = new Headers();
-        o.headers.append('Content-Type', 'application/json');
-        o.headers.append('Authorization', `Bearer ${token}`);
-
-        return new window.Promise((resolve, reject) => {
-            window
-                .fetch(url, o)
-                .catch(error => {
-                    if (!navigator.onLine) {
-                        console.error('NETWORK ERROR: Disconnected from network.');
-                        return reject('You are offline.');
-                    }
-                    console.error(`NETWORK ERROR: ${error.message}`);
-                    return reject('Network error. Are you offline?');
-                })
-                .then(parseJson)
-                .then(
-                    response => {
-                        if (response.ok) {
-                            return resolve(response.json);
-                        }
-                        // extract the error from the server's json
-                        switch (response.status) {
-                            case 400:
-                                console.error(`BAD REQUEST: ${response.json}`);
-                                return reject(`An error has occured: ${response.json}`);
-                            case 401:
-                                console.error(`UNAUTHORIZED: ${response.json}`);
-                                return reject('You are not authorized. Please refresh the page!');
-                            case 403:
-                                console.error(`UNAUTHORIZED: ${response.json}`);
-                                return reject("You don't have permission!");
-                            case 404:
-                                console.error(`NOT FOUND: ${response.json}`);
-                                return reject('Not found.');
-                            case 500:
-                                console.error(`SERVER ERROR: ${response.json}`);
-                                return reject('A server error has occured.');
-                            default:
-                                console.error(`UNKNOWN ERROR: ${response.json}`);
-                                return reject(`An error has occured. ${response.json}`);
-                        }
-                    },
-                    error => {
-                        console.error(`JSON PARSING ERROR: ${error}`);
-                        return reject('A server error has occured.');
-                    }
-                )
-                .catch(error => {
-                    console.error(`NETWORK ERROR: ${error.message}`);
-                    return reject('Network error. Are you offline?');
-                });
-        });
-    });
 }
 
 export const getToken = () => authContext.getCachedToken(authContext.config.clientId);

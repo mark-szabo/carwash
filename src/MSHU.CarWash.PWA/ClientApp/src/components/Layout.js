@@ -49,7 +49,7 @@ const styles = theme => ({
         },
     },
     drawer: {
-        height: '100%',
+        height: '100vh',
         position: 'relative',
     },
     content: {
@@ -162,7 +162,7 @@ class Layout extends React.Component {
                         <IconButton color="inherit" aria-label="open drawer" onClick={this.handleDrawerToggle} className={classes.navIconHide}>
                             <MenuIcon />
                         </IconButton>
-                        <Typography variant="title" color="inherit" noWrap className={classes.flex}>
+                        <Typography variant="h6" color="inherit" noWrap className={classes.flex}>
                             {this.getNavbarName()}
                         </Typography>
                         {refresh && (

@@ -19,6 +19,7 @@ import NotificationDialog from './components/NotificationDialog';
 import { NotificationChannel, BacklogHubMethods } from './Constants';
 import Spinner from './components/Spinner';
 import { sleep } from './Helpers';
+import Blockers from './components/Blockers';
 
 // A theme with custom primary and secondary color.
 const theme = createMuiTheme({
@@ -36,6 +37,7 @@ const theme = createMuiTheme({
     },
     typography: {
         fontFamily: ['"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'].join(','),
+        useNextVariants: true,
     },
 });
 
@@ -154,7 +156,7 @@ export default class App extends Component {
 
                 return { reservations };
             });
-        } else {
+        } else if (this.state.user.isAdmin) {
             this.setState({
                 companyReservationsLoading: true,
             });
@@ -288,6 +290,15 @@ export default class App extends Component {
             const backlog = state.backlog;
             const i = backlog.findIndex(item => item.id === backlogItem.id);
             backlog[i] = backlogItem;
+
+            return { backlog };
+        });
+    };
+
+    removeBacklogItem = backlogItemId => {
+        this.setState(state => {
+            let backlog = state.backlog;
+            backlog = backlog.filter(item => item.id !== backlogItemId);
 
             return { backlog };
         });
@@ -486,13 +497,20 @@ export default class App extends Component {
                                 backlog={backlog}
                                 backlogLoading={backlogLoading}
                                 backlogUpdateFound={backlogUpdateFound}
+                                updateBacklogItem={this.updateBacklogItem}
+                                removeBacklogItem={this.removeBacklogItem}
                                 invokeBacklogHub={this.invokeBacklogHub}
                                 snackbarOpen={this.state.snackbarOpen}
                                 openSnackbar={this.openSnackbar}
-                                updateBacklogItem={this.updateBacklogItem}
                                 {...props}
                             />
                         )}
+                    />
+                    <Route
+                        exact
+                        path="/blockers"
+                        navbarName="Blockers"
+                        render={props => <Blockers user={user} snackbarOpen={this.state.snackbarOpen} openSnackbar={this.openSnackbar} {...props} />}
                     />
                     <Route exact path="/support" navbarName="Support" component={Support} />
                 </Layout>

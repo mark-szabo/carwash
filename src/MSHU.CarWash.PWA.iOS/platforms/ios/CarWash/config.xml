@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.graphisoft.carwash" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <allow-navigation href="https://carwashu.azurewebsites.net/*" />
+    <allow-navigation href="https://login.microsoftonline.com/*" />
+    <allow-navigation href="https://login.live.com/*" />
+    <allow-navigation href="https://*.microsoft.com/*" />
+    <allow-navigation href="https://*.*.microsoft.com/*" />
+    <allow-navigation href="https://*.*.*.microsoft.com/*" />
+    <allow-navigation href="https://*.corp.sap/*" />
+    <allow-navigation href="https://*.*.corp.sap/*" />
+    <allow-navigation href="https://*.*.*.corp.sap/*" />
+    <allow-navigation href="https://*.graphisoft.hu/*" />
+    <allow-navigation href="https://*.*.graphisoft.hu/*" />
+    <allow-navigation href="https://*.*.*.graphisoft.hu/*" />
+ 
+    <feature name="LocalStorage">
+        <param name="ios-package" value="CDVLocalStorage" />
+    </feature>
+    <feature name="HandleOpenUrl">
+        <param name="ios-package" value="CDVHandleOpenURL" />
+        <param name="onload" value="true" />
+    </feature>
+    <feature name="IntentAndNavigationFilter">
+        <param name="ios-package" value="CDVIntentAndNavigationFilter" />
+        <param name="onload" value="true" />
+    </feature>
+    <feature name="GestureHandler">
+        <param name="ios-package" value="CDVGestureHandler" />
+        <param name="onload" value="true" />
+    </feature>
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <feature name="NetworkStatus">
+        <param name="ios-package" value="CDVConnection" />
+        <param name="onload" value="true" />
+    </feature>
+    <feature name="HostedWebApp">
+        <param name="ios-package" value="CDVHostedWebApp" />
+        <param name="onload" value="true" />
+    </feature>
+    <feature name="NetworkStatus">
+        <param name="ios-package" value="CDVConnection" />
+    </feature>
+    <name>CarWash</name>
+    <description>
+        This app is intended to help employees working in Graphisoft park (Budapest, Hungary) reserve car washing services.
+    </description>
+    <author email="carwashapp@microsoft.com" href="https://www.microsoft.com">
+        Microsoft
+    </author>
+    <content src="https://carwashu.azurewebsites.net/" />
+    <access origin="*" />
+    <allow-intent href="tel:*" />
+    <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
+    <allow-intent href="geo:*" />
+    <allow-navigation hap-rule="yes" href="https://carwashu.azurewebsites.net/*" />
+    <allow-intent href="itms:*" />
+    <allow-intent href="itms-apps:*" />
+    <icon height="50" src="/images/icon50.png" width="50" />
+    <icon height="72" src="/images/icon72.png" width="72" />
+    <icon height="76" src="/images/icon76.png" width="76" />
+    <icon height="144" src="/images/icon144.png" width="144" />
+    <icon height="152" src="/images/icon152.png" width="152" />
+    <icon height="180" src="/images/icon180.png" width="180" />
+    <preference name="AllowInlineMediaPlayback" value="false" />
+    <preference name="BackupWebStorage" value="cloud" />
+    <preference name="DisallowOverscroll" value="false" />
+    <preference name="EnableViewportScale" value="false" />
+    <preference name="KeyboardDisplayRequiresUserAction" value="true" />
+    <preference name="MediaPlaybackRequiresUserAction" value="false" />
+    <preference name="SuppressesIncrementalRendering" value="false" />
+    <preference name="SuppressesLongPressGesture" value="false" />
+    <preference name="Suppresses3DTouchGesture" value="false" />
+    <preference name="GapBetweenPages" value="0" />
+    <preference name="PageLength" value="0" />
+    <preference name="PaginationBreakingMode" value="page" />
+    <preference name="PaginationMode" value="unpaginated" />
+    <preference name="Orientation" value="default" />
+    <preference name="Fullscreen" value="false" />
+</widget>
