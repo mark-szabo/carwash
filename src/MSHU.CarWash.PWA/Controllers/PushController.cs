@@ -51,7 +51,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="400">BadRequest if subscription is null or invalid.</response>
         /// <response code="401">Unauthorized</response>
         [HttpPost("register")]
-        public async Task<ActionResult<NoContentResult>> Register([FromBody] PushSubscriptionViewModel subscription)
+        public async Task<IActionResult> Register([FromBody] PushSubscriptionViewModel subscription)
         {
             var dbSubscription = new PushSubscription
             {
@@ -77,7 +77,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="400">BadRequest if subscription is null or invalid.</response>
         /// <response code="401">Unauthorized</response>
         [HttpPost("send/{userId}")]
-        public async Task<ActionResult<AcceptedResult>> Send([FromRoute] string userId, [FromBody] Notification notification)
+        public async Task<IActionResult> Send([FromRoute] string userId, [FromBody] Notification notification)
         {
             if (!_env.IsDevelopment()) return Forbid();
 

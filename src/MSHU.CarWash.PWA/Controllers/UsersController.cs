@@ -147,7 +147,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="400">BadRequest if setting key is not valid or value param is null.</response>
         /// <response code="401">Unauthorized</response>
         [HttpPut("settings/{key}")]
-        public async Task<ActionResult<NoContentResult>> PutSettings([FromRoute] string key, [FromBody] object value)
+        public async Task<IActionResult> PutSettings([FromRoute] string key, [FromBody] object value)
         {
             if (value == null) return BadRequest("Setting value cannot be null.");
 
