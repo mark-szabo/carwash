@@ -1,47 +1,47 @@
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": ".NET Core Launch (web)",
-      "type": "coreclr",
-      "request": "launch",
-      "preLaunchTask": "build",
-      "program": "${workspaceRoot}/src/MSHU.CarWash.PWA/bin/Debug/netcoreapp2.2/MSHU.CarWash.PWA.dll",
-      "args": [],
-      "cwd": "${workspaceRoot}/src/MSHU.CarWash.PWA",
-      "stopAtEntry": false,
-      "internalConsoleOptions": "openOnSessionStart",
-      "launchBrowser": {
-        "enabled": true,
-        "args": "${auto-detect-url}",
-        "windows": {
-          "command": "cmd.exe",
-          "args": "/C start \"\" \"C:/Program Files (x86)/Google/Chrome/Application/chrome.exe\" ${auto-detect-url}"
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": ".NET Core Launch (web)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceRoot}/src/MSHU.CarWash.PWA/bin/Debug/netcoreapp2.1/MSHU.CarWash.PWA.dll",
+            "args": [],
+            "cwd": "${workspaceRoot}/src/MSHU.CarWash.PWA",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart",
+            "launchBrowser": {
+                "enabled": true,
+                "args": "${auto-detect-url}",
+                "windows": {
+                    "command": "cmd.exe",
+                    "args": "/C start \"\" \"C:/Program Files (x86)/Google/Chrome/Application/chrome.exe\" ${auto-detect-url}"
+                },
+                "osx": {
+                    "command": "open"
+                },
+                "linux": {
+                    "command": "xdg-open"
+                }
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "NODE_PATH": "../node_modules/"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceRoot}/Views"
+            }
         },
-        "osx": {
-          "command": "open"
-        },
-        "linux": {
-          "command": "xdg-open"
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch Chrome against localhost",
+            "url": "http://localhost:8080",
+            "webRoot": "${workspaceFolder}"
         }
-      },
-      "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "NODE_PATH": "../node_modules/"
-      },
-      "sourceFileMap": {
-        "/Views": "${workspaceRoot}/Views"
-      }
-    },
-    {
-      "type": "chrome",
-      "request": "launch",
-      "name": "Launch Chrome against localhost",
-      "url": "http://localhost:8080",
-      "webRoot": "${workspaceFolder}"
-    }
-  ]
+    ]
 }
