@@ -232,35 +232,31 @@ class ReservationCard extends Component {
                             subheader={formatDate2(reservation)}
                         />
                         <CardContent>
-                            <Typography variant="caption" gutterBottom>
+                            <Typography variant="caption" color="textSecondary" gutterBottom>
                                 Vehicle plate number
                             </Typography>
-                            <Typography variant="body1" gutterBottom>
-                                {reservation.vehiclePlateNumber}
-                            </Typography>
+                            <Typography gutterBottom>{reservation.vehiclePlateNumber}</Typography>
                             {reservation.location && (
                                 <React.Fragment>
-                                    <Typography variant="caption" gutterBottom style={{ marginTop: 8 }}>
+                                    <Typography variant="caption" color="textSecondary" gutterBottom style={{ marginTop: 8 }}>
                                         Location
                                     </Typography>
-                                    <Typography variant="body1" gutterBottom>
-                                        {formatLocation(reservation.location)}
-                                    </Typography>
+                                    <Typography gutterBottom>{formatLocation(reservation.location)}</Typography>
                                 </React.Fragment>
                             )}
                             {admin && (
                                 <React.Fragment>
-                                    <Typography variant="caption" gutterBottom style={{ marginTop: 8 }}>
+                                    <Typography variant="caption" color="textSecondary" gutterBottom style={{ marginTop: 8 }}>
                                         Name
                                     </Typography>
-                                    <Typography variant="body1" gutterBottom>
+                                    <Typography gutterBottom>
                                         {reservation.user.firstName} {reservation.user.lastName}
                                     </Typography>
                                 </React.Fragment>
                             )}
                             <Comments commentOutgoing={reservation.comment} commentIncoming={reservation.carwashComment} commentIncomingName="CarWash" />
                             <Divider className={classes.divider} />
-                            <Typography variant="subheading">Selected services</Typography>
+                            <Typography variant="subtitle1">Selected services</Typography>
                             {reservation.services.map(service => (
                                 <Chip label={getServiceName(service)} className={classes.chip} key={service} />
                             ))}
@@ -310,7 +306,8 @@ class ReservationCard extends Component {
                                 <MenuItem value="HX">HX</MenuItem>
                             </Select>
                         </FormControl>
-                        {garage && Garages[garage] && (
+                        {garage &&
+                            Garages[garage] && (
                             <FormControl className={classes.formControl} error={validationErrors.floor}>
                                 <InputLabel htmlFor="floor">Floor</InputLabel>
                                 <Select

@@ -252,7 +252,7 @@ class Reserve extends TrackedComponent {
             );
         }
 
-        if (this.props.user.isAdmin) {
+        if (this.props.user.isAdmin || this.props.user.isCarwashAdmin) {
             apiFetch('api/users/dictionary').then(
                 data => {
                     this.setState({
@@ -543,7 +543,7 @@ class Reserve extends TrackedComponent {
                 <div className={classes.center}>
                     <div>
                         <CloudOffIcon className={classes.errorIcon} />
-                        <Typography variant="title" gutterBottom className={classes.errorText}>
+                        <Typography variant="h6" gutterBottom className={classes.errorText}>
                             Connect to the Internet
                         </Typography>
                         <Typography className={classes.errorText}>You must be connected to make a new reservation.</Typography>
@@ -557,7 +557,7 @@ class Reserve extends TrackedComponent {
                 <div className={classes.center}>
                     <div>
                         <ErrorOutlineIcon className={classes.errorIcon} />
-                        <Typography variant="title" gutterBottom className={classes.errorText}>
+                        <Typography variant="h6" gutterBottom className={classes.errorText}>
                             Limit reached
                         </Typography>
                         <Typography className={classes.errorText}>You cannot have more than two concurrent active reservations.</Typography>
@@ -578,9 +578,9 @@ class Reserve extends TrackedComponent {
                                 <Grid item xs={12} md={6}>
                                     {this.state.services.map(service => (
                                         <span key={service.id}>
-                                            {service.id === 0 && <Typography variant="body2">Basic</Typography>}
-                                            {service.id === 3 && <Typography variant="body2">Extras</Typography>}
-                                            {service.id === 6 && <Typography variant="body2">AC</Typography>}
+                                            {service.id === 0 && <Typography variant="caption">Basic</Typography>}
+                                            {service.id === 3 && <Typography variant="caption">Extras</Typography>}
+                                            {service.id === 6 && <Typography variant="caption">AC</Typography>}
                                             <Chip
                                                 key={service.id}
                                                 label={service.name}
@@ -704,7 +704,7 @@ class Reserve extends TrackedComponent {
                                         />
                                     </FormGroup>
                                 </div>
-                                {user.isAdmin && (
+                                {(user.isAdmin || user.isCarwashAdmin) && (
                                     <FormControl className={classes.formControl}>
                                         <InputLabel htmlFor="user">User</InputLabel>
                                         <Select
@@ -766,7 +766,8 @@ class Reserve extends TrackedComponent {
                                                 <MenuItem value="HX">HX</MenuItem>
                                             </Select>
                                         </FormControl>
-                                        {garage && Garages[garage] && (
+                                        {garage &&
+                                            Garages[garage] && (
                                             <FormControl className={classes.formControl} error={validationErrors.floor}>
                                                 <InputLabel htmlFor="floor">Floor</InputLabel>
                                                 <Select
@@ -811,7 +812,7 @@ class Reserve extends TrackedComponent {
                                                 />
                                             </FormGroup>
                                             {dropoffPreConfirmed && (
-                                                <Typography variant="body1" color="textSecondary" component="span" style={{ margin: '8px 0 0 8px' }}>
+                                                <Typography color="textSecondary" component="span" style={{ margin: '8px 0 0 8px' }}>
                                                     <WarningIcon style={{ verticalAlign: 'middle' }} /> You won't be able to modify your reservation after you
                                                     click Reserve!
                                                 </Typography>

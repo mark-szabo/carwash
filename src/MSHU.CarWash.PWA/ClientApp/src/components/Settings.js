@@ -209,7 +209,7 @@ class Settings extends TrackedComponent {
                 <div className={classes.center}>
                     <div>
                         <DeleteForeverIcon className={classes.errorIcon} />
-                        <Typography variant="title" gutterBottom className={classes.errorText}>
+                        <Typography variant="h6" gutterBottom className={classes.errorText}>
                             Account permanently deleted
                         </Typography>
                         <Typography className={classes.errorText}>Please close the app now!</Typography>
@@ -225,7 +225,7 @@ class Settings extends TrackedComponent {
         return (
             <React.Fragment>
                 <Paper className={classes.paper} elevation={1}>
-                    <Typography variant="headline" component="h3">
+                    <Typography variant="h5" component="h3">
                         Notifications
                     </Typography>
                     <Typography component="p">How do you want us to remind you to drop off the keys or notify when your car is ready?</Typography>
@@ -244,7 +244,7 @@ class Settings extends TrackedComponent {
                     </FormControl>
                 </Paper>
                 <Paper className={classes.paper} elevation={1}>
-                    <Typography variant="headline" component="h3">
+                    <Typography variant="h5" component="h3">
                         Calendar integration
                     </Typography>
                     <Typography component="p">Do you want us to automatically create a (non-blocker) event in your calendar for your reservations?</Typography>
@@ -262,7 +262,7 @@ class Settings extends TrackedComponent {
                 </Paper>
                 {(user.isAdmin || user.IsCarwashAdmin) && (
                     <Paper className={classes.paper} elevation={1}>
-                        <Typography variant="headline" component="h3">
+                        <Typography variant="h5" component="h3">
                             Export reservations to Excel
                         </Typography>
                         <Typography component="p">
@@ -298,7 +298,7 @@ class Settings extends TrackedComponent {
                     </Paper>
                 )}
                 <Paper className={classes.paper} elevation={1}>
-                    <Typography variant="headline" component="h3">
+                    <Typography variant="h5" component="h3">
                         We take your privacy seriously!
                     </Typography>
                     <Typography component="p">
@@ -315,13 +315,13 @@ class Settings extends TrackedComponent {
                     <Typography component="p">
                         Your account contains personal data that you have given us. You can download or delete that data below.
                     </Typography>
-                    <Typography variant="subheading" gutterBottom className={classes.title}>
+                    <Typography variant="subtitle1" gutterBottom className={classes.title}>
                         Download your data
                     </Typography>
                     <Button variant="contained" color="primary" className={classes.primaryButtonContained} onClick={this.handleDownloadDataClick}>
                         Download
                     </Button>
-                    <Typography variant="subheading" className={classes.title}>
+                    <Typography variant="subtitle1" className={classes.title}>
                         Delete your account and your personal data
                     </Typography>
                     <Typography component="p" gutterBottom>

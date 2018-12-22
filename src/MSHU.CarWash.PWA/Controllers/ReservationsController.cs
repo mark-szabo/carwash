@@ -14,6 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
+using Org.BouncyCastle.Asn1.X509.Qualified;
 
 namespace MSHU.CarWash.PWA.Controllers
 {
@@ -107,7 +108,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <param name="id">reservation id</param>
         /// <returns><see cref="ReservationViewModel"/></returns>
         /// <response code="200">OK</response>
-        /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formated.</response>
+        /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formatted.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to get another user's reservation.</response>
         /// <response code="404">NotFound if reservation not found.</response>
@@ -148,7 +149,7 @@ namespace MSHU.CarWash.PWA.Controllers
 
             if (dbReservation == null) return NotFound();
 
-            dbReservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty);
+            dbReservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty).Replace(" ", string.Empty);
             dbReservation.Location = reservation.Location;
             dbReservation.Services = reservation.Services;
             dbReservation.Private = reservation.Private;
@@ -264,7 +265,7 @@ namespace MSHU.CarWash.PWA.Controllers
             if (reservation.UserId == null) reservation.UserId = _user.Id;
             reservation.State = State.SubmittedNotActual;
             reservation.Mpv = false;
-            reservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty);
+            reservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty).Replace(" ", string.Empty);
             reservation.CarwashComment = null;
             reservation.CreatedById = _user.Id;
             reservation.CreatedOn = DateTime.Now;
@@ -351,7 +352,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <param name="id">reservation id</param>
         /// <returns>The deleted <see cref="Reservation"/></returns>
         /// <response code="200">OK</response>
-        /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formated.</response>
+        /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formatted.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to delete another user's reservation.</response>
         /// <response code="404">NotFound if reservation not found.</response>
@@ -478,7 +479,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to update another user's reservation.</response>
         [HttpPost("{id}/confirmdropoff")]
-        public async Task<ActionResult<NoContentResult>> ConfirmDropoff([FromRoute] string id, [FromBody] string location)
+        public async Task<IActionResult> ConfirmDropoff([FromRoute] string id, [FromBody] string location)
         {
             if (id == null) return BadRequest("Reservation id cannot be null.");
             if (location == null) return BadRequest("Reservation location cannot be null.");
@@ -522,7 +523,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         [HttpPost("{id}/startwash")]
-        public async Task<ActionResult<NoContentResult>> StartWash([FromRoute] string id)
+        public async Task<IActionResult> StartWash([FromRoute] string id)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 
@@ -564,7 +565,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         [HttpPost("{id}/completewash")]
-        public async Task<ActionResult<NoContentResult>> CompleteWash([FromRoute] string id)
+        public async Task<IActionResult> CompleteWash([FromRoute] string id)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 
@@ -640,7 +641,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         [HttpPost("{id}/confirmpayment")]
-        public async Task<ActionResult<NoContentResult>> ConfirmPayment([FromRoute] string id)
+        public async Task<IActionResult> ConfirmPayment([FromRoute] string id)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 
@@ -685,7 +686,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         [HttpPost("{id}/state/{state}")]
-        public async Task<ActionResult<NoContentResult>> SetState([FromRoute] string id, [FromRoute] State state)
+        public async Task<IActionResult> SetState([FromRoute] string id, [FromRoute] State state)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 
@@ -728,7 +729,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         [HttpPost("{id}/carwashcomment")]
-        public async Task<ActionResult<NoContentResult>> AddCarwashComment([FromRoute] string id, [FromBody] string comment)
+        public async Task<IActionResult> AddCarwashComment([FromRoute] string id, [FromBody] string comment)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 
@@ -799,7 +800,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         [HttpPost("{id}/mpv")]
-        public async Task<ActionResult<NoContentResult>> SetMpv([FromRoute] string id, [FromBody] bool mpv)
+        public async Task<IActionResult> SetMpv([FromRoute] string id, [FromBody] bool mpv)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 
@@ -842,7 +843,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         [HttpPost("{id}/services")]
-        public async Task<ActionResult<NoContentResult>> UpdateServices([FromRoute] string id, [FromBody] List<ServiceType> services)
+        public async Task<IActionResult> UpdateServices([FromRoute] string id, [FromBody] List<ServiceType> services)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 
@@ -886,7 +887,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         [HttpPost("{id}/location")]
-        public async Task<ActionResult<NoContentResult>> UpdateLocation([FromRoute] string id, [FromBody] string location)
+        public async Task<IActionResult> UpdateLocation([FromRoute] string id, [FromBody] string location)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 

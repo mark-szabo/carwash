@@ -45,17 +45,17 @@ function CarwashCardHeader(props) {
         <div className={classes.root} {...other}>
             <div className={classes.content}>
                 <div className={classes.titleRow}>
-                    <Typography variant="headline" component="span" className={classes.title}>
+                    <Typography variant="h5" component="span" className={classes.title}>
                         {title} {priv && <LockIcon alt="Private" />}
                     </Typography>
                     <div className={classes.logo}>
                         <img src={`/images/${company}.svg`} alt={company} height="20px" />
                     </div>
                 </div>
-                <Typography variant="body1" className={classes.subheader} color="textSecondary" component="span">
+                <Typography className={classes.subheader} color="textSecondary" component="span">
                     {subheader}
                 </Typography>
-                <Typography variant="body1" className={classes.subheader} color="textSecondary" component="span">
+                <Typography className={classes.subheader} color="textSecondary" component="span">
                     {subheaderSecondLine}
                 </Typography>
             </div>

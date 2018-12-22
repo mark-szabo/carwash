@@ -7,6 +7,8 @@ import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogActions from '@material-ui/core/DialogActions';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import red from '@material-ui/core/colors/red';
 import withMobileDialog from '@material-ui/core/withMobileDialog';
 import Typography from '@material-ui/core/Typography';
 import Chip from '@material-ui/core/Chip';
@@ -27,6 +29,7 @@ import EditIcon from '@material-ui/icons/Edit';
 import MoneyOffIcon from '@material-ui/icons/MoneyOff';
 import SendIcon from '@material-ui/icons/Send';
 import SaveIcon from '@material-ui/icons/Save';
+import DeleteForeverIcon from '@material-ui/icons/DeleteForever';
 import { State, getServiceName, getAdminStateName, Garages, Service, BacklogHubMethods } from '../Constants';
 import { formatLocation, formatDate } from '../Helpers';
 import Comments from './Comments';
@@ -106,6 +109,12 @@ const styles = theme => ({
             maxWidth: 60,
         },
     },
+    dangerButton: {
+        color: red[300],
+        '&:hover': {
+            backgroundColor: 'rgba(229,115,115,0.08)',
+        },
+    },
     pushActionsUp: {},
 });
 
@@ -122,6 +131,7 @@ class CarwashDetailsDialog extends React.Component {
         },
         editServices: false,
         oldServices: [],
+        cancelDialogOpen: false,
     };
 
     componentDidMount() {
@@ -548,6 +558,35 @@ class CarwashDetailsDialog extends React.Component {
         this.props.handleClose();
     };
 
+    handleCancelDialogOpen = () => {
+        this.setState({ cancelDialogOpen: true });
+    };
+
+    handleCancelDialogClose = () => {
+        this.setState({ cancelDialogOpen: false });
+    };
+
+    handleCancelConfirmed = () => {
+        this.setState({ cancelDialogOpen: false });
+
+        apiFetch(`api/reservations/${this.props.reservation.id}`, {
+            method: 'DELETE',
+        }).then(
+            () => {
+                this.props.openSnackbar('Reservation successfully canceled.');
+
+                // Remove deleted reservation from reservations
+                this.props.removeReservation(this.props.reservation.id);
+
+                // Broadcast using SignalR
+                this.props.invokeBacklogHub(BacklogHubMethods.ReservationDeleted, this.props.reservation.id);
+            },
+            error => {
+                this.props.openSnackbar(error);
+            }
+        );
+    };
+
     preventDefault = event => {
         event.preventDefault();
     };
@@ -557,152 +596,174 @@ class CarwashDetailsDialog extends React.Component {
         const { reservation, open, snackbarOpen, fullScreen, classes } = this.props;
 
         return (
-            <Dialog open={open} onClose={this.handleClose} fullScreen={fullScreen}>
-                <DialogContent className={classes.details}>
-                    <div className={classes.closeButton}>
-                        <IconButton onClick={this.handleToggleMpv} aria-label="MPV">
-                            {reservation.mpv ? <LocalShippingIcon /> : <LocalShippingOutlinedIcon />}
-                        </IconButton>
-                        <IconButton onClick={this.handleClose} aria-label="Close">
-                            <CloseIcon />
-                        </IconButton>
-                    </div>
-                    <Typography variant="display2">{reservation.vehiclePlateNumber}</Typography>
-                    <Typography variant="body1" color="textSecondary" component="span" style={{ margin: '8px 0' }}>
-                        {getAdminStateName(reservation.state)} • {formatDate(reservation)} • {reservation.user.firstName} {reservation.user.lastName} •{' '}
-                        {reservation.user.company}
-                    </Typography>
-                    {!editLocation ? (
-                        <Typography variant="subheading" gutterBottom>
-                            {reservation.location ? formatLocation(reservation.location) : 'Location not set'}
-                            <IconButton onClick={this.handleEditLocation} aria-label="Edit location">
-                                <EditIcon />
+            <React.Fragment>
+                <Dialog open={open} onClose={this.handleClose} fullScreen={fullScreen}>
+                    <DialogContent className={classes.details}>
+                        <div className={classes.closeButton}>
+                            <IconButton onClick={this.handleCancelDialogOpen} aria-label="Delete">
+                                <DeleteForeverIcon />
                             </IconButton>
+                            <IconButton onClick={this.handleToggleMpv} aria-label="MPV">
+                                {reservation.mpv ? <LocalShippingIcon /> : <LocalShippingOutlinedIcon />}
+                            </IconButton>
+                            <IconButton onClick={this.handleClose} aria-label="Close">
+                                <CloseIcon />
+                            </IconButton>
+                        </div>
+                        <Typography variant="h3">{reservation.vehiclePlateNumber}</Typography>
+                        <Typography color="textSecondary" component="span" style={{ margin: '8px 0' }}>
+                            {getAdminStateName(reservation.state)} • {formatDate(reservation)} • {reservation.user.firstName} {reservation.user.lastName} •{' '}
+                            {reservation.user.company}
                         </Typography>
-                    ) : (
-                        <React.Fragment>
-                            <FormControl className={classes.formControl} error={validationErrors.garage}>
-                                <InputLabel htmlFor="garage">Building</InputLabel>
-                                <Select
-                                    required
-                                    value={garage}
-                                    onChange={this.handleGarageChange}
-                                    inputProps={{
-                                        name: 'garage',
-                                        id: 'garage',
-                                    }}
-                                >
-                                    <MenuItem value="M">M</MenuItem>
-                                    <MenuItem value="S1">S1</MenuItem>
-                                    <MenuItem value="GS">GS</MenuItem>
-                                    <MenuItem value="HX">HX</MenuItem>
-                                </Select>
-                            </FormControl>
-                            {garage && Garages[garage] && (
-                                <FormControl className={classes.formControl} error={validationErrors.floor}>
-                                    <InputLabel htmlFor="floor">Floor</InputLabel>
+                        {!editLocation ? (
+                            <Typography variant="subtitle1" gutterBottom>
+                                {reservation.location ? formatLocation(reservation.location) : 'Location not set'}
+                                <IconButton onClick={this.handleEditLocation} aria-label="Edit location">
+                                    <EditIcon />
+                                </IconButton>
+                            </Typography>
+                        ) : (
+                            <React.Fragment>
+                                <FormControl className={classes.formControl} error={validationErrors.garage}>
+                                    <InputLabel htmlFor="garage">Building</InputLabel>
                                     <Select
                                         required
-                                        value={floor}
-                                        onChange={this.handleFloorChange}
+                                        value={garage}
+                                        onChange={this.handleGarageChange}
                                         inputProps={{
-                                            name: 'floor',
-                                            id: 'floor',
+                                            name: 'garage',
+                                            id: 'garage',
                                         }}
                                     >
-                                        {Garages[garage].map(item => (
-                                            <MenuItem value={item} key={item}>
-                                                {item}
-                                            </MenuItem>
-                                        ))}
+                                        <MenuItem value="M">M</MenuItem>
+                                        <MenuItem value="S1">S1</MenuItem>
+                                        <MenuItem value="GS">GS</MenuItem>
+                                        <MenuItem value="HX">HX</MenuItem>
                                     </Select>
                                 </FormControl>
-                            )}
-                            {floor && (
-                                <React.Fragment>
-                                    <TextField
-                                        id="seat"
-                                        label="Seat (optional)"
-                                        value={seat}
-                                        className={classes.textField}
-                                        margin="normal"
-                                        onChange={this.handleSeatChange}
-                                    />
-                                    <IconButton onClick={this.handleUpdateLocation} aria-label="Save location">
-                                        <SaveIcon />
-                                    </IconButton>
-                                </React.Fragment>
-                            )}
-                        </React.Fragment>
-                    )}
-                    <div className={classes.comments}>
-                        <Comments
-                            commentOutgoing={reservation.carwashComment}
-                            commentIncoming={reservation.comment}
-                            commentIncomingName={reservation.user.firstName}
-                            incomingFirst
-                        />
-                        <FormControl className={classes.commentTextfield}>
-                            <InputLabel htmlFor="comment">Reply</InputLabel>
-                            <Input
-                                id="comment"
-                                type="text"
-                                value={this.state.commentTextfield}
-                                onChange={this.handleCommentChange}
-                                onKeyPress={this.handleCommentKeyPress}
-                                endAdornment={
-                                    <InputAdornment position="end">
-                                        {this.state.commentTextfield && (
-                                            <IconButton aria-label="Save comment" onClick={this.handleAddComment} onMouseDown={this.preventDefault}>
-                                                <SendIcon />
-                                            </IconButton>
-                                        )}
-                                    </InputAdornment>
-                                }
+                                {garage &&
+                                    Garages[garage] && (
+                                    <FormControl className={classes.formControl} error={validationErrors.floor}>
+                                        <InputLabel htmlFor="floor">Floor</InputLabel>
+                                        <Select
+                                            required
+                                            value={floor}
+                                            onChange={this.handleFloorChange}
+                                            inputProps={{
+                                                name: 'floor',
+                                                id: 'floor',
+                                            }}
+                                        >
+                                            {Garages[garage].map(item => (
+                                                <MenuItem value={item} key={item}>
+                                                    {item}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                )}
+                                {floor && (
+                                    <React.Fragment>
+                                        <TextField
+                                            id="seat"
+                                            label="Seat (optional)"
+                                            value={seat}
+                                            className={classes.textField}
+                                            margin="normal"
+                                            onChange={this.handleSeatChange}
+                                        />
+                                        <IconButton onClick={this.handleUpdateLocation} aria-label="Save location">
+                                            <SaveIcon />
+                                        </IconButton>
+                                    </React.Fragment>
+                                )}
+                            </React.Fragment>
+                        )}
+                        <div className={classes.comments}>
+                            <Comments
+                                commentOutgoing={reservation.carwashComment}
+                                commentIncoming={reservation.comment}
+                                commentIncomingName={reservation.user.firstName}
+                                incomingFirst
                             />
-                        </FormControl>
-                    </div>
-                    <Typography variant="subheading" className={classes.subheader}>
-                        Selected services
-                    </Typography>
-                    {!editServices ? (
-                        <React.Fragment>
-                            {reservation.services.map(service => (
-                                <Chip label={getServiceName(service)} className={classes.chip} key={service} />
-                            ))}
-                            <IconButton onClick={this.handleEditServices} aria-label="Add service">
-                                <EditIcon />
-                            </IconButton>
-                        </React.Fragment>
-                    ) : (
-                        <React.Fragment>
-                            {reservation.services.map(service => (
-                                <Chip label={getServiceName(service)} className={classes.chip} key={service} onDelete={this.handleRemoveService(service)} />
-                            ))}
-                            {this.getUnselectedServices(reservation.services).map(service => (
-                                <Chip
-                                    label={getServiceName(service)}
-                                    className={classes.unselectedChip}
-                                    key={service}
-                                    variant="outlined"
-                                    onClick={this.handleAddService(service)}
+                            <FormControl className={classes.commentTextfield}>
+                                <InputLabel htmlFor="comment">Reply</InputLabel>
+                                <Input
+                                    id="comment"
+                                    type="text"
+                                    value={this.state.commentTextfield}
+                                    onChange={this.handleCommentChange}
+                                    onKeyPress={this.handleCommentKeyPress}
+                                    endAdornment={
+                                        <InputAdornment position="end">
+                                            {this.state.commentTextfield && (
+                                                <IconButton aria-label="Save comment" onClick={this.handleAddComment} onMouseDown={this.preventDefault}>
+                                                    <SendIcon />
+                                                </IconButton>
+                                            )}
+                                        </InputAdornment>
+                                    }
                                 />
-                            ))}
-                            <IconButton onClick={this.handleUpdateServices(reservation.services)} aria-label="Save services">
-                                <SaveIcon />
-                            </IconButton>
-                        </React.Fragment>
-                    )}
-                    {this.getFab(reservation.state)}
-                </DialogContent>
-                <DialogActions
-                    className={classNames(classes.actions, {
-                        [classes.pushActionsUp]: fullScreen && snackbarOpen,
-                    })}
+                            </FormControl>
+                        </div>
+                        <Typography variant="subtitle1" className={classes.subheader}>
+                            Selected services
+                        </Typography>
+                        {!editServices ? (
+                            <React.Fragment>
+                                {reservation.services.map(service => (
+                                    <Chip label={getServiceName(service)} className={classes.chip} key={service} />
+                                ))}
+                                <IconButton onClick={this.handleEditServices} aria-label="Add service">
+                                    <EditIcon />
+                                </IconButton>
+                            </React.Fragment>
+                        ) : (
+                            <React.Fragment>
+                                {reservation.services.map(service => (
+                                    <Chip label={getServiceName(service)} className={classes.chip} key={service} onDelete={this.handleRemoveService(service)} />
+                                ))}
+                                {this.getUnselectedServices(reservation.services).map(service => (
+                                    <Chip
+                                        label={getServiceName(service)}
+                                        className={classes.unselectedChip}
+                                        key={service}
+                                        variant="outlined"
+                                        onClick={this.handleAddService(service)}
+                                    />
+                                ))}
+                                <IconButton onClick={this.handleUpdateServices(reservation.services)} aria-label="Save services">
+                                    <SaveIcon />
+                                </IconButton>
+                            </React.Fragment>
+                        )}
+                        {this.getFab(reservation.state)}
+                    </DialogContent>
+                    <DialogActions
+                        className={classNames(classes.actions, {
+                            [classes.pushActionsUp]: fullScreen && snackbarOpen,
+                        })}
+                    >
+                        {this.getActions(reservation.state)}
+                    </DialogActions>
+                </Dialog>
+                <Dialog
+                    open={this.state.cancelDialogOpen}
+                    onClose={this.handleCancelDialogClose}
+                    aria-labelledby="cancel-dialog-title"
+                    aria-describedby="cancel-dialog-title"
                 >
-                    {this.getActions(reservation.state)}
-                </DialogActions>
-            </Dialog>
+                    <DialogTitle id="cancel-dialog-title">Cancel this reservation?</DialogTitle>
+                    <DialogActions>
+                        <Button onClick={this.handleCancelDialogClose} color="primary">
+                            Don't cancel
+                        </Button>
+                        <Button onClick={this.handleCancelConfirmed} color="primary" className={classes.dangerButton} autoFocus>
+                            Cancel
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            </React.Fragment>
         );
     }
 }
@@ -714,6 +775,7 @@ CarwashDetailsDialog.propTypes = {
     open: PropTypes.bool.isRequired,
     handleClose: PropTypes.func.isRequired,
     updateReservation: PropTypes.func.isRequired,
+    removeReservation: PropTypes.func.isRequired,
     invokeBacklogHub: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,

@@ -128,7 +128,7 @@ class CardSection extends React.Component {
                         <ExpandMoreIcon />
                     </IconButton>
                     <div className={classNames(classes.titleText, { [classes.expanded]: expanded })}>
-                        <Typography variant="subheading">{title}</Typography>
+                        <Typography variant="subtitle1">{title}</Typography>
                     </div>
                 </ButtonBase>
 

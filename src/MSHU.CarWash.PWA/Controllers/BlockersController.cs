@@ -36,6 +36,13 @@ namespace MSHU.CarWash.PWA.Controllers
         }
 
         // GET: api/blockers
+        /// <summary>
+        /// Get blockers
+        /// </summary>
+        /// <returns>List of <see cref="Blocker"/></returns>
+        /// <response code="200">OK</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">Forbidden if user is not admin or carwash admin.</response>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Blocker>>> GetBlocker()
         {
@@ -45,6 +52,16 @@ namespace MSHU.CarWash.PWA.Controllers
         }
 
         // GET: api/blockers/{id}
+        /// <summary>
+        /// Get a specific blocker by id
+        /// </summary>
+        /// <param name="id">blocker id</param>
+        /// <returns><see cref="Blocker"/></returns>
+        /// <response code="200">OK</response>
+        /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formatted.</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">Forbidden if user is not admin or carwash admin.</response>
+        /// <response code="404">NotFound if blocker not found.</response>
         [HttpGet("{id}")]
         public async Task<ActionResult<Blocker>> GetBlocker([FromRoute] string id)
         {
@@ -60,6 +77,15 @@ namespace MSHU.CarWash.PWA.Controllers
         }
 
         // POST: api/blockers
+        /// <summary>
+        /// Add a new blocker
+        /// </summary>
+        /// <param name="blocker"><see cref="Blocker"/></param>
+        /// <returns>The newly created <see cref="Blocker"/></returns>
+        /// <response code="201">Created</response>
+        /// <response code="400">BadRequest if model is not valid / EndDate is after StartDate / this blocker is overlapping with any other blocker.</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">Forbidden if user is not a carwash admin.</response>
         [HttpPost]
         public async Task<ActionResult<Blocker>> PostBlocker([FromBody] Blocker blocker)
         {
@@ -129,6 +155,16 @@ Sorry for the inconvenience!"
         }
 
         // DELETE: api/blockers/{id}
+        /// <summary>
+        /// Delete an existing blocker
+        /// </summary>
+        /// <param name="id">blocker id</param>
+        /// <returns>The deleted <see cref="Blocker"/></returns>
+        /// <response code="200">OK</response>
+        /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formatted.</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">Forbidden if user is carwash admin.</response>
+        /// <response code="404">NotFound if blocker not found.</response>
         [HttpDelete("{id}")]
         public async Task<ActionResult<Blocker>> DeleteBlocker([FromRoute] string id)
         {

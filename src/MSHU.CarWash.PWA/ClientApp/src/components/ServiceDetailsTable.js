@@ -74,7 +74,6 @@ const styles = theme => {
         root: {
             width: 'calc(100% - 8px)',
             margin: 4,
-            overflowX: 'auto',
         },
         table: {
             minWidth: 200,
@@ -214,7 +213,7 @@ class ServiceDetailsTable extends React.Component {
                         <ExpandMoreIcon />
                     </IconButton>
                     <div className={classNames(classes.titleText, { [classes.expanded]: expanded })}>
-                        <Typography variant="subheading">Service details</Typography>
+                        <Typography variant="subtitle1">Service details</Typography>
                     </div>
                 </ButtonBase>
 

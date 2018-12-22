@@ -147,16 +147,16 @@ class CarwashCard extends Component {
                                 subheaderSecondLine={formatDate(reservation)}
                             />
                             <CardContent>
-                                <Typography variant="caption" gutterBottom>
+                                <Typography variant="caption" color="textSecondary" gutterBottom>
                                     Location
                                 </Typography>
-                                <Typography variant="body1" gutterBottom>
+                                <Typography gutterBottom>
                                     {reservation.location ? formatLocation(reservation.location) : 'Not set'}
                                 </Typography>
-                                <Typography variant="caption" gutterBottom style={{ marginTop: '8px' }}>
+                                <Typography variant="caption" color="textSecondary" gutterBottom style={{ marginTop: '8px' }}>
                                     Name
                                 </Typography>
-                                <Typography variant="body1" gutterBottom>
+                                <Typography gutterBottom>
                                     {reservation.user.firstName} {reservation.user.lastName}
                                 </Typography>
                                 <Comments
@@ -166,7 +166,7 @@ class CarwashCard extends Component {
                                     incomingFirst
                                 />
                                 <Divider className={classes.divider} />
-                                <Typography variant="subheading">Selected services</Typography>
+                                <Typography variant="subtitle1">Selected services</Typography>
                                 {reservation.services.map(service => (
                                     <Chip label={getServiceName(service)} className={classes.chip} key={service} />
                                 ))}
@@ -179,6 +179,7 @@ class CarwashCard extends Component {
                     open={detailsDialogOpen}
                     handleClose={this.handleDetailsDialogClose}
                     updateReservation={this.props.updateReservation}
+                    removeReservation={this.props.removeReservation}
                     invokeBacklogHub={this.props.invokeBacklogHub}
                     snackbarOpen={this.props.snackbarOpen}
                     openSnackbar={this.props.openSnackbar}
@@ -208,6 +209,7 @@ CarwashCard.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     reservation: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     updateReservation: PropTypes.func.isRequired,
+    removeReservation: PropTypes.func.isRequired,
     invokeBacklogHub: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
