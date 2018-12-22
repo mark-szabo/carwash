@@ -107,7 +107,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <param name="id">reservation id</param>
         /// <returns><see cref="ReservationViewModel"/></returns>
         /// <response code="200">OK</response>
-        /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formated.</response>
+        /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formatted.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to get another user's reservation.</response>
         /// <response code="404">NotFound if reservation not found.</response>
@@ -351,7 +351,7 @@ namespace MSHU.CarWash.PWA.Controllers
         /// <param name="id">reservation id</param>
         /// <returns>The deleted <see cref="Reservation"/></returns>
         /// <response code="200">OK</response>
-        /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formated.</response>
+        /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formatted.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to delete another user's reservation.</response>
         /// <response code="404">NotFound if reservation not found.</response>
