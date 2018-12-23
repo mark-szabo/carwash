@@ -7,16 +7,20 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Configuration;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
+using Microsoft.Recognizers.Text.DataTypes.TimexExpression;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
+using MSHU.CarWash.Bot.CognitiveModels;
 using MSHU.CarWash.Bot.Dialogs.Auth;
 using MSHU.CarWash.Bot.Dialogs.ConfirmDropoff;
 using MSHU.CarWash.Bot.Dialogs.FindReservation;
+using MSHU.CarWash.ClassLibrary.Enums;
 using Newtonsoft.Json;
 
 namespace MSHU.CarWash.Bot
@@ -31,8 +35,10 @@ namespace MSHU.CarWash.Bot
         public const string CancelReservationIntent = "Reservation_Delete";
         public const string EditReservationIntent = "Reservation_Edit";
         public const string FindReservationIntent = "Reservation_Find";
+        public const string NextFreeSlotIntent = "Reservation_NextFreeSlot";
         public const string HelpIntent = "Help";
         public const string NoneIntent = "None";
+        public const string WeatherIntent = "Weather_GetForecast";
 
         // Card actions
         public const string DropoffAction = "dropoff";
@@ -158,15 +164,14 @@ namespace MSHU.CarWash.Bot
                         // Perform a call to LUIS to retrieve results for the current activity message.
                         var luisResults = await _services.LuisServices[LuisConfiguration].RecognizeAsync(dc.Context, cancellationToken).ConfigureAwait(false);
 
-                        // If any entities were updated, treat as interruption.
-                        // For example, "no my name is tony" will manifest as an update of the name to be "tony".
-                        var topScoringIntent = luisResults?.GetTopScoringIntent().intent;
+                        var (intent, score) = luisResults.GetTopScoringIntent();
+                        var entities = ParseLuisForEntities(luisResults);
 
-                        // update greeting state with any entities captured
-                        await UpdateGreetingState(luisResults, dc.Context);
+                        // Log LUIS to AppInsights
+                        LogLuis(luisResults, intent, score, entities);
 
                         // Handle conversation interrupts first.
-                        var interrupted = await IsTurnInterruptedAsync(dc, topScoringIntent);
+                        var interrupted = await IsTurnInterruptedAsync(dc, intent);
                         if (interrupted)
                         {
                             // Bypass the dialog.
@@ -186,7 +191,7 @@ namespace MSHU.CarWash.Bot
                             switch (dialogResult.Status)
                             {
                                 case DialogTurnStatus.Empty:
-                                    switch (topScoringIntent)
+                                    switch (intent)
                                     {
                                         case NewReservationIntent:
                                             await turnContext.SendActivityAsync("This feature is not yet implemented. Check back after christmas! 😉", cancellationToken: cancellationToken);
@@ -210,6 +215,14 @@ namespace MSHU.CarWash.Bot
                                             await dc.BeginDialogAsync(nameof(FindReservationDialog), cancellationToken: cancellationToken);
                                             break;
 
+                                        case NextFreeSlotIntent:
+                                            await turnContext.SendActivityAsync("This feature is not yet implemented. Check back after christmas! 😉", cancellationToken: cancellationToken);
+                                            break;
+
+                                        case WeatherIntent:
+                                            await turnContext.SendActivityAsync("They say, I'll get access to the internet soon, and will be able to answer what the weather will look like...", cancellationToken: cancellationToken);
+                                            break;
+
                                         case NoneIntent:
                                             // Check QnA Maker model
                                             var response = await _services.QnAServices[QnAMakerConfiguration].GetAnswersAsync(turnContext);
@@ -227,10 +240,12 @@ namespace MSHU.CarWash.Bot
                                                     { "Activity Type", turnContext.Activity.Type },
                                                     { "Message", text },
                                                     { "Channel ID", turnContext.Activity.ChannelId },
+                                                    { "Activity ID", turnContext.Activity.Id },
                                                     { "Conversation ID", turnContext.Activity.Conversation.Id },
                                                     { "From ID", turnContext.Activity.From.Id },
                                                     { "Recipient ID", turnContext.Activity.Recipient.Id },
                                                     { "Value", JsonConvert.SerializeObject(turnContext.Activity.Value) },
+                                                    { "LUIS intent 'None'", "true" },
                                                     });
 
                                                 await dc.Context.SendActivityAsync("I didn't understand what you just said to me.", cancellationToken: cancellationToken);
@@ -247,10 +262,12 @@ namespace MSHU.CarWash.Bot
                                                     { "Activity Type", turnContext.Activity.Type },
                                                     { "Message", text },
                                                     { "Channel ID", turnContext.Activity.ChannelId },
+                                                    { "Activity ID", turnContext.Activity.Id },
                                                     { "Conversation ID", turnContext.Activity.Conversation.Id },
                                                     { "From ID", turnContext.Activity.From.Id },
                                                     { "Recipient ID", turnContext.Activity.Recipient.Id },
                                                     { "Value", JsonConvert.SerializeObject(turnContext.Activity.Value) },
+                                                    { "LUIS intent 'None'", "false" },
                                                 });
 
                                             // Help or no intent identified, either way, let's provide some help to the user
@@ -384,55 +401,6 @@ namespace MSHU.CarWash.Bot
         }
 
         /// <summary>
-        /// Helper function to update greeting state with entities returned by LUIS.
-        /// </summary>
-        /// <param name="luisResult">LUIS recognizer <see cref="RecognizerResult"/>.</param>
-        /// <param name="turnContext">A <see cref="ITurnContext"/> containing all the data needed
-        /// for processing this conversation turn.</param>
-        /// <returns>A task that represents the work queued to execute.</returns>
-        private async Task UpdateGreetingState(RecognizerResult luisResult, ITurnContext turnContext)
-        {
-            if (luisResult.Entities != null && luisResult.Entities.HasValues)
-            {
-                // Get latest GreetingState
-                var greetingState = await _greetingStateAccessor.GetAsync(turnContext, () => new GreetingState());
-                var entities = luisResult.Entities;
-
-                // Supported LUIS Entities
-                string[] userNameEntities = { "userName", "userName_paternAny" };
-                string[] userLocationEntities = { "userLocation", "userLocation_patternAny" };
-
-                // Update any entities
-                // Note: Consider a confirm dialog, instead of just updating.
-                foreach (var name in userNameEntities)
-                {
-                    // Check if we found valid slot values in entities returned from LUIS.
-                    if (entities[name] != null)
-                    {
-                        // Capitalize and set new user name.
-                        var newName = (string)entities[name][0];
-                        greetingState.Name = char.ToUpper(newName[0]) + newName.Substring(1);
-                        break;
-                    }
-                }
-
-                foreach (var city in userLocationEntities)
-                {
-                    if (entities[city] != null)
-                    {
-                        // Captilize and set new city.
-                        var newCity = (string)entities[city][0];
-                        greetingState.City = char.ToUpper(newCity[0]) + newCity.Substring(1);
-                        break;
-                    }
-                }
-
-                // Set the new values into state.
-                await _greetingStateAccessor.SetAsync(turnContext, greetingState);
-            }
-        }
-
-        /// <summary>
         /// Generates .transcript files for consuming in Bot Framework Emulator.
         /// </summary>
         /// <param name="turnContext">Turn context.</param>
@@ -514,6 +482,121 @@ namespace MSHU.CarWash.Bot
             }
 
             await turnContext.SendActivityAsync("Done");
+        }
+
+        /// <summary>
+        /// Parses LUIS response to custom CognitiveModels.
+        /// </summary>
+        /// <param name="recognizerResult">LUIS response.</param>
+        /// <returns>List of Entities (in the form of CognitiveModels).</returns>
+        private List<CognitiveModel> ParseLuisForEntities(RecognizerResult recognizerResult)
+        {
+            // var s = (string)recognizerResult.Entities["Service"]?[0];
+
+            var entities = new List<CognitiveModel>();
+
+            try
+            {
+                var parsedLuisResponse = JsonConvert.DeserializeObject<LuisEntityResponse>(recognizerResult.Entities.ToString());
+
+                foreach (var entityList in parsedLuisResponse.Instance)
+                {
+                    foreach (var entity in entityList.Value)
+                    {
+                        try
+                        {
+                            switch (entityList.Key)
+                            {
+                                case "Service":
+                                    var service = new ServiceModel(entity);
+                                    if (!Enum.TryParse(service.Text, true, out ServiceType serviceType)) continue;
+                                    service.Service = serviceType;
+                                    service.Type = LuisEntityType.Service;
+                                    entities.Add(service);
+                                    break;
+                                case "datetime":
+                                    var dateTime = new DateTimeModel(entity);
+                                    string timex = ((dynamic)parsedLuisResponse.Entities["datetime"].ToList()[0]).timex[0];
+                                    dateTime.Timex = new TimexProperty(timex);
+                                    dateTime.Type = LuisEntityType.DateTime;
+                                    entities.Add(dateTime);
+                                    break;
+                                case "Reservation_Comment":
+                                    entity.Type = LuisEntityType.Comment;
+                                    entities.Add(entity);
+                                    break;
+                                case "Reservation_Location_Building":
+                                    entity.Type = LuisEntityType.Building;
+                                    entities.Add(entity);
+                                    break;
+                                case "Reservation_Location_Floor":
+                                    entity.Type = LuisEntityType.Floor;
+                                    entities.Add(entity);
+                                    break;
+                                case "Reservation_Location_Seat":
+                                    entity.Type = LuisEntityType.Seat;
+                                    entities.Add(entity);
+                                    break;
+                                case "Reservation_Location_Private":
+                                    entity.Type = LuisEntityType.Private;
+                                    entities.Add(entity);
+                                    break;
+                                case "Reservation_Location_VehiclePlateNumber":
+                                    entity.Type = LuisEntityType.VehiclePlateNumber;
+                                    entities.Add(entity);
+                                    break;
+                                case "Weather_Location":
+                                    entity.Type = LuisEntityType.WeatherLocation;
+                                    entities.Add(entity);
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            _telemetryClient.TrackException(e);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                _telemetryClient.TrackException(e);
+            }
+
+            return entities;
+        }
+
+        /// <summary>
+        /// Logs LUIS responses to Application Insights.
+        /// </summary>
+        /// <param name="luisResult">LUIS response.</param>
+        /// <param name="intent">LUIS intent.</param>
+        /// <param name="score">LUIS score of intent.</param>
+        /// <param name="entities">List of parsed entities.</param>
+        private void LogLuis(RecognizerResult luisResult, string intent, double score, List<CognitiveModel> entities)
+        {
+            // Collect information to send to Application Insights
+            var logProperties = new Dictionary<string, string>
+            {
+                { "LUIS_query", luisResult.Text },
+                { "LUIS_topScoringIntent", intent },
+                { "LUIS_topScoringIntentScore", score.ToString() },
+            };
+
+            // Add entities to collected information
+            int i = 1;
+            foreach (var item in entities)
+            {
+                // Query: reserve [exterior] cleaning
+                // item.Type = "Service"
+                // item.Text = "exterior"
+                logProperties.Add("LUIS_entities_" + i++ + "_" + item.Type, item.Text);
+            }
+
+            // Log LUIS to AppInsights
+            _telemetryClient.TrackTrace("LUIS", SeverityLevel.Information, logProperties);
         }
     }
 }
