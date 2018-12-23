@@ -38,6 +38,8 @@ const styles = {
 };
 
 class CommentIncoming extends Component {
+    displayName = 'CommentIncoming';
+
     render() {
         const { classes, comment, name } = this.props;
 

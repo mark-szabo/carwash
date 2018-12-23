@@ -11,6 +11,8 @@ import Button from '@material-ui/core/Button';
 import { NotificationChannel } from '../Constants';
 
 export default class NotificationDialog extends React.Component {
+    displayName = 'NotificationDialog';
+
     handleEnable = () => {
         askPermission().then(permissionResult => {
             if (permissionResult === 'granted') {

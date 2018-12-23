@@ -12,6 +12,8 @@ const styles = {
 };
 
 class Comments extends Component {
+    displayName = 'Comments';
+
     render() {
         const { classes, commentOutgoing, commentIncoming, commentIncomingName, incomingFirst } = this.props;
 

@@ -4,7 +4,7 @@ import TrackedComponent from './TrackedComponent';
 import ReservationGrid from './ReservationGrid';
 
 export default class Admin extends TrackedComponent {
-    displayName = Admin.name;
+    displayName = 'Admin';
 
     render() {
         const { reservations, reservationsLoading, removeReservation, updateReservation, invokeBacklogHub, openSnackbar, lastSettings } = this.props;

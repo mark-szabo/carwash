@@ -39,7 +39,7 @@ const styles = theme => ({
 });
 
 class ReservationGrid extends Component {
-    displayName = ReservationGrid.name;
+    displayName = 'ReservationGrid';
 
     componentDidMount() {
         document.getElementsByTagName('main')[0].style.overflow = 'hidden';

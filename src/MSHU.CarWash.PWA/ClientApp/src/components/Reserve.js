@@ -119,7 +119,7 @@ const styles = theme => ({
 });
 
 class Reserve extends TrackedComponent {
-    displayName = Reserve.name;
+    displayName = 'Reserve';
 
     constructor(props) {
         super(props);

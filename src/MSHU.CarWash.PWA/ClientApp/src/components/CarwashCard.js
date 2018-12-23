@@ -63,6 +63,8 @@ const styles = theme => ({
 });
 
 class CarwashCard extends Component {
+    displayName = 'CarwashCard';
+
     state = {
         detailsDialogOpen: false,
         cancelDialogOpen: false,

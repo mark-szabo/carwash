@@ -2,7 +2,7 @@ import React from 'react';
 import { AppInsights } from 'applicationinsights-js';
 
 export default class TrackedComponent extends React.Component {
-    displayName = TrackedComponent.name;
+    displayName = 'TrackedComponent';
 
     componentDidMount() {
         this.componentDidMountTimestamp = Date.now();

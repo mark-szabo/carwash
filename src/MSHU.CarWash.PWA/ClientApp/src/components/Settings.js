@@ -82,7 +82,7 @@ const styles = theme => ({
 });
 
 class Settings extends TrackedComponent {
-    displayName = Settings.name;
+    displayName = 'Settings';
 
     state = {
         userDeleted: false,

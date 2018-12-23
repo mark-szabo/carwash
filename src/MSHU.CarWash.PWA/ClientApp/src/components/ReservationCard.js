@@ -69,6 +69,8 @@ const styles = theme => ({
 });
 
 class ReservationCard extends Component {
+    displayName = 'ReservationCard';
+
     state = {
         cancelDialogOpen: false,
         dropoffDialogOpen: false,

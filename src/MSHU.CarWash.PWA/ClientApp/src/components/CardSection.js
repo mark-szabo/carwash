@@ -73,7 +73,7 @@ const styles = theme => {
 };
 
 class CardSection extends React.Component {
-    displayName = CardSection.name;
+    displayName = 'CardSection';
 
     state = {
         expanded: this.props.expanded,
