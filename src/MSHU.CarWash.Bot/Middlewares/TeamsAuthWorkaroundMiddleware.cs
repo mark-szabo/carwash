@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
 
-namespace MSHU.CarWash.Bot
+namespace MSHU.CarWash.Bot.Middlewares
 {
     public class TeamsAuthWorkaroundMiddleware : IMiddleware
     {

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using System;
@@ -20,6 +20,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MSHU.CarWash.Bot.Dialogs.ConfirmDropoff;
+using MSHU.CarWash.Bot.Middlewares;
 using MSHU.CarWash.Bot.Proactive;
 
 namespace MSHU.CarWash.Bot
@@ -144,7 +145,7 @@ namespace MSHU.CarWash.Bot
 
                 // Enable the conversation transcript middleware.
                 var transcriptStore = new AzureBlobTranscriptStore(blobStorageConfig.ConnectionString, "transcripts");
-                options.Middleware.Add(new TranscriptLoggerMiddleware(transcriptStore));
+                options.Middleware.Add(new TranscriptLoggerWorkaroundMiddleware(transcriptStore));
 
                 options.Middleware.Add(new TeamsAuthWorkaroundMiddleware());
 
