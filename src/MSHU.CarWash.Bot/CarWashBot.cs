@@ -56,9 +56,6 @@ namespace MSHU.CarWash.Bot
         private readonly BotServices _services;
         private readonly TelemetryClient _telemetryClient;
 
-        // TODO: remove
-        private readonly IStatePropertyAccessor<GreetingState> _greetingStateAccessor;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="CarWashBot"/> class.
         /// </summary>
@@ -91,10 +88,6 @@ namespace MSHU.CarWash.Bot
             Dialogs.Add(new FindReservationDialog());
             Dialogs.Add(new AuthDialog());
             Dialogs.Add(AuthDialog.LoginPromptDialog());
-
-            // TODO: remove
-            _greetingStateAccessor = _accessors.UserState.CreateProperty<GreetingState>(nameof(GreetingState));
-            Dialogs.Add(new GreetingDialog(_greetingStateAccessor, loggerFactory));
         }
 
         private DialogSet Dialogs { get; set; }
@@ -491,7 +484,9 @@ namespace MSHU.CarWash.Bot
         /// <returns>List of Entities (in the form of CognitiveModels).</returns>
         private List<CognitiveModel> ParseLuisForEntities(RecognizerResult recognizerResult)
         {
-            // var s = (string)recognizerResult.Entities["Service"]?[0];
+            /* Simple way 👇
+             * var s = (string)recognizerResult.Entities["Service"]?[0];
+             */
 
             var entities = new List<CognitiveModel>();
 

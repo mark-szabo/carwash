@@ -115,11 +115,10 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
         {
             // Get the token from the previous step. Note that we could also have gotten the
             // token directly from the prompt itself. There is an example of this in the next method.
-            var tokenResponse = (TokenResponse)step.Result;
-            if (tokenResponse == null)
+            if (!(step.Result is TokenResponse tokenResponse))
             {
                 await step.Context.SendActivityAsync("Login was not successful, please try again.", cancellationToken: cancellationToken);
-                return EndOfTurn;
+                return await step.EndDialogAsync(cancellationToken: cancellationToken);
             }
 
             await step.Context.SendActivityAsync("You are now logged in.", cancellationToken: cancellationToken);
