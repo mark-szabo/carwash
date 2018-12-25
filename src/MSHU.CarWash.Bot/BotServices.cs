@@ -3,9 +3,12 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.Azure.ServiceBus;
 using Microsoft.Bot.Builder.AI.Luis;
 using Microsoft.Bot.Builder.AI.QnA;
 using Microsoft.Bot.Configuration;
+using Microsoft.Bot.Configuration.Encryption;
+using Newtonsoft.Json;
 
 namespace MSHU.CarWash.Bot
 {
@@ -29,6 +32,20 @@ namespace MSHU.CarWash.Bot
             {
                 switch (service.Type)
                 {
+                    case ServiceTypes.Endpoint:
+                        {
+                            var endpoint = (EndpointService)service;
+                            EndpointServices.Add(endpoint.Name, endpoint);
+
+                            break;
+                        }
+
+                    case ServiceTypes.BlobStorage:
+                        {
+                            // Create storage client here if needed.
+                            break;
+                        }
+
                     case ServiceTypes.QnA:
                         {
                             // Create a QnA Maker that is initialized and suitable for passing
@@ -73,14 +90,38 @@ namespace MSHU.CarWash.Bot
 
                             break;
                         }
+
+                    case ServiceTypes.Generic:
+                        {
+                            var genericService = (GenericService)service;
+                            if (genericService.Name == "carwashuservicebus")
+                            {
+                                var serviceBusConnection = new ServiceBusConnection(genericService.Configuration["connectionString"]);
+                                ServiceBusServices.Add(genericService.Name, serviceBusConnection);
+                            }
+
+                            break;
+                        }
                 }
             }
         }
 
         /// <summary>
         /// Gets the set of QnA Maker services used.
+        /// Given there can be multiple <see cref="EndpointService"/> endpoints for a single bot (development/production),
+        /// Endpoint instances are represented as a Dictionary.  This is also modeled in the
+        /// ".bot" file using named elements.
+        /// </summary>
+        /// <remarks>The Endpoint services collection should not be modified while the bot is running.</remarks>
+        /// <value>
+        /// An <see cref="EndpointService"/> instance created based on configuration in the .bot file.
+        /// </value>
+        public Dictionary<string, EndpointService> EndpointServices { get; } = new Dictionary<string, EndpointService>();
+
+        /// <summary>
+        /// Gets the set of QnA Maker services used.
         /// Given there can be multiple <see cref="QnAMaker"/> services used in a single bot,
-        /// QnA Maker instances are represented as a Dictionary.  This is also modeled in the
+        /// QnA Maker instances are represented as a Dictionary. This is also modeled in the
         /// ".bot" file using named elements.
         /// </summary>
         /// <remarks>The QnA Maker services collection should not be modified while the bot is running.</remarks>
@@ -92,7 +133,7 @@ namespace MSHU.CarWash.Bot
         /// <summary>
         /// Gets the set of LUIS Services used.
         /// Given there can be multiple <see cref="LuisRecognizer"/> services used in a single bot,
-        /// LuisServices is represented as a dictionary.  This is also modeled in the
+        /// LuisServices is represented as a dictionary. This is also modeled in the
         /// ".bot" file since the elements are named.
         /// </summary>
         /// <remarks>The LUIS services collection should not be modified while the bot is running.</remarks>
@@ -100,5 +141,17 @@ namespace MSHU.CarWash.Bot
         /// A <see cref="LuisRecognizer"/> client instance created based on configuration in the .bot file.
         /// </value>
         public Dictionary<string, LuisRecognizer> LuisServices { get; } = new Dictionary<string, LuisRecognizer>();
+
+        /// <summary>
+        /// Gets the set of Service Bus Services used.
+        /// Given there can be multiple <see cref="ServiceBusConnection"/> services used in a single bot,
+        /// ServiceBusServices is represented as a dictionary. This is also modeled in the
+        /// ".bot" file since the elements are named.
+        /// </summary>
+        /// <remarks>The Service Bus Services collection should not be modified while the bot is running.</remarks>
+        /// <value>
+        /// A <see cref="ServiceBusConnection"/> client instance created based on configuration in the .bot file.
+        /// </value>
+        public Dictionary<string, ServiceBusConnection> ServiceBusServices { get; } = new Dictionary<string, ServiceBusConnection>();
     }
 }

@@ -20,6 +20,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MSHU.CarWash.Bot.Dialogs.ConfirmDropoff;
+using MSHU.CarWash.Bot.Proactive;
 
 namespace MSHU.CarWash.Bot
 {
@@ -109,6 +110,9 @@ namespace MSHU.CarWash.Bot
             // Add SnapshotCollector telemetry processor.
             services.AddSingleton<ITelemetryProcessorFactory>(sp => new SnapshotCollectorTelemetryProcessorFactory(sp));
 
+            // Add proactive message services
+            services.AddSingleton<DropoffReminder, DropoffReminder>();
+
             // Memory Storage is for local bot debugging only. When the bot
             // is restarted, everything stored in memory will be gone.
             // IStorage dataStore = new MemoryStorage();
@@ -130,12 +134,18 @@ namespace MSHU.CarWash.Bot
             var conversationState = new ConversationState(dataStore);
             services.AddSingleton(conversationState);
 
+            // Create and add user state.
             var userState = new UserState(dataStore);
             services.AddSingleton(userState);
 
+            var credentialProvider = new SimpleCredentialProvider(endpointService.AppId, endpointService.AppPassword);
+
+            // Define BotAdapter as singleton.
+            services.AddSingleton(sp => new BotFrameworkAdapter(credentialProvider));
+
             services.AddBot<CarWashBot>(options =>
             {
-                options.CredentialProvider = new SimpleCredentialProvider(endpointService.AppId, endpointService.AppPassword);
+                options.CredentialProvider = credentialProvider;
 
                 // Enable the conversation transcript middleware.
                 var transcriptStore = new AzureBlobTranscriptStore(blobStorageConfig.ConnectionString, "transcripts");
@@ -156,7 +166,7 @@ namespace MSHU.CarWash.Bot
 
             // Create and register state accessors.
             // Accessors created here are passed into the IBot-derived class on every turn.
-            services.AddSingleton<StateAccessors>(sp =>
+            services.AddSingleton(sp =>
             {
                 if (conversationState == null)
                 {
@@ -185,10 +195,14 @@ namespace MSHU.CarWash.Bot
         /// </summary>
         /// <param name="app">Application Builder.</param>
         /// <param name="env">Hosting Environment.</param>
+        /// <param name="serviceProvider">Service Provider.</param>
         /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to create logger object for tracing.</param>
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider serviceProvider, ILoggerFactory loggerFactory)
         {
             _loggerFactory = loggerFactory;
+
+            // Register proactive message handlers
+            serviceProvider.GetService<DropoffReminder>().RegisterHandler();
 
             app.UseDefaultFiles()
                 .UseStaticFiles()
