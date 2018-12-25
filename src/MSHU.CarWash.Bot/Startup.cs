@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using System;
@@ -138,14 +138,9 @@ namespace MSHU.CarWash.Bot
             var userState = new UserState(dataStore);
             services.AddSingleton(userState);
 
-            var credentialProvider = new SimpleCredentialProvider(endpointService.AppId, endpointService.AppPassword);
-
-            // Define BotAdapter as singleton.
-            services.AddSingleton(sp => new BotFrameworkAdapter(credentialProvider));
-
             services.AddBot<CarWashBot>(options =>
             {
-                options.CredentialProvider = credentialProvider;
+                options.CredentialProvider = new SimpleCredentialProvider(endpointService.AppId, endpointService.AppPassword);
 
                 // Enable the conversation transcript middleware.
                 var transcriptStore = new AzureBlobTranscriptStore(blobStorageConfig.ConnectionString, "transcripts");

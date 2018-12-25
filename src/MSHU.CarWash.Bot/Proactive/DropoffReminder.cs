@@ -4,10 +4,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Azure.ServiceBus;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Integration;
 using Microsoft.Bot.Configuration;
 using Microsoft.Bot.Schema;
+using MSHU.CarWash.ClassLibrary.Extensions;
 using MSHU.CarWash.ClassLibrary.Models.ServiceBus;
 using Newtonsoft.Json;
 
@@ -16,39 +19,42 @@ namespace MSHU.CarWash.Bot.Proactive
     public class DropoffReminder
     {
         /// <summary>
+        /// Key in the bot config (.bot file) for the Endpoint.
+        /// </summary>
+        private const string EndpointConfiguration = "production";
+        private const string EndpointConfigurationDev = "development";
+
+        /// <summary>
         /// Key in the bot config (.bot file) for Service Bus.
         /// </summary>
         private const string ServiceBusConfiguration = "carwashuservicebus";
 
         /// <summary>
-        /// Key in the bot config (.bot file) for the Endpoint.
-        /// </summary>
-        private const string EndpointConfiguration = "production";
-
-        /// <summary>
         /// Service Bus queue name.
         /// </summary>
         private const string ServiceBusQueueName = "bot-dropoff-reminder";
+        private const string ServiceBusQueueNameDev = "bot-dropoff-reminder-dev";
 
         private readonly QueueClient _queueClient;
-        private readonly string _botId;
+        private readonly EndpointService _endpoint;
         private readonly StateAccessors _accessors;
         private readonly BotFrameworkAdapter _botFrameworkAdapter;
         private readonly TelemetryClient _telemetryClient;
 
-        public DropoffReminder(StateAccessors accessors, BotFrameworkAdapter botFrameworkAdapter, BotConfiguration botConfig, BotServices services)
+        public DropoffReminder(StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotConfiguration botConfig, BotServices services)
         {
             _accessors = accessors;
-            _botFrameworkAdapter = botFrameworkAdapter;
+            _botFrameworkAdapter = (BotFrameworkAdapter)adapterIntegration;
             _telemetryClient = new TelemetryClient();
 
             // Verify Endpoint configuration.
-            if (!services.EndpointServices.ContainsKey(EndpointConfiguration))
+            var endpointConfig = env.IsProduction() ? EndpointConfiguration : EndpointConfigurationDev;
+            if (!services.EndpointServices.ContainsKey(endpointConfig))
             {
-                throw new ArgumentException($"Invalid configuration. Please check your '.bot' file for a Endpoint service named '{EndpointConfiguration}'.");
+                throw new ArgumentException($"Invalid configuration. Please check your '.bot' file for a Endpoint service named '{endpointConfig}'.");
             }
 
-            _botId = services.EndpointServices[EndpointConfiguration].AppId;
+            _endpoint = services.EndpointServices[endpointConfig];
 
             // Verify ServiceBus configuration.
             if (!services.ServiceBusServices.ContainsKey(ServiceBusConfiguration))
@@ -56,7 +62,8 @@ namespace MSHU.CarWash.Bot.Proactive
                 throw new ArgumentException($"Invalid configuration. Please check your '.bot' file for a Service Bus service named '{ServiceBusConfiguration}'.");
             }
 
-            _queueClient = new QueueClient(services.ServiceBusServices[ServiceBusConfiguration], ServiceBusQueueName, ReceiveMode.PeekLock, null);
+            var queueName = env.IsProduction() ? ServiceBusQueueName : ServiceBusQueueNameDev;
+            _queueClient = new QueueClient(services.ServiceBusServices[ServiceBusConfiguration], queueName, ReceiveMode.PeekLock, null);
         }
 
         public void RegisterHandler()
@@ -95,16 +102,44 @@ namespace MSHU.CarWash.Bot.Proactive
             var json = Encoding.UTF8.GetString(message.Body);
             var reminder = JsonConvert.DeserializeObject<DropoffReminderMessage>(json);
 
-            // TODO
-            var conversation = new ConversationReference(
-                null,
-                new ChannelAccount(),
-                new ChannelAccount(),
-                new ConversationAccount(null, null, "4d996330-07d4-11e9-a658-0fb8e400cbd0|livechat", null, null, null),
-                "emulator",
-                "http://localhost:1032");
+            var user = new ChannelAccount("29:1Mvgp4Jo7JFW3u5phDbpjtN0HMjkHV2cPqqBu0pER4EftX6J0fAs2afCHpucbWmcHUByRoaHzKrWi6KTpSRVGlA", "Mark Szabo (Prohuman 2004 kft.)", RoleTypes.User);
+            var bot = new ChannelAccount("28:3e58d71d-7fd2-4568-8a02-0f641a3dfbc5", "CarWash", RoleTypes.Bot);
 
-            await _botFrameworkAdapter.ContinueConversationAsync(_botId, conversation, DropOffReminderCallback(), cancellationToken);
+            try
+            {
+                // TODO
+                await _botFrameworkAdapter.CreateConversationAsync(
+                    "msteams",
+                    "https://smba.trafficmanager.net/amer/",
+                    new Microsoft.Bot.Connector.Authentication.MicrosoftAppCredentials(_endpoint.AppId, _endpoint.AppPassword),
+                    new ConversationParameters(bot: bot, members: new List<ChannelAccount> { user }, channelData: new { tenant = new { id = "72f988bf-86f1-41af-91ab-2d7cd011db47" } }),
+                    DropOffReminderCallback(),
+                    cancellationToken);
+
+                // var conversation = new ConversationReference(
+                //    null,
+                //    user,
+                //    bot,
+                //    new ConversationAccount(null, null, "01b74930-086c-11e9-ad05-d9034388c99f|transcript", null, null, null),
+                //    "msteams",
+                //    "https://smba.trafficmanager.net/amer/");
+                // await _botFrameworkAdapter.ContinueConversationAsync(_endpoint.AppId, conversation, DropOffReminderCallback(), cancellationToken);
+            }
+            catch (ErrorResponseException e)
+            {
+                _telemetryClient.TrackException(e, new Dictionary<string, string>
+                {
+                    { "Error message", e.Message },
+                    { "Response body", e.Response.Content },
+                    { "Request body", e.Request.Content },
+                    { "Request uri", $"{e.Request.Method.ToString()} {e.Request.RequestUri.AbsoluteUri}" },
+                    { "Request headers", e.Request.Headers.ToJson() },
+                });
+            }
+            catch (Exception e)
+            {
+                _telemetryClient.TrackException(e);
+            }
 
             // Note: Use the cancellationToken passed as necessary to determine if the queueClient has already been closed.
             // If queueClient has already been Closed, you may chose to not call CompleteAsync() or AbandonAsync() etc. calls
