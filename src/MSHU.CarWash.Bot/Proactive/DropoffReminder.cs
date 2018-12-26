@@ -9,8 +9,10 @@ using Microsoft.Azure.ServiceBus;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Integration;
 using Microsoft.Bot.Configuration;
+using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Bot.Schema;
 using Microsoft.WindowsAzure.Storage.Table;
+using MSHU.CarWash.Bot.Extensions;
 using MSHU.CarWash.Bot.States;
 using MSHU.CarWash.ClassLibrary.Extensions;
 using MSHU.CarWash.ClassLibrary.Models.ServiceBus;
@@ -97,27 +99,40 @@ namespace MSHU.CarWash.Bot.Proactive
             var json = Encoding.UTF8.GetString(message.Body);
             var reminder = JsonConvert.DeserializeObject<DropoffReminderMessage>(json);
 
-            var user = new ChannelAccount("29:1Mvgp4Jo7JFW3u5phDbpjtN0HMjkHV2cPqqBu0pER4EftX6J0fAs2afCHpucbWmcHUByRoaHzKrWi6KTpSRVGlA", "Mark Szabo (Prohuman 2004 kft.)", RoleTypes.User);
-            var bot = new ChannelAccount("28:3e58d71d-7fd2-4568-8a02-0f641a3dfbc5", "CarWash", RoleTypes.Bot);
+            var userInfo = await _table.RetrieveUserInfoAsync(reminder.UserId);
+
+            if (userInfo == null)
+            {
+                await _queueClient.CompleteAsync(message.SystemProperties.LockToken);
+
+                _telemetryClient.TrackEvent(
+                    "Failed to send bot drop-off reminder proactive message: User was not found in the bot's database.",
+                    new Dictionary<string, string>
+                    {
+                        { "User Carwash ID", reminder.UserId },
+                        { "Reservation ID", reminder.ReservationId },
+                        { "SequenceNumber", message.SystemProperties.SequenceNumber.ToString() },
+                    });
+            }
 
             try
             {
-                // TODO
                 await _botFrameworkAdapter.CreateConversationAsync(
-                    "msteams",
-                    "https://smba.trafficmanager.net/amer/",
-                    new Microsoft.Bot.Connector.Authentication.MicrosoftAppCredentials(_endpoint.AppId, _endpoint.AppPassword),
-                    new ConversationParameters(bot: bot, members: new List<ChannelAccount> { user }, channelData: new { tenant = new { id = "72f988bf-86f1-41af-91ab-2d7cd011db47" } }),
+                    userInfo.ChannelId,
+                    userInfo.ServiceUrl,
+                    new MicrosoftAppCredentials(_endpoint.AppId, _endpoint.AppPassword),
+                    new ConversationParameters(bot: userInfo.Bot, members: new List<ChannelAccount> { userInfo.User }, channelData: userInfo.ChannelData),
                     DropOffReminderCallback(),
                     cancellationToken);
 
+                // Same with an existing conversation
                 // var conversation = new ConversationReference(
-                //    null,
-                //    user,
-                //    bot,
-                //    new ConversationAccount(null, null, "01b74930-086c-11e9-ad05-d9034388c99f|transcript", null, null, null),
-                //    "msteams",
-                //    "https://smba.trafficmanager.net/amer/");
+                //   null,
+                //   userInfo.User,
+                //   userInfo.Bot,
+                //   new ConversationAccount(null, null, userInfo.CurrentConversation.Conversation.Id, null, null, null),
+                //   userInfo.ChannelId,
+                //   userInfo.ServiceUrl);
                 // await _botFrameworkAdapter.ContinueConversationAsync(_endpoint.AppId, conversation, DropOffReminderCallback(), cancellationToken);
             }
             catch (ErrorResponseException e)

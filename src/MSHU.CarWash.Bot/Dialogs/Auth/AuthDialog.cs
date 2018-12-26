@@ -13,6 +13,7 @@ using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 using MSHU.CarWash.Bot.Dialogs.FindReservation;
 using MSHU.CarWash.Bot.Proactive;
+using MSHU.CarWash.Bot.Services;
 using MSHU.CarWash.Bot.States;
 
 namespace MSHU.CarWash.Bot.Dialogs.Auth
@@ -140,7 +141,13 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
 
             await step.Context.SendActivityAsync("You are now logged in.", cancellationToken: cancellationToken);
 
-            // TODO: call GetMe and update UserProfile state
+            // Call Carwash API and update UserProfile state
+            var api = new CarwashService(tokenResponse.Token);
+            var carwashUser = await api.GetMe(cancellationToken);
+            var userProfile = await _userProfileAccessor.GetAsync(step.Context, () => new UserProfile());
+            userProfile.CarwashUserId = carwashUser.Id;
+            await _userProfileAccessor.SetAsync(step.Context, userProfile, cancellationToken);
+
             await UpdateUserInfoForProactiveMessages(step.Context, cancellationToken).ConfigureAwait(false);
 
             // Display user's active reservations after login
@@ -151,19 +158,19 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
         {
             try
             {
-                var carwashUserId = (await _userProfileAccessor.GetAsync(turnContext)).CarwashUserId;
+                var carwashUserId = (await _userProfileAccessor.GetAsync(turnContext, () => new UserProfile())).CarwashUserId;
                 if (carwashUserId == null) return;
 
                 var activity = turnContext.Activity;
                 var user = (activity.Recipient.Role == RoleTypes.User || activity.From.Role == RoleTypes.Bot) ? activity.Recipient : activity.From;
+                var bot = (activity.Recipient.Role == RoleTypes.User || activity.From.Role == RoleTypes.Bot) ? activity.From : activity.Recipient;
 
                 var userInfo = new UserInfoEntity(
                     carwashUserId,
-                    user.Id,
                     activity.ChannelId,
                     activity.ServiceUrl,
-                    user.AadObjectId,
-                    user.Name,
+                    user,
+                    bot,
                     activity.ChannelData,
                     activity.GetConversationReference());
 
