@@ -51,6 +51,17 @@ namespace MSHU.CarWash.Bot.Services
         }
 
         /// <summary>
+        /// Get the signed in user's object.
+        /// </summary>
+        /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
+        /// or threads to receive notice of cancellation.</param>
+        /// <returns>The currently signed in user.</returns>
+        public async Task<User> GetMe(CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return await GetAsync<User>("/api/users/me", cancellationToken);
+        }
+
+        /// <summary>
         /// Get the user's active (not done) reservations.
         /// </summary>
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects

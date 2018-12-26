@@ -3,7 +3,7 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using MSHU.CarWash.Bot.Dialogs.ConfirmDropoff;
 
-namespace MSHU.CarWash.Bot
+namespace MSHU.CarWash.Bot.States
 {
     /// <summary>
     /// This class is created as a Singleton and passed into the IBot-derived constructor.
@@ -20,7 +20,19 @@ namespace MSHU.CarWash.Bot
         {
             ConversationState = conversationState ?? throw new ArgumentNullException(nameof(conversationState));
             UserState = userState ?? throw new ArgumentNullException(nameof(userState));
+
+            UserProfileAccessor = userState.CreateProperty<UserProfile>(nameof(UserProfile));
+            DialogStateAccessor = conversationState.CreateProperty<DialogState>(nameof(DialogState));
+            ConfirmDropoffStateAccessor = conversationState.CreateProperty<ConfirmDropoffState>(nameof(ConfirmDropoffState));
         }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IStatePropertyAccessor{T}"/> for UserProfile.
+        /// </summary>
+        /// <value>
+        /// The accessor stores the user state for the user's profile.
+        /// </value>
+        public IStatePropertyAccessor<UserProfile> UserProfileAccessor { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IStatePropertyAccessor{T}"/> for DialogState.

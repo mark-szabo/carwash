@@ -7,8 +7,7 @@ using Microsoft.Azure.ServiceBus;
 using Microsoft.Bot.Builder.AI.Luis;
 using Microsoft.Bot.Builder.AI.QnA;
 using Microsoft.Bot.Configuration;
-using Microsoft.Bot.Configuration.Encryption;
-using Newtonsoft.Json;
+using Microsoft.WindowsAzure.Storage;
 
 namespace MSHU.CarWash.Bot
 {
@@ -42,7 +41,15 @@ namespace MSHU.CarWash.Bot
 
                     case ServiceTypes.BlobStorage:
                         {
-                            // Create storage client here if needed.
+                            // Create a Storage client.
+                            var storage = (BlobStorageService)service;
+
+                            if (string.IsNullOrWhiteSpace(storage.ConnectionString))
+                                throw new InvalidOperationException("The Storage ConnectionString ('connectionString') is required. Please update your '.bot' file.");
+
+                            var storageAccount = CloudStorageAccount.Parse(storage.ConnectionString);
+                            StorageServices.Add(storage.Name, storageAccount);
+
                             break;
                         }
 
@@ -53,19 +60,13 @@ namespace MSHU.CarWash.Bot
                             var qna = (QnAMakerService)service;
 
                             if (string.IsNullOrWhiteSpace(qna.KbId))
-                            {
-                                throw new InvalidOperationException("The QnA KnowledgeBaseId ('kbId') is required to run this sample. Please update your '.bot' file.");
-                            }
+                                throw new InvalidOperationException("The QnA KnowledgeBaseId ('kbId') is required. Please update your '.bot' file.");
 
                             if (string.IsNullOrWhiteSpace(qna.EndpointKey))
-                            {
-                                throw new InvalidOperationException("The QnA EndpointKey ('endpointKey') is required to run this sample. Please update your '.bot' file.");
-                            }
+                                throw new InvalidOperationException("The QnA EndpointKey ('endpointKey') is required. Please update your '.bot' file.");
 
                             if (string.IsNullOrWhiteSpace(qna.Hostname))
-                            {
-                                throw new InvalidOperationException("The QnA Host ('hostname') is required to run this sample. Please update your '.bot' file.");
-                            }
+                                throw new InvalidOperationException("The QnA Host ('hostname') is required. Please update your '.bot' file.");
 
                             var qnaEndpoint = new QnAMakerEndpoint()
                             {
@@ -84,6 +85,15 @@ namespace MSHU.CarWash.Bot
                         {
                             var luis = (LuisService)service;
 
+                            if (string.IsNullOrWhiteSpace(luis.AppId))
+                                throw new InvalidOperationException("The LUIS AppId ('appId') is required. Please update your '.bot' file.");
+
+                            if (string.IsNullOrWhiteSpace(luis.AuthoringKey))
+                                throw new InvalidOperationException("The LUIS AuthoringKey ('authoringKey') is required. Please update your '.bot' file.");
+
+                            if (string.IsNullOrWhiteSpace(luis.Region))
+                                throw new InvalidOperationException("The LUIS Region ('region') is required. Please update your '.bot' file.");
+
                             var app = new LuisApplication(luis.AppId, luis.AuthoringKey, luis.GetEndpoint());
                             var recognizer = new LuisRecognizer(app);
                             LuisServices.Add(luis.Name, recognizer);
@@ -96,6 +106,9 @@ namespace MSHU.CarWash.Bot
                             var genericService = (GenericService)service;
                             if (genericService.Name == "carwashuservicebus")
                             {
+                                if (string.IsNullOrWhiteSpace(genericService.Configuration["connectionString"]))
+                                    throw new InvalidOperationException("The ServiceBus ConnectionString ('connectionString') is required. Please update your '.bot' file.");
+
                                 var serviceBusConnection = new ServiceBusConnection(genericService.Configuration["connectionString"]);
                                 ServiceBusServices.Add(genericService.Name, serviceBusConnection);
                             }
@@ -117,6 +130,18 @@ namespace MSHU.CarWash.Bot
         /// An <see cref="EndpointService"/> instance created based on configuration in the .bot file.
         /// </value>
         public Dictionary<string, EndpointService> EndpointServices { get; } = new Dictionary<string, EndpointService>();
+
+        /// <summary>
+        /// Gets the set of Storage services used.
+        /// Given there can be multiple <see cref="CloudStorageAccount"/> services used in a single bot,
+        /// Storage Account instances are represented as a Dictionary. This is also modeled in the
+        /// ".bot" file using named elements.
+        /// </summary>
+        /// <remarks>The Storage services collection should not be modified while the bot is running.</remarks>
+        /// <value>
+        /// A <see cref="CloudStorageAccount"/> client instance created based on configuration in the .bot file.
+        /// </value>
+        public Dictionary<string, CloudStorageAccount> StorageServices { get; } = new Dictionary<string, CloudStorageAccount>();
 
         /// <summary>
         /// Gets the set of QnA Maker services used.

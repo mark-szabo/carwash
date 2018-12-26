@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Azure;
-using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Bot.Configuration;
 using Microsoft.Bot.Connector.Authentication;
@@ -19,9 +18,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MSHU.CarWash.Bot.Dialogs.ConfirmDropoff;
 using MSHU.CarWash.Bot.Middlewares;
 using MSHU.CarWash.Bot.Proactive;
+using MSHU.CarWash.Bot.States;
 
 namespace MSHU.CarWash.Bot
 {
@@ -176,11 +175,7 @@ namespace MSHU.CarWash.Bot
 
                 // Create the custom state accessor.
                 // State accessors enable other components to read and write individual properties of state.
-                var accessors = new StateAccessors(conversationState, userState)
-                {
-                    DialogStateAccessor = conversationState.CreateProperty<DialogState>(nameof(DialogState)),
-                    ConfirmDropoffStateAccessor = conversationState.CreateProperty<ConfirmDropoffState>(nameof(ConfirmDropoffState)),
-                };
+                var accessors = new StateAccessors(conversationState, userState);
 
                 return accessors;
             });

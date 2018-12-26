@@ -1,12 +1,19 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights;
+using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Table;
 using MSHU.CarWash.Bot.Dialogs.FindReservation;
+using MSHU.CarWash.Bot.Proactive;
+using MSHU.CarWash.Bot.States;
 
 namespace MSHU.CarWash.Bot.Dialogs.Auth
 {
@@ -25,11 +32,21 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
         private const string Name = "auth";
         private const string LoginPromptName = "loginPrompt";
 
+        private readonly IStatePropertyAccessor<UserProfile> _userProfileAccessor;
+        private readonly CloudTable _table;
+        private readonly TelemetryClient _telemetryClient;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthDialog"/> class.
         /// </summary>
-        public AuthDialog() : base(nameof(AuthDialog))
+        /// <param name="userProfileAccessor">The <see cref="UserProfile"/> for storing properties at user-scope.</param>
+        /// <param name="storage">Storage account.</param>
+        public AuthDialog(IStatePropertyAccessor<UserProfile> userProfileAccessor, CloudStorageAccount storage) : base(nameof(AuthDialog))
         {
+            _userProfileAccessor = userProfileAccessor;
+            _table = storage.CreateCloudTableClient().GetTableReference(CarWashBot.UserStorageTableName);
+            _telemetryClient = new TelemetryClient();
+
             var dialogSteps = new WaterfallStep[]
             {
                 PromptStepAsync,
@@ -111,7 +128,7 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
         /// <returns>A <see cref="Task"/> representing the operation result of the operation.</returns>
-        private static async Task<DialogTurnResult> LoginStepAsync(WaterfallStepContext step, CancellationToken cancellationToken = default(CancellationToken))
+        private async Task<DialogTurnResult> LoginStepAsync(WaterfallStepContext step, CancellationToken cancellationToken = default(CancellationToken))
         {
             // Get the token from the previous step. Note that we could also have gotten the
             // token directly from the prompt itself. There is an example of this in the next method.
@@ -123,8 +140,39 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
 
             await step.Context.SendActivityAsync("You are now logged in.", cancellationToken: cancellationToken);
 
+            // TODO: call GetMe and update UserProfile state
+            await UpdateUserInfoForProactiveMessages(step.Context, cancellationToken).ConfigureAwait(false);
+
             // Display user's active reservations after login
             return await step.ReplaceDialogAsync(nameof(FindReservationDialog), tokenResponse.Token, cancellationToken: cancellationToken);
+        }
+
+        private async Task UpdateUserInfoForProactiveMessages(ITurnContext turnContext, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var carwashUserId = (await _userProfileAccessor.GetAsync(turnContext)).CarwashUserId;
+                if (carwashUserId == null) return;
+
+                var activity = turnContext.Activity;
+                var user = (activity.Recipient.Role == RoleTypes.User || activity.From.Role == RoleTypes.Bot) ? activity.Recipient : activity.From;
+
+                var userInfo = new UserInfoEntity(
+                    carwashUserId,
+                    user.Id,
+                    activity.ChannelId,
+                    activity.ServiceUrl,
+                    user.AadObjectId,
+                    user.Name,
+                    activity.ChannelData,
+                    activity.GetConversationReference());
+
+                await _table.ExecuteAsync(TableOperation.InsertOrReplace(userInfo), null, null, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                _telemetryClient.TrackException(e);
+            }
         }
     }
 }

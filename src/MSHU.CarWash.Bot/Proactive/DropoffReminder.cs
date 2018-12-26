@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -10,6 +10,8 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Integration;
 using Microsoft.Bot.Configuration;
 using Microsoft.Bot.Schema;
+using Microsoft.WindowsAzure.Storage.Table;
+using MSHU.CarWash.Bot.States;
 using MSHU.CarWash.ClassLibrary.Extensions;
 using MSHU.CarWash.ClassLibrary.Models.ServiceBus;
 using Newtonsoft.Json;
@@ -19,23 +21,13 @@ namespace MSHU.CarWash.Bot.Proactive
     public class DropoffReminder
     {
         /// <summary>
-        /// Key in the bot config (.bot file) for the Endpoint.
-        /// </summary>
-        private const string EndpointConfiguration = "production";
-        private const string EndpointConfigurationDev = "development";
-
-        /// <summary>
-        /// Key in the bot config (.bot file) for Service Bus.
-        /// </summary>
-        private const string ServiceBusConfiguration = "carwashuservicebus";
-
-        /// <summary>
         /// Service Bus queue name.
         /// </summary>
         private const string ServiceBusQueueName = "bot-dropoff-reminder";
         private const string ServiceBusQueueNameDev = "bot-dropoff-reminder-dev";
 
         private readonly QueueClient _queueClient;
+        private readonly CloudTable _table;
         private readonly EndpointService _endpoint;
         private readonly StateAccessors _accessors;
         private readonly BotFrameworkAdapter _botFrameworkAdapter;
@@ -48,22 +40,25 @@ namespace MSHU.CarWash.Bot.Proactive
             _telemetryClient = new TelemetryClient();
 
             // Verify Endpoint configuration.
-            var endpointConfig = env.IsProduction() ? EndpointConfiguration : EndpointConfigurationDev;
+            var endpointConfig = env.IsProduction() ? CarWashBot.EndpointConfiguration : CarWashBot.EndpointConfigurationDev;
             if (!services.EndpointServices.ContainsKey(endpointConfig))
-            {
                 throw new ArgumentException($"Invalid configuration. Please check your '.bot' file for a Endpoint service named '{endpointConfig}'.");
-            }
 
             _endpoint = services.EndpointServices[endpointConfig];
 
+            // Verify Storage configuration.
+            if (!services.StorageServices.ContainsKey(CarWashBot.StorageConfiguration))
+                throw new ArgumentException($"Invalid configuration. Please check your '.bot' file for a Storage service named '{CarWashBot.StorageConfiguration}'.");
+
+            var tableClient = services.StorageServices[CarWashBot.StorageConfiguration].CreateCloudTableClient();
+            _table = tableClient.GetTableReference(CarWashBot.UserStorageTableName);
+
             // Verify ServiceBus configuration.
-            if (!services.ServiceBusServices.ContainsKey(ServiceBusConfiguration))
-            {
-                throw new ArgumentException($"Invalid configuration. Please check your '.bot' file for a Service Bus service named '{ServiceBusConfiguration}'.");
-            }
+            if (!services.ServiceBusServices.ContainsKey(CarWashBot.ServiceBusConfiguration))
+                throw new ArgumentException($"Invalid configuration. Please check your '.bot' file for a Service Bus service named '{CarWashBot.ServiceBusConfiguration}'.");
 
             var queueName = env.IsProduction() ? ServiceBusQueueName : ServiceBusQueueNameDev;
-            _queueClient = new QueueClient(services.ServiceBusServices[ServiceBusConfiguration], queueName, ReceiveMode.PeekLock, null);
+            _queueClient = new QueueClient(services.ServiceBusServices[CarWashBot.ServiceBusConfiguration], queueName, ReceiveMode.PeekLock, null);
         }
 
         public void RegisterHandler()

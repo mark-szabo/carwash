@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.AI.Luis;
+using Microsoft.Bot.Builder.AI.QnA;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Configuration;
 using Microsoft.Bot.Schema;
@@ -20,6 +22,7 @@ using MSHU.CarWash.Bot.CognitiveModels;
 using MSHU.CarWash.Bot.Dialogs.Auth;
 using MSHU.CarWash.Bot.Dialogs.ConfirmDropoff;
 using MSHU.CarWash.Bot.Dialogs.FindReservation;
+using MSHU.CarWash.Bot.States;
 using MSHU.CarWash.ClassLibrary.Enums;
 using Newtonsoft.Json;
 
@@ -45,15 +48,40 @@ namespace MSHU.CarWash.Bot
         public const string CancelAction = "cancel";
 
         /// <summary>
+        /// Key in the bot config (.bot file) for the Endpoint.
+        /// </summary>
+        public const string EndpointConfiguration = "production";
+        public const string EndpointConfigurationDev = "development";
+
+        /// <summary>
+        /// Key in the bot config (.bot file) for the Storage instance.
+        /// </summary>
+        public const string StorageConfiguration = "carwashstorage";
+
+        /// <summary>
+        /// Storage Table name of the user storage for proactive messaging.
+        /// </summary>
+        public const string UserStorageTableName = "ProactiveBotUsers";
+
+        /// <summary>
         /// Key in the bot config (.bot file) for the LUIS instance.
-        /// In the .bot file, multiple instances of LUIS can be configured.
         /// </summary>
         public const string LuisConfiguration = "carwashubot";
+
+        /// <summary>
+        /// Key in the bot config (.bot file) for the QnA Maker instance.
+        /// </summary>
         public const string QnAMakerConfiguration = "carwashufaq";
 
+        /// <summary>
+        /// Key in the bot config (.bot file) for Service Bus.
+        /// </summary>
+        public const string ServiceBusConfiguration = "carwashuservicebus";
+
         private readonly StateAccessors _accessors;
-        private readonly BotConfiguration _botConfig;
-        private readonly BotServices _services;
+        private readonly LuisRecognizer _luis;
+        private readonly QnAMaker _qna;
+        private readonly CloudStorageAccount _storage;
         private readonly TelemetryClient _telemetryClient;
 
         /// <summary>
@@ -66,27 +94,30 @@ namespace MSHU.CarWash.Bot
         public CarWashBot(StateAccessors accessors, BotConfiguration botConfig, BotServices services, ILoggerFactory loggerFactory)
         {
             _accessors = accessors ?? throw new ArgumentNullException(nameof(accessors));
-            _botConfig = botConfig ?? throw new ArgumentNullException(nameof(botConfig));
-            _services = services ?? throw new ArgumentNullException(nameof(services));
+            if (botConfig == null) throw new ArgumentNullException(nameof(botConfig));
+            if (services == null) throw new ArgumentNullException(nameof(services));
 
             _telemetryClient = new TelemetryClient();
 
-            // Verify QnAMaker configuration.
-            if (!_services.QnAServices.ContainsKey(QnAMakerConfiguration))
-            {
-                throw new ArgumentException($"Invalid configuration. Please check your '.bot' file for a QnA service named '{QnAMakerConfiguration}'.");
-            }
-
             // Verify LUIS configuration.
-            if (!_services.LuisServices.ContainsKey(LuisConfiguration))
-            {
-                throw new InvalidOperationException($"The bot configuration does not contain a service type of `luis` with the id `{LuisConfiguration}`.");
-            }
+            if (!services.LuisServices.ContainsKey(LuisConfiguration))
+                throw new InvalidOperationException($"Invalid configuration. Please check your '.bot' file for a LUIS service named '{LuisConfiguration}'.");
+            _luis = services.LuisServices[LuisConfiguration];
+
+            // Verify QnAMaker configuration.
+            if (!services.QnAServices.ContainsKey(QnAMakerConfiguration))
+                throw new ArgumentException($"Invalid configuration. Please check your '.bot' file for a QnA service named '{QnAMakerConfiguration}'.");
+            _qna = services.QnAServices[QnAMakerConfiguration];
+
+            // Verify Storage configuration.
+            if (!services.StorageServices.ContainsKey(StorageConfiguration))
+                throw new ArgumentException($"Invalid configuration. Please check your '.bot' file for a Storage service named '{StorageConfiguration}'.");
+            _storage = services.StorageServices[StorageConfiguration];
 
             Dialogs = new DialogSet(_accessors.DialogStateAccessor);
             Dialogs.Add(new ConfirmDropoffDialog(_accessors.ConfirmDropoffStateAccessor));
             Dialogs.Add(new FindReservationDialog());
-            Dialogs.Add(new AuthDialog());
+            Dialogs.Add(new AuthDialog(accessors.UserProfileAccessor, _storage));
             Dialogs.Add(AuthDialog.LoginPromptDialog());
         }
 
@@ -155,7 +186,7 @@ namespace MSHU.CarWash.Bot
                         if (text == "debug.generatetranscripts") await GenerateTranscriptsAsync(turnContext);
 
                         // Perform a call to LUIS to retrieve results for the current activity message.
-                        var luisResults = await _services.LuisServices[LuisConfiguration].RecognizeAsync(dc.Context, cancellationToken).ConfigureAwait(false);
+                        var luisResults = await _luis.RecognizeAsync(dc.Context, cancellationToken).ConfigureAwait(false);
 
                         var (intent, score) = luisResults.GetTopScoringIntent();
                         var entities = ParseLuisForEntities(luisResults);
@@ -218,7 +249,7 @@ namespace MSHU.CarWash.Bot
 
                                         case NoneIntent:
                                             // Check QnA Maker model
-                                            var response = await _services.QnAServices[QnAMakerConfiguration].GetAnswersAsync(turnContext);
+                                            var response = await _qna.GetAnswersAsync(turnContext);
                                             if (response != null && response.Length > 0)
                                             {
                                                 await turnContext.SendActivityAsync(response[0].Answer, cancellationToken: cancellationToken);
@@ -399,11 +430,7 @@ namespace MSHU.CarWash.Bot
         /// <param name="turnContext">Turn context.</param>
         private async Task GenerateTranscriptsAsync(ITurnContext turnContext)
         {
-            var blobConfig = _botConfig.FindServiceByNameOrId("carwashstorage");
-            if (!(blobConfig is BlobStorageService blobStorageConfig)) return;
-
-            var storage = CloudStorageAccount.Parse(blobStorageConfig.ConnectionString);
-            var blobClient = storage.CreateCloudBlobClient();
+            var blobClient = _storage.CreateCloudBlobClient();
             var container = blobClient.GetContainerReference("transcripts");
 
             // List channels (level 1 folders)
