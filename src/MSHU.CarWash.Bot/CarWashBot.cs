@@ -141,7 +141,7 @@ namespace MSHU.CarWash.Bot
                 case ActivityTypes.Message:
                     {
                         // This bot is not case sensitive.
-                        var text = turnContext.Activity.Text?.ToLowerInvariant();
+                        var text = turnContext.Activity.Text?.Trim().ToLowerInvariant();
 
                         if (text == null)
                         {
@@ -183,7 +183,7 @@ namespace MSHU.CarWash.Bot
                             break;
                         }
 
-                        if (text == "debug.generatetranscripts") await GenerateTranscriptsAsync(turnContext);
+                        if (text == "!generatetranscripts") await GenerateTranscriptsAsync(turnContext);
 
                         // Perform a call to LUIS to retrieve results for the current activity message.
                         var luisResults = await _luis.RecognizeAsync(dc.Context, cancellationToken).ConfigureAwait(false);
@@ -341,9 +341,10 @@ namespace MSHU.CarWash.Bot
                             // Iterate over all new members added to the conversation.
                             foreach (var member in activity.MembersAdded)
                             {
-                                // Greet anyone that was not the target (recipient) of this message.
+                                // Greet only the user and not the bot itself.
                                 if (member.Id == activity.Recipient.Id) continue;
-                                await SendWelcomeMessageAsync(turnContext, cancellationToken, member.Name);
+                                await SendWelcomeMessageAsync(turnContext, cancellationToken);
+                                break;
                             }
                         }
 
@@ -399,9 +400,9 @@ namespace MSHU.CarWash.Bot
         /// <param name="name">(Optional) Name to be included in the greeting. Like "Hi Mark!".</param>
         /// or threads to receive notice of cancellation.</param>
         /// <returns>A <see cref="Task"/> representing the operation result of the Turn operation.</returns>
-        private static async Task SendWelcomeMessageAsync(ITurnContext turnContext, CancellationToken cancellationToken, string name = null)
+        private static async Task SendWelcomeMessageAsync(ITurnContext turnContext, CancellationToken cancellationToken)
         {
-            var greeting = name == null ? "Hi!" : $"Hi {name}!";
+            var greeting = turnContext.Activity.From?.Name == null ? "Hi!" : $"Hi {turnContext.Activity.From.Name}!";
             await turnContext.SendActivityAsync(greeting, cancellationToken: cancellationToken);
             await turnContext.SendActivityAsync("My name is C.I.C.A. (Cool and Intelligent Carwash Assistant) and I'm your bot 🤖 who will help you reserve car washing services and answer your questions.", cancellationToken: cancellationToken);
             await turnContext.SendActivityAsync("Ask me questions like 'How to use the app?' or 'What does interior cleaning cost?'.", cancellationToken: cancellationToken);
