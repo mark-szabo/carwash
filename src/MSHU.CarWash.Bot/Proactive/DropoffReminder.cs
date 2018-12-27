@@ -19,6 +19,7 @@ using MSHU.CarWash.Bot.States;
 using MSHU.CarWash.ClassLibrary.Extensions;
 using MSHU.CarWash.ClassLibrary.Models.ServiceBus;
 using Newtonsoft.Json;
+using static MSHU.CarWash.Bot.Dialogs.FindReservation.FindReservationDialog;
 
 namespace MSHU.CarWash.Bot.Proactive
 {
@@ -203,7 +204,10 @@ namespace MSHU.CarWash.Bot.Proactive
                     var dc = await _dialogs.CreateContextAsync(turnContext, cancellationToken);
 
                     // Show them the reservation
-                    await dc.BeginDialogAsync(nameof(FindReservationDialog), reservationId, cancellationToken: cancellationToken);
+                    await dc.BeginDialogAsync(
+                        nameof(FindReservationDialog),
+                        new FindReservationDialogOptions { ReservationId = reservationId },
+                        cancellationToken: cancellationToken);
                 }
                 catch (Exception e)
                 {

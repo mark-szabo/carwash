@@ -81,7 +81,7 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
         private async Task<DialogTurnResult> SelectReservationStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
         {
             var state = await _stateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
-            var reservationId = step.Options as string;
+            var options = step.Options as ConfirmDropoffDialogOptions ?? new ConfirmDropoffDialogOptions();
 
             List<Reservation> reservations;
             try
@@ -116,9 +116,9 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
                 return await step.EndDialogAsync(cancellationToken: cancellationToken);
             }
 
-            if (reservations.Any(r => r.Id == reservationId))
+            if (reservations.Any(r => r.Id == options.ReservationId))
             {
-                state.ReservationId = reservationId;
+                state.ReservationId = options.ReservationId;
                 await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
 
                 return await step.NextAsync(cancellationToken: cancellationToken);
@@ -359,6 +359,11 @@ namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
                 await promptContext.Context.SendActivityAsync($"Please enter a number.").ConfigureAwait(false);
                 return false;
             }
+        }
+
+        public class ConfirmDropoffDialogOptions
+        {
+            public string ReservationId { get; set; }
         }
     }
 }

@@ -52,12 +52,14 @@ namespace MSHU.CarWash.Bot.Dialogs.FindReservation
 
             try
             {
-                var api = (step.Options is TokenResponse tokenResponse) ? new CarwashService(tokenResponse.Token) : new CarwashService(step, cancellationToken);
+                var options = step.Options as FindReservationDialogOptions ?? new FindReservationDialogOptions();
 
-                if (step.Options is string reservationId)
+                var api = options.Token != null ? new CarwashService(options.Token) : new CarwashService(step, cancellationToken);
+
+                if (options.ReservationId != null)
                 {
                     // Reservation id was predefined -> dialog was started from eg. DropoffReminder
-                    reservations.Add(await api.GetReservationAsync(reservationId, cancellationToken));
+                    reservations.Add(await api.GetReservationAsync(options.ReservationId, cancellationToken));
                 }
                 else
                 {
@@ -103,6 +105,13 @@ namespace MSHU.CarWash.Bot.Dialogs.FindReservation
             }
 
             return await step.EndDialogAsync(cancellationToken: cancellationToken);
+        }
+
+        public class FindReservationDialogOptions
+        {
+            public string Token { get; set; }
+
+            public string ReservationId { get; set; }
         }
     }
 }

@@ -25,6 +25,7 @@ using MSHU.CarWash.Bot.Dialogs.FindReservation;
 using MSHU.CarWash.Bot.States;
 using MSHU.CarWash.ClassLibrary.Enums;
 using Newtonsoft.Json;
+using static MSHU.CarWash.Bot.Dialogs.ConfirmDropoff.ConfirmDropoffDialog;
 
 namespace MSHU.CarWash.Bot
 {
@@ -151,7 +152,10 @@ namespace MSHU.CarWash.Bot
                             switch (action)
                             {
                                 case DropoffAction:
-                                    await dc.BeginDialogAsync(nameof(ConfirmDropoffDialog), id, cancellationToken: cancellationToken);
+                                    await dc.BeginDialogAsync(
+                                        nameof(ConfirmDropoffDialog),
+                                        new ConfirmDropoffDialogOptions { ReservationId = id },
+                                        cancellationToken: cancellationToken);
                                     break;
                                 case CancelAction:
                                     await turnContext.SendActivityAsync("This feature is not yet implemented. Check back after christmas! 😉", cancellationToken: cancellationToken);
