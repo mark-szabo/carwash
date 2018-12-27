@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Schema;
 using MSHU.CarWash.Bot.Resources;
 using MSHU.CarWash.Bot.Services;
 using MSHU.CarWash.ClassLibrary.Models;
@@ -46,7 +47,8 @@ namespace MSHU.CarWash.Bot.Dialogs
         /// <returns>A <see cref="Task"/> representing the operation result of the operation.</returns>
         private async Task<DialogTurnResult> DisplayReservationsStepAsync(WaterfallStepContext step, CancellationToken cancellationToken = default(CancellationToken))
         {
-            List<Reservation> reservations = new List<Reservation>();
+            var reservations = new List<Reservation>();
+            var activities = new List<IActivity>();
 
             try
             {
@@ -70,10 +72,10 @@ namespace MSHU.CarWash.Bot.Dialogs
                             await step.Context.SendActivityAsync("No pending reservations. Get started by making a new reservation!", cancellationToken: cancellationToken);
                             return await step.EndDialogAsync(cancellationToken: cancellationToken);
                         case 1:
-                            await step.Context.SendActivityAsync("I have found one active reservation!", cancellationToken: cancellationToken);
+                            activities.Add(new Activity(type: ActivityTypes.Message, text: "I have found one active reservation!"));
                             break;
                         default:
-                            await step.Context.SendActivityAsync($"Nice! You have {reservations.Count} reservations in-progress.", cancellationToken: cancellationToken);
+                            activities.Add(new Activity(type: ActivityTypes.Message, text: $"Nice! You have {reservations.Count} reservations in-progress."));
                             break;
                     }
                 }
@@ -99,8 +101,10 @@ namespace MSHU.CarWash.Bot.Dialogs
                 var response = step.Context.Activity.CreateReply();
                 response.Attachments = card.ToAttachmentList();
 
-                await step.Context.SendActivityAsync(response, cancellationToken).ConfigureAwait(false);
+                activities.Add(response);
             }
+
+            await step.Context.SendActivitiesAsync(activities.ToArray(), cancellationToken);
 
             return await step.EndDialogAsync(cancellationToken: cancellationToken);
         }
