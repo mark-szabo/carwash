@@ -7,6 +7,7 @@ using System.Security.Authentication;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights;
 using Microsoft.Bot.Builder.Dialogs;
 using MSHU.CarWash.Bot.Dialogs.Auth;
 using MSHU.CarWash.ClassLibrary.Enums;
@@ -18,6 +19,7 @@ namespace MSHU.CarWash.Bot.Services
     public class CarwashService
     {
         private readonly HttpClient _client;
+        private readonly TelemetryClient _telemetryClient;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CarwashService"/> class.
@@ -31,6 +33,8 @@ namespace MSHU.CarWash.Bot.Services
             _client = new HttpClient();
             _client.BaseAddress = new Uri("https://carwashu.azurewebsites.net/");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            _telemetryClient = new TelemetryClient();
         }
 
         /// <summary>
@@ -71,7 +75,10 @@ namespace MSHU.CarWash.Bot.Services
         {
             var reservations = await GetAsync<List<Reservation>>("/api/reservations", cancellationToken);
 
-            return reservations.Where(r => r.State < State.Done).ToList();
+            return reservations
+                .Where(r => r.State < State.Done)
+                .OrderBy(r => r.StartDate)
+                .ToList();
         }
 
         /// <summary>
@@ -110,11 +117,26 @@ namespace MSHU.CarWash.Bot.Services
         /// <returns>Parsed response.</returns>
         private async Task<T> GetAsync<T>(string endpoint, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var response = await _client.GetAsync(endpoint, cancellationToken);
-            response.EnsureSuccessStatusCode();
-            var content = await response.Content.ReadAsStringAsync();
+            try
+            {
+                var response = await _client.GetAsync(endpoint, cancellationToken);
+                response.EnsureSuccessStatusCode();
+                var responseContent = await response.Content.ReadAsStringAsync();
 
-            return JsonConvert.DeserializeObject<T>(content);
+                return JsonConvert.DeserializeObject<T>(responseContent);
+            }
+            catch (HttpRequestException e)
+            {
+                _telemetryClient.TrackException(e);
+
+                throw new Exception($"A HTTP request error occured while communicating with the CarWash API: {e.Message} See inner exception.", e);
+            }
+            catch (Exception e)
+            {
+                _telemetryClient.TrackException(e);
+
+                throw new Exception($"An error occured while communicating with the CarWash API: {e.Message} See inner exception.", e);
+            }
         }
 
         /// <summary>
@@ -128,11 +150,26 @@ namespace MSHU.CarWash.Bot.Services
         /// <returns>Parsed response.</returns>
         private async Task<T> PostAsync<T>(string endpoint, HttpContent content, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var response = await _client.PostAsync(endpoint, content, cancellationToken);
-            response.EnsureSuccessStatusCode();
-            var responseContent = await response.Content.ReadAsStringAsync();
+            try
+            {
+                var response = await _client.PostAsync(endpoint, content, cancellationToken);
+                response.EnsureSuccessStatusCode();
+                var responseContent = await response.Content.ReadAsStringAsync();
 
-            return JsonConvert.DeserializeObject<T>(responseContent);
+                return JsonConvert.DeserializeObject<T>(responseContent);
+            }
+            catch (HttpRequestException e)
+            {
+                _telemetryClient.TrackException(e);
+
+                throw new Exception($"A HTTP request error occured while communicating with the CarWash API: {e.Message} See inner exception.", e);
+            }
+            catch (Exception e)
+            {
+                _telemetryClient.TrackException(e);
+
+                throw new Exception($"An error occured while communicating with the CarWash API: {e.Message} See inner exception.", e);
+            }
         }
     }
 }
