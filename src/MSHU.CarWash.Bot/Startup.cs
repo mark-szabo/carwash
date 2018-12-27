@@ -140,10 +140,14 @@ namespace MSHU.CarWash.Bot
             {
                 options.CredentialProvider = new SimpleCredentialProvider(endpointService.AppId, endpointService.AppPassword);
 
+                // Enable the show typing middleware.
+                options.Middleware.Add(new ShowTypingMiddleware());
+
                 // Enable the conversation transcript middleware.
                 var transcriptStore = new AzureBlobTranscriptStore(blobStorageConfig.ConnectionString, "transcripts");
                 options.Middleware.Add(new TranscriptLoggerWorkaroundMiddleware(transcriptStore));
 
+                // Add Teams authentication workaround middleware.
                 options.Middleware.Add(new TeamsAuthWorkaroundMiddleware());
 
                 // Catches any errors that occur during a conversation turn and logs them to currently
