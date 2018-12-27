@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Schema;
 using MSHU.CarWash.Bot.Dialogs.Auth;
 using MSHU.CarWash.Bot.Resources;
 using MSHU.CarWash.Bot.Services;
@@ -47,16 +48,39 @@ namespace MSHU.CarWash.Bot.Dialogs.FindReservation
         /// <returns>A <see cref="Task"/> representing the operation result of the operation.</returns>
         private async Task<DialogTurnResult> DisplayReservationsStepAsync(WaterfallStepContext step, CancellationToken cancellationToken = default(CancellationToken))
         {
-            List<Reservation> reservations;
+            List<Reservation> reservations = new List<Reservation>();
+
             try
             {
-                var token = (string)step.Options;
-                var api = token == null ? new CarwashService(step, cancellationToken) : new CarwashService(token);
-                reservations = await api.GetMyActiveReservationsAsync(cancellationToken);
+                var api = (step.Options is TokenResponse tokenResponse) ? new CarwashService(tokenResponse.Token) : new CarwashService(step, cancellationToken);
+
+                if (step.Options is string reservationId)
+                {
+                    // Reservation id was predefined -> dialog was started from eg. DropoffReminder
+                    reservations.Add(await api.GetReservationAsync(reservationId, cancellationToken));
+                }
+                else
+                {
+                    reservations = await api.GetMyActiveReservationsAsync(cancellationToken);
+
+                    // Chit-chat
+                    switch (reservations.Count)
+                    {
+                        case 0:
+                            await step.Context.SendActivityAsync("No pending reservations. Get started by making a new reservation!", cancellationToken: cancellationToken);
+                            return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                        case 1:
+                            await step.Context.SendActivityAsync("I have found one active reservation!", cancellationToken: cancellationToken);
+                            break;
+                        default:
+                            await step.Context.SendActivityAsync($"Nice! You have {reservations.Count} reservations in-progress.", cancellationToken: cancellationToken);
+                            break;
+                    }
+                }
             }
             catch (AuthenticationException)
             {
-                await step.Context.SendActivityAsync("You have to be authenticated first.", cancellationToken: cancellationToken);
+                await step.Context.SendActivityAsync("You have to be authenticated.", cancellationToken: cancellationToken);
 
                 return await step.EndDialogAsync(cancellationToken: cancellationToken);
             }
@@ -66,19 +90,6 @@ namespace MSHU.CarWash.Bot.Dialogs.FindReservation
                 await step.Context.SendActivityAsync("I am not able to access your reservations right now.", cancellationToken: cancellationToken);
 
                 return await step.EndDialogAsync(cancellationToken: cancellationToken);
-            }
-
-            switch (reservations.Count)
-            {
-                case 0:
-                    await step.Context.SendActivityAsync("No pending reservations. Get started by making a new reservation!", cancellationToken: cancellationToken);
-                    return await step.EndDialogAsync(cancellationToken: cancellationToken);
-                case 1:
-                    await step.Context.SendActivityAsync("I have found one active reservation!", cancellationToken: cancellationToken);
-                    break;
-                default:
-                    await step.Context.SendActivityAsync($"Nice! You have {reservations.Count} reservations in-progress.", cancellationToken: cancellationToken);
-                    break;
             }
 
             foreach (var reservation in reservations)

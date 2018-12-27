@@ -146,12 +146,13 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
             var carwashUser = await api.GetMe(cancellationToken);
             var userProfile = await _userProfileAccessor.GetAsync(step.Context, () => new UserProfile());
             userProfile.CarwashUserId = carwashUser.Id;
+            userProfile.NickName = carwashUser.FirstName;
             await _userProfileAccessor.SetAsync(step.Context, userProfile, cancellationToken);
 
             await UpdateUserInfoForProactiveMessages(step.Context, cancellationToken).ConfigureAwait(false);
 
             // Display user's active reservations after login
-            return await step.ReplaceDialogAsync(nameof(FindReservationDialog), tokenResponse.Token, cancellationToken: cancellationToken);
+            return await step.ReplaceDialogAsync(nameof(FindReservationDialog), tokenResponse, cancellationToken: cancellationToken);
         }
 
         private async Task UpdateUserInfoForProactiveMessages(ITurnContext turnContext, CancellationToken cancellationToken)

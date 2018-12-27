@@ -7,11 +7,13 @@ using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Azure.ServiceBus;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Integration;
 using Microsoft.Bot.Configuration;
 using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Bot.Schema;
 using Microsoft.WindowsAzure.Storage.Table;
+using MSHU.CarWash.Bot.Dialogs.FindReservation;
 using MSHU.CarWash.Bot.Extensions;
 using MSHU.CarWash.Bot.States;
 using MSHU.CarWash.ClassLibrary.Extensions;
@@ -33,6 +35,7 @@ namespace MSHU.CarWash.Bot.Proactive
         private readonly EndpointService _endpoint;
         private readonly StateAccessors _accessors;
         private readonly BotFrameworkAdapter _botFrameworkAdapter;
+        private readonly DialogSet _dialogs;
         private readonly TelemetryClient _telemetryClient;
 
         public DropoffReminder(StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotConfiguration botConfig, BotServices services)
@@ -40,6 +43,9 @@ namespace MSHU.CarWash.Bot.Proactive
             _accessors = accessors;
             _botFrameworkAdapter = (BotFrameworkAdapter)adapterIntegration;
             _telemetryClient = new TelemetryClient();
+
+            _dialogs = new DialogSet(_accessors.DialogStateAccessor);
+            _dialogs.Add(new FindReservationDialog());
 
             // Verify Endpoint configuration.
             var endpointConfig = env.IsProduction() ? CarWashBot.EndpointConfiguration : CarWashBot.EndpointConfigurationDev;
@@ -122,7 +128,7 @@ namespace MSHU.CarWash.Bot.Proactive
                     userInfo.ServiceUrl,
                     new MicrosoftAppCredentials(_endpoint.AppId, _endpoint.AppPassword),
                     new ConversationParameters(bot: userInfo.Bot, members: new List<ChannelAccount> { userInfo.User }, channelData: userInfo.ChannelData),
-                    DropOffReminderCallback(),
+                    DropOffReminderCallback(reminder.ReservationId, userInfo),
                     cancellationToken);
 
                 // Same with an existing conversation
@@ -172,13 +178,41 @@ namespace MSHU.CarWash.Bot.Proactive
                 });
         }
 
-        private BotCallbackHandler DropOffReminderCallback()
-        {
-            return async (turnContext, cancellationToken) =>
+        private BotCallbackHandler DropOffReminderCallback(string reservationId, UserInfoEntity userInfo) =>
+            async (turnContext, cancellationToken) =>
             {
-                // Send the user a proactive reminder message.
-                await turnContext.SendActivityAsync("It's time to leave the key at the reception and confirm vehicle location!");
+                try
+                {
+                    // Set the From object for the state accessor (CreateConversationAsync() does not fill the Activity.From object)
+                    turnContext.Activity.From = userInfo.User;
+
+                    var profile = await _accessors.UserProfileAccessor.GetAsync(turnContext, () => null, cancellationToken);
+                    var greeting = profile?.NickName == null ? "Hi!" : $"Hi {profile.NickName}!";
+
+                    // Send the user a proactive reminder message.
+                    await turnContext.SendActivitiesAsync(
+                        new IActivity[]
+                        {
+                            new Activity(type: ActivityTypes.Message, text: greeting),
+                            new Activity(type: ActivityTypes.Message, text: "Sorry for bothering!"),
+                            new Activity(type: ActivityTypes.Message, text: "Just wanted to remind you, that it's time to leave the key at the reception."),
+                            new Activity(type: ActivityTypes.Message, text: "And please don't forget to confirm the vehicle location! You can do it here by clicking the 'Confirm key drop-off' button below."),
+                        }, cancellationToken);
+
+                    // Create a dialog context
+                    var dc = await _dialogs.CreateContextAsync(turnContext, cancellationToken);
+
+                    // Show them the reservation
+                    await dc.BeginDialogAsync(nameof(FindReservationDialog), reservationId, cancellationToken: cancellationToken);
+                }
+                catch (Exception e)
+                {
+                    _telemetryClient.TrackException(e, new Dictionary<string, string>
+                    {
+                        { "Activity", turnContext?.Activity?.ToJson() ?? "No activity." },
+                        { "Reservation ID", reservationId ?? "Reservation ID missing." },
+                    });
+                }
             };
-        }
     }
 }
