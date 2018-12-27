@@ -22,6 +22,9 @@ using Newtonsoft.Json;
 
 namespace MSHU.CarWash.Bot.Proactive
 {
+    /// <summary>
+    /// Proactive messaging service for sending out reminders to the users to drop-off their keys.
+    /// </summary>
     public class DropoffReminder
     {
         /// <summary>
@@ -38,6 +41,14 @@ namespace MSHU.CarWash.Bot.Proactive
         private readonly DialogSet _dialogs;
         private readonly TelemetryClient _telemetryClient;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DropoffReminder"/> class.
+        /// </summary>
+        /// <param name="accessors">The state accessors for managing bot state.</param>
+        /// <param name="adapterIntegration">The <see cref="BotFrameworkAdapter"/> connects the bot to the service endpoint of the given channel.</param>
+        /// <param name="env">Provides information about the web hosting environment an application is running in.</param>
+        /// <param name="botConfig">The parsed .bot config file.</param>
+        /// <param name="services">External services.</param>
         public DropoffReminder(StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotConfiguration botConfig, BotServices services)
         {
             _accessors = accessors;
@@ -69,6 +80,10 @@ namespace MSHU.CarWash.Bot.Proactive
             _queueClient = new QueueClient(services.ServiceBusServices[CarWashBot.ServiceBusConfiguration], queueName, ReceiveMode.PeekLock, null);
         }
 
+        /// <summary>
+        /// Register Service Bus message handler.
+        /// This will trigger <see cref="ProcessMessagesAsync(Message, CancellationToken)"/> when a new message is inserted into the queue.
+        /// </summary>
         public void RegisterHandler()
         {
             // Configure the MessageHandler Options in terms of exception handling, number of concurrent messages to deliver etc.

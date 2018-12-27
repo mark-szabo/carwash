@@ -1,5 +1,10 @@
-﻿namespace MSHU.CarWash.Bot.CognitiveModels
+﻿#pragma warning disable SA1602 // Enumeration items should be documented
+
+namespace MSHU.CarWash.Bot.CognitiveModels
 {
+    /// <summary>
+    /// Types of LUIS entities for recognizing information entities in the user's messages.
+    /// </summary>
     internal enum LuisEntityType
     {
         Service,

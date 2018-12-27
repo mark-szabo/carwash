@@ -8,6 +8,10 @@
     <ApplicationInsightsAnnotationResourceId>/subscriptions/a984fd43-e460-42c7-957c-a023cf7f8241/resourcegroups/carwash/providers/microsoft.insights/components/carwashubot4fj5z2</ApplicationInsightsAnnotationResourceId>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>C:\Users\a-marks\Source\Repos\CarWash\src\MSHU.CarWash.Bot\MSHU.CarWash.Bot.xml</DocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.AdaptiveCards" Version="0.5.1" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.5.1" />

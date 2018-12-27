@@ -1,5 +1,10 @@
-﻿namespace MSHU.CarWash.Bot
+﻿#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
+namespace MSHU.CarWash.Bot
 {
+    /// <summary>
+    /// Bot Framework Channel id constants.
+    /// </summary>
     public class ChannelIds
     {
         public const string Facebook = "facebook";

@@ -31,24 +31,14 @@ namespace MSHU.CarWash.Bot
     /// </summary>
     public class CarWashBot : IBot
     {
-        // Supported LUIS Intents
-        public const string NewReservationIntent = "Reservation_Add";
-        public const string CancelReservationIntent = "Reservation_Delete";
-        public const string EditReservationIntent = "Reservation_Edit";
-        public const string FindReservationIntent = "Reservation_Find";
-        public const string NextFreeSlotIntent = "Reservation_NextFreeSlot";
-        public const string HelpIntent = "Help";
-        public const string NoneIntent = "None";
-        public const string WeatherIntent = "Weather_GetForecast";
-
-        // Card actions
-        public const string DropoffAction = "dropoff";
-        public const string CancelAction = "cancel";
-
         /// <summary>
         /// Key in the bot config (.bot file) for the Endpoint.
         /// </summary>
         public const string EndpointConfiguration = "production";
+
+        /// <summary>
+        /// Key in the bot config (.bot file) for the DEV Endpoint.
+        /// </summary>
         public const string EndpointConfigurationDev = "development";
 
         /// <summary>
@@ -76,6 +66,20 @@ namespace MSHU.CarWash.Bot
         /// </summary>
         public const string ServiceBusConfiguration = "carwashuservicebus";
 
+        // Supported LUIS Intents
+        private const string NewReservationIntent = "Reservation_Add";
+        private const string CancelReservationIntent = "Reservation_Delete";
+        private const string EditReservationIntent = "Reservation_Edit";
+        private const string FindReservationIntent = "Reservation_Find";
+        private const string NextFreeSlotIntent = "Reservation_NextFreeSlot";
+        private const string HelpIntent = "Help";
+        private const string NoneIntent = "None";
+        private const string WeatherIntent = "Weather_GetForecast";
+
+        // Card actions
+        private const string DropoffAction = "dropoff";
+        private const string CancelAction = "cancel";
+
         private readonly StateAccessors _accessors;
         private readonly LuisRecognizer _luis;
         private readonly QnAMaker _qna;
@@ -85,9 +89,9 @@ namespace MSHU.CarWash.Bot
         /// <summary>
         /// Initializes a new instance of the <see cref="CarWashBot"/> class.
         /// </summary>
-        /// <param name="accessors">State accessors.</param>
-        /// <param name="botConfig">Bot configuration.</param>
-        /// <param name="services">Bot services.</param>
+        /// <param name="accessors">The state accessors for managing bot state.</param>
+        /// <param name="botConfig">The parsed .bot config file.</param>
+        /// <param name="services">External services.</param>
         /// <param name="loggerFactory">Logger.</param>
         public CarWashBot(StateAccessors accessors, BotConfiguration botConfig, BotServices services, ILoggerFactory loggerFactory)
         {
@@ -398,7 +402,6 @@ namespace MSHU.CarWash.Bot
         /// </summary>
         /// <param name="turnContext">Provides the <see cref="ITurnContext"/> for the turn of the bot.</param>
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
-        /// <param name="name">(Optional) Name to be included in the greeting. Like "Hi Mark!".</param>
         /// or threads to receive notice of cancellation.</param>
         /// <returns>A <see cref="Task"/> representing the operation result of the Turn operation.</returns>
         private static async Task SendWelcomeMessageAsync(ITurnContext turnContext, CancellationToken cancellationToken)

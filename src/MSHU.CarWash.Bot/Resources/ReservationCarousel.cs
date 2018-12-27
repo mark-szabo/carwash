@@ -5,10 +5,17 @@ using MSHU.CarWash.ClassLibrary.Models;
 
 namespace MSHU.CarWash.Bot.Resources
 {
+    /// <summary>
+    /// Reservation chooser, carousel.
+    /// </summary>
     public class ReservationCarousel
     {
         private readonly List<ThumbnailCard> _cards = new List<ThumbnailCard>();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReservationCarousel"/> class.
+        /// </summary>
+        /// <param name="reservations">List of reservations to be displayed in the carousel.</param>
         public ReservationCarousel(IEnumerable<Reservation> reservations)
         {
             foreach (var reservation in reservations)
@@ -27,6 +34,10 @@ namespace MSHU.CarWash.Bot.Resources
             }
         }
 
+        /// <summary>
+        /// Converts the list of cards to a list of attachments.
+        /// </summary>
+        /// <returns>A list of attachments containing the cards.</returns>
         public List<Attachment> ToAttachmentList()
         {
             var attachments = new List<Attachment>();

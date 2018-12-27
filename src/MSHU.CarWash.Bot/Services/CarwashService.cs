@@ -16,6 +16,9 @@ using Newtonsoft.Json;
 
 namespace MSHU.CarWash.Bot.Services
 {
+    /// <summary>
+    /// CarWash Service for accessing the CarWash API.
+    /// </summary>
     public class CarwashService
     {
         private readonly HttpClient _client;

@@ -105,10 +105,25 @@ namespace MSHU.CarWash.Bot.Dialogs
             return await step.EndDialogAsync(cancellationToken: cancellationToken);
         }
 
+        /// <summary>
+        /// Options param type for <see cref="FindReservationDialog"/>.
+        /// </summary>
         public class FindReservationDialogOptions
         {
+            /// <summary>
+            /// Gets or sets the authentication token.
+            /// </summary>
+            /// <value>
+            /// JWT Bearer authentication token.
+            /// </value>
             public string Token { get; set; }
 
+            /// <summary>
+            /// Gets or sets the reservation id.
+            /// </summary>
+            /// <value>
+            /// <see cref="Reservation"/> id.
+            /// </value>
             public string ReservationId { get; set; }
         }
     }

@@ -17,8 +17,6 @@ namespace MSHU.CarWash.Bot
     /// For example, LUIS services are kept here as a singleton. This external service is configured
     /// using the <see cref="BotConfiguration"/> class.
     /// </summary>
-    /// <seealso cref="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-2.1"/>
-    /// <seealso cref="https://www.luis.ai/home"/>
     public class BotServices
     {
         /// <summary>

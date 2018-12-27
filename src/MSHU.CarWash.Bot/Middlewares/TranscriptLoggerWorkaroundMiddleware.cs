@@ -41,7 +41,7 @@ namespace MSHU.CarWash.Bot.Middlewares
         /// or threads to receive notice of cancellation.</param>
         /// <returns>A task that represents the work queued to execute.</returns>
         /// <seealso cref="ITurnContext"/>
-        /// <seealso cref="Bot.Schema.IActivity"/>
+        /// <seealso cref="IActivity"/>
         public async Task OnTurnAsync(ITurnContext turnContext, NextDelegate nextTurn, CancellationToken cancellationToken)
         {
             // log incoming activity at beginning of turn

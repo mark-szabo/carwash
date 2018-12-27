@@ -35,11 +35,9 @@ namespace MSHU.CarWash.Bot
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Startup"/> class.
-        /// This method gets called by the runtime. Use this method to add services to the container.
-        /// For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940.
+        /// This method gets called by the runtime and adds services to the container.
         /// </summary>
         /// <param name="env">Provides information about the web hosting environment an application is running in.</param>
-        /// <seealso cref="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/startup?view=aspnetcore-2.1"/>
         public Startup(IHostingEnvironment env)
         {
             _isProduction = env.IsProduction();

@@ -10,10 +10,17 @@ using Newtonsoft.Json;
 
 namespace MSHU.CarWash.Bot.Resources
 {
+    /// <summary>
+    /// Reservation adaptive card for displaying a reservation in a chat visally.
+    /// </summary>
     public class ReservationCard
     {
-        private AdaptiveCard _card;
+        private readonly AdaptiveCard _card;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReservationCard"/> class.
+        /// </summary>
+        /// <param name="reservation">The reservation to be rendered tha card based upon.</param>
         public ReservationCard(Reservation reservation)
         {
             var services = new List<string>();
@@ -57,6 +64,10 @@ namespace MSHU.CarWash.Bot.Resources
             }
         }
 
+        /// <summary>
+        /// Converts the card to an attachment.
+        /// </summary>
+        /// <returns>An attachment containing the card.</returns>
         public Attachment ToAttachment()
         {
             return new Attachment
@@ -66,6 +77,10 @@ namespace MSHU.CarWash.Bot.Resources
             };
         }
 
+        /// <summary>
+        /// Converts the card to an attachment and places it into new a list of attachments.
+        /// </summary>
+        /// <returns>A list of attachments containing the one reservation card.</returns>
         public List<Attachment> ToAttachmentList()
         {
             return new List<Attachment>

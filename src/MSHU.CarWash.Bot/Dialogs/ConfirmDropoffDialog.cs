@@ -360,8 +360,17 @@ namespace MSHU.CarWash.Bot.Dialogs
             }
         }
 
+        /// <summary>
+        /// Options param type for <see cref="ConfirmDropoffDialog"/>.
+        /// </summary>
         public class ConfirmDropoffDialogOptions
         {
+            /// <summary>
+            /// Gets or sets the reservation id.
+            /// </summary>
+            /// <value>
+            /// <see cref="Reservation"/> id.
+            /// </value>
             public string ReservationId { get; set; }
         }
     }

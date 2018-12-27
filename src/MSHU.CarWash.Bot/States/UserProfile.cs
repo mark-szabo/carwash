@@ -1,5 +1,8 @@
 ﻿namespace MSHU.CarWash.Bot.States
 {
+    /// <summary>
+    /// User Profile state type.
+    /// </summary>
     public class UserProfile
     {
         /// <summary>
@@ -14,7 +17,7 @@
         /// Gets or sets the user's ID within the CarWash API.
         /// </summary>
         /// <value>
-        /// The user's ID within the CarWash API.
+        /// The <see cref="ClassLibrary.Models.User"/>'s ID within the CarWash API.
         /// </value>
         public string CarwashUserId { get; set; }
     }
