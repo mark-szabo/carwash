@@ -120,9 +120,9 @@ namespace MSHU.CarWash.Bot.Proactive
             var json = Encoding.UTF8.GetString(message.Body);
             var reminder = JsonConvert.DeserializeObject<DropoffReminderMessage>(json);
 
-            var userInfo = await _table.RetrieveUserInfoAsync(reminder.UserId);
+            var userInfos = await _table.RetrieveUserInfoAsync(reminder.UserId);
 
-            if (userInfo == null)
+            if (userInfos == null || userInfos.Count == 0)
             {
                 await _queueClient.CompleteAsync(message.SystemProperties.LockToken);
 
@@ -136,40 +136,45 @@ namespace MSHU.CarWash.Bot.Proactive
                     });
             }
 
-            try
+            foreach (var userInfo in userInfos)
             {
-                await _botFrameworkAdapter.CreateConversationAsync(
-                    userInfo.ChannelId,
-                    userInfo.ServiceUrl,
-                    new MicrosoftAppCredentials(_endpoint.AppId, _endpoint.AppPassword),
-                    new ConversationParameters(bot: userInfo.Bot, members: new List<ChannelAccount> { userInfo.User }, channelData: userInfo.ChannelData),
-                    DropOffReminderCallback(reminder.ReservationId, userInfo),
-                    cancellationToken);
-
-                // Same with an existing conversation
-                // var conversation = new ConversationReference(
-                //   null,
-                //   userInfo.User,
-                //   userInfo.Bot,
-                //   new ConversationAccount(null, null, userInfo.CurrentConversation.Conversation.Id, null, null, null),
-                //   userInfo.ChannelId,
-                //   userInfo.ServiceUrl);
-                // await _botFrameworkAdapter.ContinueConversationAsync(_endpoint.AppId, conversation, DropOffReminderCallback(), cancellationToken);
-            }
-            catch (ErrorResponseException e)
-            {
-                _telemetryClient.TrackException(e, new Dictionary<string, string>
+                try
                 {
-                    { "Error message", e.Message },
-                    { "Response body", e.Response.Content },
-                    { "Request body", e.Request.Content },
-                    { "Request uri", $"{e.Request.Method.ToString()} {e.Request.RequestUri.AbsoluteUri}" },
-                    { "Request headers", e.Request.Headers.ToJson() },
-                });
-            }
-            catch (Exception e)
-            {
-                _telemetryClient.TrackException(e);
+                    await _botFrameworkAdapter.CreateConversationAsync(
+                        userInfo.ChannelId,
+                        userInfo.ServiceUrl,
+                        new MicrosoftAppCredentials(_endpoint.AppId, _endpoint.AppPassword),
+                        new ConversationParameters(bot: userInfo.Bot, members: new List<ChannelAccount> { userInfo.User }, channelData: userInfo.ChannelData),
+                        DropOffReminderCallback(reminder.ReservationId, userInfo),
+                        cancellationToken);
+
+                    // Same with an existing conversation
+                    // var conversation = new ConversationReference(
+                    //   null,
+                    //   userInfo.User,
+                    //   userInfo.Bot,
+                    //   new ConversationAccount(null, null, userInfo.CurrentConversation.Conversation.Id, null, null, null),
+                    //   userInfo.ChannelId,
+                    //   userInfo.ServiceUrl);
+                    // await _botFrameworkAdapter.ContinueConversationAsync(_endpoint.AppId, conversation, DropOffReminderCallback(), cancellationToken);
+                }
+                catch (ErrorResponseException e)
+                {
+                    _telemetryClient.TrackException(
+                        e,
+                        new Dictionary<string, string>
+                        {
+                            { "Error message", e.Message },
+                            { "Response body", e.Response.Content },
+                            { "Request body", e.Request.Content },
+                            { "Request uri", $"{e.Request.Method.ToString()} {e.Request.RequestUri.AbsoluteUri}" },
+                            { "Request headers", e.Request.Headers.ToJson() },
+                        });
+                }
+                catch (Exception e)
+                {
+                    _telemetryClient.TrackException(e);
+                }
             }
 
             // Note: Use the cancellationToken passed as necessary to determine if the queueClient has already been closed.

@@ -8,11 +8,6 @@ namespace MSHU.CarWash.Bot.Proactive
     internal class UserInfoEntity : TableEntity
     {
         /// <summary>
-        /// Partition key (partitioning the table wouldn't be valuable).
-        /// </summary>
-        public const string Partition = "user";
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="UserInfoEntity"/> class.
         /// </summary>
         public UserInfoEntity()
@@ -31,9 +26,8 @@ namespace MSHU.CarWash.Bot.Proactive
         /// <param name="currentConversation">Reference to the current (last) converstaion of the user.</param>
         public UserInfoEntity(string carwashUserId, string channelId, string serviceUrl, ChannelAccount user, ChannelAccount bot = null, object channelData = null, ConversationReference currentConversation = null)
         {
-            PartitionKey = Partition;
-            RowKey = CarwashUserId = carwashUserId ?? throw new ArgumentNullException(nameof(carwashUserId));
-            ChannelId = channelId ?? throw new ArgumentNullException(nameof(channelId));
+            PartitionKey = CarwashUserId = carwashUserId ?? throw new ArgumentNullException(nameof(carwashUserId));
+            RowKey = ChannelId = channelId ?? throw new ArgumentNullException(nameof(channelId));
             ServiceUrl = serviceUrl ?? throw new ArgumentNullException(nameof(serviceUrl));
             if (user.Id == null) throw new ArgumentNullException(nameof(user.Id));
             User = user;

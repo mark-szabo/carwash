@@ -420,11 +420,6 @@
             This will trigger <see cref="M:MSHU.CarWash.Bot.Proactive.DropoffReminder.ProcessMessagesAsync(Microsoft.Azure.ServiceBus.Message,System.Threading.CancellationToken)"/> when a new message is inserted into the queue.
             </summary>
         </member>
-        <member name="F:MSHU.CarWash.Bot.Proactive.UserInfoEntity.Partition">
-            <summary>
-            Partition key (partitioning the table wouldn't be valuable).
-            </summary>
-        </member>
         <member name="M:MSHU.CarWash.Bot.Proactive.UserInfoEntity.#ctor">
             <summary>
             Initializes a new instance of the <see cref="T:MSHU.CarWash.Bot.Proactive.UserInfoEntity"/> class.
