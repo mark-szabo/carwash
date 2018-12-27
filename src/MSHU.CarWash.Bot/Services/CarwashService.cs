@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.Bot.Builder.Dialogs;
-using MSHU.CarWash.Bot.Dialogs.Auth;
+using MSHU.CarWash.Bot.Dialogs;
 using MSHU.CarWash.ClassLibrary.Enums;
 using MSHU.CarWash.ClassLibrary.Models;
 using Newtonsoft.Json;

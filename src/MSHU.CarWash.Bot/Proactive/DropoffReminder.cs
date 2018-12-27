@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -13,13 +13,12 @@ using Microsoft.Bot.Configuration;
 using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Bot.Schema;
 using Microsoft.WindowsAzure.Storage.Table;
-using MSHU.CarWash.Bot.Dialogs.FindReservation;
+using MSHU.CarWash.Bot.Dialogs;
 using MSHU.CarWash.Bot.Extensions;
 using MSHU.CarWash.Bot.States;
 using MSHU.CarWash.ClassLibrary.Extensions;
 using MSHU.CarWash.ClassLibrary.Models.ServiceBus;
 using Newtonsoft.Json;
-using static MSHU.CarWash.Bot.Dialogs.FindReservation.FindReservationDialog;
 
 namespace MSHU.CarWash.Bot.Proactive
 {
@@ -206,7 +205,7 @@ namespace MSHU.CarWash.Bot.Proactive
                     // Show them the reservation
                     await dc.BeginDialogAsync(
                         nameof(FindReservationDialog),
-                        new FindReservationDialogOptions { ReservationId = reservationId },
+                        new FindReservationDialog.FindReservationDialogOptions { ReservationId = reservationId },
                         cancellationToken: cancellationToken);
                 }
                 catch (Exception e)

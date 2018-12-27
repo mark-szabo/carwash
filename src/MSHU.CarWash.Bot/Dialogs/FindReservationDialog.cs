@@ -5,13 +5,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.Bot.Builder.Dialogs;
-using Microsoft.Bot.Schema;
-using MSHU.CarWash.Bot.Dialogs.Auth;
 using MSHU.CarWash.Bot.Resources;
 using MSHU.CarWash.Bot.Services;
 using MSHU.CarWash.ClassLibrary.Models;
 
-namespace MSHU.CarWash.Bot.Dialogs.FindReservation
+namespace MSHU.CarWash.Bot.Dialogs
 {
     /// <summary>
     /// Find reservation dialog.

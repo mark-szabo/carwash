@@ -11,13 +11,11 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
-using MSHU.CarWash.Bot.Dialogs.FindReservation;
 using MSHU.CarWash.Bot.Proactive;
 using MSHU.CarWash.Bot.Services;
 using MSHU.CarWash.Bot.States;
-using static MSHU.CarWash.Bot.Dialogs.FindReservation.FindReservationDialog;
 
-namespace MSHU.CarWash.Bot.Dialogs.Auth
+namespace MSHU.CarWash.Bot.Dialogs
 {
     /// <summary>
     /// User authentication.
@@ -155,7 +153,7 @@ namespace MSHU.CarWash.Bot.Dialogs.Auth
             // Display user's active reservations after login
             return await step.ReplaceDialogAsync(
                 nameof(FindReservationDialog),
-                new FindReservationDialogOptions { Token = tokenResponse.Token },
+                new FindReservationDialog.FindReservationDialogOptions { Token = tokenResponse.Token },
                 cancellationToken: cancellationToken);
         }
 

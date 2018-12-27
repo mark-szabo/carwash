@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using System;
@@ -19,13 +19,10 @@ using Microsoft.Recognizers.Text.DataTypes.TimexExpression;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using MSHU.CarWash.Bot.CognitiveModels;
-using MSHU.CarWash.Bot.Dialogs.Auth;
-using MSHU.CarWash.Bot.Dialogs.ConfirmDropoff;
-using MSHU.CarWash.Bot.Dialogs.FindReservation;
+using MSHU.CarWash.Bot.Dialogs;
 using MSHU.CarWash.Bot.States;
 using MSHU.CarWash.ClassLibrary.Enums;
 using Newtonsoft.Json;
-using static MSHU.CarWash.Bot.Dialogs.ConfirmDropoff.ConfirmDropoffDialog;
 
 namespace MSHU.CarWash.Bot
 {
@@ -154,7 +151,7 @@ namespace MSHU.CarWash.Bot
                                 case DropoffAction:
                                     await dc.BeginDialogAsync(
                                         nameof(ConfirmDropoffDialog),
-                                        new ConfirmDropoffDialogOptions { ReservationId = id },
+                                        new ConfirmDropoffDialog.ConfirmDropoffDialogOptions { ReservationId = id },
                                         cancellationToken: cancellationToken);
                                     break;
                                 case CancelAction:

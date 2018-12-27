@@ -1,7 +1,6 @@
 ﻿using System;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
-using MSHU.CarWash.Bot.Dialogs.ConfirmDropoff;
 
 namespace MSHU.CarWash.Bot.States
 {

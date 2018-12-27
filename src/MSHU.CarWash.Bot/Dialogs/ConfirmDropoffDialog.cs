@@ -9,14 +9,13 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
 using Microsoft.Bot.Schema;
-using MSHU.CarWash.Bot.Dialogs.Auth;
-using MSHU.CarWash.Bot.Dialogs.FindReservation;
 using MSHU.CarWash.Bot.Resources;
 using MSHU.CarWash.Bot.Services;
+using MSHU.CarWash.Bot.States;
 using MSHU.CarWash.ClassLibrary.Enums;
 using MSHU.CarWash.ClassLibrary.Models;
 
-namespace MSHU.CarWash.Bot.Dialogs.ConfirmDropoff
+namespace MSHU.CarWash.Bot.Dialogs
 {
     /// <summary>
     /// Reservation drop-off dialog.
