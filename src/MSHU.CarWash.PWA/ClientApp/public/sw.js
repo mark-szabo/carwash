@@ -16,7 +16,7 @@ workbox.core.setCacheNameDetails({
 // Don't forget to increase the revision number of index.html (aka. '/')
 // as it is needed to include the newly genereted js and css files.
 // Error would be thrown: Refused to execute script from '...' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled.
-const build = '2.0.34';
+const build = '2.0.35';
 console.log(`Build: ${build}`);
 workbox.precaching.precacheAndRoute([
     { url: '/', revision: build.replace(/\./g, '') },

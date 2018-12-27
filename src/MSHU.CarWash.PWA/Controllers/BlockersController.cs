@@ -97,8 +97,8 @@ namespace MSHU.CarWash.PWA.Controllers
             blocker.CreatedOn = DateTime.Now;
             if (blocker.EndDate == null) blocker.EndDate = new DateTime(blocker.StartDate.Year, blocker.StartDate.Month, blocker.StartDate.Day, 23, 59, 59);
 
-            if (blocker.EndDate <= blocker.StartDate)
-                return BadRequest("Blocker end time should be after the start time.");
+            if (blocker.EndDate.Value.Subtract(blocker.StartDate).TotalDays > 31) return BadRequest("Blocker cannot be longer than one month.");
+            if (blocker.EndDate <= blocker.StartDate) return BadRequest("Blocker end time should be after the start time.");
 
             // Check for overlapping blocker
             var overLappingBlockerCount = await _context.Blocker

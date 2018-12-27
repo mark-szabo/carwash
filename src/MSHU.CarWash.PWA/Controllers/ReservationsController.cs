@@ -964,12 +964,11 @@ namespace MSHU.CarWash.PWA.Controllers
             // Current milestone to be fixed is EF 3.0.0
             var queryResult = await _context.Reservation
                 .Where(r => r.EndDate >= DateTime.Now && r.StartDate <= DateTime.Now.AddDays(daysAhead))
-                .Include(r => r.User)
                 .Where(r => r.User.Company == _user.Company)
                 .GroupBy(r => r.StartDate.Date)
                 .Select(g => new
                 {
-                    g.Key.Date,
+                    Date = g.Key,
                     TimeSum = g.Sum(r => r.TimeRequirement)
                 })
                 .Where(d => d.TimeSum >= userCompanyLimit * TimeUnit)
