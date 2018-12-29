@@ -36,5 +36,13 @@
         /// (Optional) <see cref="ClassLibrary.Models.Reservation"/> location (seat).
         /// </value>
         public string Seat { get; set; }
+
+        /// <summary>
+        /// Gets the reservation location.
+        /// </summary>
+        /// <value>
+        /// A concatenation of the building, floor and seat separated by '/'.
+        /// </value>
+        public string Location { get => $"{Building}/{Floor}/{Seat}"; }
     }
 }

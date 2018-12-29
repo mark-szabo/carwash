@@ -299,7 +299,7 @@ namespace MSHU.CarWash.Bot.Dialogs
                 var api = new CarwashService(step, cancellationToken);
 
                 // Confirm key drop-off and location
-                await api.ConfirmDropoffAsync(state.ReservationId, $"{state.Building}/{state.Floor}/{state.Seat}", cancellationToken);
+                await api.ConfirmDropoffAsync(state.ReservationId, state.Location, cancellationToken);
 
                 // Get reservation object for displaying
                 reservation = await api.GetReservationAsync(state.ReservationId, cancellationToken);
