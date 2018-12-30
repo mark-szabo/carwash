@@ -278,11 +278,12 @@
             Initializes a new instance of the <see cref="T:MSHU.CarWash.Bot.Dialogs.FindReservationDialog"/> class.
             </summary>
         </member>
-        <member name="M:MSHU.CarWash.Bot.Dialogs.FindReservationDialog.DisplayReservationsStepAsync(Microsoft.Bot.Builder.Dialogs.WaterfallStepContext,System.Threading.CancellationToken)">
+        <member name="M:MSHU.CarWash.Bot.Dialogs.FindReservationDialog.BeginDialogAsync(Microsoft.Bot.Builder.Dialogs.DialogContext,System.Object,System.Threading.CancellationToken)">
             <summary>
-            Fetch the token and display it for the user if they asked to see it.
+            Load reservation (or one reservation if reservation id is specified in the options) and displays it on a card.
             </summary>
-            <param name="step">A <see cref="T:Microsoft.Bot.Builder.Dialogs.WaterfallStepContext"/> provides context for the current waterfall step.</param>
+            <param name="dc">A <see cref="T:Microsoft.Bot.Builder.Dialogs.DialogContext"/> provides context for the dialog.</param>
+            <param name="options">(Optional) A <see cref="T:MSHU.CarWash.Bot.Dialogs.FindReservationDialog.FindReservationDialogOptions"/> object storing the input options.</param>
             <param name="cancellationToken" >(Optional) A <see cref="T:System.Threading.CancellationToken"/> that can be used by other objects
             or threads to receive notice of cancellation.</param>
             <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the operation result of the operation.</returns>

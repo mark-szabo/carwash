@@ -15,11 +15,8 @@ namespace MSHU.CarWash.Bot.Dialogs
     /// <summary>
     /// Find reservation dialog.
     /// </summary>
-    public class FindReservationDialog : ComponentDialog
+    public class FindReservationDialog : Dialog
     {
-        // Dialogs
-        private const string Name = "findReservation";
-
         private readonly TelemetryClient _telemetryClient;
 
         /// <summary>
@@ -28,38 +25,31 @@ namespace MSHU.CarWash.Bot.Dialogs
         public FindReservationDialog() : base(nameof(FindReservationDialog))
         {
             _telemetryClient = new TelemetryClient();
-
-            var dialogSteps = new WaterfallStep[]
-            {
-                DisplayReservationsStepAsync,
-            };
-
-            AddDialog(new WaterfallDialog(Name, dialogSteps));
-            AddDialog(AuthDialog.LoginPromptDialog());
         }
 
         /// <summary>
-        /// Fetch the token and display it for the user if they asked to see it.
+        /// Load reservation (or one reservation if reservation id is specified in the options) and displays it on a card.
         /// </summary>
-        /// <param name="step">A <see cref="WaterfallStepContext"/> provides context for the current waterfall step.</param>
+        /// <param name="dc">A <see cref="DialogContext"/> provides context for the dialog.</param>
+        /// <param name="options">(Optional) A <see cref="FindReservationDialogOptions"/> object storing the input options.</param>
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
         /// <returns>A <see cref="Task"/> representing the operation result of the operation.</returns>
-        private async Task<DialogTurnResult> DisplayReservationsStepAsync(WaterfallStepContext step, CancellationToken cancellationToken = default(CancellationToken))
+        public override async Task<DialogTurnResult> BeginDialogAsync(DialogContext dc, object options = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             var reservations = new List<Reservation>();
             var activities = new List<IActivity>();
 
             try
             {
-                var options = step.Options as FindReservationDialogOptions ?? new FindReservationDialogOptions();
+                var o = options as FindReservationDialogOptions ?? new FindReservationDialogOptions();
 
-                var api = options.Token != null ? new CarwashService(options.Token) : new CarwashService(step, cancellationToken);
+                var api = o.Token != null ? new CarwashService(o.Token) : new CarwashService(dc, cancellationToken);
 
-                if (options.ReservationId != null)
+                if (o.ReservationId != null)
                 {
                     // Reservation id was predefined -> dialog was started from eg. DropoffReminder
-                    reservations.Add(await api.GetReservationAsync(options.ReservationId, cancellationToken));
+                    reservations.Add(await api.GetReservationAsync(o.ReservationId, cancellationToken));
                 }
                 else
                 {
@@ -69,8 +59,8 @@ namespace MSHU.CarWash.Bot.Dialogs
                     switch (reservations.Count)
                     {
                         case 0:
-                            await step.Context.SendActivityAsync("No pending reservations. Get started by making a new reservation!", cancellationToken: cancellationToken);
-                            return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                            await dc.Context.SendActivityAsync("No pending reservations. Get started by making a new reservation!", cancellationToken: cancellationToken);
+                            return await dc.EndDialogAsync(cancellationToken: cancellationToken);
                         case 1:
                             activities.Add(new Activity(type: ActivityTypes.Message, text: "I have found one active reservation!"));
                             break;
@@ -82,31 +72,31 @@ namespace MSHU.CarWash.Bot.Dialogs
             }
             catch (AuthenticationException)
             {
-                await step.Context.SendActivityAsync("You have to be authenticated.", cancellationToken: cancellationToken);
+                await dc.Context.SendActivityAsync("You have to be authenticated.", cancellationToken: cancellationToken);
 
-                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                return await dc.EndDialogAsync(cancellationToken: cancellationToken);
             }
             catch (Exception e)
             {
                 _telemetryClient.TrackException(e);
-                await step.Context.SendActivityAsync("I am not able to access your reservations right now.", cancellationToken: cancellationToken);
+                await dc.Context.SendActivityAsync("I am not able to access your reservations right now.", cancellationToken: cancellationToken);
 
-                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                return await dc.EndDialogAsync(cancellationToken: cancellationToken);
             }
 
             foreach (var reservation in reservations)
             {
                 var card = new ReservationCard(reservation);
 
-                var response = step.Context.Activity.CreateReply();
+                var response = dc.Context.Activity.CreateReply();
                 response.Attachments = card.ToAttachmentList();
 
                 activities.Add(response);
             }
 
-            await step.Context.SendActivitiesAsync(activities.ToArray(), cancellationToken);
+            await dc.Context.SendActivitiesAsync(activities.ToArray(), cancellationToken);
 
-            return await step.EndDialogAsync(cancellationToken: cancellationToken);
+            return await dc.EndDialogAsync(cancellationToken: cancellationToken);
         }
 
         /// <summary>
