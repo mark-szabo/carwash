@@ -111,6 +111,17 @@ namespace MSHU.CarWash.Bot.Services
         }
 
         /// <summary>
+        /// Get some settings from the last reservation made by the user to be used as defaults for a new reservation.
+        /// </summary>
+        /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
+        /// or threads to receive notice of cancellation.</param>
+        /// <returns>Reservation object.</returns>
+        public async Task<Reservation> GetLastSettingsAsync(CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return await GetAsync<Reservation>("/api/reservations/lastsettings", cancellationToken);
+        }
+
+        /// <summary>
         /// Makes a GET request to the api endpoint specified in the parameter and returns the parsed response.
         /// </summary>
         /// <typeparam name="T">Type the API response should be parsed to.</typeparam>

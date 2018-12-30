@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.Recognizers.Text.DataTypes.TimexExpression;
 using MSHU.CarWash.ClassLibrary.Enums;
 
 namespace MSHU.CarWash.Bot.States
@@ -23,7 +24,7 @@ namespace MSHU.CarWash.Bot.States
         /// <value>
         /// List of <see cref="ServiceType"/>s.
         /// </value>
-        public List<ServiceType> Services { get; set; }
+        public List<ServiceType> Services { get; set; } = new List<ServiceType>();
 
         /// <summary>
         /// Gets or sets a value indicating whether the reservation is private.
@@ -40,6 +41,14 @@ namespace MSHU.CarWash.Bot.States
         /// <see cref="ClassLibrary.Models.Reservation"/> start date and time.
         /// </value>
         public DateTime StartDate { get; set; }
+
+        /// <summary>
+        /// Gets or sets the reservation start date and time in a Timex object.
+        /// </summary>
+        /// <value>
+        /// <see cref="ClassLibrary.Models.Reservation"/> start date and time Timex object.
+        /// </value>
+        public TimexProperty Timex { get; set; }
 
         /// <summary>
         /// Gets or sets the reservation comment.

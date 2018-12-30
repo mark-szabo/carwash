@@ -22,6 +22,7 @@ namespace MSHU.CarWash.Bot.States
 
             UserProfileAccessor = userState.CreateProperty<UserProfile>(nameof(UserProfile));
             DialogStateAccessor = conversationState.CreateProperty<DialogState>(nameof(DialogState));
+            NewReservationStateAccessor = conversationState.CreateProperty<NewReservationState>(nameof(NewReservationState));
             ConfirmDropoffStateAccessor = conversationState.CreateProperty<ConfirmDropoffState>(nameof(ConfirmDropoffState));
         }
 
@@ -40,6 +41,14 @@ namespace MSHU.CarWash.Bot.States
         /// The accessor stores the dialog state for the conversation.
         /// </value>
         public IStatePropertyAccessor<DialogState> DialogStateAccessor { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IStatePropertyAccessor{T}"/> for NewReservationState.
+        /// </summary>
+        /// <value>
+        /// The accessor stores the dialog state for the NewReservation dialog.
+        /// </value>
+        public IStatePropertyAccessor<NewReservationState> NewReservationStateAccessor { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IStatePropertyAccessor{T}"/> for ConfirmDropoffState.

@@ -44,7 +44,7 @@
                   "maxLines": 1
                 }
               ],
-              "width": "auto"
+              "width": "stretch"
             }
           ]
         },

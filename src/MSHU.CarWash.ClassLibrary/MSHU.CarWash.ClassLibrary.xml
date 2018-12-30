@@ -88,6 +88,121 @@
             </summary>
             <returns>WebPush subscription</returns>
         </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Models.Reservation">
+            <summary>
+            Reservation model.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.Id">
+            <summary>
+            Gets or sets the reservation id.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.UserId">
+            <summary>
+            Gets or sets the reservation user id.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.User">
+            <summary>
+            Gets or sets the virtual user object for the reservation.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.VehiclePlateNumber">
+            <summary>
+            Gets or sets the reservation vehicle plate number.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.Location">
+            <summary>
+            Gets or sets the reservation location.
+            </summary>
+            <value>
+            A concatenation of the building, floor and seat separated by '/'.
+            </value>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.State">
+            <summary>
+            Gets or sets the reservation state.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.Services">
+            <summary>
+            Gets or sets the reservation services.
+            </summary>
+            <value>
+            List of <see cref="T:MSHU.CarWash.ClassLibrary.Enums.ServiceType"/>s deserialized from <see cref="P:MSHU.CarWash.ClassLibrary.Models.Reservation.ServicesJson"/>.
+            </value>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.ServicesJson">
+            <summary>
+            Gets or sets the reservation services serialized in JSON.
+            </summary>
+            <value>
+            List of <see cref="T:MSHU.CarWash.ClassLibrary.Enums.ServiceType"/>s serialized in JSON.
+            </value>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.Private">
+            <summary>
+            Gets or sets a value indicating whether the reservation is private.
+            </summary>
+            <value>
+            A boolean indicating whether the reservation is private.
+            </value>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.Mpv">
+            <summary>
+            Gets or sets a value indicating whether the car is an MPV.
+            </summary>
+            <value>
+            A boolean indicating whether the car is an MPV.
+            </value>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.TimeRequirement">
+            <summary>
+            Gets or sets the time requirement of the reservation.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.StartDate">
+            <summary>
+            Gets or sets the reservation start date and time.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.EndDate">
+            <summary>
+            (Optional) Gets or sets the reservation end date and time.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.Comment">
+            <summary>
+            Gets or sets the reservation comment.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.CarwashComment">
+            <summary>
+            Gets or sets the comment from the carwash.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.CreatedById">
+            <summary>
+            Gets or sets the user id of the reservation creator.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.CreatedOn">
+            <summary>
+            Gets or sets the date and time whenthe reservation was created.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.OutlookEventId">
+            <summary>
+            Gets or sets Outlook's even id of the reservation.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.Price">
+            <summary>
+            Gets reservation's costs.
+            </summary>
+        </member>
         <member name="T:MSHU.CarWash.ClassLibrary.Services.IPushService">
             <summary>
             Defines a service to manage Push subscriptions and send Push notifications

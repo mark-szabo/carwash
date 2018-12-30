@@ -308,6 +308,39 @@
             <see cref="T:MSHU.CarWash.ClassLibrary.Models.Reservation"/> id.
             </value>
         </member>
+        <member name="T:MSHU.CarWash.Bot.Dialogs.NewReservationDialog">
+            <summary>
+            New reservation dialog.
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.Bot.Dialogs.NewReservationDialog.#ctor(Microsoft.Bot.Builder.IStatePropertyAccessor{MSHU.CarWash.Bot.States.NewReservationState})">
+            <summary>
+            Initializes a new instance of the <see cref="T:MSHU.CarWash.Bot.Dialogs.NewReservationDialog"/> class.
+            </summary>
+            <param name="stateAccessor">The <see cref="T:Microsoft.Bot.Builder.ConversationState"/> for storing properties at conversation-scope.</param>
+        </member>
+        <member name="M:MSHU.CarWash.Bot.Dialogs.NewReservationDialog.ValidateServices(Microsoft.Bot.Builder.Dialogs.PromptValidatorContext{System.String},System.Threading.CancellationToken)">
+            <summary>
+            Validator function to verify if at least one service was choosen.
+            </summary>
+            <param name="promptContext">Context for this prompt.</param>
+            <param name="cancellationToken">A <see cref="T:System.Threading.CancellationToken"/> that can be used by other objects
+            or threads to receive notice of cancellation.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the work queued to execute.</returns>
+        </member>
+        <member name="T:MSHU.CarWash.Bot.Dialogs.NewReservationDialog.NewReservationDialogOptions">
+            <summary>
+            Options param type for <see cref="T:MSHU.CarWash.Bot.Dialogs.NewReservationDialog"/>.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.Bot.Dialogs.NewReservationDialog.NewReservationDialogOptions.LuisEntities">
+            <summary>
+            Gets or sets the LUIS entities.
+            </summary>
+            <value>
+            List of LUIS entities.
+            </value>
+        </member>
         <member name="T:MSHU.CarWash.Bot.GreetingDialog">
             <summary>
             Demonstrates the following concepts:
@@ -493,9 +526,32 @@
             Reference to the current (last) converstaion of the user.
             </value>
         </member>
+        <member name="T:MSHU.CarWash.Bot.Resources.Card">
+            <summary>
+            Adaptive card for displaying something in a chat visually.
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.Bot.Resources.Card.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:MSHU.CarWash.Bot.Resources.Card"/> class.
+            </summary>
+            <param name="path">Path to the card's json file.</param>
+        </member>
+        <member name="M:MSHU.CarWash.Bot.Resources.Card.ToAttachment">
+            <summary>
+            Converts the card to an attachment.
+            </summary>
+            <returns>An attachment containing the card.</returns>
+        </member>
+        <member name="M:MSHU.CarWash.Bot.Resources.Card.ToAttachmentList">
+            <summary>
+            Converts the card to an attachment and places it into new a list of attachments.
+            </summary>
+            <returns>A list of attachments containing the only one card.</returns>
+        </member>
         <member name="T:MSHU.CarWash.Bot.Resources.ReservationCard">
             <summary>
-            Reservation adaptive card for displaying a reservation in a chat visally.
+            Reservation adaptive card for displaying a reservation in a chat visually.
             </summary>
         </member>
         <member name="M:MSHU.CarWash.Bot.Resources.ReservationCard.#ctor(MSHU.CarWash.ClassLibrary.Models.Reservation)">
@@ -503,18 +559,6 @@
             Initializes a new instance of the <see cref="T:MSHU.CarWash.Bot.Resources.ReservationCard"/> class.
             </summary>
             <param name="reservation">The reservation to be rendered tha card based upon.</param>
-        </member>
-        <member name="M:MSHU.CarWash.Bot.Resources.ReservationCard.ToAttachment">
-            <summary>
-            Converts the card to an attachment.
-            </summary>
-            <returns>An attachment containing the card.</returns>
-        </member>
-        <member name="M:MSHU.CarWash.Bot.Resources.ReservationCard.ToAttachmentList">
-            <summary>
-            Converts the card to an attachment and places it into new a list of attachments.
-            </summary>
-            <returns>A list of attachments containing the one reservation card.</returns>
         </member>
         <member name="T:MSHU.CarWash.Bot.Resources.ReservationCarousel">
             <summary>
@@ -532,6 +576,16 @@
             Converts the list of cards to a list of attachments.
             </summary>
             <returns>A list of attachments containing the cards.</returns>
+        </member>
+        <member name="T:MSHU.CarWash.Bot.Resources.ServiceSelectionCard">
+            <summary>
+            Adaptive card for reservation service selection (multiple-choice).
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.Bot.Resources.ServiceSelectionCard.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:MSHU.CarWash.Bot.Resources.ServiceSelectionCard"/> class.
+            </summary>
         </member>
         <member name="T:MSHU.CarWash.Bot.Services.CarwashService">
             <summary>
@@ -588,6 +642,14 @@
             <param name="cancellationToken" >(Optional) A <see cref="T:System.Threading.CancellationToken"/> that can be used by other objects
             or threads to receive notice of cancellation.</param>
             <returns>Void.</returns>
+        </member>
+        <member name="M:MSHU.CarWash.Bot.Services.CarwashService.GetLastSettingsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Get some settings from the last reservation made by the user to be used as defaults for a new reservation.
+            </summary>
+            <param name="cancellationToken" >(Optional) A <see cref="T:System.Threading.CancellationToken"/> that can be used by other objects
+            or threads to receive notice of cancellation.</param>
+            <returns>Reservation object.</returns>
         </member>
         <member name="M:MSHU.CarWash.Bot.Services.CarwashService.GetAsync``1(System.String,System.Threading.CancellationToken)">
             <summary>
@@ -682,6 +744,67 @@
             (Optional) <see cref="T:MSHU.CarWash.ClassLibrary.Models.Reservation"/> location (seat).
             </value>
         </member>
+        <member name="P:MSHU.CarWash.Bot.States.ConfirmDropoffState.Location">
+            <summary>
+            Gets the reservation location.
+            </summary>
+            <value>
+            A concatenation of the building, floor and seat separated by '/'.
+            </value>
+        </member>
+        <member name="T:MSHU.CarWash.Bot.States.NewReservationState">
+            <summary>
+            State properties ('conversation' scope) for making a new reservation.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.Bot.States.NewReservationState.VehiclePlateNumber">
+            <summary>
+            Gets or sets the reservation vehicle plate number.
+            </summary>
+            <value>
+            <see cref="T:MSHU.CarWash.ClassLibrary.Models.Reservation"/> vehicle plate number.
+            </value>
+        </member>
+        <member name="P:MSHU.CarWash.Bot.States.NewReservationState.Services">
+            <summary>
+            Gets or sets the reservation services.
+            </summary>
+            <value>
+            List of <see cref="T:MSHU.CarWash.ClassLibrary.Enums.ServiceType"/>s.
+            </value>
+        </member>
+        <member name="P:MSHU.CarWash.Bot.States.NewReservationState.Private">
+            <summary>
+            Gets or sets a value indicating whether the reservation is private.
+            </summary>
+            <value>
+            A boolean indicating whether the <see cref="T:MSHU.CarWash.ClassLibrary.Models.Reservation"/> is private.
+            </value>
+        </member>
+        <member name="P:MSHU.CarWash.Bot.States.NewReservationState.StartDate">
+            <summary>
+            Gets or sets the reservation start date and time.
+            </summary>
+            <value>
+            <see cref="T:MSHU.CarWash.ClassLibrary.Models.Reservation"/> start date and time.
+            </value>
+        </member>
+        <member name="P:MSHU.CarWash.Bot.States.NewReservationState.Timex">
+            <summary>
+            Gets or sets the reservation start date and time in a Timex object.
+            </summary>
+            <value>
+            <see cref="T:MSHU.CarWash.ClassLibrary.Models.Reservation"/> start date and time Timex object.
+            </value>
+        </member>
+        <member name="P:MSHU.CarWash.Bot.States.NewReservationState.Comment">
+            <summary>
+            Gets or sets the reservation comment.
+            </summary>
+            <value>
+            <see cref="T:MSHU.CarWash.ClassLibrary.Models.Reservation"/> comment.
+            </value>
+        </member>
         <member name="T:MSHU.CarWash.Bot.States.StateAccessors">
             <summary>
             This class is created as a Singleton and passed into the IBot-derived constructor.
@@ -709,6 +832,14 @@
             </summary>
             <value>
             The accessor stores the dialog state for the conversation.
+            </value>
+        </member>
+        <member name="P:MSHU.CarWash.Bot.States.StateAccessors.NewReservationStateAccessor">
+            <summary>
+            Gets or sets the <see cref="T:Microsoft.Bot.Builder.IStatePropertyAccessor`1"/> for NewReservationState.
+            </summary>
+            <value>
+            The accessor stores the dialog state for the NewReservation dialog.
             </value>
         </member>
         <member name="P:MSHU.CarWash.Bot.States.StateAccessors.ConfirmDropoffStateAccessor">

@@ -117,6 +117,7 @@ namespace MSHU.CarWash.Bot
             _storage = services.StorageServices[StorageConfiguration];
 
             Dialogs = new DialogSet(_accessors.DialogStateAccessor);
+            Dialogs.Add(new NewReservationDialog(_accessors.NewReservationStateAccessor));
             Dialogs.Add(new ConfirmDropoffDialog(_accessors.ConfirmDropoffStateAccessor));
             Dialogs.Add(new FindReservationDialog());
             Dialogs.Add(new AuthDialog(accessors.UserProfileAccessor, _storage));
@@ -163,6 +164,8 @@ namespace MSHU.CarWash.Bot
                                     break;
                             }
 
+                            // Continue the current dialog
+                            await dc.ContinueDialogAsync(cancellationToken);
                             break;
                         }
 
@@ -223,7 +226,10 @@ namespace MSHU.CarWash.Bot
                                     switch (intent)
                                     {
                                         case NewReservationIntent:
-                                            await turnContext.SendActivityAsync("This feature is not yet implemented. Check back after christmas! 😉", cancellationToken: cancellationToken);
+                                            await dc.BeginDialogAsync(
+                                                nameof(NewReservationDialog),
+                                                new NewReservationDialog.NewReservationDialogOptions { LuisEntities = entities },
+                                                cancellationToken);
                                             break;
 
                                         case EditReservationIntent:
