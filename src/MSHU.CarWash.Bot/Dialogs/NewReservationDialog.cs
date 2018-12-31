@@ -103,8 +103,7 @@ namespace MSHU.CarWash.Bot.Dialogs
                 {
                     var api = new CarwashService(step, cancellationToken);
 
-                    var lastSettings = await api.GetLastSettingsAsync(cancellationToken);
-                    state.VehiclePlateNumber = lastSettings.VehiclePlateNumber;
+                    state.LastSettings = await api.GetLastSettingsAsync(cancellationToken);
                 }
                 catch (AuthenticationException)
                 {
@@ -133,21 +132,18 @@ namespace MSHU.CarWash.Bot.Dialogs
             if (state.Services.Count > 0) return await step.NextAsync(cancellationToken: cancellationToken);
 
             var response = step.Context.Activity.CreateReply();
-            response.Attachments = new ServiceSelectionCard().ToAttachmentList();
+            response.Attachments = new ServiceSelectionCard(state.LastSettings).ToAttachmentList();
 
             var activities = new IActivity[]
             {
                 new Activity(type: ActivityTypes.Message, text: "Please select from these services!"),
                 response,
             };
-
             await step.Context.SendActivitiesAsync(activities, cancellationToken);
 
             return await step.PromptAsync(
                 ServicesPromptName,
-                new PromptOptions
-                {
-                },
+                new PromptOptions { },
                 cancellationToken);
         }
 
@@ -188,7 +184,7 @@ namespace MSHU.CarWash.Bot.Dialogs
 
         private List<ServiceType> ParseServiceSelectionCardResponse(Activity activity)
         {
-            var servicesStringArray = JObject.FromObject(activity.Value)?["services"].ToString()?.Split(',');
+            var servicesStringArray = JObject.FromObject(activity.Value)?["services"]?.ToString()?.Split(',');
             var services = new List<ServiceType>();
             if (servicesStringArray == null) return services;
             foreach (var service in servicesStringArray)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Recognizers.Text.DataTypes.TimexExpression;
+using MSHU.CarWash.Bot.Services;
 using MSHU.CarWash.ClassLibrary.Enums;
 
 namespace MSHU.CarWash.Bot.States
@@ -57,5 +58,13 @@ namespace MSHU.CarWash.Bot.States
         /// <see cref="ClassLibrary.Models.Reservation"/> comment.
         /// </value>
         public string Comment { get; set; }
+
+        /// <summary>
+        /// Gets or sets the last reservation settings.
+        /// </summary>
+        /// <value>
+        /// LastSettings object.
+        /// </value>
+        internal CarwashService.LastSettings LastSettings { get; set; }
     }
 }

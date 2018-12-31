@@ -583,10 +583,11 @@
             Adaptive card for reservation service selection (multiple-choice).
             </summary>
         </member>
-        <member name="M:MSHU.CarWash.Bot.Resources.ServiceSelectionCard.#ctor">
+        <member name="M:MSHU.CarWash.Bot.Resources.ServiceSelectionCard.#ctor(MSHU.CarWash.Bot.Services.CarwashService.LastSettings)">
             <summary>
             Initializes a new instance of the <see cref="T:MSHU.CarWash.Bot.Resources.ServiceSelectionCard"/> class.
             </summary>
+            <param name="lastSettings">Last reservation settings.</param>
         </member>
         <member name="T:MSHU.CarWash.Bot.Services.CarwashService">
             <summary>
@@ -650,7 +651,15 @@
             </summary>
             <param name="cancellationToken" >(Optional) A <see cref="T:System.Threading.CancellationToken"/> that can be used by other objects
             or threads to receive notice of cancellation.</param>
-            <returns>Reservation object.</returns>
+            <returns>LastSettings object.</returns>
+        </member>
+        <member name="M:MSHU.CarWash.Bot.Services.CarwashService.GetNotAvailableDatesAndTimesAsync(System.Threading.CancellationToken)">
+            <summary>
+            Get the list of future dates that are not available.
+            </summary>
+            <param name="cancellationToken" >(Optional) A <see cref="T:System.Threading.CancellationToken"/> that can be used by other objects
+            or threads to receive notice of cancellation.</param>
+            <returns>NotAvailableDatesAndTimes object.</returns>
         </member>
         <member name="M:MSHU.CarWash.Bot.Services.CarwashService.GetAsync``1(System.String,System.Threading.CancellationToken)">
             <summary>
@@ -804,6 +813,14 @@
             </summary>
             <value>
             <see cref="T:MSHU.CarWash.ClassLibrary.Models.Reservation"/> comment.
+            </value>
+        </member>
+        <member name="P:MSHU.CarWash.Bot.States.NewReservationState.LastSettings">
+            <summary>
+            Gets or sets the last reservation settings.
+            </summary>
+            <value>
+            LastSettings object.
             </value>
         </member>
         <member name="T:MSHU.CarWash.Bot.States.StateAccessors">

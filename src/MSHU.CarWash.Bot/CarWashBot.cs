@@ -147,7 +147,7 @@ namespace MSHU.CarWash.Bot
                 case ActivityTypes.Message:
                     {
                         // This bot is not case sensitive.
-                        var text = turnContext.Activity.Text?.Trim().ToLowerInvariant();
+                        var text = turnContext.Activity.Text?.Trim()?.ToLowerInvariant();
 
                         if (text == null)
                         {
@@ -163,7 +163,7 @@ namespace MSHU.CarWash.Bot
                                         cancellationToken: cancellationToken);
                                     break;
                                 case CancelAction:
-                                    await turnContext.SendActivityAsync("This feature is not yet implemented. Check back after christmas! 😉", cancellationToken: cancellationToken);
+                                    await turnContext.SendActivityAsync("This feature is not yet implemented. Check back in a few days! 😉", cancellationToken: cancellationToken);
                                     break;
                             }
 
@@ -250,7 +250,7 @@ namespace MSHU.CarWash.Bot
                                             break;
 
                                         case CancelReservationIntent:
-                                            await turnContext.SendActivityAsync("This feature is not yet implemented. Check back after christmas! 😉", cancellationToken: cancellationToken);
+                                            await turnContext.SendActivityAsync("This feature is not yet implemented. Check back in a few days! 😉", cancellationToken: cancellationToken);
                                             break;
 
                                         case FindReservationIntent:
@@ -258,7 +258,7 @@ namespace MSHU.CarWash.Bot
                                             break;
 
                                         case NextFreeSlotIntent:
-                                            await turnContext.SendActivityAsync("This feature is not yet implemented. Check back after christmas! 😉", cancellationToken: cancellationToken);
+                                            await turnContext.SendActivityAsync("This feature is not yet implemented. Check back in a few days! 😉", cancellationToken: cancellationToken);
                                             break;
 
                                         case WeatherIntent:

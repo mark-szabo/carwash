@@ -18,6 +18,7 @@
       "type": "Input.ChoiceSet",
       "id": "services",
       "spacing": "Small",
+      "value": "",
       "choices": [
         {
           "title": "exterior",

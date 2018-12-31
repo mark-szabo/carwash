@@ -19,7 +19,7 @@ namespace MSHU.CarWash.Bot.Services
     /// <summary>
     /// CarWash Service for accessing the CarWash API.
     /// </summary>
-    public class CarwashService
+    internal class CarwashService
     {
         private readonly HttpClient _client;
         private readonly TelemetryClient _telemetryClient;
@@ -29,7 +29,7 @@ namespace MSHU.CarWash.Bot.Services
         /// CarWash Service for accessing the CarWash API.
         /// </summary>
         /// <param name="token">Authentication token.</param>
-        public CarwashService(string token)
+        internal CarwashService(string token)
         {
             if (string.IsNullOrEmpty(token)) throw new AuthenticationException("Not authenticated.");
 
@@ -47,7 +47,7 @@ namespace MSHU.CarWash.Bot.Services
         /// <param name="dc">Dialog context.</param>
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
-        public CarwashService(DialogContext dc, CancellationToken cancellationToken = default(CancellationToken))
+        internal CarwashService(DialogContext dc, CancellationToken cancellationToken = default(CancellationToken))
         {
             var token = AuthDialog.GetToken(dc, cancellationToken).GetAwaiter().GetResult();
             if (string.IsNullOrEmpty(token)) throw new AuthenticationException("Not authenticated.");
@@ -63,7 +63,7 @@ namespace MSHU.CarWash.Bot.Services
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
         /// <returns>The currently signed in user.</returns>
-        public async Task<User> GetMe(CancellationToken cancellationToken = default(CancellationToken))
+        internal async Task<User> GetMe(CancellationToken cancellationToken = default(CancellationToken))
         {
             return await GetAsync<User>("/api/users/me", cancellationToken);
         }
@@ -74,7 +74,7 @@ namespace MSHU.CarWash.Bot.Services
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
         /// <returns>List of active reservations.</returns>
-        public async Task<List<Reservation>> GetMyActiveReservationsAsync(CancellationToken cancellationToken = default(CancellationToken))
+        internal async Task<List<Reservation>> GetMyActiveReservationsAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             var reservations = await GetAsync<List<Reservation>>("/api/reservations", cancellationToken);
 
@@ -91,7 +91,7 @@ namespace MSHU.CarWash.Bot.Services
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
         /// <returns>Reservation object.</returns>
-        public async Task<Reservation> GetReservationAsync(string id, CancellationToken cancellationToken = default(CancellationToken))
+        internal async Task<Reservation> GetReservationAsync(string id, CancellationToken cancellationToken = default(CancellationToken))
         {
             return await GetAsync<Reservation>($"/api/reservations/{id}", cancellationToken);
         }
@@ -104,7 +104,7 @@ namespace MSHU.CarWash.Bot.Services
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
         /// <returns>Void.</returns>
-        public async Task ConfirmDropoffAsync(string id, string location, CancellationToken cancellationToken = default(CancellationToken))
+        internal async Task ConfirmDropoffAsync(string id, string location, CancellationToken cancellationToken = default(CancellationToken))
         {
             var content = new StringContent(JsonConvert.SerializeObject(location), Encoding.UTF8, "application/json");
             await PostAsync<object>($"/api/reservations/{id}/confirmdropoff", content, cancellationToken);
@@ -115,10 +115,21 @@ namespace MSHU.CarWash.Bot.Services
         /// </summary>
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
-        /// <returns>Reservation object.</returns>
-        public async Task<Reservation> GetLastSettingsAsync(CancellationToken cancellationToken = default(CancellationToken))
+        /// <returns>LastSettings object.</returns>
+        internal async Task<LastSettings> GetLastSettingsAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            return await GetAsync<Reservation>("/api/reservations/lastsettings", cancellationToken);
+            return await GetAsync<LastSettings>("/api/reservations/lastsettings", cancellationToken);
+        }
+
+        /// <summary>
+        /// Get the list of future dates that are not available.
+        /// </summary>
+        /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
+        /// or threads to receive notice of cancellation.</param>
+        /// <returns>NotAvailableDatesAndTimes object.</returns>
+        internal async Task<NotAvailableDatesAndTimes> GetNotAvailableDatesAndTimesAsync(CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return await GetAsync<NotAvailableDatesAndTimes>("/api/reservations/notavailabledates", cancellationToken);
         }
 
         /// <summary>
@@ -184,6 +195,26 @@ namespace MSHU.CarWash.Bot.Services
 
                 throw new Exception($"An error occured while communicating with the CarWash API: {e.Message} See inner exception.", e);
             }
+        }
+
+        /*
+         * API response models
+         */
+
+        internal class NotAvailableDatesAndTimes
+        {
+            public IEnumerable<DateTime> Dates { get; set; }
+
+            public IEnumerable<DateTime> Times { get; set; }
+        }
+
+        internal class LastSettings
+        {
+            public string VehiclePlateNumber { get; set; }
+
+            public string Location { get; set; }
+
+            public List<ServiceType> Services { get; set; }
         }
     }
 }
