@@ -1070,7 +1070,8 @@ namespace MSHU.CarWash.PWA.Controllers
             return Ok(new LastSettingsViewModel
             {
                 VehiclePlateNumber = lastReservation.VehiclePlateNumber,
-                Location = lastReservation.Location
+                Location = lastReservation.Location,
+                Services = lastReservation.Services
             });
         }
 
@@ -1562,6 +1563,7 @@ namespace MSHU.CarWash.PWA.Controllers
     {
         public string VehiclePlateNumber { get; set; }
         public string Location { get; set; }
+        public List<ServiceType> Services { get; set; }
     }
 
     public class ReservationPercentageViewModel
