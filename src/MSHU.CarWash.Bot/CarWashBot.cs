@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Bot.Builder.Community.Dialogs.FormFlow;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Bot.Builder;
@@ -122,6 +123,8 @@ namespace MSHU.CarWash.Bot
             Dialogs.Add(new FindReservationDialog());
             Dialogs.Add(new AuthDialog(accessors.UserProfileAccessor, _storage));
             Dialogs.Add(AuthDialog.LoginPromptDialog());
+
+            // Dialogs.Add(FormDialog.FromForm(NewReservationForm.BuildForm));
         }
 
         private DialogSet Dialogs { get; set; }
@@ -230,6 +233,10 @@ namespace MSHU.CarWash.Bot
                                                 nameof(NewReservationDialog),
                                                 new NewReservationDialog.NewReservationDialogOptions { LuisEntities = entities },
                                                 cancellationToken);
+
+                                            // await dc.BeginDialogAsync(
+                                            //    nameof(NewReservationForm),
+                                            //    cancellationToken);
                                             break;
 
                                         case EditReservationIntent:
