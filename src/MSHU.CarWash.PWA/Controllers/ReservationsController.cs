@@ -1012,26 +1012,38 @@ namespace MSHU.CarWash.PWA.Controllers
 
             foreach (var blocker in blockers)
             {
-                var date = blocker.StartDate.Date;
-
                 Debug.Assert(blocker.EndDate != null, "blocker.EndDate != null");
                 if (blocker.EndDate == null) continue;
 
-                while (date <= ((DateTime)blocker.EndDate).Date)
+                var dateIterator = blocker.StartDate.Date;
+                while (dateIterator <= ((DateTime)blocker.EndDate).Date)
                 {
+                    // Don't bother with the past part of the blocker
+                    if (dateIterator < DateTime.Today)
+                    {
+                        dateIterator = dateIterator.AddDays(1);
+                        continue;
+                    }
+
                     var dateBlocked = true;
 
                     foreach (var slot in Slots)
                     {
-                        var slotStart = new DateTime(date.Year, date.Month, date.Day, slot.StartTime, 0, 0);
-                        var slotEnd = new DateTime(date.Year, date.Month, date.Day, slot.EndTime, 0, 0);
-                        if (slotStart > blocker.StartDate && slotEnd < blocker.EndDate)
+                        var slotStart = new DateTime(dateIterator.Year, dateIterator.Month, dateIterator.Day, slot.StartTime, 0, 0);
+                        var slotEnd = new DateTime(dateIterator.Year, dateIterator.Month, dateIterator.Day, slot.EndTime, 0, 0);
+                        if (slotStart > blocker.StartDate && slotEnd < blocker.EndDate && !notAvailableTimes.Contains(slotStart))
+                        {
                             notAvailableTimes.Add(slotStart);
-                        else dateBlocked = false;
+                        }
+                        else
+                        {
+                            dateBlocked = false;
+                        }
                     }
-                    if (dateBlocked) notAvailableDates.Add(date);
 
-                    date = date.AddDays(1);
+                    if (dateBlocked && !notAvailableDates.Contains(dateIterator)) notAvailableDates.Add(dateIterator);
+
+                    dateIterator = dateIterator.AddDays(1);
                 }
             }
             #endregion
