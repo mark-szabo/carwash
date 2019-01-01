@@ -329,6 +329,15 @@
             or threads to receive notice of cancellation.</param>
             <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the work queued to execute.</returns>
         </member>
+        <member name="M:MSHU.CarWash.Bot.Dialogs.NewReservationDialog.ValidateRecommendedSlots(Microsoft.Bot.Builder.Dialogs.PromptValidatorContext{Microsoft.Bot.Builder.Dialogs.Choices.FoundChoice},System.Threading.CancellationToken)">
+            <summary>
+            Validator function to verify if at least one service was choosen.
+            </summary>
+            <param name="promptContext">Context for this prompt.</param>
+            <param name="cancellationToken">A <see cref="T:System.Threading.CancellationToken"/> that can be used by other objects
+            or threads to receive notice of cancellation.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the work queued to execute.</returns>
+        </member>
         <member name="T:MSHU.CarWash.Bot.Dialogs.NewReservationDialog.NewReservationDialogOptions">
             <summary>
             Options param type for <see cref="T:MSHU.CarWash.Bot.Dialogs.NewReservationDialog"/>.

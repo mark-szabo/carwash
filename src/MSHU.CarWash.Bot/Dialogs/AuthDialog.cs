@@ -88,6 +88,9 @@ namespace MSHU.CarWash.Bot.Dialogs
         /// <returns>Token string.</returns>
         public static async Task<string> GetToken(DialogContext dc, CancellationToken cancellationToken = default(CancellationToken))
         {
+            // Workaround: https://github.com/Microsoft/botbuilder-dotnet/pull/1243
+            if (dc.Context.Activity.Text == null) dc.Context.Activity.Text = "workaround";
+
             var tokenResponse = await LoginPromptDialog().GetUserTokenAsync(dc.Context, cancellationToken);
             return tokenResponse?.Token;
         }

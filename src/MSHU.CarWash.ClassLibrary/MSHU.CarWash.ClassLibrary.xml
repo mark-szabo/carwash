@@ -4,6 +4,42 @@
         <name>MSHU.CarWash.ClassLibrary</name>
     </assembly>
     <members>
+        <member name="T:MSHU.CarWash.ClassLibrary.Constants">
+            <summary>
+            Class containing constants.
+            </summary>
+        </member>
+        <member name="F:MSHU.CarWash.ClassLibrary.Constants.Slots">
+            <summary>
+            Bookable slots and their capacity (in washes and not in minutes!)
+            </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Extensions.DateTimeExtension">
+            <summary>
+            Extension class for DateTime
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Extensions.DateTimeExtension.IsWeekend(System.DateTime)">
+            <summary>
+            Indicates whether this instance of <see cref="T:System.DateTime"/> is on a weekend.
+            </summary>
+            <param name="dateTime">the DateTime object</param>
+            <returns>
+            True if the value of the <see cref="T:System.DayOfWeek"/> property is <see cref="F:System.DayOfWeek.Saturday"/> or <see cref="F:System.DayOfWeek.Saturday"/>.
+            </returns>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Extensions.ObjectExtension">
+            <summary>
+            Extension class for Object
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Extensions.ObjectExtension.ToJson(System.Object)">
+            <summary>
+            Serializes the specified object to a JSON string.
+            </summary>
+            <param name="o">The object to serialize.</param>
+            <returns>A JSON string representation of the object.</returns>
+        </member>
         <member name="M:MSHU.CarWash.ClassLibrary.Models.ApplicationDbContext.Update``1(``0)">
              WORKAROUND:
              DbContext.Update() sometimes throws an InvalidOperationException: The instance of entity type 'X' cannot be tracked because another instance of this type with the same key is already being tracked.
@@ -201,6 +237,26 @@
         <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.Price">
             <summary>
             Gets reservation's costs.
+            </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Models.Slot">
+            <summary>
+            Carwash slot.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Slot.StartTime">
+            <summary>
+            Slot start time in hours.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Slot.EndTime">
+            <summary>
+            Slot end time in hours.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Slot.Capacity">
+            <summary>
+            Slot capacity in washes. (Not in minutes!)
             </summary>
         </member>
         <member name="T:MSHU.CarWash.ClassLibrary.Services.IPushService">

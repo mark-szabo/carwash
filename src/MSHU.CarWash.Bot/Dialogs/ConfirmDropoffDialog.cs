@@ -85,8 +85,6 @@ namespace MSHU.CarWash.Bot.Dialogs
             List<Reservation> reservations;
             try
             {
-                // Workaround: https://github.com/Microsoft/botbuilder-dotnet/pull/1243
-                step.Context.Activity.Text = "workaround";
                 var api = new CarwashService(step, cancellationToken);
 
                 reservations = (await api.GetMyActiveReservationsAsync(cancellationToken))

@@ -14,7 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
-using Org.BouncyCastle.Asn1.X509.Qualified;
+using static MSHU.CarWash.ClassLibrary.Constants;
 
 namespace MSHU.CarWash.PWA.Controllers
 {
@@ -62,16 +62,6 @@ namespace MSHU.CarWash.PWA.Controllers
             new Company(Company.Microsoft, 14),
             new Company(Company.Sap, 16),
             new Company(Company.Graphisoft, 5)
-        };
-
-        /// <summary>
-        /// Bookable slots and their capacity (in washes and not in minutes!)
-        /// </summary>
-        private static readonly List<Slot> Slots = new List<Slot>
-        {
-            new Slot {StartTime = 8, EndTime = 11, Capacity = 12},
-            new Slot {StartTime = 11, EndTime = 14, Capacity = 12},
-            new Slot {StartTime = 14, EndTime = 17, Capacity = 11}
         };
 
         /// <inheritdoc />
@@ -1014,7 +1004,7 @@ namespace MSHU.CarWash.PWA.Controllers
                 }
             }
             #endregion
-            
+
             #region Check blockers
             var blockers = await _context.Blocker
                 .Where(b => b.EndDate >= DateTime.Now)
@@ -1578,11 +1568,4 @@ namespace MSHU.CarWash.PWA.Controllers
         public int FreeCapacity { get; set; }
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-    internal class Slot
-    {
-        public int StartTime { get; set; }
-        public int EndTime { get; set; }
-        public int Capacity { get; set; }
-    }
 }
