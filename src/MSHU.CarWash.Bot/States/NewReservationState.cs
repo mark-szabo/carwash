@@ -73,6 +73,14 @@ namespace MSHU.CarWash.Bot.States
         /// <value>
         /// A list of DateTimes recommended to the user.
         /// </value>
-        internal List<DateTime> RecommendedSlots { get; set; }
+        internal List<DateTime> RecommendedSlots { get; set; } = new List<DateTime>();
+
+        /// <summary>
+        /// Gets or sets the slots the user can choose from on a given day.
+        /// </summary>
+        /// <value>
+        /// A list of DateTimes sent to the user as choices.
+        /// </value>
+        internal List<DateTime> SlotChoices { get; set; } = new List<DateTime>();
     }
 }

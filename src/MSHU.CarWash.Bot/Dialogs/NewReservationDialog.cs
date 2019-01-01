@@ -32,6 +32,7 @@ namespace MSHU.CarWash.Bot.Dialogs
         private const string RecommendedSlotsPromptName = "recommendedSlotsPrompt";
         private const string DatePromptName = "datePrompt";
         private const string SlotPromptName = "slotPrompt";
+        private const string VehiclePlateNumberConfirmationPromptName = "vehiclePlateNumberConfirmationPrompt";
 
         private readonly IStatePropertyAccessor<NewReservationState> _stateAccessor;
         private readonly TelemetryClient _telemetryClient;
@@ -53,8 +54,9 @@ namespace MSHU.CarWash.Bot.Dialogs
                 RecommendSlotsStepAsync,
                 PromptForDateStepAsync,
                 PromptForSlotStepAsync,
+                PromptForVehiclePlateNumberConfirmationStepAsync,
                 // PromptForVehiclePlateNumberStepAsync,
-                // PromptForPrivateSteapAsync,
+                // PromptForPrivateStepAsync,
                 // PropmtForCommentStepAsync,
                 // DisplayReservationStepAsync,
             };
@@ -67,6 +69,7 @@ namespace MSHU.CarWash.Bot.Dialogs
             AddDialog(new ChoicePrompt(RecommendedSlotsPromptName, ValidateRecommendedSlots));
             AddDialog(new DateTimePrompt(DatePromptName, ValidateDate));
             AddDialog(new ChoicePrompt(SlotPromptName));
+            AddDialog(new ConfirmPrompt(VehiclePlateNumberConfirmationPromptName));
         }
 
         private async Task<DialogTurnResult> InitializeStateStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
@@ -275,18 +278,82 @@ namespace MSHU.CarWash.Bot.Dialogs
                 await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
             }
 
+            var reservationCapacity = new List<CarwashService.ReservationCapacity>();
+            try
+            {
+                var api = new CarwashService(step, cancellationToken);
+
+                reservationCapacity = (List<CarwashService.ReservationCapacity>)await api.GetReservationCapacityAsync(state.StartDate, cancellationToken);
+            }
+            catch (AuthenticationException)
+            {
+                await step.Context.SendActivityAsync(AuthDialog.NotAuthenticatedMessage, cancellationToken: cancellationToken);
+
+                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+            }
+            catch (Exception e)
+            {
+                _telemetryClient.TrackException(e);
+                await step.Context.SendActivityAsync("I am not able to access the CarWash app right now.", cancellationToken: cancellationToken);
+
+                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+            }
+
             // Check whether we already know the slot.
             if (Slots.Any(s => s.StartTime == state.StartDate.Hour))
             {
-                // TODO: check if slot is available.
-                return await step.NextAsync(cancellationToken: cancellationToken);
+                // Check if slot is available.
+                if (!reservationCapacity.Any(c => c.StartTime == state.StartDate && c.FreeCapacity > 0))
+                {
+                    await step.Context.SendActivityAsync("Sorry, this slot is already full.", cancellationToken: cancellationToken);
+                }
+                else
+                {
+                    return await step.NextAsync(cancellationToken: cancellationToken);
+                }
             }
+
+            var choices = new List<Choice>();
+            state.SlotChoices = new List<DateTime>();
+            foreach (var slot in reservationCapacity)
+            {
+                var timex = TimexProperty.FromDateTime(slot.StartTime);
+                choices.Add(new Choice($"{timex.ToNaturalLanguage(DateTime.Now)} ({slot.StartTime.Hour}-{Slots.Single(s => s.StartTime == slot.StartTime.Hour).EndTime})"));
+
+                // Save recommendations to state
+                state.SlotChoices.Add(slot.StartTime);
+            }
+
+            await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
 
             return await step.PromptAsync(
                 SlotPromptName,
                 new PromptOptions
                 {
                     Prompt = MessageFactory.Text("Please choose one of these slots:"),
+                    Choices = choices,
+                },
+                cancellationToken);
+        }
+
+        private async Task<DialogTurnResult> PromptForVehiclePlateNumberConfirmationStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
+        {
+            var state = await _stateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
+
+            if (Slots.Any(s => s.StartTime == state.StartDate.Hour) && step.Result is FoundChoice choice)
+            {
+                state.StartDate = state.SlotChoices[choice.Index];
+                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
+            }
+
+            // Check whether we don't know the vehicle plate number.
+            if (state.VehiclePlateNumber == null) return await step.NextAsync(cancellationToken: cancellationToken);
+
+            return await step.PromptAsync(
+                VehiclePlateNumberConfirmationPromptName,
+                new PromptOptions
+                {
+                    Prompt = MessageFactory.Text($"I have {state.VehiclePlateNumber} as you plate number, is that correct?"),
                 },
                 cancellationToken);
         }

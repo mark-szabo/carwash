@@ -133,6 +133,18 @@ namespace MSHU.CarWash.Bot.Services
         }
 
         /// <summary>
+        /// Gets a list of slots and their free reservation capacity on a given date.
+        /// </summary>
+        /// <param name="date">the date to filter on</param>
+        /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
+        /// or threads to receive notice of cancellation.</param>
+        /// <returns>List of <see cref="ReservationCapacity"/>.</returns>
+        internal async Task<IEnumerable<ReservationCapacity>> GetReservationCapacityAsync(DateTime date, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return await GetAsync<IEnumerable<ReservationCapacity>>($"/api/reservations/reservationcapacity?date={date.ToString("s")}", cancellationToken);
+        }
+
+        /// <summary>
         /// Makes a GET request to the api endpoint specified in the parameter and returns the parsed response.
         /// </summary>
         /// <typeparam name="T">Type the API response should be parsed to.</typeparam>
@@ -215,6 +227,13 @@ namespace MSHU.CarWash.Bot.Services
             public string Location { get; set; }
 
             public List<ServiceType> Services { get; set; }
+        }
+
+        internal class ReservationCapacity
+        {
+            public DateTime StartTime { get; set; }
+
+            public int FreeCapacity { get; set; }
         }
     }
 }
