@@ -66,5 +66,13 @@ namespace MSHU.CarWash.Bot.States
         /// LastSettings object.
         /// </value>
         internal CarwashService.LastSettings LastSettings { get; set; }
+
+        /// <summary>
+        /// Gets or sets the recommended slots.
+        /// </summary>
+        /// <value>
+        /// A list of DateTimes recommended to the user.
+        /// </value>
+        internal List<DateTime> RecommendedSlots { get; set; }
     }
 }

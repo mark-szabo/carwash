@@ -30,6 +30,8 @@ namespace MSHU.CarWash.Bot.Dialogs
         private const string Name = "newReservation";
         private const string ServicesPromptName = "servicesPrompt";
         private const string RecommendedSlotsPromptName = "recommendedSlotsPrompt";
+        private const string DatePromptName = "datePrompt";
+        private const string SlotPromptName = "slotPrompt";
 
         private readonly IStatePropertyAccessor<NewReservationState> _stateAccessor;
         private readonly TelemetryClient _telemetryClient;
@@ -49,8 +51,8 @@ namespace MSHU.CarWash.Bot.Dialogs
                 // PromptUsualStepAsync, // Can I start your usual order?
                 PromptForServicesStepAsync,
                 RecommendSlotsStepAsync,
-                // PromptForDateStepAsync,
-                // PromptForSlotStepAsync,
+                PromptForDateStepAsync,
+                PromptForSlotStepAsync,
                 // PromptForVehiclePlateNumberStepAsync,
                 // PromptForPrivateSteapAsync,
                 // PropmtForCommentStepAsync,
@@ -63,6 +65,8 @@ namespace MSHU.CarWash.Bot.Dialogs
 
             AddDialog(new TextPrompt(ServicesPromptName, ValidateServices));
             AddDialog(new ChoicePrompt(RecommendedSlotsPromptName, ValidateRecommendedSlots));
+            AddDialog(new DateTimePrompt(DatePromptName, ValidateDate));
+            AddDialog(new ChoicePrompt(SlotPromptName));
         }
 
         private async Task<DialogTurnResult> InitializeStateStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
@@ -86,16 +90,35 @@ namespace MSHU.CarWash.Bot.Dialogs
                         var service = (ServiceModel)entity;
                         state.Services.Add(service.Service);
                         break;
+
                     case LuisEntityType.DateTime:
-                        var dateTime = (CognitiveModels.DateTimeModel)entity;
+                        var dateTime = (DateTimeModel)entity;
                         state.Timex = dateTime.Timex;
+
+                        if (dateTime.Timex.Year != null &&
+                            dateTime.Timex.Month != null &&
+                            dateTime.Timex.DayOfMonth != null)
+                        {
+                            var hour = dateTime.Timex.Hour ?? 0;
+                            state.StartDate = new DateTime(
+                                dateTime.Timex.Year.Value,
+                                dateTime.Timex.Month.Value,
+                                dateTime.Timex.DayOfMonth.Value,
+                                dateTime.Timex.Hour.Value,
+                                0,
+                                0);
+                        }
+
                         break;
+
                     case LuisEntityType.Comment:
                         state.Comment = entity.Text;
                         break;
+
                     case LuisEntityType.Private:
                         state.Private = true;
                         break;
+
                     case LuisEntityType.VehiclePlateNumber:
                         state.VehiclePlateNumber = entity.Text;
                         break;
@@ -135,6 +158,7 @@ namespace MSHU.CarWash.Bot.Dialogs
         {
             var state = await _stateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
 
+            // Check whether we already know the services.
             if (state.Services.Count > 0) return await step.NextAsync(cancellationToken: cancellationToken);
 
             var response = step.Context.Activity.CreateReply();
@@ -163,6 +187,9 @@ namespace MSHU.CarWash.Bot.Dialogs
                 await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
             }
 
+            // Check whether we already know something about the date.
+            if (state.StartDate != null) return await step.NextAsync(cancellationToken: cancellationToken);
+
             var recommendedSlots = new List<DateTime>();
 
             try
@@ -186,6 +213,10 @@ namespace MSHU.CarWash.Bot.Dialogs
                 return await step.EndDialogAsync(cancellationToken: cancellationToken);
             }
 
+            // Save recommendations to state
+            state.RecommendedSlots = recommendedSlots;
+            await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
+
             var choices = new List<Choice>();
 
             foreach (var slot in recommendedSlots)
@@ -204,8 +235,64 @@ namespace MSHU.CarWash.Bot.Dialogs
                 cancellationToken);
         }
 
+        private async Task<DialogTurnResult> PromptForDateStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
+        {
+            var state = await _stateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
+
+            if (state.StartDate == null && step.Result is FoundChoice choice)
+            {
+                state.StartDate = state.RecommendedSlots[choice.Index];
+                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
+            }
+
+            // Check whether we already know something about the date.
+            if (state.StartDate != null) return await step.NextAsync(cancellationToken: cancellationToken);
+
+            return await step.PromptAsync(
+                DatePromptName,
+                new PromptOptions
+                {
+                    Prompt = MessageFactory.Text("When do you want to wash your car?"),
+                },
+                cancellationToken);
+        }
+
+        private async Task<DialogTurnResult> PromptForSlotStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
+        {
+            var state = await _stateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
+
+            if (state.StartDate == null && step.Result is IList<DateTimeResolution> resolution)
+            {
+                var timex = new TimexProperty(resolution[0].Timex);
+                var hour = timex.Hour ?? 0;
+                state.StartDate = new DateTime(
+                    timex.Year.Value,
+                    timex.Month.Value,
+                    timex.DayOfMonth.Value,
+                    hour,
+                    0,
+                    0);
+                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
+            }
+
+            // Check whether we already know the slot.
+            if (Slots.Any(s => s.StartTime == state.StartDate.Hour))
+            {
+                // TODO: check if slot is available.
+                return await step.NextAsync(cancellationToken: cancellationToken);
+            }
+
+            return await step.PromptAsync(
+                SlotPromptName,
+                new PromptOptions
+                {
+                    Prompt = MessageFactory.Text("Please choose one of these slots:"),
+                },
+                cancellationToken);
+        }
+
         /// <summary>
-        /// Validator function to verify if at least one service was choosen.
+        /// Validator function to verify if at least one service was chosen.
         /// </summary>
         /// <param name="promptContext">Context for this prompt.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used by other objects
@@ -227,7 +314,7 @@ namespace MSHU.CarWash.Bot.Dialogs
         }
 
         /// <summary>
-        /// Validator function to verify if at least one service was choosen.
+        /// Validator function to verify if a recommendation was chosen or the user wants to skip the step.
         /// </summary>
         /// <param name="promptContext">Context for this prompt.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used by other objects
@@ -245,6 +332,52 @@ namespace MSHU.CarWash.Bot.Dialogs
             else
             {
                 await promptContext.Context.SendActivityAsync($"Please choose one of the options or say skip!").ConfigureAwait(false);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Validator function to verify if the date is valid.
+        /// </summary>
+        /// <param name="promptContext">Context for this prompt.</param>
+        /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used by other objects
+        /// or threads to receive notice of cancellation.</param>
+        /// <returns>A <see cref="Task"/> that represents the work queued to execute.</returns>
+        private async Task<bool> ValidateDate(PromptValidatorContext<IList<DateTimeResolution>> promptContext, CancellationToken cancellationToken)
+        {
+            var timex = new TimexProperty(promptContext.Recognized.Value?[0]?.Timex);
+
+            if (promptContext.Recognized.Succeeded &&
+                timex?.Year != null &&
+                timex?.Month != null &&
+                timex?.DayOfMonth != null)
+            {
+                var hour = timex.Hour ?? 0;
+                var date = new DateTime(
+                    timex.Year.Value,
+                    timex.Month.Value,
+                    timex.DayOfMonth.Value,
+                    hour,
+                    0,
+                    0);
+
+                if (date.Subtract(DateTime.Today).Days > 365)
+                {
+                    await promptContext.Context.SendActivityAsync($"Sorry, you cannot reserve for more than 365 days in the future.").ConfigureAwait(false);
+                    return false;
+                }
+
+                if (date < DateTime.Today)
+                {
+                    await promptContext.Context.SendActivityAsync($"Sorry, you cannot reserve in the past.").ConfigureAwait(false);
+                    return false;
+                }
+
+                return true;
+            }
+            else
+            {
+                await promptContext.Context.SendActivityAsync($"Sorry, I wasn't able to get the date. Can you please rephrase it?").ConfigureAwait(false);
                 return false;
             }
         }
