@@ -33,6 +33,8 @@ namespace MSHU.CarWash.Bot.Dialogs
         private const string DatePromptName = "datePrompt";
         private const string SlotPromptName = "slotPrompt";
         private const string VehiclePlateNumberConfirmationPromptName = "vehiclePlateNumberConfirmationPrompt";
+        private const string VehiclePlateNumberPromptName = "vehiclePlateNumberPrompt";
+        private const string PrivatePromptName = "privatePrompt";
 
         private readonly IStatePropertyAccessor<NewReservationState> _stateAccessor;
         private readonly TelemetryClient _telemetryClient;
@@ -55,8 +57,8 @@ namespace MSHU.CarWash.Bot.Dialogs
                 PromptForDateStepAsync,
                 PromptForSlotStepAsync,
                 PromptForVehiclePlateNumberConfirmationStepAsync,
-                // PromptForVehiclePlateNumberStepAsync,
-                // PromptForPrivateStepAsync,
+                PromptForVehiclePlateNumberStepAsync,
+                PromptForPrivateStepAsync,
                 // PropmtForCommentStepAsync,
                 // DisplayReservationStepAsync,
             };
@@ -70,6 +72,8 @@ namespace MSHU.CarWash.Bot.Dialogs
             AddDialog(new DateTimePrompt(DatePromptName, ValidateDate));
             AddDialog(new ChoicePrompt(SlotPromptName));
             AddDialog(new ConfirmPrompt(VehiclePlateNumberConfirmationPromptName));
+            AddDialog(new TextPrompt(VehiclePlateNumberPromptName, ValidateVehiclePlateNumber));
+            AddDialog(new ConfirmPrompt(PrivatePromptName));
         }
 
         private async Task<DialogTurnResult> InitializeStateStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
@@ -358,6 +362,41 @@ namespace MSHU.CarWash.Bot.Dialogs
                 cancellationToken);
         }
 
+        private async Task<DialogTurnResult> PromptForVehiclePlateNumberStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
+        {
+            var state = await _stateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
+
+            if (state.VehiclePlateNumber != null && step.Result is bool confirmed) return await step.NextAsync(cancellationToken: cancellationToken);
+
+            return await step.PromptAsync(
+                VehiclePlateNumberPromptName,
+                new PromptOptions
+                {
+                    Prompt = MessageFactory.Text($"I have {state.VehiclePlateNumber} as you plate number, is that correct?"),
+                },
+                cancellationToken);
+        }
+
+        private async Task<DialogTurnResult> PromptForPrivateStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
+        {
+            var state = await _stateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
+
+            if (step.Result is string plate)
+            {
+                state.VehiclePlateNumber = plate;
+                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
+            }
+
+            // TODO: Check from API, whether the car is private or not by plate number.
+            return await step.PromptAsync(
+                PrivatePromptName,
+                new PromptOptions
+                {
+                    Prompt = MessageFactory.Text("Is this your private car?"),
+                },
+                cancellationToken);
+        }
+
         /// <summary>
         /// Validator function to verify if at least one service was chosen.
         /// </summary>
@@ -445,6 +484,29 @@ namespace MSHU.CarWash.Bot.Dialogs
             else
             {
                 await promptContext.Context.SendActivityAsync($"Sorry, I wasn't able to get the date. Can you please rephrase it?").ConfigureAwait(false);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Validator function to verify if vehicle plate number meets required constraints.
+        /// </summary>
+        /// <param name="promptContext">Context for this prompt.</param>
+        /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used by other objects
+        /// or threads to receive notice of cancellation.</param>
+        /// <returns>A <see cref="Task"/> that represents the work queued to execute.</returns>
+        private async Task<bool> ValidateVehiclePlateNumber(PromptValidatorContext<string> promptContext, CancellationToken cancellationToken)
+        {
+            var plate = promptContext.Recognized.Value?.ToUpper().Replace("-", string.Empty).Replace(" ", string.Empty) ?? string.Empty;
+
+            if (plate.Length == 6)
+            {
+                promptContext.Recognized.Value = plate;
+                return true;
+            }
+            else
+            {
+                await promptContext.Context.SendActivityAsync($"This does not seem to be a vehicle plate number...").ConfigureAwait(false);
                 return false;
             }
         }
