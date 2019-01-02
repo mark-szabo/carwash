@@ -16,6 +16,7 @@ using MSHU.CarWash.Bot.Services;
 using MSHU.CarWash.Bot.States;
 using MSHU.CarWash.ClassLibrary.Enums;
 using MSHU.CarWash.ClassLibrary.Extensions;
+using MSHU.CarWash.ClassLibrary.Models;
 using Newtonsoft.Json.Linq;
 using static MSHU.CarWash.ClassLibrary.Constants;
 
@@ -35,6 +36,7 @@ namespace MSHU.CarWash.Bot.Dialogs
         private const string VehiclePlateNumberConfirmationPromptName = "vehiclePlateNumberConfirmationPrompt";
         private const string VehiclePlateNumberPromptName = "vehiclePlateNumberPrompt";
         private const string PrivatePromptName = "privatePrompt";
+        private const string CommentPromptName = "commentPrompt";
 
         private readonly IStatePropertyAccessor<NewReservationState> _stateAccessor;
         private readonly TelemetryClient _telemetryClient;
@@ -59,8 +61,8 @@ namespace MSHU.CarWash.Bot.Dialogs
                 PromptForVehiclePlateNumberConfirmationStepAsync,
                 PromptForVehiclePlateNumberStepAsync,
                 PromptForPrivateStepAsync,
-                // PropmtForCommentStepAsync,
-                // DisplayReservationStepAsync,
+                PromptForCommentStepAsync,
+                DisplayReservationStepAsync,
             };
 
             AddDialog(new WaterfallDialog(Name, dialogSteps));
@@ -74,6 +76,7 @@ namespace MSHU.CarWash.Bot.Dialogs
             AddDialog(new ConfirmPrompt(VehiclePlateNumberConfirmationPromptName));
             AddDialog(new TextPrompt(VehiclePlateNumberPromptName, ValidateVehiclePlateNumber));
             AddDialog(new ConfirmPrompt(PrivatePromptName));
+            AddDialog(new TextPrompt(CommentPromptName));
         }
 
         private async Task<DialogTurnResult> InitializeStateStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
@@ -287,7 +290,7 @@ namespace MSHU.CarWash.Bot.Dialogs
             {
                 var api = new CarwashService(step, cancellationToken);
 
-                reservationCapacity = (List<CarwashService.ReservationCapacity>)await api.GetReservationCapacityAsync(state.StartDate, cancellationToken);
+                reservationCapacity = (List<CarwashService.ReservationCapacity>)await api.GetReservationCapacityAsync(state.StartDate.Value, cancellationToken);
             }
             catch (AuthenticationException)
             {
@@ -303,8 +306,14 @@ namespace MSHU.CarWash.Bot.Dialogs
                 return await step.EndDialogAsync(cancellationToken: cancellationToken);
             }
 
+            // Check whether we can find out the slot from timex.
+            if (!string.IsNullOrEmpty(state.Timex.PartOfDay))
+            {
+
+            }
+
             // Check whether we already know the slot.
-            if (Slots.Any(s => s.StartTime == state.StartDate.Hour))
+            if (Slots.Any(s => s.StartTime == state.StartDate?.Hour))
             {
                 // Check if slot is available.
                 if (!reservationCapacity.Any(c => c.StartTime == state.StartDate && c.FreeCapacity > 0))
@@ -321,8 +330,7 @@ namespace MSHU.CarWash.Bot.Dialogs
             state.SlotChoices = new List<DateTime>();
             foreach (var slot in reservationCapacity)
             {
-                var timex = TimexProperty.FromDateTime(slot.StartTime);
-                choices.Add(new Choice($"{timex.ToNaturalLanguage(DateTime.Now)} ({slot.StartTime.Hour}-{Slots.Single(s => s.StartTime == slot.StartTime.Hour).EndTime})"));
+                choices.Add(new Choice($"{slot.StartTime.ToNaturalLanguage()} ({slot.StartTime.Hour}-{Slots.Single(s => s.StartTime == slot.StartTime.Hour).EndTime})"));
 
                 // Save recommendations to state
                 state.SlotChoices.Add(slot.StartTime);
@@ -344,7 +352,7 @@ namespace MSHU.CarWash.Bot.Dialogs
         {
             var state = await _stateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
 
-            if (Slots.Any(s => s.StartTime == state.StartDate.Hour) && step.Result is FoundChoice choice)
+            if (Slots.Any(s => s.StartTime == state.StartDate?.Hour) && step.Result is FoundChoice choice)
             {
                 state.StartDate = state.SlotChoices[choice.Index];
                 await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
@@ -395,6 +403,90 @@ namespace MSHU.CarWash.Bot.Dialogs
                     Prompt = MessageFactory.Text("Is this your private car?"),
                 },
                 cancellationToken);
+        }
+
+        private async Task<DialogTurnResult> PromptForCommentStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
+        {
+            var state = await _stateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
+
+            if (step.Result is bool priv)
+            {
+                state.Private = priv;
+                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
+            }
+
+            if (!string.IsNullOrWhiteSpace(state.Comment)) return await step.NextAsync(cancellationToken: cancellationToken);
+
+            return await step.PromptAsync(
+                CommentPromptName,
+                new PromptOptions
+                {
+                    Prompt = MessageFactory.Text("Any other comment?"),
+                },
+                cancellationToken);
+        }
+
+        private async Task<DialogTurnResult> DisplayReservationStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
+        {
+            var state = await _stateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
+
+            if (string.IsNullOrWhiteSpace(state.Comment) && step.Result is string comment && !new[] { "skip", "nope", "thanks, no", "no" }.Contains(comment.ToLower()))
+            {
+                state.Comment = comment;
+                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
+            }
+
+            Reservation reservation = new Reservation
+            {
+                VehiclePlateNumber = state.VehiclePlateNumber,
+                Services = state.Services,
+                Private = state.Private,
+                StartDate = state.StartDate.Value,
+                Comment = state.Comment,
+            };
+
+            try
+            {
+                var api = new CarwashService(step, cancellationToken);
+
+                // Submit reservation
+                reservation = await api.SubmitReservationAsync(reservation, cancellationToken);
+
+                // Reset state
+                state.VehiclePlateNumber = null;
+                state.Services = new List<ServiceType>();
+                state.StartDate = null;
+                state.Timex = null;
+                state.Comment = null;
+                state.LastSettings = null;
+                state.RecommendedSlots = new List<DateTime>();
+                state.SlotChoices = new List<DateTime>();
+                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
+            }
+            catch (AuthenticationException)
+            {
+                await step.Context.SendActivityAsync(AuthDialog.NotAuthenticatedMessage, cancellationToken: cancellationToken);
+
+                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+            }
+            catch (Exception e)
+            {
+                _telemetryClient.TrackException(e);
+                await step.Context.SendActivityAsync("I am not able to access the CarWash app right now.", cancellationToken: cancellationToken);
+
+                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+            }
+
+            await step.Context.SendActivityAsync($"OK, I have reserved a car wash for {reservation.StartDate.ToNaturalLanguage()}.", cancellationToken: cancellationToken);
+            await step.Context.SendActivityAsync("🚗", cancellationToken: cancellationToken);
+            await step.Context.SendActivityAsync("Here is the current state of your reservation. I'll let you know when you will need to drop off the keys.", cancellationToken: cancellationToken);
+
+            var response = step.Context.Activity.CreateReply();
+            response.Attachments = new ReservationCard(reservation).ToAttachmentList();
+
+            await step.Context.SendActivityAsync(response, cancellationToken).ConfigureAwait(false);
+
+            return await step.EndDialogAsync(cancellationToken: cancellationToken);
         }
 
         /// <summary>

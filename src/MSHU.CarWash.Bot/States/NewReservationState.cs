@@ -41,7 +41,7 @@ namespace MSHU.CarWash.Bot.States
         /// <value>
         /// <see cref="ClassLibrary.Models.Reservation"/> start date and time.
         /// </value>
-        public DateTime StartDate { get; set; }
+        public DateTime? StartDate { get; set; }
 
         /// <summary>
         /// Gets or sets the reservation start date and time in a Timex object.
