@@ -114,7 +114,7 @@ namespace MSHU.CarWash.Bot.Dialogs
                                 dateTime.Timex.Year.Value,
                                 dateTime.Timex.Month.Value,
                                 dateTime.Timex.DayOfMonth.Value,
-                                dateTime.Timex.Hour.Value,
+                                hour,
                                 0,
                                 0);
                         }
@@ -194,7 +194,7 @@ namespace MSHU.CarWash.Bot.Dialogs
             if (state.Services.Count == 0)
             {
                 state.Services = ParseServiceSelectionCardResponse(step.Context.Activity);
-                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
+                // await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
             }
 
             // Check whether we already know something about the date.
@@ -274,6 +274,7 @@ namespace MSHU.CarWash.Bot.Dialogs
             if (state.StartDate == null && step.Result is IList<DateTimeResolution> resolution)
             {
                 var timex = new TimexProperty(resolution[0].Timex);
+                state.Timex = timex;
                 var hour = timex.Hour ?? 0;
                 state.StartDate = new DateTime(
                     timex.Year.Value,
@@ -307,7 +308,7 @@ namespace MSHU.CarWash.Bot.Dialogs
             }
 
             // Check whether we can find out the slot from timex.
-            if (!string.IsNullOrEmpty(state.Timex.PartOfDay))
+            if (!string.IsNullOrEmpty(state.Timex?.PartOfDay))
             {
 
             }
@@ -352,7 +353,7 @@ namespace MSHU.CarWash.Bot.Dialogs
         {
             var state = await _stateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
 
-            if (Slots.Any(s => s.StartTime == state.StartDate?.Hour) && step.Result is FoundChoice choice)
+            if (!Slots.Any(s => s.StartTime == state.StartDate?.Hour) && step.Result is FoundChoice choice)
             {
                 state.StartDate = state.SlotChoices[choice.Index];
                 await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
@@ -365,7 +366,7 @@ namespace MSHU.CarWash.Bot.Dialogs
                 VehiclePlateNumberConfirmationPromptName,
                 new PromptOptions
                 {
-                    Prompt = MessageFactory.Text($"I have {state.VehiclePlateNumber} as you plate number, is that correct?"),
+                    Prompt = MessageFactory.Text($"I have {state.VehiclePlateNumber} as your plate number, is that correct?"),
                 },
                 cancellationToken);
         }
@@ -380,7 +381,7 @@ namespace MSHU.CarWash.Bot.Dialogs
                 VehiclePlateNumberPromptName,
                 new PromptOptions
                 {
-                    Prompt = MessageFactory.Text($"I have {state.VehiclePlateNumber} as you plate number, is that correct?"),
+                    Prompt = MessageFactory.Text($"What's your vehicle plate number?"),
                 },
                 cancellationToken);
         }

@@ -99,13 +99,20 @@ namespace MSHU.CarWash.Bot.Services
         /// <summary>
         /// Add a new reservation.
         /// </summary>
-        /// <param name="reservation"><see cref="Reservation"/></param>
+        /// <param name="reservation"><see cref="Reservation"/>.</param>
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
-        /// <returns>The newly created <see cref="Reservation"/></returns>
+        /// <returns>The newly created <see cref="Reservation"/>.</returns>
         internal async Task<Reservation> SubmitReservationAsync(Reservation reservation, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var content = new StringContent(JsonConvert.SerializeObject(reservation), Encoding.UTF8, "application/json");
+            reservation.StartDate = reservation.StartDate.ToUniversalTime();
+            var jsonContent = JsonConvert.SerializeObject(
+                reservation,
+                new JsonSerializerSettings
+                {
+                    DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+                });
+            var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
             return await PostAsync<Reservation>($"/api/reservations", content, cancellationToken);
         }

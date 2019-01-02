@@ -347,6 +347,15 @@
             or threads to receive notice of cancellation.</param>
             <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the work queued to execute.</returns>
         </member>
+        <member name="M:MSHU.CarWash.Bot.Dialogs.NewReservationDialog.ValidateVehiclePlateNumber(Microsoft.Bot.Builder.Dialogs.PromptValidatorContext{System.String},System.Threading.CancellationToken)">
+            <summary>
+            Validator function to verify if vehicle plate number meets required constraints.
+            </summary>
+            <param name="promptContext">Context for this prompt.</param>
+            <param name="cancellationToken">A <see cref="T:System.Threading.CancellationToken"/> that can be used by other objects
+            or threads to receive notice of cancellation.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the work queued to execute.</returns>
+        </member>
         <member name="T:MSHU.CarWash.Bot.Dialogs.NewReservationDialog.NewReservationDialogOptions">
             <summary>
             Options param type for <see cref="T:MSHU.CarWash.Bot.Dialogs.NewReservationDialog"/>.
@@ -653,6 +662,15 @@
             or threads to receive notice of cancellation.</param>
             <returns>Reservation object.</returns>
         </member>
+        <member name="M:MSHU.CarWash.Bot.Services.CarwashService.SubmitReservationAsync(MSHU.CarWash.ClassLibrary.Models.Reservation,System.Threading.CancellationToken)">
+            <summary>
+            Add a new reservation.
+            </summary>
+            <param name="reservation"><see cref="T:MSHU.CarWash.ClassLibrary.Models.Reservation"/>.</param>
+            <param name="cancellationToken" >(Optional) A <see cref="T:System.Threading.CancellationToken"/> that can be used by other objects
+            or threads to receive notice of cancellation.</param>
+            <returns>The newly created <see cref="T:MSHU.CarWash.ClassLibrary.Models.Reservation"/>.</returns>
+        </member>
         <member name="M:MSHU.CarWash.Bot.Services.CarwashService.ConfirmDropoffAsync(System.String,System.String,System.Threading.CancellationToken)">
             <summary>
             Confirm key drop-off and location for a reservation.
@@ -678,6 +696,15 @@
             <param name="cancellationToken" >(Optional) A <see cref="T:System.Threading.CancellationToken"/> that can be used by other objects
             or threads to receive notice of cancellation.</param>
             <returns>NotAvailableDatesAndTimes object.</returns>
+        </member>
+        <member name="M:MSHU.CarWash.Bot.Services.CarwashService.GetReservationCapacityAsync(System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            Gets a list of slots and their free reservation capacity on a given date.
+            </summary>
+            <param name="date">the date to filter on</param>
+            <param name="cancellationToken" >(Optional) A <see cref="T:System.Threading.CancellationToken"/> that can be used by other objects
+            or threads to receive notice of cancellation.</param>
+            <returns>List of <see cref="T:MSHU.CarWash.Bot.Services.CarwashService.ReservationCapacity"/>.</returns>
         </member>
         <member name="M:MSHU.CarWash.Bot.Services.CarwashService.GetAsync``1(System.String,System.Threading.CancellationToken)">
             <summary>
@@ -849,6 +876,14 @@
             A list of DateTimes recommended to the user.
             </value>
         </member>
+        <member name="P:MSHU.CarWash.Bot.States.NewReservationState.SlotChoices">
+            <summary>
+            Gets or sets the slots the user can choose from on a given day.
+            </summary>
+            <value>
+            A list of DateTimes sent to the user as choices.
+            </value>
+        </member>
         <member name="T:MSHU.CarWash.Bot.States.StateAccessors">
             <summary>
             This class is created as a Singleton and passed into the IBot-derived constructor.
@@ -926,6 +961,21 @@
             <value>
             The <see cref="T:MSHU.CarWash.ClassLibrary.Models.User"/>'s ID within the CarWash API.
             </value>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Extensions.DateTimeExtension">
+            <summary>
+            Extension class for DateTime.
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Extensions.DateTimeExtension.ToNaturalLanguage(System.DateTime,System.Nullable{System.DateTime})">
+            <summary>
+            Converts the DateTime object to natural languge with the given reference point.
+            </summary>
+            <param name="dateTime">the DateTime object.</param>
+            <param name="referenceDate">(Optional) Reference point. Defaults to DateTime.Now.</param>
+            <returns>
+            Natural languge string of the DateTime.
+            </returns>
         </member>
     </members>
 </doc>

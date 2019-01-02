@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Recognizers.Text.DataTypes.TimexExpression;
 using MSHU.CarWash.Bot.Services;
 using MSHU.CarWash.ClassLibrary.Enums;
+using Newtonsoft.Json;
 
 namespace MSHU.CarWash.Bot.States
 {
@@ -75,6 +76,12 @@ namespace MSHU.CarWash.Bot.States
         /// </value>
         internal List<DateTime> RecommendedSlots { get; set; } = new List<DateTime>();
 
+        public string RecommendedSlotsJson
+        {
+            get => JsonConvert.SerializeObject(RecommendedSlots);
+            set => RecommendedSlots = JsonConvert.DeserializeObject<List<DateTime>>(value);
+        }
+
         /// <summary>
         /// Gets or sets the slots the user can choose from on a given day.
         /// </summary>
@@ -82,5 +89,11 @@ namespace MSHU.CarWash.Bot.States
         /// A list of DateTimes sent to the user as choices.
         /// </value>
         internal List<DateTime> SlotChoices { get; set; } = new List<DateTime>();
+
+        public string SlotChoicesJson
+        {
+            get => JsonConvert.SerializeObject(SlotChoices);
+            set => SlotChoices = JsonConvert.DeserializeObject<List<DateTime>>(value);
+        }
     }
 }
