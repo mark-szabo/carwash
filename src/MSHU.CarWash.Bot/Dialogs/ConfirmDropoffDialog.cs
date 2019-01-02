@@ -332,6 +332,17 @@ namespace MSHU.CarWash.Bot.Dialogs
 
             await step.Context.SendActivityAsync(response, cancellationToken).ConfigureAwait(false);
 
+            _telemetryClient.TrackEvent(
+                "Drop-off confirmed from chat bot.",
+                new Dictionary<string, string>
+                {
+                    { "Reservation ID", reservation.Id },
+                },
+                new Dictionary<string, double>
+                {
+                    { "Drop-off confirmation", 1 },
+                });
+
             return await step.EndDialogAsync(cancellationToken: cancellationToken);
         }
 

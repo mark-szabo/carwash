@@ -512,6 +512,17 @@ namespace MSHU.CarWash.Bot.Dialogs
 
             await step.Context.SendActivityAsync(response, cancellationToken).ConfigureAwait(false);
 
+            _telemetryClient.TrackEvent(
+                "New reservation from chat bot.",
+                new Dictionary<string, string>
+                {
+                    { "Reservation ID", reservation.Id },
+                },
+                new Dictionary<string, double>
+                {
+                    { "New reservation", 1 },
+                });
+
             return await step.EndDialogAsync(cancellationToken: cancellationToken);
         }
 
@@ -569,7 +580,8 @@ namespace MSHU.CarWash.Bot.Dialogs
         /// <returns>A <see cref="Task"/> that represents the work queued to execute.</returns>
         private async Task<bool> ValidateDate(PromptValidatorContext<IList<DateTimeResolution>> promptContext, CancellationToken cancellationToken)
         {
-            var timex = new TimexProperty(promptContext.Recognized.Value?[0]?.Timex);
+            if (!promptContext.Recognized.Succeeded || string.IsNullOrEmpty(promptContext?.Recognized?.Value?[0]?.Timex)) return false;
+            var timex = new TimexProperty(promptContext.Recognized.Value[0].Timex);
 
             if (promptContext.Recognized.Succeeded &&
                 timex?.Year != null &&
