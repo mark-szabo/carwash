@@ -194,7 +194,7 @@ namespace MSHU.CarWash.Bot.Dialogs
             if (state.Services.Count == 0)
             {
                 state.Services = ParseServiceSelectionCardResponse(step.Context.Activity);
-                // await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
+                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
             }
 
             // Check whether we already know something about the date.
@@ -310,7 +310,32 @@ namespace MSHU.CarWash.Bot.Dialogs
             // Check whether we can find out the slot from timex.
             if (!string.IsNullOrEmpty(state.Timex?.PartOfDay))
             {
+                Slot slot = null;
+                switch (state.Timex.PartOfDay)
+                {
+                    case "MO":
+                        slot = Slots[0];
+                        break;
+                    case "AF":
+                        slot = Slots[1];
+                        break;
+                    case "EV":
+                        slot = Slots[2];
+                        break;
+                }
 
+                if (slot != null)
+                {
+                    state.StartDate = new DateTime(
+                        state.StartDate.Value.Year,
+                        state.StartDate.Value.Month,
+                        state.StartDate.Value.Day,
+                        slot.StartTime,
+                        0,
+                        0);
+
+                    await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
+                }
             }
 
             // Check whether we already know the slot.
