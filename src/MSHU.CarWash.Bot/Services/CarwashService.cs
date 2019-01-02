@@ -19,7 +19,7 @@ namespace MSHU.CarWash.Bot.Services
     /// <summary>
     /// CarWash Service for accessing the CarWash API.
     /// </summary>
-    internal class CarwashService
+    public class CarwashService
     {
         private readonly HttpClient _client;
         private readonly TelemetryClient _telemetryClient;
@@ -234,14 +234,14 @@ namespace MSHU.CarWash.Bot.Services
          * API response models
          */
 
-        internal class NotAvailableDatesAndTimes
+        public class NotAvailableDatesAndTimes
         {
             public IEnumerable<DateTime> Dates { get; set; }
 
             public IEnumerable<DateTime> Times { get; set; }
         }
 
-        internal class LastSettings
+        public class LastSettings
         {
             public string VehiclePlateNumber { get; set; }
 
@@ -250,7 +250,7 @@ namespace MSHU.CarWash.Bot.Services
             public List<ServiceType> Services { get; set; }
         }
 
-        internal class ReservationCapacity
+        public class ReservationCapacity
         {
             public DateTime StartTime { get; set; }
 

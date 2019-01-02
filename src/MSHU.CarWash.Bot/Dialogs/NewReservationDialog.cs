@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Authentication;
@@ -383,8 +383,13 @@ namespace MSHU.CarWash.Bot.Dialogs
                 await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
             }
 
+            // Check last settings
+            if (string.IsNullOrEmpty(state.VehiclePlateNumber) &&
+                !string.IsNullOrEmpty(state.LastSettings?.VehiclePlateNumber))
+                state.VehiclePlateNumber = state.LastSettings.VehiclePlateNumber;
+
             // Check whether we don't know the vehicle plate number.
-            if (state.VehiclePlateNumber == null) return await step.NextAsync(cancellationToken: cancellationToken);
+            if (string.IsNullOrEmpty(state.VehiclePlateNumber)) return await step.NextAsync(cancellationToken: cancellationToken);
 
             return await step.PromptAsync(
                 VehiclePlateNumberConfirmationPromptName,

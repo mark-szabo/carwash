@@ -66,7 +66,7 @@ namespace MSHU.CarWash.Bot.States
         /// <value>
         /// LastSettings object.
         /// </value>
-        internal CarwashService.LastSettings LastSettings { get; set; }
+        public CarwashService.LastSettings LastSettings { get; set; }
 
         /// <summary>
         /// Gets or sets the recommended slots.
@@ -74,13 +74,7 @@ namespace MSHU.CarWash.Bot.States
         /// <value>
         /// A list of DateTimes recommended to the user.
         /// </value>
-        internal List<DateTime> RecommendedSlots { get; set; } = new List<DateTime>();
-
-        public string RecommendedSlotsJson
-        {
-            get => JsonConvert.SerializeObject(RecommendedSlots);
-            set => RecommendedSlots = JsonConvert.DeserializeObject<List<DateTime>>(value);
-        }
+        public List<DateTime> RecommendedSlots { get; set; } = new List<DateTime>();
 
         /// <summary>
         /// Gets or sets the slots the user can choose from on a given day.
@@ -88,12 +82,6 @@ namespace MSHU.CarWash.Bot.States
         /// <value>
         /// A list of DateTimes sent to the user as choices.
         /// </value>
-        internal List<DateTime> SlotChoices { get; set; } = new List<DateTime>();
-
-        public string SlotChoicesJson
-        {
-            get => JsonConvert.SerializeObject(SlotChoices);
-            set => SlotChoices = JsonConvert.DeserializeObject<List<DateTime>>(value);
-        }
+        public List<DateTime> SlotChoices { get; set; } = new List<DateTime>();
     }
 }
