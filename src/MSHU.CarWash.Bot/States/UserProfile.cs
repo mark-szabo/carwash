@@ -20,5 +20,13 @@
         /// The <see cref="ClassLibrary.Models.User"/>'s ID within the CarWash API.
         /// </value>
         public string CarwashUserId { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether a welcome message was already sent to the chat.
+        /// </summary>
+        /// <value>
+        /// True if a welcome message was already sent to the chat.
+        /// </value>
+        public bool IsWelcomeMessageSent { get; set; } = false;
     }
 }

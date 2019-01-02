@@ -637,6 +637,7 @@ namespace MSHU.CarWash.Bot.Dialogs
             foreach (var service in servicesStringArray)
             {
                 if (Enum.TryParse(service, true, out ServiceType serviceType)) services.Add(serviceType);
+                else _telemetryClient.TrackEvent("Failed to parse choosen services.", new Dictionary<string, string> { { "Activity value", activity.Value.ToJson() } });
             }
 
             return services;

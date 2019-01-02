@@ -417,29 +417,37 @@ namespace MSHU.CarWash.Bot
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
         /// <returns>A <see cref="Task"/> representing the operation result of the Turn operation.</returns>
-        private static async Task SendWelcomeMessageAsync(ITurnContext turnContext, CancellationToken cancellationToken)
+        private async Task SendWelcomeMessageAsync(ITurnContext turnContext, CancellationToken cancellationToken)
         {
+            var profileState = await _accessors.UserProfileAccessor.GetAsync(turnContext, () => new UserProfile(), cancellationToken);
+            if (profileState.IsWelcomeMessageSent) return;
+            profileState.IsWelcomeMessageSent = true;
+            await _accessors.UserProfileAccessor.SetAsync(turnContext, profileState);
+
             var greeting = turnContext.Activity.From?.Name == null ? "Hi!" : $"Hi {turnContext.Activity.From.Name}!";
-            await turnContext.SendActivityAsync(greeting, cancellationToken: cancellationToken);
-            await turnContext.SendActivityAsync("My name is C.I.C.A. (Cool and Intelligent Carwash Assistant) and I'm your bot 🤖 who will help you reserve car washing services and answer your questions.", cancellationToken: cancellationToken);
-            await turnContext.SendActivityAsync("Ask me questions like 'How to use the app?' or 'What does interior cleaning cost?'.", cancellationToken: cancellationToken);
-            await turnContext.SendActivityAsync(
-                new Activity
+            await turnContext.SendActivitiesAsync(
+                new IActivity[]
                 {
-                    Type = ActivityTypes.Message,
-                    InputHint = InputHints.AcceptingInput,
-                    Text = "Or I can make reservations for you. But before that you need to log in by typing 'login'.",
-                    SuggestedActions = new SuggestedActions
+                    new Activity(type: ActivityTypes.Message, text: greeting),
+                    new Activity(type: ActivityTypes.Message, text: "My name is C.I.C.A. (Cool and Intelligent Carwash Assistant) and I'm your bot 🤖 who will help you reserve car washing services and answer your questions."),
+                    new Activity(type: ActivityTypes.Message, text: "Ask me questions like 'How to use the app?' or 'What does interior cleaning cost?'."),
+                    new Activity
                     {
-                        Actions = new List<CardAction>
+                        Type = ActivityTypes.Message,
+                        InputHint = InputHints.AcceptingInput,
+                        Text = "Or I can make reservations for you. But before that you need to log in by typing 'login'.",
+                        SuggestedActions = new SuggestedActions
                         {
-                            new CardAction { Title = "login", Type = ActionTypes.ImBack, Value = "login" },
-                            new CardAction { Title = "How to use the app?", Type = ActionTypes.ImBack, Value = "How to use the app?" },
-                            new CardAction { Title = "What does interior cleaning cost?", Type = ActionTypes.ImBack, Value = "What does interior cleaning cost?" },
+                            Actions = new List<CardAction>
+                            {
+                                new CardAction { Title = "login", Type = ActionTypes.ImBack, Value = "login" },
+                                new CardAction { Title = "How to use the app?", Type = ActionTypes.ImBack, Value = "How to use the app?" },
+                                new CardAction { Title = "What does interior cleaning cost?", Type = ActionTypes.ImBack, Value = "What does interior cleaning cost?" },
+                            },
                         },
                     },
                 },
-                cancellationToken: cancellationToken);
+                cancellationToken);
         }
 
         /// <summary>

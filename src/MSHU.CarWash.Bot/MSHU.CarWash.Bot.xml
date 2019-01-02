@@ -962,6 +962,14 @@
             The <see cref="T:MSHU.CarWash.ClassLibrary.Models.User"/>'s ID within the CarWash API.
             </value>
         </member>
+        <member name="P:MSHU.CarWash.Bot.States.UserProfile.IsWelcomeMessageSent">
+            <summary>
+            Gets or sets a value indicating whether a welcome message was already sent to the chat.
+            </summary>
+            <value>
+            True if a welcome message was already sent to the chat.
+            </value>
+        </member>
         <member name="T:MSHU.CarWash.ClassLibrary.Extensions.DateTimeExtension">
             <summary>
             Extension class for DateTime.
