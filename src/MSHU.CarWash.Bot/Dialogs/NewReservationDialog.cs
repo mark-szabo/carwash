@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Authentication;
@@ -307,9 +307,22 @@ namespace MSHU.CarWash.Bot.Dialogs
                 return await step.EndDialogAsync(cancellationToken: cancellationToken);
             }
 
-            // Check whether we can find out the slot from timex.
-            if (!string.IsNullOrEmpty(state.Timex?.PartOfDay))
+            // Check whether we already know the slot.
+            if (Slots.Any(s => s.StartTime == state.StartDate?.Hour))
             {
+                // Check if slot is available.
+                if (!reservationCapacity.Any(c => c.StartTime == state.StartDate && c.FreeCapacity > 0))
+                {
+                    await step.Context.SendActivityAsync("Sorry, this slot is already full.", cancellationToken: cancellationToken);
+                }
+                else
+                {
+                    return await step.NextAsync(cancellationToken: cancellationToken);
+                }
+            }
+            else if (!string.IsNullOrEmpty(state.Timex?.PartOfDay))
+            {
+                // Check whether we can find out the slot from timex.
                 Slot slot = null;
                 switch (state.Timex.PartOfDay)
                 {
@@ -335,20 +348,6 @@ namespace MSHU.CarWash.Bot.Dialogs
                         0);
 
                     await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
-                }
-            }
-
-            // Check whether we already know the slot.
-            if (Slots.Any(s => s.StartTime == state.StartDate?.Hour))
-            {
-                // Check if slot is available.
-                if (!reservationCapacity.Any(c => c.StartTime == state.StartDate && c.FreeCapacity > 0))
-                {
-                    await step.Context.SendActivityAsync("Sorry, this slot is already full.", cancellationToken: cancellationToken);
-                }
-                else
-                {
-                    return await step.NextAsync(cancellationToken: cancellationToken);
                 }
             }
 
@@ -643,9 +642,16 @@ namespace MSHU.CarWash.Bot.Dialogs
 
         private List<ServiceType> ParseServiceSelectionCardResponse(Activity activity)
         {
-            var servicesStringArray = JObject.FromObject(activity.Value)?["services"]?.ToString()?.Split(',');
             var services = new List<ServiceType>();
+
+            var servicesString = JObject.FromObject(activity.Value)?["services"]?.ToString();
+            var servicesStringArray = servicesString?.Split(',');
+
+            // Teams Android mobile client concatenates items with ';' for some reason. #consistency
+            if (servicesString.Contains(';')) servicesStringArray = servicesString?.Split(';');
+
             if (servicesStringArray == null) return services;
+
             foreach (var service in servicesStringArray)
             {
                 if (Enum.TryParse(service, true, out ServiceType serviceType)) services.Add(serviceType);
