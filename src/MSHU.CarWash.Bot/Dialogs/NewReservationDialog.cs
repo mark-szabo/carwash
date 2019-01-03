@@ -404,7 +404,7 @@ namespace MSHU.CarWash.Bot.Dialogs
         {
             var state = await _stateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
 
-            if (state.VehiclePlateNumber != null && step.Result is bool confirmed) return await step.NextAsync(cancellationToken: cancellationToken);
+            if (state.VehiclePlateNumber != null && step.Result is bool confirmed && confirmed) return await step.NextAsync(cancellationToken: cancellationToken);
 
             return await step.PromptAsync(
                 VehiclePlateNumberPromptName,
