@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,6 +40,7 @@ namespace MSHU.CarWash.Bot.Proactive
         private readonly StateAccessors _accessors;
         private readonly BotFrameworkAdapter _botFrameworkAdapter;
         private readonly DialogSet _dialogs;
+        private readonly IHostingEnvironment _env;
         private readonly TelemetryClient _telemetryClient;
 
         /// <summary>
@@ -52,6 +54,7 @@ namespace MSHU.CarWash.Bot.Proactive
         public DropoffReminder(StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotConfiguration botConfig, BotServices services)
         {
             _accessors = accessors;
+            _env = env;
             _botFrameworkAdapter = (BotFrameworkAdapter)adapterIntegration;
             _telemetryClient = new TelemetryClient();
 
@@ -135,6 +138,8 @@ namespace MSHU.CarWash.Bot.Proactive
                         { "SequenceNumber", message.SystemProperties.SequenceNumber.ToString() },
                     });
             }
+
+            if (!_env.IsProduction()) userInfos = userInfos.Where(i => i.ChannelId == ChannelIds.Emulator).ToList();
 
             foreach (var userInfo in userInfos)
             {

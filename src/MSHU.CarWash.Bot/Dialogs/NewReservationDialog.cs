@@ -153,7 +153,7 @@ namespace MSHU.CarWash.Bot.Dialogs
                 catch (Exception e)
                 {
                     _telemetryClient.TrackException(e);
-                    await step.Context.SendActivityAsync("I am not able to access the CarWash app right now.", cancellationToken: cancellationToken);
+                    await step.Context.SendActivityAsync(e.Message, cancellationToken: cancellationToken);
 
                     return await step.EndDialogAsync(cancellationToken: cancellationToken);
                 }
@@ -218,7 +218,7 @@ namespace MSHU.CarWash.Bot.Dialogs
             catch (Exception e)
             {
                 _telemetryClient.TrackException(e);
-                await step.Context.SendActivityAsync("I am not able to access the CarWash app right now.", cancellationToken: cancellationToken);
+                await step.Context.SendActivityAsync(e.Message, cancellationToken: cancellationToken);
 
                 return await step.EndDialogAsync(cancellationToken: cancellationToken);
             }
@@ -302,7 +302,7 @@ namespace MSHU.CarWash.Bot.Dialogs
             catch (Exception e)
             {
                 _telemetryClient.TrackException(e);
-                await step.Context.SendActivityAsync("I am not able to access the CarWash app right now.", cancellationToken: cancellationToken);
+                await step.Context.SendActivityAsync(e.Message, cancellationToken: cancellationToken);
 
                 return await step.EndDialogAsync(cancellationToken: cancellationToken);
             }
@@ -502,7 +502,7 @@ namespace MSHU.CarWash.Bot.Dialogs
             catch (Exception e)
             {
                 _telemetryClient.TrackException(e);
-                await step.Context.SendActivityAsync("I am not able to access the CarWash app right now.", cancellationToken: cancellationToken);
+                await step.Context.SendActivityAsync(e.Message, cancellationToken: cancellationToken);
 
                 return await step.EndDialogAsync(cancellationToken: cancellationToken);
             }

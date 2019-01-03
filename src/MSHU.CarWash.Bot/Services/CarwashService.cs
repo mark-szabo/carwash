@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.Serialization;
 using System.Security.Authentication;
 using System.Text;
 using System.Threading;
@@ -11,6 +12,7 @@ using Microsoft.ApplicationInsights;
 using Microsoft.Bot.Builder.Dialogs;
 using MSHU.CarWash.Bot.Dialogs;
 using MSHU.CarWash.ClassLibrary.Enums;
+using MSHU.CarWash.ClassLibrary.Extensions;
 using MSHU.CarWash.ClassLibrary.Models;
 using Newtonsoft.Json;
 
@@ -55,6 +57,8 @@ namespace MSHU.CarWash.Bot.Services
             _client = new HttpClient();
             _client.BaseAddress = new Uri("https://carwashu.azurewebsites.net/");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            _telemetryClient = new TelemetryClient();
         }
 
         /// <summary>
@@ -178,22 +182,46 @@ namespace MSHU.CarWash.Bot.Services
             try
             {
                 var response = await _client.GetAsync(endpoint, cancellationToken);
+                var responseContent = await response.Content?.ReadAsStringAsync();
+
+                switch (response.StatusCode)
+                {
+                    case System.Net.HttpStatusCode.BadRequest:
+                        throw new CarwashApiException(responseContent.Trim('"'), response);
+                    case System.Net.HttpStatusCode.Forbidden:
+                        throw new CarwashApiException("Sorry, but you don't have permission to do this.", response);
+                    case System.Net.HttpStatusCode.InternalServerError:
+                        throw new CarwashApiException("I'm not able to access the CarWash app right now.", response);
+                    case System.Net.HttpStatusCode.NotFound:
+                        throw new CarwashApiException("Sorry, I haven't found this one.", response);
+                    case System.Net.HttpStatusCode.Unauthorized:
+                        throw new CarwashApiException("You are not authenticated. Log in by typing 'login'.", response);
+                }
+
                 response.EnsureSuccessStatusCode();
-                var responseContent = await response.Content.ReadAsStringAsync();
 
                 return JsonConvert.DeserializeObject<T>(responseContent);
             }
-            catch (HttpRequestException e)
+            catch (CarwashApiException e)
             {
-                _telemetryClient.TrackException(e);
+                _telemetryClient.TrackException(
+                    e,
+                    new Dictionary<string, string>
+                    {
+                            { "Error message", e.Message },
+                            { "Response body", await e.Response?.Content?.ReadAsStringAsync() },
+                            { "Request body", await e.Response?.RequestMessage?.Content?.ReadAsStringAsync() },
+                            { "Request uri", $"{e.Response?.RequestMessage?.Method?.ToString()} {e.Response?.RequestMessage?.RequestUri?.AbsoluteUri}" },
+                            { "Request headers", e.Response?.RequestMessage?.Headers?.ToJson() },
+                    });
 
-                throw new Exception($"A HTTP request error occured while communicating with the CarWash API: {e.Message} See inner exception.", e);
+                throw e;
             }
             catch (Exception e)
             {
                 _telemetryClient.TrackException(e);
 
-                throw new Exception($"An error occured while communicating with the CarWash API: {e.Message} See inner exception.", e);
+                throw new Exception($"I'm not able to access the CarWash app right now.", e);
             }
         }
 
@@ -211,22 +239,46 @@ namespace MSHU.CarWash.Bot.Services
             try
             {
                 var response = await _client.PostAsync(endpoint, content, cancellationToken);
-                response.EnsureSuccessStatusCode();
                 var responseContent = await response.Content.ReadAsStringAsync();
+
+                switch (response.StatusCode)
+                {
+                    case System.Net.HttpStatusCode.BadRequest:
+                        throw new CarwashApiException(responseContent.Trim('"'), response);
+                    case System.Net.HttpStatusCode.Forbidden:
+                        throw new CarwashApiException("Sorry, but you don't have permission to do this.", response);
+                    case System.Net.HttpStatusCode.InternalServerError:
+                        throw new CarwashApiException("I'm not able to access the CarWash app right now.", response);
+                    case System.Net.HttpStatusCode.NotFound:
+                        throw new CarwashApiException("Sorry, I haven't found this one.", response);
+                    case System.Net.HttpStatusCode.Unauthorized:
+                        throw new CarwashApiException("You are not authenticated. Log in by typing 'login'.", response);
+                }
+
+                response.EnsureSuccessStatusCode();
 
                 return JsonConvert.DeserializeObject<T>(responseContent);
             }
-            catch (HttpRequestException e)
+            catch (CarwashApiException e)
             {
-                _telemetryClient.TrackException(e);
+                _telemetryClient.TrackException(
+                    e,
+                    new Dictionary<string, string>
+                    {
+                            { "Error message", e.Message },
+                            { "Response body", await e.Response?.Content?.ReadAsStringAsync() },
+                            { "Request body", await e.Response?.RequestMessage?.Content?.ReadAsStringAsync() },
+                            { "Request uri", $"{e.Response?.RequestMessage?.Method?.ToString()} {e.Response?.RequestMessage?.RequestUri?.AbsoluteUri}" },
+                            { "Request headers", e.Response?.RequestMessage?.Headers?.ToJson() },
+                    });
 
-                throw new Exception($"A HTTP request error occured while communicating with the CarWash API: {e.Message} See inner exception.", e);
+                throw e;
             }
             catch (Exception e)
             {
                 _telemetryClient.TrackException(e);
 
-                throw new Exception($"An error occured while communicating with the CarWash API: {e.Message} See inner exception.", e);
+                throw new Exception($"I'm not able to access the CarWash app right now.", e);
             }
         }
 
@@ -255,6 +307,26 @@ namespace MSHU.CarWash.Bot.Services
             public DateTime StartTime { get; set; }
 
             public int FreeCapacity { get; set; }
+        }
+
+        [Serializable]
+        private class CarwashApiException : Exception
+        {
+            public CarwashApiException(string message, HttpResponseMessage response) : base(message)
+            {
+                Response = response;
+            }
+
+            public CarwashApiException(string message, HttpResponseMessage response, Exception innerException) : base(message, innerException)
+            {
+                Response = response;
+            }
+
+            protected CarwashApiException(SerializationInfo info, StreamingContext context) : base(info, context)
+            {
+            }
+
+            public HttpResponseMessage Response { get; set; }
         }
     }
 }
