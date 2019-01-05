@@ -25,6 +25,11 @@ steps:
       projects: '**/MSHU.CarWash.PWA.csproj'
       arguments: '--configuration $(buildConfiguration)'
 
+  - task: NodeTool@0
+    displayName: 'Install Node.js'
+    inputs:
+      versionSpec: '10.x'
+
   - script: |
       cd $(Build.SourcesDirectory)\src\MSHU.CarWash.PWA\ClientApp
       npm install
@@ -34,6 +39,13 @@ steps:
       cd $(Build.SourcesDirectory)\src\MSHU.CarWash.PWA\ClientApp
       npm run build
     displayName: 'Build PWA'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Build Functions ($(buildConfiguration))'
+    inputs:
+      command: build
+      projects: '**/MSHU.CarWash.Functions.csproj'
+      arguments: '--configuration $(buildConfiguration)'
 
   - task: DotNetCoreCLI@2
     displayName: 'Run tests'
