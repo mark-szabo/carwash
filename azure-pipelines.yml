@@ -25,10 +25,10 @@ steps:
       projects: '**/MSHU.CarWash.PWA.csproj'
       arguments: '--configuration $(buildConfiguration)'
 
-  - script: cd $(Build.SourcesDirectory)\src\MSHU.CarWash.PWA\ClientApp; npm install
+  - script: npm install --prefix $(Build.SourcesDirectory)\src\MSHU.CarWash.PWA\ClientApp
     displayName: 'Restore npm packages for PWA'
 
-  - script: cd $(Build.SourcesDirectory)\src\MSHU.CarWash.PWA\ClientApp; npm run build
+  - script: npm run build --prefix $(Build.SourcesDirectory)\src\MSHU.CarWash.PWA\ClientApp
     displayName: 'Build PWA'
 
   - task: DotNetCoreCLI@2
