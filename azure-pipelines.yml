@@ -1,7 +1,5 @@
-# ASP.NET Core
-# Build and test ASP.NET Core projects targeting .NET Core.
-# Add steps that run tests, create a NuGet package, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+# CarWash CI
+# Docs: https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
 
 trigger:
   - master
@@ -14,11 +12,17 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-  - script: dotnet restore './src/MSHU.CarWash.PWA/MSHU.CarWash.PWA.csproj'
+  - script: dotnet restore 'src/MSHU.CarWash.PWA/MSHU.CarWash.PWA.csproj'
     displayName: 'Restore NuGet packages for API'
 
-  - script: dotnet build './src/MSHU.CarWash.PWA/MSHU.CarWash.PWA.csproj' --configuration $(buildConfiguration)
+  - script: dotnet build 'src/MSHU.CarWash.PWA/MSHU.CarWash.PWA.csproj' --configuration $(buildConfiguration)
     displayName: 'Build API ($(buildConfiguration))'
+
+  - script: npm install --prefix src/MSHU.CarWash.PWA/ClientApp
+    displayName: 'Restore npm packages for PWA'
+
+  - script: npm run build --prefix src/MSHU.CarWash.PWA/ClientApp
+    displayName: 'Build PWA'
 
   - task: DotNetCoreCLI@2
     displayName: 'Run tests'
