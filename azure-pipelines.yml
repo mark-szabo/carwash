@@ -12,11 +12,18 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-  - script: dotnet restore 'src/MSHU.CarWash.PWA/MSHU.CarWash.PWA.csproj'
-    displayName: 'Restore NuGet packages for API'
+  - task: DotNetCoreCLI@2
+    displayName: 'Restore NuGet packages'
+    inputs:
+      command: restore
+      projects: '**/*.csproj'
 
-  - script: dotnet build 'src/MSHU.CarWash.PWA/MSHU.CarWash.PWA.csproj' --configuration $(buildConfiguration)
+  - task: DotNetCoreCLI@2
     displayName: 'Build API ($(buildConfiguration))'
+    inputs:
+      command: build
+      projects: '**/MSHU.CarWash.PWA.csproj'
+      arguments: '--configuration $(buildConfiguration)'
 
   - script: npm install --prefix src/MSHU.CarWash.PWA/ClientApp
     displayName: 'Restore npm packages for PWA'
