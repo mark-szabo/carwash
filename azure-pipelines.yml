@@ -14,11 +14,11 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-  - script: dotnet restore
-    displayName: 'Restore NuGet packages'
+  - script: dotnet restore './src/MSHU.CarWash.PWA/MSHU.CarWash.PWA.csproj'
+    displayName: 'Restore NuGet packages for API'
 
-  - script: dotnet build --configuration $(buildConfiguration)
-    displayName: 'Build ($(buildConfiguration))'
+  - script: dotnet build './src/MSHU.CarWash.PWA/MSHU.CarWash.PWA.csproj' --configuration $(buildConfiguration)
+    displayName: 'Build API ($(buildConfiguration))'
 
   - task: DotNetCoreCLI@2
     displayName: 'Run tests'
