@@ -1,6 +1,6 @@
 # CarWash app v2.0
 
-[![Build Status](https://jovadker.visualstudio.com/CarWash/_apis/build/status/CarWash-PWA-CI)](https://jovadker.visualstudio.com/CarWash/_build/latest?definitionId=26)
+[![Build Status](https://dev.azure.com/mark-szabo/carwash/_apis/build/status/CarWash%20CI?branchName=master)](https://dev.azure.com/mark-szabo/carwash/_build/latest?definitionId=2?branchName=master)
 
 ## Features
 
