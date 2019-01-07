@@ -10,11 +10,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Recognizers.Text.DataTypes.TimexExpression;
 using MSHU.CarWash.Bot.Dialogs;
 using MSHU.CarWash.ClassLibrary.Enums;
 using MSHU.CarWash.ClassLibrary.Extensions;
 using MSHU.CarWash.ClassLibrary.Models;
 using Newtonsoft.Json;
+using Constants = MSHU.CarWash.ClassLibrary.Constants;
 
 namespace MSHU.CarWash.Bot.Services
 {
@@ -158,9 +160,42 @@ namespace MSHU.CarWash.Bot.Services
         }
 
         /// <summary>
+        /// Get the list of next available, free slots.
+        /// </summary>
+        /// <param name="numberOfSlots">Number of next free slot to return. Defaults to 3.</param>
+        /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
+        /// or threads to receive notice of cancellation.</param>
+        /// <returns>A list of free slots.</returns>
+        internal async Task<IEnumerable<string>> GetNextFreeSlotsAsync(int numberOfSlots = 3, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var notAvailable = await GetAsync<NotAvailableDatesAndTimes>("/api/reservations/notavailabledates", cancellationToken);
+
+            var freeslots = new List<string>();
+            var dateIterator = DateTime.Today;
+            while (freeslots.Count < numberOfSlots && dateIterator < DateTime.Today.AddYears(1))
+            {
+                foreach (var slot in Constants.Slots)
+                {
+                    var slotStartTime = new DateTime(dateIterator.Year, dateIterator.Month, dateIterator.Day, slot.StartTime, 0, 0);
+                    var slotEndTime = new DateTime(dateIterator.Year, dateIterator.Month, dateIterator.Day, slot.EndTime, 0, 0);
+
+                    if (!notAvailable.Times.Contains(slotStartTime) && freeslots.Count <= numberOfSlots)
+                    {
+                        var timex = TimexProperty.FromDateTime(slotStartTime);
+                        freeslots.Add($"{timex.ToNaturalLanguage(DateTime.Now)}-{slotEndTime.ToString("htt")}");
+                    }
+                }
+
+                dateIterator = dateIterator.AddDays(1);
+            }
+
+            return freeslots;
+        }
+
+        /// <summary>
         /// Gets a list of slots and their free reservation capacity on a given date.
         /// </summary>
-        /// <param name="date">the date to filter on</param>
+        /// <param name="date">The date to filter on.</param>
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
         /// <returns>List of <see cref="ReservationCapacity"/>.</returns>
@@ -282,6 +317,7 @@ namespace MSHU.CarWash.Bot.Services
             }
         }
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         /*
          * API response models
          */

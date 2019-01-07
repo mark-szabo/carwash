@@ -72,14 +72,14 @@ namespace MSHU.CarWash.Bot.Dialogs
             }
             catch (AuthenticationException)
             {
-                await dc.Context.SendActivityAsync("You have to be authenticated.", cancellationToken: cancellationToken);
+                await dc.Context.SendActivityAsync(AuthDialog.NotAuthenticatedMessage, cancellationToken: cancellationToken);
 
                 return await dc.EndDialogAsync(cancellationToken: cancellationToken);
             }
             catch (Exception e)
             {
                 _telemetryClient.TrackException(e);
-                await dc.Context.SendActivityAsync("I am not able to access your reservations right now.", cancellationToken: cancellationToken);
+                await dc.Context.SendActivityAsync(e.Message, cancellationToken: cancellationToken);
 
                 return await dc.EndDialogAsync(cancellationToken: cancellationToken);
             }

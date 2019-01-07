@@ -369,6 +369,26 @@
             List of LUIS entities.
             </value>
         </member>
+        <member name="T:MSHU.CarWash.Bot.Dialogs.NextFreeSlotDialog">
+            <summary>
+            Next free slots dialog.
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.Bot.Dialogs.NextFreeSlotDialog.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:MSHU.CarWash.Bot.Dialogs.NextFreeSlotDialog"/> class.
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.Bot.Dialogs.NextFreeSlotDialog.BeginDialogAsync(Microsoft.Bot.Builder.Dialogs.DialogContext,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Load and responds with the next available, free slots.
+            </summary>
+            <param name="dc">A <see cref="T:Microsoft.Bot.Builder.Dialogs.DialogContext"/> provides context for the dialog.</param>
+            <param name="options">(Optional) An object storing the input options.</param>
+            <param name="cancellationToken" >(Optional) A <see cref="T:System.Threading.CancellationToken"/> that can be used by other objects
+            or threads to receive notice of cancellation.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the operation result of the operation.</returns>
+        </member>
         <member name="T:MSHU.CarWash.Bot.GreetingDialog">
             <summary>
             Demonstrates the following concepts:
@@ -697,11 +717,20 @@
             or threads to receive notice of cancellation.</param>
             <returns>NotAvailableDatesAndTimes object.</returns>
         </member>
+        <member name="M:MSHU.CarWash.Bot.Services.CarwashService.GetNextFreeSlotsAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Get the list of next available, free slots.
+            </summary>
+            <param name="numberOfSlots">Number of next free slot to return. Defaults to 3.</param>
+            <param name="cancellationToken" >(Optional) A <see cref="T:System.Threading.CancellationToken"/> that can be used by other objects
+            or threads to receive notice of cancellation.</param>
+            <returns>A list of free slots.</returns>
+        </member>
         <member name="M:MSHU.CarWash.Bot.Services.CarwashService.GetReservationCapacityAsync(System.DateTime,System.Threading.CancellationToken)">
             <summary>
             Gets a list of slots and their free reservation capacity on a given date.
             </summary>
-            <param name="date">the date to filter on</param>
+            <param name="date">The date to filter on.</param>
             <param name="cancellationToken" >(Optional) A <see cref="T:System.Threading.CancellationToken"/> that can be used by other objects
             or threads to receive notice of cancellation.</param>
             <returns>List of <see cref="T:MSHU.CarWash.Bot.Services.CarwashService.ReservationCapacity"/>.</returns>

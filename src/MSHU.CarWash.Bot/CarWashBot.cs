@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Bot.Builder.Community.Dialogs.FormFlow;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Bot.Builder;
@@ -121,6 +120,7 @@ namespace MSHU.CarWash.Bot
             Dialogs.Add(new NewReservationDialog(_accessors.NewReservationStateAccessor));
             Dialogs.Add(new ConfirmDropoffDialog(_accessors.ConfirmDropoffStateAccessor));
             Dialogs.Add(new FindReservationDialog());
+            Dialogs.Add(new NextFreeSlotDialog());
             Dialogs.Add(new AuthDialog(accessors.UserProfileAccessor, _storage));
             Dialogs.Add(AuthDialog.LoginPromptDialog());
 
@@ -258,7 +258,7 @@ namespace MSHU.CarWash.Bot
                                             break;
 
                                         case NextFreeSlotIntent:
-                                            await turnContext.SendActivityAsync("This feature is not yet implemented. Check back in a few days! 😉", cancellationToken: cancellationToken);
+                                            await dc.BeginDialogAsync(nameof(NextFreeSlotDialog), cancellationToken: cancellationToken);
                                             break;
 
                                         case WeatherIntent:
