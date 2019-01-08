@@ -72,6 +72,7 @@ namespace MSHU.CarWash.Bot
         private const string EditReservationIntent = "Reservation_Edit";
         private const string FindReservationIntent = "Reservation_Find";
         private const string NextFreeSlotIntent = "Reservation_NextFreeSlot";
+        private const string StopIntent = "Stop";
         private const string HelpIntent = "Help";
         private const string NoneIntent = "None";
         private const string WeatherIntent = "Weather_GetForecast";
@@ -377,23 +378,21 @@ namespace MSHU.CarWash.Bot
         // Determine if an interruption has occured before we dispatch to any active dialog.
         private static async Task<bool> IsTurnInterruptedAsync(DialogContext dc, string topIntent)
         {
-            /*
             // See if there are any conversation interrupts we need to handle.
-            if (topIntent.Equals(CancelIntent))
+            if (topIntent.Equals(StopIntent))
             {
                 if (dc.ActiveDialog != null)
                 {
                     await dc.CancelAllDialogsAsync();
-                    await dc.Context.SendActivityAsync("Ok. I've cancelled our last activity.");
+                    await dc.Context.SendActivityAsync("Sorry, I haven't noticed that the context changed. How can I help you?");
                 }
                 else
                 {
-                    await dc.Context.SendActivityAsync("I don't have anything to cancel.");
+                    await dc.Context.SendActivityAsync("How can I help you?");
                 }
 
                 return true;        // Handled the interrupt.
             }
-            */
 
             if (topIntent.Equals(HelpIntent))
             {

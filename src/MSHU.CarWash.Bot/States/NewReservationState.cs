@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Microsoft.Recognizers.Text.DataTypes.TimexExpression;
 using MSHU.CarWash.Bot.Services;
 using MSHU.CarWash.ClassLibrary.Enums;
-using Newtonsoft.Json;
 
 namespace MSHU.CarWash.Bot.States
 {

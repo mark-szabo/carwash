@@ -9,6 +9,7 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
 using Microsoft.Bot.Schema;
+using MSHU.CarWash.Bot.Extensions;
 using MSHU.CarWash.Bot.Resources;
 using MSHU.CarWash.Bot.Services;
 using MSHU.CarWash.Bot.States;
@@ -96,21 +97,21 @@ namespace MSHU.CarWash.Bot.Dialogs
             {
                 await step.Context.SendActivityAsync(AuthDialog.NotAuthenticatedMessage, cancellationToken: cancellationToken);
 
-                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
             }
             catch (Exception e)
             {
                 _telemetryClient.TrackException(e);
                 await step.Context.SendActivityAsync("I am not able to access your reservations right now.", cancellationToken: cancellationToken);
 
-                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
             }
 
             if (reservations.Count == 0)
             {
                 await step.Context.SendActivityAsync("You do not have any active reservations.", cancellationToken: cancellationToken);
 
-                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
             }
 
             if (reservations.Any(r => r.Id == options.ReservationId))
@@ -170,14 +171,14 @@ namespace MSHU.CarWash.Bot.Dialogs
             {
                 await step.Context.SendActivityAsync(AuthDialog.NotAuthenticatedMessage, cancellationToken: cancellationToken);
 
-                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
             }
             catch (Exception e)
             {
                 _telemetryClient.TrackException(e);
                 await step.Context.SendActivityAsync("I am not able to access your reservations right now.", cancellationToken: cancellationToken);
 
-                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
             }
 
             if (!string.IsNullOrWhiteSpace(reservation.Location))
@@ -301,26 +302,19 @@ namespace MSHU.CarWash.Bot.Dialogs
 
                 // Get reservation object for displaying
                 reservation = await api.GetReservationAsync(state.ReservationId, cancellationToken);
-
-                // Reset state
-                state.ReservationId = null;
-                state.Building = null;
-                state.Floor = null;
-                state.Seat = null;
-                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
             }
             catch (AuthenticationException)
             {
                 await step.Context.SendActivityAsync(AuthDialog.NotAuthenticatedMessage, cancellationToken: cancellationToken);
 
-                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
             }
             catch (Exception e)
             {
                 _telemetryClient.TrackException(e);
                 await step.Context.SendActivityAsync(e.Message, cancellationToken: cancellationToken);
 
-                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
             }
 
             await step.Context.SendActivityAsync("OK, I have confirmed that you've dropped off the key.", cancellationToken: cancellationToken);
@@ -343,7 +337,7 @@ namespace MSHU.CarWash.Bot.Dialogs
                     { "Drop-off confirmation", 1 },
                 });
 
-            return await step.EndDialogAsync(cancellationToken: cancellationToken);
+            return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
         }
 
         /// <summary>

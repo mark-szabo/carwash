@@ -11,6 +11,7 @@ using Microsoft.Bot.Builder.Dialogs.Choices;
 using Microsoft.Bot.Schema;
 using Microsoft.Recognizers.Text.DataTypes.TimexExpression;
 using MSHU.CarWash.Bot.CognitiveModels;
+using MSHU.CarWash.Bot.Extensions;
 using MSHU.CarWash.Bot.Resources;
 using MSHU.CarWash.Bot.Services;
 using MSHU.CarWash.Bot.States;
@@ -148,14 +149,14 @@ namespace MSHU.CarWash.Bot.Dialogs
                 {
                     await step.Context.SendActivityAsync(AuthDialog.NotAuthenticatedMessage, cancellationToken: cancellationToken);
 
-                    return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                    return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
                 }
                 catch (Exception e)
                 {
                     _telemetryClient.TrackException(e);
                     await step.Context.SendActivityAsync(e.Message, cancellationToken: cancellationToken);
 
-                    return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                    return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
                 }
             }
 
@@ -213,14 +214,14 @@ namespace MSHU.CarWash.Bot.Dialogs
             {
                 await step.Context.SendActivityAsync(AuthDialog.NotAuthenticatedMessage, cancellationToken: cancellationToken);
 
-                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
             }
             catch (Exception e)
             {
                 _telemetryClient.TrackException(e);
                 await step.Context.SendActivityAsync(e.Message, cancellationToken: cancellationToken);
 
-                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
             }
 
             // Save recommendations to state
@@ -297,14 +298,14 @@ namespace MSHU.CarWash.Bot.Dialogs
             {
                 await step.Context.SendActivityAsync(AuthDialog.NotAuthenticatedMessage, cancellationToken: cancellationToken);
 
-                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
             }
             catch (Exception e)
             {
                 _telemetryClient.TrackException(e);
                 await step.Context.SendActivityAsync(e.Message, cancellationToken: cancellationToken);
 
-                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
             }
 
             // Check whether we already know the slot.
@@ -348,6 +349,8 @@ namespace MSHU.CarWash.Bot.Dialogs
                         0);
 
                     await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
+
+                    return await step.NextAsync(cancellationToken: cancellationToken);
                 }
             }
 
@@ -481,30 +484,19 @@ namespace MSHU.CarWash.Bot.Dialogs
 
                 // Submit reservation
                 reservation = await api.SubmitReservationAsync(reservation, cancellationToken);
-
-                // Reset state
-                state.VehiclePlateNumber = null;
-                state.Services = new List<ServiceType>();
-                state.StartDate = null;
-                state.Timex = null;
-                state.Comment = null;
-                state.LastSettings = null;
-                state.RecommendedSlots = new List<DateTime>();
-                state.SlotChoices = new List<DateTime>();
-                await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
             }
             catch (AuthenticationException)
             {
                 await step.Context.SendActivityAsync(AuthDialog.NotAuthenticatedMessage, cancellationToken: cancellationToken);
 
-                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
             }
             catch (Exception e)
             {
                 _telemetryClient.TrackException(e);
                 await step.Context.SendActivityAsync(e.Message, cancellationToken: cancellationToken);
 
-                return await step.EndDialogAsync(cancellationToken: cancellationToken);
+                return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
             }
 
             await step.Context.SendActivityAsync($"OK, I have reserved a car wash for {reservation.StartDate.ToNaturalLanguage()}.", cancellationToken: cancellationToken);
@@ -527,7 +519,7 @@ namespace MSHU.CarWash.Bot.Dialogs
                     { "New reservation", 1 },
                 });
 
-            return await step.EndDialogAsync(cancellationToken: cancellationToken);
+            return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
         }
 
         /// <summary>
@@ -539,6 +531,12 @@ namespace MSHU.CarWash.Bot.Dialogs
         /// <returns>A <see cref="Task"/> that represents the work queued to execute.</returns>
         private async Task<bool> ValidateServices(PromptValidatorContext<string> promptContext, CancellationToken cancellationToken)
         {
+            if (promptContext.Context.Activity?.Value == null)
+            {
+                await promptContext.Context.SendActivityAsync($"Please choose at least one service!").ConfigureAwait(false);
+                return false;
+            }
+
             var services = ParseServiceSelectionCardResponse(promptContext.Context.Activity);
 
             if (services.Count > 0)

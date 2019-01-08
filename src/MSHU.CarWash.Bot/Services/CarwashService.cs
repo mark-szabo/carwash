@@ -179,7 +179,7 @@ namespace MSHU.CarWash.Bot.Services
                     var slotStartTime = new DateTime(dateIterator.Year, dateIterator.Month, dateIterator.Day, slot.StartTime, 0, 0);
                     var slotEndTime = new DateTime(dateIterator.Year, dateIterator.Month, dateIterator.Day, slot.EndTime, 0, 0);
 
-                    if (!notAvailable.Times.Contains(slotStartTime) && freeslots.Count <= numberOfSlots)
+                    if (!notAvailable.Times.Contains(slotStartTime) && freeslots.Count <= numberOfSlots && slotStartTime >= DateTime.Now)
                     {
                         var timex = TimexProperty.FromDateTime(slotStartTime);
                         freeslots.Add($"{timex.ToNaturalLanguage(DateTime.Now)}-{slotEndTime.ToString("htt")}");
