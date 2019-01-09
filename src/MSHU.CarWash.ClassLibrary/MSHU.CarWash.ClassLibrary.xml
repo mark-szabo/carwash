@@ -14,6 +14,137 @@
             Bookable slots and their capacity (in washes and not in minutes!)
             </summary>
         </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Enums.NotificationChannel">
+            <summary>
+            Types of notification channels the user can choose from.
+            </summary>
+        </member>
+        <member name="F:MSHU.CarWash.ClassLibrary.Enums.NotificationChannel.NotSet">
+            <summary>
+            Notification channel not yet set.
+            </summary>
+        </member>
+        <member name="F:MSHU.CarWash.ClassLibrary.Enums.NotificationChannel.Disabled">
+            <summary>
+            Notifications are disabled.
+            </summary>
+        </member>
+        <member name="F:MSHU.CarWash.ClassLibrary.Enums.NotificationChannel.Email">
+            <summary>
+            Email channel is choosen for notifications.
+            </summary>
+        </member>
+        <member name="F:MSHU.CarWash.ClassLibrary.Enums.NotificationChannel.Push">
+            <summary>
+            Push channel is choosen for notifications.
+            </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Enums.ServiceType">
+            <summary>
+            Types of services the users can choose from.
+            </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Enums.ServiceExtensions">
+            <summary>
+            Extension class for ServiceType.
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Enums.ServiceExtensions.ToFriendlyString(MSHU.CarWash.ClassLibrary.Enums.ServiceType)">
+            <summary>
+            Converts the ServiceType enum to a display-friendly string.
+            </summary>
+            <param name="serviceType">The service type to convert.</param>
+            <returns>A display-friendly string.</returns>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Enums.ServiceTypes">
+            <summary>
+            Services the users can choose from.
+            </summary>
+        </member>
+        <member name="F:MSHU.CarWash.ClassLibrary.Enums.ServiceTypes.Types">
+            <summary>
+            Services the users can choose from.
+            </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Enums.Service">
+            <summary>
+            Representation of a service which the user can choose.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Enums.Service.Type">
+            <summary>
+            Gets or sets the type of the service.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Enums.Service.TimeInMinutes">
+            <summary>
+            Gets or sets the time needed for this service.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Enums.Service.Price">
+            <summary>
+            Gets or sets the price of the service.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Enums.Service.PriceMpv">
+            <summary>
+            Gets or sets the price of the service for MPVs.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Enums.Service.Hidden">
+            <summary>
+            Gets or sets a value indicating whether the service is hidden from normal users on the UI.
+            </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Enums.State">
+            <summary>
+            Types of states a reservation can be in.
+            </summary>
+        </member>
+        <member name="F:MSHU.CarWash.ClassLibrary.Enums.State.SubmittedNotActual">
+            <summary>
+            Reservation was submitted, but is in the future.
+            No task needed.
+            </summary>
+        </member>
+        <member name="F:MSHU.CarWash.ClassLibrary.Enums.State.ReminderSentWaitingForKey">
+            <summary>
+            A reminder was sent to the user that they need to drop-off 
+            their key and confirm the vehicle location.
+            </summary>
+        </member>
+        <member name="F:MSHU.CarWash.ClassLibrary.Enums.State.DropoffAndLocationConfirmed">
+            <summary>
+            Key was dropped off and the vehicle location is confirmed.
+            </summary>
+        </member>
+        <member name="F:MSHU.CarWash.ClassLibrary.Enums.State.WashInProgress">
+            <summary>
+            Car wash has started, is in-progress right now.
+            </summary>
+        </member>
+        <member name="F:MSHU.CarWash.ClassLibrary.Enums.State.NotYetPaid">
+            <summary>
+            Car is ready, but as the reservation is private, they need to pay.
+            </summary>
+        </member>
+        <member name="F:MSHU.CarWash.ClassLibrary.Enums.State.Done">
+            <summary>
+            Car is ready, and if needed, paid.
+            </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Enums.StateExtensions">
+            <summary>
+            Extension class for State.
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Enums.StateExtensions.ToFriendlyString(MSHU.CarWash.ClassLibrary.Enums.State)">
+            <summary>
+            Converts the State enum to a display-friendly string.
+            </summary>
+            <param name="state">The state type to convert.</param>
+            <returns>A display-friendly string.</returns>
+        </member>
         <member name="T:MSHU.CarWash.ClassLibrary.Extensions.DateTimeExtension">
             <summary>
             Extension class for DateTime
@@ -40,99 +171,343 @@
             <param name="o">The object to serialize.</param>
             <returns>A JSON string representation of the object.</returns>
         </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Models.ApplicationDbContext">
+            <summary>
+            Database context.
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Models.ApplicationDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{MSHU.CarWash.ClassLibrary.Models.ApplicationDbContext})">
+            <summary>
+            Initializes a new instance of the <see cref="T:MSHU.CarWash.ClassLibrary.Models.ApplicationDbContext"/> class.
+            </summary>
+            <param name="options">DB context options.</param>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.ApplicationDbContext.Reservation">
+            <summary>
+            Reservation table of the database.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.ApplicationDbContext.PushSubscription">
+            <summary>
+            PushSubscription table of the database.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.ApplicationDbContext.Blocker">
+            <summary>
+            Blocker table of the database.
+            </summary>
+        </member>
         <member name="M:MSHU.CarWash.ClassLibrary.Models.ApplicationDbContext.Update``1(``0)">
-             WORKAROUND:
-             DbContext.Update() sometimes throws an InvalidOperationException: The instance of entity type 'X' cannot be tracked because another instance of this type with the same key is already being tracked.
-             Normally I wasn't able to reproduce the bug, but if you stop the code at a breakpoint before Update() and expand the Results View of the _context.X object the issue will turn up.
-             In this case, it is understandable, as you've enumerated the list and loaded the objects, so there will be two when you try to update, therefore the exception.
-             But the exception has been thrown in deployed production environment, where it shouldn't.
-             This solves the issue.
-             
-             For more info: https://stackoverflow.com/questions/48117961/
-            
+            <inheritdoc />
+            <remarks>
+            WORKAROUND:
+            DbContext.Update() sometimes throws an InvalidOperationException: The instance of 
+            entity type 'X' cannot be tracked because another instance of this type with the 
+            same key is already being tracked. Normally I wasn't able to reproduce the bug, 
+            but if you stop the code at a breakpoint before Update() and expand the Results 
+            View of the _context.X object the issue will turn up. In this case, it is understandable, 
+            as you've enumerated the list and loaded the objects, so there will be two when you try 
+            to update, therefore the exception. But the exception has been thrown in deployed 
+            production environment, where it shouldn't. This solves the issue.
+            For more info: https://stackoverflow.com/questions/48117961/ic
+            </remarks>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Models.ApplicationDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
         </member>
         <member name="T:MSHU.CarWash.ClassLibrary.Models.ApplicationDbContext.IEntity">
-             Implement this interface in all DB model classes!
-            
+            <summary>
+            Interface for every DB mapped entity.
+            Implement this interface in all DB model classes!
+            </summary>
         </member>
         <member name="P:MSHU.CarWash.ClassLibrary.Models.ApplicationDbContext.IEntity.Id">
             <summary>
-            Id of the given object.
+            Gets or sets the primary key for this entity.
             </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Models.Blocker">
+            <summary>
+            Database representation of a time blocker object.
+            Blockers are used by the CarWash to block out time (eg. on holidays or when they are closed for some other reason).
+            DB mapped entity.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Blocker.Id">
+            <inheritdoc />
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Blocker.StartDate">
+            <summary>
+            Gets or sets the start date and time of the blocker.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Blocker.EndDate">
+            <summary>
+            Gets or sets the end date and time of the blocker.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Blocker.Comment">
+            <summary>
+            Gets or sets the comment of the blocker for the UI of the admins (normal users won't be able to see this).
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Blocker.CreatedById">
+            <summary>
+            Gets or sets the id of the user who created the blocker.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Blocker.CreatedOn">
+            <summary>
+            Gets or sets the timestamp when the blocker was created.
+            </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Models.Company">
+            <summary>
+            Representation of a company which users can use the CarWash app.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Company.Name">
+            <summary>
+            Gets or sets the name of the company.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Company.TenantId">
+            <summary>
+            Gets or sets the tenant id of the company.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Company.DailyLimit">
+            <summary>
+            Gets or sets the company's daily reservation limit.
+            </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Models.Email">
+            <summary>
+            Storage queue email message.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Email.To">
+            <summary>
+            Gets or sets the recipient of the email.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Email.Subject">
+            <summary>
+            Gets or sets the subject of the email.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Email.Body">
+            <summary>
+            Gets or sets the text (body) of the email.
+            </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Models.IPushDbContext">
+            <summary>
+            Interface for a database context for push subscriptions only.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.IPushDbContext.PushSubscription">
+            <summary>
+            PushSubscription table of the database.
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Models.IPushDbContext.SaveChangesAsync(System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously saves all changes made in this context to the database.
+            </summary>
+            <param name="cancellationToken">A <see cref="T:System.Threading.CancellationToken"/> to observe while waiting for the task to complete.</param>
+            <returns>
+            A task that represents the asynchronous save operation. The task result contains 
+            the number of state entries written to the database.
+            </returns>
+            <remarks>
+            This method will automatically call <see cref="M:Microsoft.EntityFrameworkCore.ChangeTracking.ChangeTracker.DetectChanges"/>
+            to discover any changes to entity instances before saving to the underlying database.
+            This can be disabled via <see cref="P:Microsoft.EntityFrameworkCore.ChangeTracking.ChangeTracker.AutoDetectChangesEnabled"/>.
+            Multiple active operations on the same context instance are not supported. Use
+            'await' to ensure that any asynchronous operations have completed before calling
+            another method on this context.
+            </remarks>
         </member>
         <member name="T:MSHU.CarWash.ClassLibrary.Models.Notification">
             <summary>
-                <see href="https://notifications.spec.whatwg.org/#dictdef-notificationoptions">Notification API Standard</see>
+            Notification model of the standard.
+            <see href="https://notifications.spec.whatwg.org/#dictdef-notificationoptions">Notification API Standard</see>.
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Models.Notification.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:MSHU.CarWash.ClassLibrary.Models.Notification"/> class.
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Models.Notification.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:MSHU.CarWash.ClassLibrary.Models.Notification"/> class.
+            </summary>
+            <param name="text">Text of the notification.</param>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Notification.Title">
+            <summary>
+            Gets or sets the title of the notification.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Notification.Lang">
+            <summary>
+            Gets or sets the language of the notification. Defaults to "en".
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Notification.Body">
+            <summary>
+            Gets or sets the text (body) of the notification.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Notification.Tag">
+            <summary>
+            Gets or sets the <see cref="T:MSHU.CarWash.ClassLibrary.Models.NotificationTag"/> of the notification.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Notification.Image">
+            <summary>
+            Gets or sets the url of an image to be displayed in the notification.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Notification.Icon">
+            <summary>
+            Gets or sets the url of an icon to be displayed in the notification.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Notification.Badge">
+            <summary>
+            Gets or sets the url of a badge icon to be displayed in the notification.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Notification.Timestamp">
+            <summary>
+            Gets or sets the timestamp of the notification. Defaults to <see cref="P:System.DateTime.Now"/>.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Notification.RequireInteraction">
+            <summary>
+            Gets or sets a value indicating whether the notification requires interaction. Defaults to false.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Notification.Actions">
+            <summary>
+            Gets or sets a list of <see cref="T:MSHU.CarWash.ClassLibrary.Models.NotificationAction"/>s to be displayed in the notification.
             </summary>
         </member>
         <member name="T:MSHU.CarWash.ClassLibrary.Models.NotificationAction">
             <summary>
-                <see href="https://notifications.spec.whatwg.org/#dictdef-notificationaction">Notification API Standard</see>
+            NotificationAction model of the standard.
+            <see href="https://notifications.spec.whatwg.org/#dictdef-notificationaction">Notification API Standard</see>.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.NotificationAction.Action">
+            <summary>
+            Gets or sets the tag of the action.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.NotificationAction.Title">
+            <summary>
+            Gets or sets the title (button text) of the action.
+            </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Models.NotificationTag">
+            <summary>
+            Possible tags for CarWash notifications.
+            </summary>
+        </member>
+        <member name="F:MSHU.CarWash.ClassLibrary.Models.NotificationTag.Reminder">
+            <summary>
+            The notification is a reminder to drop-off the keys.
+            </summary>
+        </member>
+        <member name="F:MSHU.CarWash.ClassLibrary.Models.NotificationTag.Done">
+            <summary>
+            The notification is an FYI that the car is ready.
+            </summary>
+        </member>
+        <member name="F:MSHU.CarWash.ClassLibrary.Models.NotificationTag.Comment">
+            <summary>
+            The notification is an FYI that the CarWash has left a comment.
             </summary>
         </member>
         <member name="T:MSHU.CarWash.ClassLibrary.Models.PushSubscription">
             <summary>
-            Database representation of a push subscription
+            Database representation of a push subscription.
+            Push subscriptions are used for sending out push notifications to users through the browser's own system but with a standard api.
+            <see href="https://notifications.spec.whatwg.org/#dictdef-notificationoptions">Notification API Standard</see>
+            DB mapped entity.
             </summary>
         </member>
         <member name="M:MSHU.CarWash.ClassLibrary.Models.PushSubscription.#ctor">
-            <inheritdoc />
+            <summary>
+            Initializes a new instance of the <see cref="T:MSHU.CarWash.ClassLibrary.Models.PushSubscription"/> class.
+            </summary>
         </member>
         <member name="M:MSHU.CarWash.ClassLibrary.Models.PushSubscription.#ctor(System.String,WebPush.PushSubscription)">
-            <inheritdoc />
+            <summary>
+            Initializes a new instance of the <see cref="T:MSHU.CarWash.ClassLibrary.Models.PushSubscription"/> class.
+            </summary>
+            <param name="userId">User id.</param>
+            <param name="subscription">WebPush subscription.</param>
         </member>
         <member name="P:MSHU.CarWash.ClassLibrary.Models.PushSubscription.Id">
             <inheritdoc />
         </member>
         <member name="P:MSHU.CarWash.ClassLibrary.Models.PushSubscription.UserId">
             <summary>
-            User id associated with the push subscription.
+            Gets or sets the user id associated with the push subscription.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.PushSubscription.User">
+            <summary>
+            Gets or sets a virtual user object populated from the database by <see cref="P:MSHU.CarWash.ClassLibrary.Models.PushSubscription.UserId"/>.
             </summary>
         </member>
         <member name="P:MSHU.CarWash.ClassLibrary.Models.PushSubscription.DeviceId">
             <summary>
-            Device id for later use.
+            Gets or sets the device id for later use.
             </summary>
         </member>
         <member name="P:MSHU.CarWash.ClassLibrary.Models.PushSubscription.Endpoint">
             <summary>
-            The endpoint associated with the push subscription.
+            Gets or sets the endpoint associated with the push subscription.
             </summary>
         </member>
         <member name="P:MSHU.CarWash.ClassLibrary.Models.PushSubscription.ExpirationTime">
             <summary>
-            The subscription expiration time associated with the push subscription, if there is one, or null otherwise.
+            Gets or sets the subscription expiration time associated with the push subscription, if there is one, or null otherwise.
             </summary>
         </member>
         <member name="P:MSHU.CarWash.ClassLibrary.Models.PushSubscription.P256Dh">
             <summary>
-            An
-            <see href="https://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman">Elliptic curve Diffie–Hellman</see>
+            Gets or sets an
+            <see href="https://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman">Elliptic curve Diffie-Hellman</see>
             public key on the P-256 curve (that is, the NIST secp256r1 elliptic curve).
             The resulting key is an uncompressed point in ANSI X9.62 format.
             </summary>
         </member>
         <member name="P:MSHU.CarWash.ClassLibrary.Models.PushSubscription.Auth">
             <summary>
-            An authentication secret, as described in
+            Gets or sets an authentication secret, as described in
             <see href="https://tools.ietf.org/html/draft-ietf-webpush-encryption-08">Message Encryption for Web Push</see>.
             </summary>
         </member>
         <member name="M:MSHU.CarWash.ClassLibrary.Models.PushSubscription.ToWebPushSubscription">
             <summary>
-            Converts the push subscription to the format of the library WebPush
+            Converts the push subscription to the format of the WebPush library.
             </summary>
-            <returns>WebPush subscription</returns>
+            <returns>WebPush subscription.</returns>
         </member>
         <member name="T:MSHU.CarWash.ClassLibrary.Models.Reservation">
             <summary>
-            Reservation model.
+            Database representation of a reservation object.
+            DB mapped entity.
             </summary>
         </member>
         <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.Id">
-            <summary>
-            Gets or sets the reservation id.
-            </summary>
+            <inheritdoc />
         </member>
         <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.UserId">
             <summary>
@@ -239,24 +614,90 @@
             Gets reservation's costs.
             </summary>
         </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Models.ServiceBus.DropoffReminderMessage">
+            <summary>
+            ServiceBus key drop-off reminder message.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.ServiceBus.DropoffReminderMessage.UserId">
+            <summary>
+            Gets or sets the user id whom the reminder should be sent.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.ServiceBus.DropoffReminderMessage.ReservationId">
+            <summary>
+            Gets or sets the id of the reservation where the key should be dropped-off.
+            </summary>
+        </member>
         <member name="T:MSHU.CarWash.ClassLibrary.Models.Slot">
             <summary>
-            Carwash slot.
+            Representation of a bookable slot in the CarWash app.
             </summary>
         </member>
         <member name="P:MSHU.CarWash.ClassLibrary.Models.Slot.StartTime">
             <summary>
-            Slot start time in hours.
+            Gets or sets the slot start time in hours.
             </summary>
         </member>
         <member name="P:MSHU.CarWash.ClassLibrary.Models.Slot.EndTime">
             <summary>
-            Slot end time in hours.
+            Gets or sets the slot end time in hours.
             </summary>
         </member>
         <member name="P:MSHU.CarWash.ClassLibrary.Models.Slot.Capacity">
             <summary>
-            Slot capacity in washes. (Not in minutes!)
+            Gets or sets the slot capacity in washes. (Not in minutes!)
+            </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Models.User">
+            <summary>
+            Database representation of a user object.
+            DB mapped entity.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.User.Email">
+            <summary>
+            Gets or sets the email of the user, as-is in AD.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.User.FirstName">
+            <summary>
+            Gets or sets the given name of the user, as-is in AD.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.User.LastName">
+            <summary>
+            Gets or sets the surname of the user, as-is in AD.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.User.FullName">
+            <summary>
+            Gets the full name of the user concatenated from the first and last names.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.User.Company">
+            <summary>
+            Gets or sets the company of the user, determined by tenant id at first login.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.User.IsAdmin">
+            <summary>
+            Gets or sets a value indicating whether the user is an admin.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.User.IsCarwashAdmin">
+            <summary>
+            Gets or sets a value indicating whether the user is a CarWash admin.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.User.CalendarIntegration">
+            <summary>
+            Gets or sets a value indicating whether the calendar integration feature is enabled for the user.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.User.NotificationChannel">
+            <summary>
+            Gets or sets the notification channel set by the user.
             </summary>
         </member>
         <member name="T:MSHU.CarWash.ClassLibrary.Services.IPushService">

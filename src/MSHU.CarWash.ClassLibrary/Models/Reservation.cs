@@ -9,13 +9,12 @@ using System.Linq;
 namespace MSHU.CarWash.ClassLibrary.Models
 {
     /// <summary>
-    /// Reservation model.
+    /// Database representation of a reservation object.
+    /// DB mapped entity.
     /// </summary>
     public class Reservation : ApplicationDbContext.IEntity
     {
-        /// <summary>
-        /// Gets or sets the reservation id.
-        /// </summary>
+        /// <inheritdoc />
         public string Id { get; set; }
 
         /// <summary>

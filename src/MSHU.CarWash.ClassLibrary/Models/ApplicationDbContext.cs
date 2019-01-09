@@ -5,24 +5,45 @@ using System;
 
 namespace MSHU.CarWash.ClassLibrary.Models
 {
+    /// <summary>
+    /// Database context.
+    /// </summary>
     public class ApplicationDbContext : IdentityDbContext<User>, IPushDbContext
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ApplicationDbContext"/> class.
+        /// </summary>
+        /// <param name="options">DB context options.</param>
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
+        /// <summary>
+        /// Reservation table of the database.
+        /// </summary>
         public DbSet<Reservation> Reservation { get; set; }
-        public DbSet<PushSubscription> PushSubscription { get; set; }
-        public DbSet<Blocker> Blocker { get; set; }
 
-        /** 
-         * WORKAROUND:
-         * DbContext.Update() sometimes throws an InvalidOperationException: The instance of entity type 'X' cannot be tracked because another instance of this type with the same key is already being tracked.
-         * Normally I wasn't able to reproduce the bug, but if you stop the code at a breakpoint before Update() and expand the Results View of the _context.X object the issue will turn up.
-         * In this case, it is understandable, as you've enumerated the list and loaded the objects, so there will be two when you try to update, therefore the exception.
-         * But the exception has been thrown in deployed production environment, where it shouldn't.
-         * This solves the issue.
-         * 
-         * For more info: https://stackoverflow.com/questions/48117961/
-         **/
+        /// <summary>
+        /// PushSubscription table of the database.
+        /// </summary>
+        public DbSet<PushSubscription> PushSubscription { get; set; }
+
+        /// <summary>
+        /// Blocker table of the database.
+        /// </summary>
+        public DbSet<Blocker> Blocker { get; set; }
+        
+        /// <inheritdoc />
+        /// <remarks>
+        /// WORKAROUND:
+        /// DbContext.Update() sometimes throws an InvalidOperationException: The instance of 
+        /// entity type 'X' cannot be tracked because another instance of this type with the 
+        /// same key is already being tracked. Normally I wasn't able to reproduce the bug, 
+        /// but if you stop the code at a breakpoint before Update() and expand the Results 
+        /// View of the _context.X object the issue will turn up. In this case, it is understandable, 
+        /// as you've enumerated the list and loaded the objects, so there will be two when you try 
+        /// to update, therefore the exception. But the exception has been thrown in deployed 
+        /// production environment, where it shouldn't. This solves the issue.
+        /// For more info: https://stackoverflow.com/questions/48117961/ic
+        /// </remarks>
         public override EntityEntry<TEntity> Update<TEntity>(TEntity entity)
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
@@ -45,6 +66,7 @@ namespace MSHU.CarWash.ClassLibrary.Models
             }
         }
 
+        /// <inheritdoc />
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -58,13 +80,14 @@ namespace MSHU.CarWash.ClassLibrary.Models
                 .IsUnique();
         }
 
-        /**
-         * Implement this interface in all DB model classes!
-         **/
+        /// <summary>
+        /// Interface for every DB mapped entity.
+        /// Implement this interface in all DB model classes!
+        /// </summary>
         public interface IEntity
         {
             /// <summary>
-            /// Id of the given object.
+            /// Gets or sets the primary key for this entity.
             /// </summary>
             string Id { get; }
         }

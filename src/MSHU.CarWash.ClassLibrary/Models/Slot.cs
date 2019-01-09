@@ -1,22 +1,22 @@
 ﻿namespace MSHU.CarWash.ClassLibrary.Models
 {
     /// <summary>
-    /// Carwash slot.
+    /// Representation of a bookable slot in the CarWash app.
     /// </summary>
     public class Slot
     {
         /// <summary>
-        /// Slot start time in hours.
+        /// Gets or sets the slot start time in hours.
         /// </summary>
         public int StartTime { get; set; }
 
         /// <summary>
-        /// Slot end time in hours.
+        /// Gets or sets the slot end time in hours.
         /// </summary>
         public int EndTime { get; set; }
 
         /// <summary>
-        /// Slot capacity in washes. (Not in minutes!)
+        /// Gets or sets the slot capacity in washes. (Not in minutes!)
         /// </summary>
         public int Capacity { get; set; }
     }
