@@ -8,7 +8,7 @@ const style = {
 };
 
 export default class Support extends TrackedComponent {
-    displayName = Support.name;
+    displayName = 'Support';
 
     render() {
         return (

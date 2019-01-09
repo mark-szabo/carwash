@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import './RoadAnimation.css';
 
 export default class RoadAnimation extends Component {
-    displayName = RoadAnimation.name;
+    displayName = 'RoadAnimation';
 
     render() {
         return (

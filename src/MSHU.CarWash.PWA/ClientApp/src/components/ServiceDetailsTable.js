@@ -105,7 +105,7 @@ const styles = theme => {
 };
 
 class ServiceDetailsTable extends React.Component {
-    displayName = ServiceDetailsTable.name;
+    displayName = 'ServiceDetailsTable';
 
     state = {
         expanded: false,

@@ -4,7 +4,7 @@ import TrackedComponent from './TrackedComponent';
 import CarwashGrid from './CarwashGrid';
 
 export default class CarwashAdmin extends TrackedComponent {
-    displayName = CarwashAdmin.name;
+    displayName = 'CarwashAdmin';
 
     render() {
         const { backlog, backlogLoading, updateBacklogItem, removeBacklogItem, invokeBacklogHub, openSnackbar, snackbarOpen } = this.props;

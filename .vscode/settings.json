@@ -9,5 +9,7 @@
     "**/bin": true,
     "**/obj": true,
     "**/src/MSHU.CarWash.Web": true
-  }
+  },
+  "azureFunctions.projectLanguage": "C#",
+  "azureFunctions.projectRuntime": "~2"
 }

@@ -14,7 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
-using Org.BouncyCastle.Asn1.X509.Qualified;
+using static MSHU.CarWash.ClassLibrary.Constants;
 
 namespace MSHU.CarWash.PWA.Controllers
 {
@@ -62,16 +62,6 @@ namespace MSHU.CarWash.PWA.Controllers
             new Company(Company.Microsoft, 14),
             new Company(Company.Sap, 16),
             new Company(Company.Graphisoft, 5)
-        };
-
-        /// <summary>
-        /// Bookable slots and their capacity (in washes and not in minutes!)
-        /// </summary>
-        private static readonly List<Slot> Slots = new List<Slot>
-        {
-            new Slot {StartTime = 8, EndTime = 11, Capacity = 12},
-            new Slot {StartTime = 11, EndTime = 14, Capacity = 12},
-            new Slot {StartTime = 14, EndTime = 17, Capacity = 11}
         };
 
         /// <inheritdoc />
@@ -964,12 +954,11 @@ namespace MSHU.CarWash.PWA.Controllers
             // Current milestone to be fixed is EF 3.0.0
             var queryResult = await _context.Reservation
                 .Where(r => r.EndDate >= DateTime.Now && r.StartDate <= DateTime.Now.AddDays(daysAhead))
-                .Include(r => r.User)
                 .Where(r => r.User.Company == _user.Company)
                 .GroupBy(r => r.StartDate.Date)
                 .Select(g => new
                 {
-                    g.Key.Date,
+                    Date = g.Key,
                     TimeSum = g.Sum(r => r.TimeRequirement)
                 })
                 .Where(d => d.TimeSum >= userCompanyLimit * TimeUnit)
@@ -1015,7 +1004,7 @@ namespace MSHU.CarWash.PWA.Controllers
                 }
             }
             #endregion
-            
+
             #region Check blockers
             var blockers = await _context.Blocker
                 .Where(b => b.EndDate >= DateTime.Now)
@@ -1023,26 +1012,38 @@ namespace MSHU.CarWash.PWA.Controllers
 
             foreach (var blocker in blockers)
             {
-                var date = blocker.StartDate.Date;
-
                 Debug.Assert(blocker.EndDate != null, "blocker.EndDate != null");
                 if (blocker.EndDate == null) continue;
 
-                while (date <= ((DateTime)blocker.EndDate).Date)
+                var dateIterator = blocker.StartDate.Date;
+                while (dateIterator <= ((DateTime)blocker.EndDate).Date)
                 {
+                    // Don't bother with the past part of the blocker
+                    if (dateIterator < DateTime.Today)
+                    {
+                        dateIterator = dateIterator.AddDays(1);
+                        continue;
+                    }
+
                     var dateBlocked = true;
 
                     foreach (var slot in Slots)
                     {
-                        var slotStart = new DateTime(date.Year, date.Month, date.Day, slot.StartTime, 0, 0);
-                        var slotEnd = new DateTime(date.Year, date.Month, date.Day, slot.EndTime, 0, 0);
-                        if (slotStart > blocker.StartDate && slotEnd < blocker.EndDate)
+                        var slotStart = new DateTime(dateIterator.Year, dateIterator.Month, dateIterator.Day, slot.StartTime, 0, 0);
+                        var slotEnd = new DateTime(dateIterator.Year, dateIterator.Month, dateIterator.Day, slot.EndTime, 0, 0);
+                        if (slotStart > blocker.StartDate && slotEnd < blocker.EndDate && !notAvailableTimes.Contains(slotStart))
+                        {
                             notAvailableTimes.Add(slotStart);
-                        else dateBlocked = false;
+                        }
+                        else
+                        {
+                            dateBlocked = false;
+                        }
                     }
-                    if (dateBlocked) notAvailableDates.Add(date);
 
-                    date = date.AddDays(1);
+                    if (dateBlocked && !notAvailableDates.Contains(dateIterator)) notAvailableDates.Add(dateIterator);
+
+                    dateIterator = dateIterator.AddDays(1);
                 }
             }
             #endregion
@@ -1071,7 +1072,8 @@ namespace MSHU.CarWash.PWA.Controllers
             return Ok(new LastSettingsViewModel
             {
                 VehiclePlateNumber = lastReservation.VehiclePlateNumber,
-                Location = lastReservation.Location
+                Location = lastReservation.Location,
+                Services = lastReservation.Services
             });
         }
 
@@ -1563,6 +1565,7 @@ namespace MSHU.CarWash.PWA.Controllers
     {
         public string VehiclePlateNumber { get; set; }
         public string Location { get; set; }
+        public List<ServiceType> Services { get; set; }
     }
 
     public class ReservationPercentageViewModel
@@ -1577,11 +1580,4 @@ namespace MSHU.CarWash.PWA.Controllers
         public int FreeCapacity { get; set; }
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-    internal class Slot
-    {
-        public int StartTime { get; set; }
-        public int EndTime { get; set; }
-        public int Capacity { get; set; }
-    }
 }

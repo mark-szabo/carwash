@@ -1,14 +1,18 @@
 using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.ServiceBus;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using MSHU.CarWash.ClassLibrary.Enums;
-using MSHU.CarWash.ClassLibrary.Models;
-using MSHU.CarWash.ClassLibrary.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text;
+using MSHU.CarWash.ClassLibrary.Enums;
+using MSHU.CarWash.ClassLibrary.Models;
+using MSHU.CarWash.ClassLibrary.Services;
+using MSHU.CarWash.ClassLibrary.Models.ServiceBus;
+using MSHU.CarWash.ClassLibrary.Extensions;
 
 namespace MSHU.CarWash.Functions
 {
@@ -19,6 +23,11 @@ namespace MSHU.CarWash.Functions
         /// The function is running every 10 minutes, so use a number not dividable with 10 for consistent execution.
         /// </summary>
         private const int MinutesBeforeReservationToSendReminder = 35;
+
+        /// <summary>
+        /// Service Bus queue name for the chat bot's drop-off reminders.
+        /// </summary>
+        private const string BotReminderQueueName = "bot-dropoff-reminder";
 
         /// <summary>
         /// Checks for reservations where a reminder should be sent to drop-off the key and confirm vehicle location
@@ -88,6 +97,10 @@ namespace MSHU.CarWash.Functions
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
+
+                // Send message to ServiceBus which is monitored by the bot, who will ping the user
+                await SendBotReminderMessage(reservation);
+                log.LogInformation($"Bot reminder was sent to the user ({reservation.User.Id}) about the reservation with id: {reservation.Id}. ({watch.ElapsedMilliseconds}ms)");
             }
 
             log.LogInformation("All reminders have been sent successfully.");
@@ -138,6 +151,30 @@ If don't want to get email reminders in the future, you can <a href='https://car
             {
                 throw new Exception($"Failed to send push to user with id: {reservation.UserId}. See inner exception.", e);
             }
+        }
+
+        private static async Task SendBotReminderMessage(Reservation reservation)
+        {
+            var connectionString = Environment.GetEnvironmentVariable("ServiceBus", EnvironmentVariableTarget.Process);
+            var queueClient = new QueueClient(connectionString, BotReminderQueueName);
+
+            var message = new DropoffReminderMessage
+            {
+                UserId = reservation.UserId,
+                ReservationId = reservation.Id,
+            };
+
+            // Create a new message to send to the queue.
+            var serviceBusMessage = new Message(Encoding.UTF8.GetBytes(message.ToJson()));
+
+            // Send the message to the queue.            
+            try { await queueClient.SendAsync(serviceBusMessage); }
+            catch (Exception e)
+            {
+                throw new Exception($"Failed to send message to the bot, who would have pinged the user with id: {reservation.UserId}. See inner exception.", e);
+            }
+
+            await queueClient.CloseAsync();
         }
     }
 }

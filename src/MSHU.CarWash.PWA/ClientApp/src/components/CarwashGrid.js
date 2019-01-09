@@ -33,7 +33,7 @@ const styles = theme => ({
 });
 
 class CarwashGrid extends Component {
-    displayName = CarwashGrid.name;
+    displayName = 'CarwashGrid';
 
     componentDidMount() {
         document.getElementsByTagName('main')[0].style.overflow = 'hidden';

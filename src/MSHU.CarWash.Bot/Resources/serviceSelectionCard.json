@@ -1,0 +1,69 @@
+{
+  "type": "AdaptiveCard",
+  "body": [
+    {
+      "type": "Container",
+      "items": [
+        {
+          "type": "TextBlock",
+          "size": "Medium",
+          "weight": "Bolder",
+          "color": "Accent",
+          "text": "Select CarWash services:",
+          "wrap": true
+        }
+      ]
+    },
+    {
+      "type": "Input.ChoiceSet",
+      "id": "services",
+      "spacing": "Small",
+      "value": "",
+      "choices": [
+        {
+          "title": "exterior",
+          "value": "Exterior"
+        },
+        {
+          "title": "interior",
+          "value": "Interior"
+        },
+        {
+          "title": "carpet",
+          "value": "Carpet"
+        },
+        {
+          "title": "spot cleaning",
+          "value": "SpotCleaning"
+        },
+        {
+          "title": "vignette removal",
+          "value": "VignetteRemoval"
+        },
+        {
+          "title": "polishing",
+          "value": "Polishing"
+        },
+        {
+          "title": "AC cleaning 'ozon'",
+          "value": "AcCleaningOzon"
+        },
+        {
+          "title": "AC cleaning 'bomba'",
+          "value": "AcCleaningBomba"
+        }
+      ],
+      "style": "expanded",
+      "isMultiSelect": true,
+      "isRequired": true
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "Send"
+    }
+  ],
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "version": "1.0"
+}

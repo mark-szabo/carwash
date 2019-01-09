@@ -119,6 +119,8 @@ const styles = theme => ({
 });
 
 class CarwashDetailsDialog extends React.Component {
+    displayName = 'CarwashDetailsDialog';
+
     state = {
         commentTextfield: '',
         editLocation: false,

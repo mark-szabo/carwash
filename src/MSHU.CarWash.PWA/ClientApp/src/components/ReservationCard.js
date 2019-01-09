@@ -46,6 +46,9 @@ const styles = theme => ({
             maxWidth: 400,
         },
     },
+    cardActions: {
+        padding: '8px 12px 12px 12px',
+    },
     media: {
         height: 0,
         paddingTop: '48.83%', // 512:250
@@ -69,6 +72,8 @@ const styles = theme => ({
 });
 
 class ReservationCard extends Component {
+    displayName = 'ReservationCard';
+
     state = {
         cancelDialogOpen: false,
         dropoffDialogOpen: false,
@@ -105,8 +110,8 @@ class ReservationCard extends Component {
             case 0:
             case 1:
                 return (
-                    <CardActions>
-                        <Button size="small" color="primary" onClick={this.handleDropoffDialogOpen}>
+                    <CardActions className={classes.cardActions}>
+                        <Button size="small" color="primary" variant="outlined" onClick={this.handleDropoffDialogOpen}>
                             Confirm key drop-off
                         </Button>
                         <Button component={Link} to={`/reserve/${reservation.id}`} size="small" color="primary">

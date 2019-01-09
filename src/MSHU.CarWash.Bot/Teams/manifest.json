@@ -1,0 +1,49 @@
+{
+    "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.3/MicrosoftTeams.schema.json",
+    "manifestVersion": "1.3",
+    "version": "2.0.0",
+    "id": "3e58d71d-7fd2-4568-8a02-0f641a3dfbc5",
+    "packageName": "net.azurewebsites.carwashu",
+    "developer": {
+        "name": "Microsoft",
+        "websiteUrl": "https://www.microsoft.com",
+        "privacyUrl": "https://go.microsoft.com/fwlink/?LinkId=521839",
+        "termsOfUseUrl": "https://go.microsoft.com/fwlink/?LinkID=206977"
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "name": {
+        "short": "CarWash",
+        "full": ""
+    },
+    "description": {
+        "short": "Reserving car washing services for employees in Graphisoft park",
+        "full": "This app is intended to help Microsoft, SAP and Graphisoft employees working in Graphisoft park (Budapest, Hungary) reserve car washing services."
+    },
+    "accentColor": "#80D8FF",
+    "bots": [
+        {
+            "botId": "3e58d71d-7fd2-4568-8a02-0f641a3dfbc5",
+            "scopes": [
+                "personal"
+            ],
+            "supportsFiles": false,
+            "isNotificationOnly": false
+        }
+    ],
+    "permissions": [
+        "identity",
+        "messageTeamMembers"
+    ],
+    "validDomains": [
+        "*.graphisoft.hu",
+        "*.corp.sap",
+        "*.microsoft.com",
+        "login.live.com",
+        "login.microsoftonline.com",
+        "carwashu.azurewebsites.net",
+        "token.botframework.com"
+    ]
+}

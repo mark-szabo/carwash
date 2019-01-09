@@ -1,0 +1,127 @@
+﻿{
+  "type": "AdaptiveCard",
+  "body": [
+    {
+      "type": "Image",
+      "id": "stateimage",
+      "horizontalAlignment": "Center",
+      "spacing": "none",
+      "url": "https://carwashu.azurewebsites.net/images/state0.png",
+      "size": "Stretch",
+      "altText": "Scheduled"
+    },
+    {
+      "type": "Container",
+      "items": [
+        {
+          "type": "ColumnSet",
+          "columns": [
+            {
+              "type": "Column",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "id": "state",
+                  "size": "ExtraLarge",
+                  "weight": "Bolder",
+                  "text": "Scheduled",
+                  "maxLines": 1
+                }
+              ],
+              "width": 1
+            },
+            {
+              "type": "Column",
+              "horizontalAlignment": "Right",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "id": "private",
+                  "horizontalAlignment": "Right",
+                  "size": "ExtraLarge",
+                  "weight": "Lighter",
+                  "text": "🔒",
+                  "maxLines": 1
+                }
+              ],
+              "width": "stretch"
+            }
+          ]
+        },
+        {
+          "type": "TextBlock",
+          "id": "date",
+          "spacing": "Small",
+          "color": "Accent",
+          "text": "September 21, 2:00 PM - 5:00 PM"
+        }
+      ]
+    },
+    {
+      "type": "Container",
+      "spacing": "Large",
+      "separator": true,
+      "items": [
+        {
+          "type": "FactSet",
+          "id": "details",
+          "facts": [
+            {
+              "id": "vehiclePlateNumber",
+              "title": "Vehicle plate number",
+              "value": "ASD123"
+            },
+            {
+              "id": "location",
+              "title": "Location",
+              "value": "M/-2/41"
+            },
+            {
+              "id": "services",
+              "title": "Selected services",
+              "value": "exterior, interior"
+            },
+            {
+              "id": "comment",
+              "title": "Comment",
+              "value": "Nem teszt, köszi! 😊"
+            },
+            {
+              "id": "carwashComment",
+              "title": "CarWash comment",
+              "value": "szerviz esedekes"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "id": "dropoff",
+      "data": {
+        "action": "dropoff",
+        "id":  "" 
+      },
+      "title": "Confirm key drop-off"
+    },
+    {
+      "type": "Action.OpenUrl",
+      "url": "https://carwashu.azurewebsites.net/",
+      "id": "edit",
+      "title": "Edit"
+    },
+    {
+      "type": "Action.Submit",
+      "id": "cancel",
+      "data": {
+        "action": "cancel",
+        "id": ""
+      },
+      "title": "Cancel"
+    }
+  ],
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "version": "1.0"
+}

@@ -29,6 +29,8 @@ const styles = theme => ({
 });
 
 class CommentOutgoing extends Component {
+    displayName = 'CommentOutgoing';
+
     render() {
         const { classes, comment } = this.props;
 

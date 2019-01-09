@@ -4,6 +4,10 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>C:\Users\a-marks\Source\Repos\CarWash\src\MSHU.CarWash.ClassLibrary\MSHU.CarWash.ClassLibrary.xml</DocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="Migrations\20180902003120_PushSubscription.cs" />
     <Compile Remove="Migrations\20180902003549_PushSubscription.cs" />

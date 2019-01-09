@@ -76,7 +76,7 @@ const styles = theme => ({
 });
 
 class Layout extends React.Component {
-    displayName = Layout.name;
+    displayName = 'Layout';
 
     state = {
         mobileOpen: false,

@@ -38,7 +38,7 @@ const styles = theme => ({
 });
 
 class Blockers extends TrackedComponent {
-    displayName = Blockers.name;
+    displayName = 'Blockers';
 
     state = {
         loading: true,

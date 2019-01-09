@@ -1,0 +1,333 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>MSHU.CarWash.ClassLibrary</name>
+    </assembly>
+    <members>
+        <member name="T:MSHU.CarWash.ClassLibrary.Constants">
+            <summary>
+            Class containing constants.
+            </summary>
+        </member>
+        <member name="F:MSHU.CarWash.ClassLibrary.Constants.Slots">
+            <summary>
+            Bookable slots and their capacity (in washes and not in minutes!)
+            </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Extensions.DateTimeExtension">
+            <summary>
+            Extension class for DateTime
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Extensions.DateTimeExtension.IsWeekend(System.DateTime)">
+            <summary>
+            Indicates whether this instance of <see cref="T:System.DateTime"/> is on a weekend.
+            </summary>
+            <param name="dateTime">the DateTime object</param>
+            <returns>
+            True if the value of the <see cref="T:System.DayOfWeek"/> property is <see cref="F:System.DayOfWeek.Saturday"/> or <see cref="F:System.DayOfWeek.Saturday"/>.
+            </returns>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Extensions.ObjectExtension">
+            <summary>
+            Extension class for Object
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Extensions.ObjectExtension.ToJson(System.Object)">
+            <summary>
+            Serializes the specified object to a JSON string.
+            </summary>
+            <param name="o">The object to serialize.</param>
+            <returns>A JSON string representation of the object.</returns>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Models.ApplicationDbContext.Update``1(``0)">
+             WORKAROUND:
+             DbContext.Update() sometimes throws an InvalidOperationException: The instance of entity type 'X' cannot be tracked because another instance of this type with the same key is already being tracked.
+             Normally I wasn't able to reproduce the bug, but if you stop the code at a breakpoint before Update() and expand the Results View of the _context.X object the issue will turn up.
+             In this case, it is understandable, as you've enumerated the list and loaded the objects, so there will be two when you try to update, therefore the exception.
+             But the exception has been thrown in deployed production environment, where it shouldn't.
+             This solves the issue.
+             
+             For more info: https://stackoverflow.com/questions/48117961/
+            
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Models.ApplicationDbContext.IEntity">
+             Implement this interface in all DB model classes!
+            
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.ApplicationDbContext.IEntity.Id">
+            <summary>
+            Id of the given object.
+            </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Models.Notification">
+            <summary>
+                <see href="https://notifications.spec.whatwg.org/#dictdef-notificationoptions">Notification API Standard</see>
+            </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Models.NotificationAction">
+            <summary>
+                <see href="https://notifications.spec.whatwg.org/#dictdef-notificationaction">Notification API Standard</see>
+            </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Models.PushSubscription">
+            <summary>
+            Database representation of a push subscription
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Models.PushSubscription.#ctor">
+            <inheritdoc />
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Models.PushSubscription.#ctor(System.String,WebPush.PushSubscription)">
+            <inheritdoc />
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.PushSubscription.Id">
+            <inheritdoc />
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.PushSubscription.UserId">
+            <summary>
+            User id associated with the push subscription.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.PushSubscription.DeviceId">
+            <summary>
+            Device id for later use.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.PushSubscription.Endpoint">
+            <summary>
+            The endpoint associated with the push subscription.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.PushSubscription.ExpirationTime">
+            <summary>
+            The subscription expiration time associated with the push subscription, if there is one, or null otherwise.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.PushSubscription.P256Dh">
+            <summary>
+            An
+            <see href="https://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman">Elliptic curve Diffie–Hellman</see>
+            public key on the P-256 curve (that is, the NIST secp256r1 elliptic curve).
+            The resulting key is an uncompressed point in ANSI X9.62 format.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.PushSubscription.Auth">
+            <summary>
+            An authentication secret, as described in
+            <see href="https://tools.ietf.org/html/draft-ietf-webpush-encryption-08">Message Encryption for Web Push</see>.
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Models.PushSubscription.ToWebPushSubscription">
+            <summary>
+            Converts the push subscription to the format of the library WebPush
+            </summary>
+            <returns>WebPush subscription</returns>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Models.Reservation">
+            <summary>
+            Reservation model.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.Id">
+            <summary>
+            Gets or sets the reservation id.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.UserId">
+            <summary>
+            Gets or sets the reservation user id.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.User">
+            <summary>
+            Gets or sets the virtual user object for the reservation.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.VehiclePlateNumber">
+            <summary>
+            Gets or sets the reservation vehicle plate number.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.Location">
+            <summary>
+            Gets or sets the reservation location.
+            </summary>
+            <value>
+            A concatenation of the building, floor and seat separated by '/'.
+            </value>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.State">
+            <summary>
+            Gets or sets the reservation state.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.Services">
+            <summary>
+            Gets or sets the reservation services.
+            </summary>
+            <value>
+            List of <see cref="T:MSHU.CarWash.ClassLibrary.Enums.ServiceType"/>s deserialized from <see cref="P:MSHU.CarWash.ClassLibrary.Models.Reservation.ServicesJson"/>.
+            </value>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.ServicesJson">
+            <summary>
+            Gets or sets the reservation services serialized in JSON.
+            </summary>
+            <value>
+            List of <see cref="T:MSHU.CarWash.ClassLibrary.Enums.ServiceType"/>s serialized in JSON.
+            </value>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.Private">
+            <summary>
+            Gets or sets a value indicating whether the reservation is private.
+            </summary>
+            <value>
+            A boolean indicating whether the reservation is private.
+            </value>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.Mpv">
+            <summary>
+            Gets or sets a value indicating whether the car is an MPV.
+            </summary>
+            <value>
+            A boolean indicating whether the car is an MPV.
+            </value>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.TimeRequirement">
+            <summary>
+            Gets or sets the time requirement of the reservation.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.StartDate">
+            <summary>
+            Gets or sets the reservation start date and time.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.EndDate">
+            <summary>
+            (Optional) Gets or sets the reservation end date and time.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.Comment">
+            <summary>
+            Gets or sets the reservation comment.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.CarwashComment">
+            <summary>
+            Gets or sets the comment from the carwash.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.CreatedById">
+            <summary>
+            Gets or sets the user id of the reservation creator.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.CreatedOn">
+            <summary>
+            Gets or sets the date and time whenthe reservation was created.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.OutlookEventId">
+            <summary>
+            Gets or sets Outlook's even id of the reservation.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Reservation.Price">
+            <summary>
+            Gets reservation's costs.
+            </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Models.Slot">
+            <summary>
+            Carwash slot.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Slot.StartTime">
+            <summary>
+            Slot start time in hours.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Slot.EndTime">
+            <summary>
+            Slot end time in hours.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.ClassLibrary.Models.Slot.Capacity">
+            <summary>
+            Slot capacity in washes. (Not in minutes!)
+            </summary>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Services.IPushService">
+            <summary>
+            Defines a service to manage Push subscriptions and send Push notifications
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Services.IPushService.CheckOrGenerateVapidDetails(System.String,System.String,System.String)">
+            <summary>
+            Checks VAPID info and if invalid generates new keys and throws exception
+            </summary>
+            <param name="subject">This should be a URL or a 'mailto:' email address</param>
+            <param name="vapidPublicKey">The VAPID public key as a base64 encoded string</param>
+            <param name="vapidPrivateKey">The VAPID private key as a base64 encoded string</param>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Services.IPushService.GetVapidPublicKey">
+            <summary>
+            Get the server's saved VAPID public key
+            </summary>
+            <returns>VAPID public key</returns>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Services.IPushService.Register(MSHU.CarWash.ClassLibrary.Models.PushSubscription)">
+            <summary>
+            Register a push subscription (save to the database for later use)
+            </summary>
+            <param name="subscription">push subscription</param>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Services.IPushService.Send(System.String,System.String)">
+            <summary>
+            Send a plain text push notification to a user without any special option
+            </summary>
+            <param name="userId">user id the push should be sent to</param>
+            <param name="text">text of the notification</param>
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Services.IPushService.Send(System.String,MSHU.CarWash.ClassLibrary.Models.Notification)">
+            <summary>
+            Send a push notification to a user
+            </summary>
+            <param name="userId">user id the push should be sent to</param>
+            <param name="notification">the notification to be sent</param>
+        </member>
+        <member name="T:MSHU.CarWash.ClassLibrary.Services.PushService">
+            <inheritdoc />
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Services.PushService.#ctor(MSHU.CarWash.ClassLibrary.Models.IPushDbContext,System.String,System.String,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Services.PushService.#ctor(MSHU.CarWash.ClassLibrary.Models.ApplicationDbContext,Microsoft.Extensions.Configuration.IConfiguration)">
+            <inheritdoc />
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Services.PushService.CheckOrGenerateVapidDetails(System.String,System.String,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Services.PushService.GetVapidPublicKey">
+            <inheritdoc />
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Services.PushService.Register(MSHU.CarWash.ClassLibrary.Models.PushSubscription)">
+            <inheritdoc />
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Services.PushService.Send(System.String,MSHU.CarWash.ClassLibrary.Models.Notification)">
+            <inheritdoc />
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Services.PushService.Send(System.String,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:MSHU.CarWash.ClassLibrary.Services.PushService.GetUserSubscriptions(System.String)">
+            <summary>
+            Loads a list of user subscriptions from the database
+            </summary>
+            <param name="userId">user id</param>
+            <returns>List of subscriptions</returns>
+        </member>
+    </members>
+</doc>

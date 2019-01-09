@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using static MSHU.CarWash.ClassLibrary.Enums.ServiceType;
 
 namespace MSHU.CarWash.ClassLibrary.Enums
@@ -21,6 +21,46 @@ namespace MSHU.CarWash.ClassLibrary.Enums
         LeatherCare = 11,
         PlasticCare = 12,
         PreWash = 13
+    }
+
+    public static class ServiceExtensions
+    {
+        public static string ToFriendlyString(this ServiceType serviceType)
+        {
+            switch (serviceType)
+            {
+                case Exterior:
+                    return "exterior";
+                case Interior:
+                    return "interior";
+                case Carpet:
+                    return "carpet";
+                case SpotCleaning:
+                    return "spot cleaning";
+                case VignetteRemoval:
+                    return "vignette removal";
+                case Polishing:
+                    return "polishing";
+                case AcCleaningOzon:
+                    return "AC cleaning 'ozon'";
+                case AcCleaningBomba:
+                    return "AC cleaning 'bomba'";
+                case BugRemoval:
+                    return "bug removal";
+                case WheelCleaning:
+                    return "wheel cleaning";
+                case TireCare:
+                    return "tire care";
+                case LeatherCare:
+                    return "leather care";
+                case PlasticCare:
+                    return "plastic care";
+                case PreWash:
+                    return "prewash";
+                default:
+                    return "no info";
+            }
+        }
     }
 
     public static class ServiceTypes

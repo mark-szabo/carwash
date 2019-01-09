@@ -1,0 +1,84 @@
+{
+    "name": "carwashubot",
+    "description": "",
+    "services": [
+        {
+            "type": "abs",
+            "appId": "3e58d71d-7fd2-4568-8a02-0f641a3dfbc5",
+            "id": "1",
+            "name": "carwashubot",
+            "resourceGroup": "carwash",
+            "serviceName": "carwashubot",
+            "subscriptionId": "a984fd43-e460-42c7-957c-a023cf7f8241",
+            "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47"
+        },
+        {
+            "type": "blob",
+            "connectionString": "yD6+ngXGKkUsv1Hi2L0Adg==!EbUY9/wYHCFkO/KrUWNeTufgnV4h3eYCWqWybil/+IPvZPo67eKnGoXOnN6wcYXtVMVCuHahOZB4BI33n0J92fx0NWcW9M6j5U6LsMDrPY2wiETDE5lM/oP3GrqnIryzwY0h4IsBrtyQR0mZ2ht15xCM0A/9fp/7vtDbMcpxUlb5mCr0BifONw/BAE4z5d2cMpKSVLM77iayPRU3p0FD+A==",
+            "id": "2",
+            "name": "carwashstorage",
+            "resourceGroup": "carwash",
+            "serviceName": "carwashu",
+            "subscriptionId": "a984fd43-e460-42c7-957c-a023cf7f8241",
+            "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47"
+        },
+        {
+            "type": "endpoint",
+            "appId": "3e58d71d-7fd2-4568-8a02-0f641a3dfbc5",
+            "appPassword": "wBgiwYetme050mZ3WXIsQA==!6RS68Gl9DTe9nseoSAVsv8rHi//0FIkTn9HsghJ1YRY=",
+            "endpoint": "http://localhost:3978/api/messages",
+            "id": "3",
+            "name": "development"
+        },
+        {
+            "type": "endpoint",
+            "appId": "3e58d71d-7fd2-4568-8a02-0f641a3dfbc5",
+            "appPassword": "eGVlsOdOf+VEJReoonRzRw==!z7cH5ZgsYol40d6ovjiEJr93vqd28rYhX563yIqD5cs=",
+            "endpoint": "https://carwashubot.azurewebsites.net/api/messages",
+            "id": "4",
+            "name": "production"
+        },
+        {
+            "type": "appInsights",
+            "apiKeys": {},
+            "applicationId": "71812d90-6c5f-4d65-91ec-f9bbc0d23481",
+            "id": "5",
+            "instrumentationKey": "+PIhq9eMqh9bcKj2peczig==!NWyvowSToHH1/gBEwF5WaPsaaDv+pFkR4vUP+k/Usg2tVgiNMieAxVaUkoi8m3V0",
+            "resourceGroup": "carwash",
+            "serviceName": "carwashubot4fj5z2",
+            "subscriptionId": "a984fd43-e460-42c7-957c-a023cf7f8241",
+            "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47"
+        },
+        {
+            "type": "qna",
+            "endpointKey": "6N79BDW8Fh4sSTaMtmN5dw==!0NqFilL03NFGrq54KNBJhRvQXC8OSrr07PgesCjOCFM+tNSUruAV3s+KBcKzxzwL",
+            "hostname": "https://carwashufaq.azurewebsites.net/qnamaker",
+            "id": "6",
+            "kbId": "327041b8-ae04-48fb-b82a-fcc06cd4c300",
+            "name": "carwashufaq",
+            "subscriptionKey": "L0BkE3rkSzTeyd1pd95LOg==!kVuGP1JHZUbwPlzS9EoxSSbTJuv9O2HG1aH22coAoqztTpEywcGOlK5prWOxW54L"
+        },
+        {
+            "type": "luis",
+            "appId": "7eb0e72b-bbf3-42c6-8eee-744461fb6ea4",
+            "authoringKey": "7UsT1+vm2Q9GUnw3aciKaQ==!nRXYsxG6dm/d8eM5mlAy278aACB2jPjCDV78APt9mCKXt98KAA+yT75lLdKBKldV",
+            "id": "7",
+            "name": "carwashubot",
+            "region": "westus",
+            "version": "0.1"
+        },
+        {
+            "type": "generic",
+            "configuration": {
+                "connectionString": "yPoa4+pixZ+jvQYA5bVtiA==!lNsLTsWQbIM91iqsbCFbM6pvB8/p2dLaFWBFmZRGQfCLgAdTif8kQ0JNzN6gMq1/ApcTu9fHt/AovAgQPZy3b/wUoY8vbcISwjauds0nswc9/lCoTEUHc/oQq64eB4ZF+RlUS8xC7rNXuGr9Qy8d91XB+dlssZXaDpejTMc+m4eDtWL0XY4/zicDYuBup/bU"
+            },
+            "id": "8",
+            "name": "carwashuservicebus",
+            "url": "sb://carwashu.servicebus.windows.net/"
+        }
+    ],
+    "padlock": "k2M+vAZBzEYCRWNa4fFgUw==!ongWE+/fygoyyWNPBd2Us2246y3jYd6UDyL806yT/PgLN4F8LnPjMU8rOdG+XPWh",
+    "version": "2.0",
+    "overrides": null,
+    "path": "C:\\Users\\a-marks\\Source\\Repos\\CarWash\\src\\MSHU.CarWash.Bot\\carwashubot.bot"
+}
