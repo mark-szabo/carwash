@@ -21,9 +21,6 @@
     <ApplicationInsightsAnnotationResourceId>/subscriptions/a984fd43-e460-42c7-957c-a023cf7f8241/resourcegroups/carwash/providers/microsoft.insights/components/mshucarwash-dev</ApplicationInsightsAnnotationResourceId>
     <UserSecretsId>648c0d03-e4b5-4097-8360-49e5a0ced1ab</UserSecretsId>
     <WebProject_DirectoryAccessLevelKey>0</WebProject_DirectoryAccessLevelKey>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>bin\Debug\netcoreapp2.1\MSHU.CarWash.PWA.xml</DocumentationFile>
   </PropertyGroup>
 
