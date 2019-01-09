@@ -129,9 +129,12 @@ namespace MSHU.CarWash.Bot.Dialogs
              * return await step.NextAsync(cancellationToken: cancellationToken);
              */
 
-            await step.Context.SendActivityAsync("I wasn't able to find your reservation. These are your active reservations, please choose one:", cancellationToken: cancellationToken);
+            await step.Context.SendActivityAsync("I'm not sure which one. These are your active reservations, please choose one:", cancellationToken: cancellationToken);
 
-            return await step.ReplaceDialogAsync(nameof(FindReservationDialog), cancellationToken: cancellationToken);
+            return await step.ReplaceDialogAsync(
+                nameof(FindReservationDialog),
+                new FindReservationDialog.FindReservationDialogOptions { DisableChitChat = true },
+                cancellationToken);
         }
 
         private async Task<DialogTurnResult> PromptForConfirmationStepAsync(WaterfallStepContext step, CancellationToken cancellationToken)
@@ -172,7 +175,12 @@ namespace MSHU.CarWash.Bot.Dialogs
         {
             var state = await _stateAccessor.GetAsync(step.Context, cancellationToken: cancellationToken);
 
-            if (!(step.Result is bool confirmed && confirmed)) return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
+            if (!(step.Result is bool confirmed && confirmed))
+            {
+                await step.Context.SendActivityAsync("Fine, I won't cancel that.", cancellationToken: cancellationToken);
+
+                return await step.ClearStateAndEndDialogAsync(_stateAccessor, cancellationToken: cancellationToken);
+            }
 
             try
             {

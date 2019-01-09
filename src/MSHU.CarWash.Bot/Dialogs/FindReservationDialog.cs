@@ -62,10 +62,10 @@ namespace MSHU.CarWash.Bot.Dialogs
                             await dc.Context.SendActivityAsync("No pending reservations. Get started by making a new reservation!", cancellationToken: cancellationToken);
                             return await dc.EndDialogAsync(cancellationToken: cancellationToken);
                         case 1:
-                            activities.Add(new Activity(type: ActivityTypes.Message, text: "I have found one active reservation!"));
+                            if (!o.DisableChitChat) activities.Add(new Activity(type: ActivityTypes.Message, text: "I have found one active reservation!"));
                             break;
                         default:
-                            activities.Add(new Activity(type: ActivityTypes.Message, text: $"Nice! You have {reservations.Count} reservations in-progress."));
+                            if (!o.DisableChitChat) activities.Add(new Activity(type: ActivityTypes.Message, text: $"Nice! You have {reservations.Count} reservations in-progress."));
                             break;
                     }
                 }
@@ -119,6 +119,15 @@ namespace MSHU.CarWash.Bot.Dialogs
             /// <see cref="Reservation"/> id.
             /// </value>
             public string ReservationId { get; set; }
+
+            /// <summary>
+            /// Gets or sets a value indicating whether the bot should include chit-chat in its response.
+            /// Like: Nice! You have 2 reservations in-progress.
+            /// </summary>
+            /// <value>
+            /// A value indicating whether the bot should include chit-chat in its response.
+            /// </value>
+            public bool DisableChitChat { get; set; }
         }
     }
 }
