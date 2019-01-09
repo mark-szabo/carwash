@@ -235,6 +235,30 @@
             or threads to receive notice of cancellation.</param>
             <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the operation result of the operation.</returns>
         </member>
+        <member name="T:MSHU.CarWash.Bot.Dialogs.CancelReservationDialog">
+            <summary>
+            Dialog for cancelling a reservation.
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.Bot.Dialogs.CancelReservationDialog.#ctor(Microsoft.Bot.Builder.IStatePropertyAccessor{MSHU.CarWash.Bot.States.CancelReservationState})">
+            <summary>
+            Initializes a new instance of the <see cref="T:MSHU.CarWash.Bot.Dialogs.CancelReservationDialog"/> class.
+            </summary>
+            <param name="stateAccessor">The <see cref="T:Microsoft.Bot.Builder.ConversationState"/> for storing properties at conversation-scope.</param>
+        </member>
+        <member name="T:MSHU.CarWash.Bot.Dialogs.CancelReservationDialog.CancelReservationDialogOptions">
+            <summary>
+            Options param type for <see cref="T:MSHU.CarWash.Bot.Dialogs.CancelReservationDialog"/>.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.Bot.Dialogs.CancelReservationDialog.CancelReservationDialogOptions.ReservationId">
+            <summary>
+            Gets or sets the reservation id.
+            </summary>
+            <value>
+            <see cref="T:MSHU.CarWash.ClassLibrary.Models.Reservation"/> id.
+            </value>
+        </member>
         <member name="T:MSHU.CarWash.Bot.Dialogs.ConfirmDropoffDialog">
             <summary>
             Reservation drop-off dialog.
@@ -691,6 +715,15 @@
             or threads to receive notice of cancellation.</param>
             <returns>The newly created <see cref="T:MSHU.CarWash.ClassLibrary.Models.Reservation"/>.</returns>
         </member>
+        <member name="M:MSHU.CarWash.Bot.Services.CarwashService.CancelReservationAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Cancels a reservation by id.
+            </summary>
+            <param name="id">Reservation id.</param>
+            <param name="cancellationToken" >(Optional) A <see cref="T:System.Threading.CancellationToken"/> that can be used by other objects
+            or threads to receive notice of cancellation.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the operation result of the operation.</returns>
+        </member>
         <member name="M:MSHU.CarWash.Bot.Services.CarwashService.ConfirmDropoffAsync(System.String,System.String,System.Threading.CancellationToken)">
             <summary>
             Confirm key drop-off and location for a reservation.
@@ -699,7 +732,7 @@
             <param name="location">Reservation location.</param>
             <param name="cancellationToken" >(Optional) A <see cref="T:System.Threading.CancellationToken"/> that can be used by other objects
             or threads to receive notice of cancellation.</param>
-            <returns>Void.</returns>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the operation result of the operation.</returns>
         </member>
         <member name="M:MSHU.CarWash.Bot.Services.CarwashService.GetLastSettingsAsync(System.Threading.CancellationToken)">
             <summary>
@@ -756,6 +789,16 @@
             or threads to receive notice of cancellation.</param>
             <returns>Parsed response.</returns>
         </member>
+        <member name="M:MSHU.CarWash.Bot.Services.CarwashService.DeleteAsync``1(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Makes a DELETE request to the api endpoint specified in the parameter and returns the parsed response.
+            </summary>
+            <typeparam name="T">Type the API response should be parsed to.</typeparam>
+            <param name="endpoint">API endpoint (eg. "/api/reservations").</param>
+            <param name="cancellationToken" >(Optional) A <see cref="T:System.Threading.CancellationToken"/> that can be used by other objects
+            or threads to receive notice of cancellation.</param>
+            <returns>Parsed response.</returns>
+        </member>
         <member name="T:MSHU.CarWash.Bot.Startup">
             <summary>
             The Startup class configures services and the app's request pipeline.
@@ -790,6 +833,19 @@
             <param name="env">Hosting Environment.</param>
             <param name="serviceProvider">Service Provider.</param>
             <param name="loggerFactory">The <see cref="T:Microsoft.Extensions.Logging.ILoggerFactory"/> to create logger object for tracing.</param>
+        </member>
+        <member name="T:MSHU.CarWash.Bot.States.CancelReservationState">
+            <summary>
+            State properties ('conversation' scope) for reservation cancellation.
+            </summary>
+        </member>
+        <member name="P:MSHU.CarWash.Bot.States.CancelReservationState.ReservationId">
+            <summary>
+            Gets or sets the reservation id.
+            </summary>
+            <value>
+            <see cref="T:MSHU.CarWash.ClassLibrary.Models.Reservation"/> id.
+            </value>
         </member>
         <member name="T:MSHU.CarWash.Bot.States.ConfirmDropoffState">
             <summary>
@@ -956,6 +1012,14 @@
             </summary>
             <value>
             The accessor stores the dialog state for the ConfirmDropoff dialog.
+            </value>
+        </member>
+        <member name="P:MSHU.CarWash.Bot.States.StateAccessors.CancelReservationStateAccessor">
+            <summary>
+            Gets or sets the <see cref="T:Microsoft.Bot.Builder.IStatePropertyAccessor`1"/> for CancelReservationState.
+            </summary>
+            <value>
+            The accessor stores the dialog state for the CancelReservation dialog.
             </value>
         </member>
         <member name="P:MSHU.CarWash.Bot.States.StateAccessors.ConversationState">

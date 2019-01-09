@@ -120,6 +120,7 @@ namespace MSHU.CarWash.Bot
             Dialogs = new DialogSet(_accessors.DialogStateAccessor);
             Dialogs.Add(new NewReservationDialog(_accessors.NewReservationStateAccessor));
             Dialogs.Add(new ConfirmDropoffDialog(_accessors.ConfirmDropoffStateAccessor));
+            Dialogs.Add(new CancelReservationDialog(_accessors.CancelReservationStateAccessor));
             Dialogs.Add(new FindReservationDialog());
             Dialogs.Add(new NextFreeSlotDialog());
             Dialogs.Add(new AuthDialog(accessors.UserProfileAccessor, _storage));
@@ -164,7 +165,10 @@ namespace MSHU.CarWash.Bot
                                         cancellationToken: cancellationToken);
                                     break;
                                 case CancelAction:
-                                    await turnContext.SendActivityAsync("This feature is not yet implemented. Check back in a few days! 😉", cancellationToken: cancellationToken);
+                                    await dc.BeginDialogAsync(
+                                        nameof(CancelReservationDialog),
+                                        new CancelReservationDialog.CancelReservationDialogOptions { ReservationId = id },
+                                        cancellationToken: cancellationToken);
                                     break;
                             }
 
@@ -251,7 +255,9 @@ namespace MSHU.CarWash.Bot
                                             break;
 
                                         case CancelReservationIntent:
-                                            await turnContext.SendActivityAsync("This feature is not yet implemented. Check back in a few days! 😉", cancellationToken: cancellationToken);
+                                            await dc.BeginDialogAsync(
+                                                nameof(CancelReservationDialog),
+                                                cancellationToken: cancellationToken);
                                             break;
 
                                         case FindReservationIntent:
