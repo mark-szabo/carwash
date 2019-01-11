@@ -6,6 +6,8 @@ import Typography from '@material-ui/core/Typography';
 import ReservationCard from './ReservationCard';
 import RoadAnimation from './RoadAnimation';
 import Spinner from './Spinner';
+import { State } from '../Constants';
+import * as moment from 'moment';
 
 const styles = theme => ({
     card: {
@@ -80,7 +82,24 @@ class ReservationGrid extends Component {
 
         return (
             <Grid container direction="row" justify="flex-start" alignItems="flex-start" spacing={16} className={classes.grid}>
-                {reservations.map(reservation => (
+                {reservations
+                    .filter(r => r.state !== State.Done)
+                    .sort((r1, r2) => (moment(r1.startDate).isBefore(moment(r2.startDate)) ? -1 : 1))
+                    .map(reservation => (
+                        <Grid item key={reservation.id} className={classes.card}>
+                            <ReservationCard
+                                reservation={reservation}
+                                reservations={reservations}
+                                removeReservation={removeReservation}
+                                updateReservation={updateReservation}
+                                invokeBacklogHub={invokeBacklogHub}
+                                lastSettings={lastSettings}
+                                openSnackbar={openSnackbar}
+                                admin={admin}
+                            />
+                        </Grid>
+                    ))}
+                {reservations.filter(r => r.state === State.Done).map(reservation => (
                     <Grid item key={reservation.id} className={classes.card}>
                         <ReservationCard
                             reservation={reservation}
