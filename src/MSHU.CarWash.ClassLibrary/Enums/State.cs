@@ -57,13 +57,13 @@ namespace MSHU.CarWash.ClassLibrary.Enums
                 case State.ReminderSentWaitingForKey:
                     return "Leave the key at reception";
                 case State.DropoffAndLocationConfirmed:
-                    return "Waiting";
+                    return "All set, ready to wash";
                 case State.WashInProgress:
                     return "Wash in progress";
                 case State.NotYetPaid:
                     return "You need to pay";
                 case State.Done:
-                    return "Done";
+                    return "Completed";
                 default:
                     return "No info";
             }
