@@ -27,6 +27,7 @@ const styles = theme => ({
             width: 600,
         },
         backgroundColor: theme.palette.background.paper,
+        marginTop: 48,
     },
     primaryButtonContained: {
         marginTop: theme.spacing.unit,
@@ -35,7 +36,7 @@ const styles = theme => ({
         marginTop: theme.spacing.unit * 2,
         marginBottom: theme.spacing.unit * 2,
     },
-    dateField: {
+    inputField: {
         minWidth: 220,
     },
 });
@@ -151,7 +152,7 @@ class Blockers extends TrackedComponent {
                                     shrink: true,
                                 }}
                                 onChange={this.handleChange('newBlockerStartDate')}
-                                className={classes.dateField}
+                                className={classes.inputField}
                             />
                         </div>
                         <div className={classes.formControl}>
@@ -163,11 +164,18 @@ class Blockers extends TrackedComponent {
                                     shrink: true,
                                 }}
                                 onChange={this.handleChange('newBlockerEndDate')}
-                                className={classes.dateField}
+                                className={classes.inputField}
                             />
                         </div>
                         <div className={classes.formControl}>
-                            <TextField required id="newBlockerComment" label="Comment" margin="normal" onChange={this.handleChange('newBlockerComment')} />
+                            <TextField
+                                required
+                                id="newBlockerComment"
+                                label="Comment (for CarWash)"
+                                margin="normal"
+                                onChange={this.handleChange('newBlockerComment')}
+                                className={classes.inputField}
+                            />
                         </div>
                         <div className={classes.formControl}>
                             <Button variant="contained" color="primary" className={classes.primaryButtonContained} onClick={this.handleAddNewBlockerClick}>
