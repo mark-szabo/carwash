@@ -28,6 +28,7 @@ import red from '@material-ui/core/colors/red';
 import { getStateName, getServiceName, State, Garages, BacklogHubMethods } from '../Constants';
 import { formatLocation, formatDate2 } from '../Helpers';
 import Comments from './Comments';
+import * as moment from 'moment';
 
 const styles = theme => ({
     chip: {
@@ -109,11 +110,24 @@ class ReservationCard extends Component {
         switch (reservation.state) {
             case 0:
             case 1:
+                if (moment(reservation.startDate).isSame(moment(), 'day')) {
+                    return (
+                        <CardActions className={classes.cardActions}>
+                            <Button size="small" color="primary" variant="outlined" onClick={this.handleDropoffDialogOpen}>
+                                Confirm key drop-off
+                            </Button>
+                            <Button component={Link} to={`/reserve/${reservation.id}`} size="small" color="primary">
+                                Edit
+                            </Button>
+                            <Button size="small" color="secondary" className={classes.dangerButton} onClick={this.handleCancelDialogOpen}>
+                                Cancel
+                            </Button>
+                        </CardActions>
+                    );
+                }
+
                 return (
                     <CardActions className={classes.cardActions}>
-                        <Button size="small" color="primary" variant="outlined" onClick={this.handleDropoffDialogOpen}>
-                            Confirm key drop-off
-                        </Button>
                         <Button component={Link} to={`/reserve/${reservation.id}`} size="small" color="primary">
                             Edit
                         </Button>
