@@ -105,6 +105,8 @@ class Settings extends TrackedComponent {
     handleDeleteConfirmed = () => {
         this.setState({ deleteDialogOpen: false });
 
+        localStorage.clear();
+
         apiFetch(`api/users/${this.props.user.id}`, { method: 'DELETE' }, true).then(
             () => {
                 this.props.openSnackbar('Your account has been deleted.');
