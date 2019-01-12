@@ -215,9 +215,18 @@ class Reserve extends TrackedComponent {
                 }
             );
         } else {
-            this.setState({
-                vehiclePlateNumber: this.props.lastSettings.vehiclePlateNumber || '',
-                garage: this.props.lastSettings.garage || '',
+            this.setState(state => {
+                const services = [...state.services];
+                const lastServices = this.props.lastSettings.services || [];
+                lastServices.forEach(s => {
+                    services[s].selected = true;
+                });
+
+                return {
+                    services,
+                    vehiclePlateNumber: this.props.lastSettings.vehiclePlateNumber || '',
+                    garage: this.props.lastSettings.garage || '',
+                };
             });
         }
 
@@ -364,6 +373,15 @@ class Reserve extends TrackedComponent {
             selectedDate: dateTime,
             timeStepLabel: dateTime.format('hh:mm A'),
         });
+
+        // Should delay leading from lastsettings as much as possible, because if the user reloads the page,
+        // it can happen that the lastsettings object is not yet populated in props.
+        if (!this.props.match.params.id) {
+            this.setState({
+                vehiclePlateNumber: this.props.lastSettings.vehiclePlateNumber || '',
+                garage: this.props.lastSettings.garage || '',
+            });
+        }
     };
 
     isTimeNotAvailable = (date, time) => {
@@ -492,7 +510,7 @@ class Reserve extends TrackedComponent {
 
                 // Refresh last settings
                 // Delete cached response for /api/reservations/lastsettings
-                // Not perfect solution as it seems Safari does not supports this
+                // Not perfect solution as it seems Safari does not support this
                 // https://developer.mozilla.org/en-US/docs/Web/API/Cache/delete#Browser_compatibility
                 try {
                     caches.open('api-cache').then(cache => {

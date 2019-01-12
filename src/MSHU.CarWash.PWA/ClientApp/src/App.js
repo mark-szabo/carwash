@@ -253,6 +253,7 @@ export default class App extends Component {
                     }
                     this.setState({
                         lastSettings: {
+                            services: data.services || [],
                             vehiclePlateNumber: data.vehiclePlateNumber,
                             garage,
                         },
@@ -274,7 +275,7 @@ export default class App extends Component {
         });
 
         // Delete cached response for /api/users/me
-        // Not perfect solution as it seems Safari does not supports this
+        // Not perfect solution as it seems Safari does not support this
         // https://developer.mozilla.org/en-US/docs/Web/API/Cache/delete#Browser_compatibility
         try {
             caches.open('api-cache').then(cache => {
