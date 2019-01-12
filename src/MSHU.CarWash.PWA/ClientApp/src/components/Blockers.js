@@ -35,6 +35,9 @@ const styles = theme => ({
         marginTop: theme.spacing.unit * 2,
         marginBottom: theme.spacing.unit * 2,
     },
+    dateField: {
+        minWidth: 220,
+    },
 });
 
 class Blockers extends TrackedComponent {
@@ -148,6 +151,7 @@ class Blockers extends TrackedComponent {
                                     shrink: true,
                                 }}
                                 onChange={this.handleChange('newBlockerStartDate')}
+                                className={classes.dateField}
                             />
                         </div>
                         <div className={classes.formControl}>
@@ -159,6 +163,7 @@ class Blockers extends TrackedComponent {
                                     shrink: true,
                                 }}
                                 onChange={this.handleChange('newBlockerEndDate')}
+                                className={classes.dateField}
                             />
                         </div>
                         <div className={classes.formControl}>
