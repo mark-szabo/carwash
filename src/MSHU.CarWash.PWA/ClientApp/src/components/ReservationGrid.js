@@ -132,30 +132,16 @@ class ReservationGrid extends Component {
         ));
 
         return (
-            <>
-                <Grid
-                    container
-                    direction="row"
-                    justify="flex-start"
-                    alignItems="flex-start"
-                    spacing={16}
-                    className={classes.grid}
-                    ref={ref => {
-                        this.container = ref;
-                    }}
-                >
-                    <InfiniteScroll
-                        pageStart={0}
-                        loadMore={this.loadReservationsToGrid}
-                        hasMore={this.state.listHasNotDisplayedItems}
-                        loader={<Spinner key={0} />}
-                        getScrollParent={() => this.container}
-                        useWindow={false}
-                    >
-                        <Portal container={this.container}>{gridItems}</Portal>
-                    </InfiniteScroll>
-                </Grid>
-            </>
+            <InfiniteScroll
+                pageStart={0}
+                loadMore={this.loadReservationsToGrid}
+                hasMore={this.state.listHasNotDisplayedItems}
+                loader={<Spinner key={0} />}
+                useWindow={false}
+                element={<Grid container direction="row" justify="flex-start" alignItems="flex-start" spacing={16} className={classes.grid} />}
+            >
+                {gridItems}
+            </InfiniteScroll>
         );
     }
 }
