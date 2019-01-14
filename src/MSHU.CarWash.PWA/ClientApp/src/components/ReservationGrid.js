@@ -1,35 +1,22 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
-import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
-import Portal from '@material-ui/core/Portal';
-import InfiniteScroll from 'react-infinite-scroller';
 import * as moment from 'moment';
+import memoize from 'memoize-one';
+import { FixedSizeList as List } from 'react-window';
+import AutoSizer from 'react-virtualized-auto-sizer';
 import ReservationCard from './ReservationCard';
 import RoadAnimation from './RoadAnimation';
 import Spinner from './Spinner';
 import { State } from '../Constants';
 
-const NUMBER_OF_ITEMS_DISPLAYED_ON_A_PAGE = 6;
+const CARD_WIDTH = 416;
 
 const styles = theme => ({
-    card: {
-        [theme.breakpoints.down('sm')]: {
-            minWidth: '100%',
-            maxWidth: '100%',
-        },
-        [theme.breakpoints.up('md')]: {
-            minWidth: 'inherit',
-            maxWidth: 'inherit',
-        },
-    },
     grid: {
-        maxHeight: 'calc(100% - 8px)',
-        width: 'calc(100% + 48px)',
         margin: '-24px',
         padding: '8px',
-        overflow: 'auto',
     },
     center: {
         textAlign: 'center',
@@ -42,15 +29,54 @@ const styles = theme => ({
         color: '#9E9E9E',
         marginTop: theme.spacing.unit * 4,
     },
+    row: {
+        display: 'flex',
+        justifyContent: 'space-around',
+    },
 });
+
+function Row(props) {
+    const { data, index, style } = props;
+    const { classes, itemsPerRow, reservations, removeReservation, updateReservation, invokeBacklogHub, lastSettings, openSnackbar, admin } = data;
+
+    const items = [];
+    const fromIndex = index * itemsPerRow;
+    const toIndex = Math.min(fromIndex + itemsPerRow, reservations.length);
+
+    for (let i = fromIndex; i < toIndex; i++) {
+        items.push(
+            <ReservationCard
+                key={i}
+                reservation={reservations[i]}
+                reservations={reservations}
+                removeReservation={removeReservation}
+                updateReservation={updateReservation}
+                invokeBacklogHub={invokeBacklogHub}
+                lastSettings={lastSettings}
+                openSnackbar={openSnackbar}
+                admin={admin}
+            />
+        );
+    }
+
+    const rowStyle = {
+        margin: '8px 8px 0 8px',
+        position: style.position,
+        width: style.width,
+        height: style.height,
+        top: style.top,
+        left: style.left,
+    };
+
+    return (
+        <div className={classes.row} style={rowStyle}>
+            {items}
+        </div>
+    );
+}
 
 class ReservationGrid extends Component {
     displayName = 'ReservationGrid';
-
-    state = {
-        displayedReservations: [],
-        listHasNotDisplayedItems: true,
-    };
 
     componentDidMount() {
         document.getElementsByTagName('main')[0].style.overflow = 'hidden';
@@ -60,32 +86,23 @@ class ReservationGrid extends Component {
         document.getElementsByTagName('main')[0].style.overflow = 'auto';
     }
 
+    getItemData = memoize((classes, itemsPerRow, reservations, removeReservation, updateReservation, invokeBacklogHub, lastSettings, openSnackbar, admin) => ({
+        classes,
+        itemsPerRow,
+        reservations,
+        removeReservation,
+        updateReservation,
+        invokeBacklogHub,
+        lastSettings,
+        openSnackbar,
+        admin,
+    }));
+
     reorderReservations = reservations =>
         reservations
             .filter(r => r.state !== State.Done)
             .sort((r1, r2) => (moment(r1.startDate).isBefore(moment(r2.startDate)) ? -1 : 1))
             .concat(reservations.filter(r => r.state === State.Done));
-
-    loadReservationsToGrid = page => {
-        const allReservations = this.reorderReservations(this.props.reservations);
-        const pageMultiplier = page - 1;
-        this.setState(state => {
-            const displayedReservations = [...state.displayedReservations];
-            let listHasNotDisplayedItems = true;
-            let lastItemToDisplay = pageMultiplier * NUMBER_OF_ITEMS_DISPLAYED_ON_A_PAGE + NUMBER_OF_ITEMS_DISPLAYED_ON_A_PAGE;
-
-            if (lastItemToDisplay > allReservations.length) {
-                lastItemToDisplay = allReservations.length;
-                listHasNotDisplayedItems = false;
-            }
-
-            for (let i = pageMultiplier * NUMBER_OF_ITEMS_DISPLAYED_ON_A_PAGE; i < lastItemToDisplay; i++) {
-                displayedReservations.push(allReservations[i]);
-            }
-
-            return { displayedReservations, listHasNotDisplayedItems };
-        });
-    };
 
     render() {
         const {
@@ -116,32 +133,30 @@ class ReservationGrid extends Component {
             );
         }
 
-        const gridItems = this.state.displayedReservations.map(reservation => (
-            <Grid item key={reservation.id} className={classes.card}>
-                <ReservationCard
-                    reservation={reservation}
-                    reservations={reservations}
-                    removeReservation={removeReservation}
-                    updateReservation={updateReservation}
-                    invokeBacklogHub={invokeBacklogHub}
-                    lastSettings={lastSettings}
-                    openSnackbar={openSnackbar}
-                    admin={admin}
-                />
-            </Grid>
-        ));
-
         return (
-            <InfiniteScroll
-                pageStart={0}
-                loadMore={this.loadReservationsToGrid}
-                hasMore={this.state.listHasNotDisplayedItems}
-                loader={<Spinner key={0} />}
-                useWindow={false}
-                element={<Grid container direction="row" justify="flex-start" alignItems="flex-start" spacing={16} className={classes.grid} />}
-            >
-                {gridItems}
-            </InfiniteScroll>
+            <AutoSizer>
+                {({ height, width }) => {
+                    const itemsPerRow = Math.floor(width / CARD_WIDTH) || 1;
+                    const rowCount = Math.ceil(reservations.length / itemsPerRow);
+                    const itemData = this.getItemData(
+                        classes,
+                        itemsPerRow,
+                        this.reorderReservations(reservations),
+                        removeReservation,
+                        updateReservation,
+                        invokeBacklogHub,
+                        lastSettings,
+                        openSnackbar,
+                        admin
+                    );
+
+                    return (
+                        <List height={height} itemCount={rowCount} itemData={itemData} itemSize={600} width={width + 48} className={classes.grid}>
+                            {Row}
+                        </List>
+                    );
+                }}
+            </AutoSizer>
         );
     }
 }

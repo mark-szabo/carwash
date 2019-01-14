@@ -46,6 +46,7 @@ const styles = theme => ({
             minWidth: 400,
             maxWidth: 400,
         },
+        margin: 8,
     },
     cardActions: {
         padding: '8px 12px 12px 12px',
