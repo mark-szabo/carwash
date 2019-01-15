@@ -58,6 +58,13 @@ const styles = theme => ({
         overflow: 'auto',
         backgroundColor: theme.palette.background.default,
         padding: theme.spacing.unit * 3,
+        marginTop: 56,
+        [`${theme.breakpoints.up('xs')} and (orientation: landscape)`]: {
+            marginTop: 48,
+        },
+        [theme.breakpoints.up('sm')]: {
+            marginTop: 64,
+        },
     },
     appTitle: {
         height: 60,
@@ -218,10 +225,8 @@ class Layout extends React.Component {
                         {drawer}
                     </Drawer>
                 </Hidden>
-                <main className={classes.content}>
-                    <div className={classes.toolbar} />
-                    {this.props.children}
-                </main>
+                <div className={classes.toolbar} />
+                <main className={classes.content}>{this.props.children}</main>
             </div>
         );
     }
