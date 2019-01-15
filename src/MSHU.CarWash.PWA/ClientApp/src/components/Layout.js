@@ -72,6 +72,7 @@ const styles = theme => ({
     },
     menuList: {
         backgroundColor: '#ffffff',
+        zIndex: 1,
     },
     footer: {
         position: 'absolute',
@@ -80,7 +81,7 @@ const styles = theme => ({
         color: 'rgba(0, 0, 0, 0.54)',
         fontSize: '0.8125rem',
         fontWeight: 400,
-        zIndex: -1,
+        zIndex: 0,
     },
     link: {
         textDecoration: 'underline',
