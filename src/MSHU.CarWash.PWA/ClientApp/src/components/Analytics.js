@@ -25,6 +25,7 @@ class Analytics extends React.PureComponent {
 
         return (
             <iframe
+                title="Power BI"
                 src="https://msit.powerbi.com/reportEmbed?reportId=55872423-9855-48ee-a4ae-50c3ccb5918e&autoAuth=true"
                 frameBorder="0"
                 allowFullScreen="true"

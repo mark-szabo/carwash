@@ -39,14 +39,14 @@ const styles = theme => ({
     },
     card: {
         [theme.breakpoints.down('sm')]: {
-            minWidth: '100%',
-            maxWidth: '100%',
+            width: '100%',
         },
         [theme.breakpoints.up('md')]: {
-            minWidth: 400,
-            maxWidth: 400,
+            width: 400,
         },
         margin: 8,
+        display: 'flex',
+        flexDirection: 'column',
     },
     cardActions: {
         padding: '8px 12px 12px 12px',
@@ -240,11 +240,11 @@ class ReservationCard extends Component {
 
     render() {
         const { garage, floor, seat, validationErrors } = this.state;
-        const { classes, reservation, admin } = this.props;
+        const { classes, reservation, admin, style } = this.props;
         return (
             <React.Fragment>
                 <Grow in>
-                    <Card className={classes.card}>
+                    <Card className={classes.card} style={style}>
                         <CardMedia className={classes.media} image={`/images/state${reservation.state}.png`} />
                         <CardHeader
                             action={reservation.private ? <LockIcon alt="Private" style={{ margin: '8px 16px 0 0' }} /> : null}
