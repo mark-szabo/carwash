@@ -20,7 +20,8 @@ const CARD_GUTTER = 16;
 const styles = theme => ({
     grid: {
         margin: '-24px',
-        padding: '8px',
+        display: 'flex',
+        flexGrow: 1,
     },
     center: {
         textAlign: 'center',
@@ -106,11 +107,9 @@ class ReservationGrid extends React.PureComponent {
                 cellPositioner={this._cellPositioner}
                 cellRenderer={this._cellRenderer}
                 height={CARD_DEFAULT_HEIGHT}
-                // overscanByPixels={20}
                 ref={ref => {
                     this._masonry = ref;
                 }}
-                // scrollTop={this._scrollTop}
                 width={width}
             />
         );
@@ -125,7 +124,7 @@ class ReservationGrid extends React.PureComponent {
             this._cellPositioner = createCellPositioner({
                 cellMeasurerCache: this._cache,
                 columnCount: this._columnCount,
-                CARD_WIDTH,
+                columnWidth: CARD_WIDTH,
                 spacer: CARD_GUTTER,
             });
         }
@@ -134,7 +133,7 @@ class ReservationGrid extends React.PureComponent {
     _resetCellPositioner() {
         this._cellPositioner.reset({
             columnCount: this._columnCount,
-            CARD_WIDTH,
+            columnWidth: CARD_WIDTH,
             spacer: CARD_GUTTER,
         });
     }
@@ -182,9 +181,13 @@ class ReservationGrid extends React.PureComponent {
         }
 
         return (
-            <AutoSizer disableHeight height={CARD_DEFAULT_HEIGHT} onResize={this._onResize}>
-                {this._renderMasonry}
-            </AutoSizer>
+            <div className={classes.grid}>
+                {
+                    <AutoSizer disableHeight height={CARD_DEFAULT_HEIGHT} onResize={this._onResize}>
+                        {this._renderMasonry}
+                    </AutoSizer>
+                }
+            </div>
         );
     }
 }

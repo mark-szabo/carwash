@@ -44,7 +44,7 @@ const styles = theme => ({
         [theme.breakpoints.up('md')]: {
             width: 400,
         },
-        margin: 8,
+        margin: 16,
         display: 'flex',
         flexDirection: 'column',
     },
