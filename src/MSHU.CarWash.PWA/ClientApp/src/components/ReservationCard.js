@@ -39,7 +39,7 @@ const styles = theme => ({
     },
     card: {
         [theme.breakpoints.down('sm')]: {
-            width: '100%',
+            width: 'calc(100% - 32px)!important',
         },
         [theme.breakpoints.up('md')]: {
             width: 400,

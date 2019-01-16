@@ -11,6 +11,7 @@ import ReservationCard from './ReservationCard';
 import RoadAnimation from './RoadAnimation';
 import Spinner from './Spinner';
 import { State } from '../Constants';
+import './ReservationGrid.css';
 
 const CARD_WIDTH = 400;
 const CARD_DEFAULT_HEIGHT = 680;
@@ -21,6 +22,22 @@ const styles = theme => ({
         margin: '-24px',
         display: 'flex',
         flexGrow: 1,
+        height: 'calc(100vh - 56px)',
+        [`${theme.breakpoints.up('xs')} and (orientation: landscape)`]: {
+            height: 'calc(100vh - 48px)',
+        },
+        [theme.breakpoints.up('sm')]: {
+            height: 'calc(100vh - 64px)',
+        },
+    },
+    masonry: {
+        height: 'calc(100vh - 56px)',
+        [`${theme.breakpoints.up('xs')} and (orientation: landscape)`]: {
+            height: 'calc(100vh - 48px)',
+        },
+        [theme.breakpoints.up('sm')]: {
+            height: 'calc(100vh - 64px)',
+        },
     },
     center: {
         textAlign: 'center',
@@ -32,10 +49,6 @@ const styles = theme => ({
     lonelyTitle: {
         color: '#9E9E9E',
         marginTop: theme.spacing.unit * 4,
-    },
-    row: {
-        display: 'flex',
-        justifyContent: 'space-around',
     },
 });
 
@@ -76,7 +89,7 @@ class ReservationGrid extends React.PureComponent {
         this._masonry.recomputeCellPositions();
     };
 
-    renderMasonry = ({ width }) => {
+    renderMasonry = ({ width, height }) => {
         this._width = width;
 
         this.calculateColumnCount();
@@ -84,16 +97,16 @@ class ReservationGrid extends React.PureComponent {
 
         return (
             <Masonry
-                // autoHeight={windowScrollerEnabled}
                 cellCount={this.props.reservations.length}
                 cellMeasurerCache={this._cache}
                 cellPositioner={this._cellPositioner}
                 cellRenderer={this.cellRenderer}
-                height={CARD_DEFAULT_HEIGHT}
+                height={height}
                 ref={ref => {
                     this._masonry = ref;
                 }}
                 width={width}
+                className={this.props.classes.masonry}
             />
         );
     };
@@ -166,11 +179,7 @@ class ReservationGrid extends React.PureComponent {
 
         return (
             <div className={classes.grid}>
-                {
-                    <AutoSizer disableHeight height={CARD_DEFAULT_HEIGHT} onResize={this.onResize}>
-                        {this.renderMasonry}
-                    </AutoSizer>
-                }
+                <AutoSizer onResize={this.onResize}>{this.renderMasonry}</AutoSizer>
             </div>
         );
     }
