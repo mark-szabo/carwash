@@ -21,7 +21,7 @@ const styles = theme => ({
         },
     },
     grid: {
-        maxHeight: 'calc(100% - 8px)',
+        maxHeight: 'calc(100% + 48px)',
         width: 'calc(100% + 48px)',
         margin: '-24px',
         padding: '8px',
