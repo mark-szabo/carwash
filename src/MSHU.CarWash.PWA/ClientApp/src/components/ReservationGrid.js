@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import * as moment from 'moment';
-import memoize from 'memoize-one';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
 import Masonry from 'react-virtualized/dist/commonjs/Masonry';
 import createCellPositioner from 'react-virtualized/dist/commonjs/Masonry/createCellPositioner';
@@ -53,10 +52,6 @@ class ReservationGrid extends React.PureComponent {
             defaultWidth: CARD_WIDTH,
             fixedWidth: true,
         });
-
-        this._cellRenderer = this._cellRenderer.bind(this);
-        this._onResize = this._onResize.bind(this);
-        this._renderMasonry = this._renderMasonry.bind(this);
     }
 
     componentDidMount() {
@@ -67,37 +62,25 @@ class ReservationGrid extends React.PureComponent {
         document.getElementsByTagName('main')[0].style.overflow = 'auto';
     }
 
-    getItemData = memoize((classes, itemsPerRow, reservations, removeReservation, updateReservation, invokeBacklogHub, lastSettings, openSnackbar, admin) => ({
-        classes,
-        itemsPerRow,
-        reservations,
-        removeReservation,
-        updateReservation,
-        invokeBacklogHub,
-        lastSettings,
-        openSnackbar,
-        admin,
-    }));
-
     reorderReservations = reservations =>
         reservations
             .filter(r => r.state !== State.Done)
             .sort((r1, r2) => (moment(r1.startDate).isBefore(moment(r2.startDate)) ? -1 : 1))
             .concat(reservations.filter(r => r.state === State.Done));
 
-    _onResize({ width }) {
+    onResize = ({ width }) => {
         this._width = width;
 
-        this._calculateColumnCount();
-        this._resetCellPositioner();
+        this.calculateColumnCount();
+        this.resetCellPositioner();
         this._masonry.recomputeCellPositions();
-    }
+    };
 
-    _renderMasonry({ width }) {
+    renderMasonry = ({ width }) => {
         this._width = width;
 
-        this._calculateColumnCount();
-        this._initCellPositioner();
+        this.calculateColumnCount();
+        this.initCellPositioner();
 
         return (
             <Masonry
@@ -105,7 +88,7 @@ class ReservationGrid extends React.PureComponent {
                 cellCount={this.props.reservations.length}
                 cellMeasurerCache={this._cache}
                 cellPositioner={this._cellPositioner}
-                cellRenderer={this._cellRenderer}
+                cellRenderer={this.cellRenderer}
                 height={CARD_DEFAULT_HEIGHT}
                 ref={ref => {
                     this._masonry = ref;
@@ -113,13 +96,13 @@ class ReservationGrid extends React.PureComponent {
                 width={width}
             />
         );
-    }
+    };
 
-    _calculateColumnCount() {
+    calculateColumnCount() {
         this._columnCount = Math.floor(this._width / (CARD_WIDTH + CARD_GUTTER));
     }
 
-    _initCellPositioner() {
+    initCellPositioner() {
         if (typeof this._cellPositioner === 'undefined') {
             this._cellPositioner = createCellPositioner({
                 cellMeasurerCache: this._cache,
@@ -130,7 +113,7 @@ class ReservationGrid extends React.PureComponent {
         }
     }
 
-    _resetCellPositioner() {
+    resetCellPositioner() {
         this._cellPositioner.reset({
             columnCount: this._columnCount,
             columnWidth: CARD_WIDTH,
@@ -138,8 +121,9 @@ class ReservationGrid extends React.PureComponent {
         });
     }
 
-    _cellRenderer({ index, key, parent, style }) {
-        const { reservations, removeReservation, updateReservation, invokeBacklogHub, openSnackbar, lastSettings, admin } = this.props;
+    cellRenderer = ({ index, key, parent, style }) => {
+        const reservations = this.reorderReservations(this.props.reservations);
+        const { removeReservation, updateReservation, invokeBacklogHub, openSnackbar, lastSettings, admin } = this.props;
 
         return (
             <CellMeasurer cache={this._cache} index={index} key={key} parent={parent}>
@@ -159,7 +143,7 @@ class ReservationGrid extends React.PureComponent {
                 />
             </CellMeasurer>
         );
-    }
+    };
 
     render() {
         const { classes, reservations, reservationsLoading } = this.props;
@@ -183,8 +167,8 @@ class ReservationGrid extends React.PureComponent {
         return (
             <div className={classes.grid}>
                 {
-                    <AutoSizer disableHeight height={CARD_DEFAULT_HEIGHT} onResize={this._onResize}>
-                        {this._renderMasonry}
+                    <AutoSizer disableHeight height={CARD_DEFAULT_HEIGHT} onResize={this.onResize}>
+                        {this.renderMasonry}
                     </AutoSizer>
                 }
             </div>

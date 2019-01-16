@@ -33,7 +33,6 @@
     "ajv": "^6.5.5",
     "applicationinsights-js": "^1.0.20",
     "downloadjs": "^1.4.7",
-    "memoize-one": "^5.0.0",
     "moment": "^2.22.2",
     "prop-types": "^15.6.2",
     "react": "^16.6.3",
