@@ -1,29 +1,43 @@
-import React, { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
-import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
+import * as moment from 'moment';
+import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
+import Masonry from 'react-virtualized/dist/commonjs/Masonry';
+import createCellPositioner from 'react-virtualized/dist/commonjs/Masonry/createCellPositioner';
+import { CellMeasurer, CellMeasurerCache } from 'react-virtualized/dist/commonjs/CellMeasurer';
 import ReservationCard from './ReservationCard';
 import RoadAnimation from './RoadAnimation';
 import Spinner from './Spinner';
+import { State } from '../Constants';
+import './ReservationGrid.css';
+
+const CARD_WIDTH = 400;
+const CARD_DEFAULT_HEIGHT = 680;
+const CARD_GUTTER = 16;
 
 const styles = theme => ({
-    card: {
-        [theme.breakpoints.down('sm')]: {
-            minWidth: '100%',
-            maxWidth: '100%',
+    grid: {
+        margin: '-24px',
+        display: 'flex',
+        flexGrow: 1,
+        height: 'calc(100vh - 56px)',
+        [`${theme.breakpoints.up('xs')} and (orientation: landscape)`]: {
+            height: 'calc(100vh - 48px)',
         },
-        [theme.breakpoints.up('md')]: {
-            minWidth: 'inherit',
-            maxWidth: 'inherit',
+        [theme.breakpoints.up('sm')]: {
+            height: 'calc(100vh - 64px)',
         },
     },
-    grid: {
-        maxHeight: 'calc(100% - 8px)',
-        width: 'calc(100% + 48px)',
-        margin: '-24px',
-        padding: '8px',
-        overflow: 'auto',
+    masonry: {
+        height: 'calc(100vh - 56px)',
+        [`${theme.breakpoints.up('xs')} and (orientation: landscape)`]: {
+            height: 'calc(100vh - 48px)',
+        },
+        [theme.breakpoints.up('sm')]: {
+            height: 'calc(100vh - 64px)',
+        },
     },
     center: {
         textAlign: 'center',
@@ -38,8 +52,20 @@ const styles = theme => ({
     },
 });
 
-class ReservationGrid extends Component {
+class ReservationGrid extends React.PureComponent {
     displayName = 'ReservationGrid';
+
+    constructor(props, context) {
+        super(props, context);
+
+        this._columnCount = 0;
+
+        this._cache = new CellMeasurerCache({
+            defaultHeight: CARD_DEFAULT_HEIGHT,
+            defaultWidth: CARD_WIDTH,
+            fixedWidth: true,
+        });
+    }
 
     componentDidMount() {
         document.getElementsByTagName('main')[0].style.overflow = 'hidden';
@@ -49,18 +75,91 @@ class ReservationGrid extends Component {
         document.getElementsByTagName('main')[0].style.overflow = 'auto';
     }
 
+    reorderReservations = reservations =>
+        reservations
+            .filter(r => r.state !== State.Done)
+            .sort((r1, r2) => (moment(r1.startDate).isBefore(moment(r2.startDate)) ? -1 : 1))
+            .concat(reservations.filter(r => r.state === State.Done));
+
+    onResize = ({ width }) => {
+        this._width = width;
+
+        this.calculateColumnCount();
+        this.resetCellPositioner();
+        this._masonry.recomputeCellPositions();
+    };
+
+    renderMasonry = ({ width, height }) => {
+        this._width = width;
+
+        this.calculateColumnCount();
+        this.initCellPositioner();
+
+        return (
+            <Masonry
+                cellCount={this.props.reservations.length}
+                cellMeasurerCache={this._cache}
+                cellPositioner={this._cellPositioner}
+                cellRenderer={this.cellRenderer}
+                height={height}
+                ref={ref => {
+                    this._masonry = ref;
+                }}
+                width={width}
+                className={this.props.classes.masonry}
+            />
+        );
+    };
+
+    calculateColumnCount() {
+        this._columnCount = Math.floor(this._width / (CARD_WIDTH + CARD_GUTTER));
+    }
+
+    initCellPositioner() {
+        if (typeof this._cellPositioner === 'undefined') {
+            this._cellPositioner = createCellPositioner({
+                cellMeasurerCache: this._cache,
+                columnCount: this._columnCount,
+                columnWidth: CARD_WIDTH,
+                spacer: CARD_GUTTER,
+            });
+        }
+    }
+
+    resetCellPositioner() {
+        this._cellPositioner.reset({
+            columnCount: this._columnCount,
+            columnWidth: CARD_WIDTH,
+            spacer: CARD_GUTTER,
+        });
+    }
+
+    cellRenderer = ({ index, key, parent, style }) => {
+        const reservations = this.reorderReservations(this.props.reservations);
+        const { removeReservation, updateReservation, invokeBacklogHub, openSnackbar, lastSettings, admin } = this.props;
+
+        return (
+            <CellMeasurer cache={this._cache} index={index} key={key} parent={parent}>
+                <ReservationCard
+                    reservation={reservations[index]}
+                    reservations={reservations}
+                    removeReservation={removeReservation}
+                    updateReservation={updateReservation}
+                    invokeBacklogHub={invokeBacklogHub}
+                    lastSettings={lastSettings}
+                    openSnackbar={openSnackbar}
+                    admin={admin}
+                    style={{
+                        ...style,
+                        width: CARD_WIDTH,
+                    }}
+                />
+            </CellMeasurer>
+        );
+    };
+
     render() {
-        const {
-            classes,
-            reservations,
-            reservationsLoading,
-            removeReservation,
-            updateReservation,
-            invokeBacklogHub,
-            openSnackbar,
-            lastSettings,
-            admin,
-        } = this.props;
+        const { classes, reservations, reservationsLoading } = this.props;
 
         if (reservationsLoading) {
             return <Spinner />;
@@ -79,22 +178,9 @@ class ReservationGrid extends Component {
         }
 
         return (
-            <Grid container direction="row" justify="flex-start" alignItems="flex-start" spacing={16} className={classes.grid}>
-                {reservations.map(reservation => (
-                    <Grid item key={reservation.id} className={classes.card}>
-                        <ReservationCard
-                            reservation={reservation}
-                            reservations={reservations}
-                            removeReservation={removeReservation}
-                            updateReservation={updateReservation}
-                            invokeBacklogHub={invokeBacklogHub}
-                            lastSettings={lastSettings}
-                            openSnackbar={openSnackbar}
-                            admin={admin}
-                        />
-                    </Grid>
-                ))}
-            </Grid>
+            <div className={classes.grid}>
+                <AutoSizer onResize={this.onResize}>{this.renderMasonry}</AutoSizer>
+            </div>
         );
     }
 }

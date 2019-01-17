@@ -79,6 +79,9 @@ const styles = theme => ({
         marginTop: theme.spacing.unit * 2,
         marginBottom: theme.spacing.unit * 2,
     },
+    dateField: {
+        minWidth: 220,
+    },
 });
 
 class Settings extends TrackedComponent {
@@ -101,6 +104,8 @@ class Settings extends TrackedComponent {
 
     handleDeleteConfirmed = () => {
         this.setState({ deleteDialogOpen: false });
+
+        localStorage.clear();
 
         apiFetch(`api/users/${this.props.user.id}`, { method: 'DELETE' }, true).then(
             () => {
@@ -277,6 +282,7 @@ class Settings extends TrackedComponent {
                                     shrink: true,
                                 }}
                                 onChange={this.handleExportStartDateChange}
+                                className={classes.dateField}
                             />
                         </div>
                         <div className={classes.formControl}>
@@ -288,6 +294,7 @@ class Settings extends TrackedComponent {
                                     shrink: true,
                                 }}
                                 onChange={this.handleExportEndDateChange}
+                                className={classes.dateField}
                             />
                         </div>
                         <div className={classes.formControl}>

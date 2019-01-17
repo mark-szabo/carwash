@@ -28,6 +28,7 @@ import red from '@material-ui/core/colors/red';
 import { getStateName, getServiceName, State, Garages, BacklogHubMethods } from '../Constants';
 import { formatLocation, formatDate2 } from '../Helpers';
 import Comments from './Comments';
+import * as moment from 'moment';
 
 const styles = theme => ({
     chip: {
@@ -38,13 +39,14 @@ const styles = theme => ({
     },
     card: {
         [theme.breakpoints.down('sm')]: {
-            minWidth: '100%',
-            maxWidth: '100%',
+            width: 'calc(100% - 32px)!important',
         },
         [theme.breakpoints.up('md')]: {
-            minWidth: 400,
-            maxWidth: 400,
+            width: 400,
         },
+        margin: 16,
+        display: 'flex',
+        flexDirection: 'column',
     },
     cardActions: {
         padding: '8px 12px 12px 12px',
@@ -109,11 +111,24 @@ class ReservationCard extends Component {
         switch (reservation.state) {
             case 0:
             case 1:
+                if (moment(reservation.startDate).isSame(moment(), 'day')) {
+                    return (
+                        <CardActions className={classes.cardActions}>
+                            <Button size="small" color="primary" variant="outlined" onClick={this.handleDropoffDialogOpen}>
+                                Confirm key drop-off
+                            </Button>
+                            <Button component={Link} to={`/reserve/${reservation.id}`} size="small" color="primary">
+                                Edit
+                            </Button>
+                            <Button size="small" color="secondary" className={classes.dangerButton} onClick={this.handleCancelDialogOpen}>
+                                Cancel
+                            </Button>
+                        </CardActions>
+                    );
+                }
+
                 return (
                     <CardActions className={classes.cardActions}>
-                        <Button size="small" color="primary" variant="outlined" onClick={this.handleDropoffDialogOpen}>
-                            Confirm key drop-off
-                        </Button>
                         <Button component={Link} to={`/reserve/${reservation.id}`} size="small" color="primary">
                             Edit
                         </Button>
@@ -225,11 +240,11 @@ class ReservationCard extends Component {
 
     render() {
         const { garage, floor, seat, validationErrors } = this.state;
-        const { classes, reservation, admin } = this.props;
+        const { classes, reservation, admin, style } = this.props;
         return (
             <React.Fragment>
                 <Grow in>
-                    <Card className={classes.card}>
+                    <Card className={classes.card} style={style}>
                         <CardMedia className={classes.media} image={`/images/state${reservation.state}.png`} />
                         <CardHeader
                             action={reservation.private ? <LockIcon alt="Private" style={{ margin: '8px 16px 0 0' }} /> : null}

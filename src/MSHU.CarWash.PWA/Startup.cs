@@ -38,6 +38,17 @@ namespace MSHU.CarWash.PWA
 {
     public class Startup
     {
+        private const string ContentSecurityPolicy = @"default-src 'self'; " +
+                    "script-src 'self' 'unsafe-inline' 'unsafe-eval' *.msecnd.net storage.googleapis.com; " +
+                    "style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com; " +
+                    "img-src 'self' data:; " +
+                    "connect-src https: wss: 'self' fonts.googleapis.com fonts.gstatic.com; " +
+                    "font-src 'self' fonts.googleapis.com fonts.gstatic.com; " +
+                    "frame-src 'self' login.microsoftonline.com *.powerbi.com; " +
+                    "form-action 'self'; " +
+                    "upgrade-insecure-requests; " +
+                    "report-uri https://markszabo.report-uri.com/r/d/csp/enforce";
+
         private readonly List<Company> _authorizedTenants = new List<Company>
         {
             new Company(Company.Carwash, "bca200e7-1765-4001-977f-5363e5f7a63a"),
@@ -207,7 +218,7 @@ namespace MSHU.CarWash.PWA
             services.AddSignalR();
 
             // Swagger API Documentation generator
-            if (Environment.IsDevelopment()) services.AddSwaggerGen(c =>
+            services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v2", new Info { Title = "CarWash API", Version = "v2" });
 
@@ -261,7 +272,7 @@ namespace MSHU.CarWash.PWA
                 context.Response.Headers.Add("X-Content-Type-Options", new[] { "nosniff" });
                 context.Response.Headers.Add("Referrer-Policy", new[] { "strict-origin-when-cross-origin" });
                 context.Response.Headers.Add("Feature-Policy", new[] { "accelerometer 'none'; camera 'none'; geolocation 'self'; gyroscope 'none'; magnetometer 'none'; microphone 'none'; payment 'none'; usb 'none'" });
-                context.Response.Headers.Add("Content-Security-Policy", new[] { "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' *.msecnd.net storage.googleapis.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com; img-src 'self' data:; connect-src https: wss: 'self' fonts.googleapis.com fonts.gstatic.com; font-src 'self' fonts.googleapis.com fonts.gstatic.com; frame-src 'self' login.microsoftonline.com; form-action 'self'; upgrade-insecure-requests; report-uri https://markszabo.report-uri.com/r/d/csp/enforce" });
+                context.Response.Headers.Add("Content-Security-Policy", new[] { ContentSecurityPolicy });
                 context.Response.Headers.Remove(HeaderNames.Server);
                 context.Response.Headers.Remove("X-Powered-By");
                 await next();
@@ -294,20 +305,17 @@ namespace MSHU.CarWash.PWA
                     template: "{controller}/{action=Index}/{id?}");
             });
 
-            if (env.IsDevelopment())
-            {
-                // Enable middleware to serve generated Swagger as a JSON endpoint.
-                app.UseSwagger();
+            // Enable middleware to serve generated Swagger as a JSON endpoint.
+            app.UseSwagger();
 
-                // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
-                // specifying the Swagger JSON endpoint.
-                app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("/swagger/v2/swagger.json", "CarWash API");
-                    c.EnableDeepLinking();
-                    c.DocumentTitle = "CarWash API";
-                });
-            }
+            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
+            // specifying the Swagger JSON endpoint.
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v2/swagger.json", "CarWash API");
+                c.EnableDeepLinking();
+                c.DocumentTitle = "CarWash API";
+            });
 
             app.UseSpa(spa =>
             {

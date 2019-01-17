@@ -16,7 +16,7 @@ workbox.core.setCacheNameDetails({
 // Don't forget to increase the revision number of index.html (aka. '/')
 // as it is needed to include the newly genereted js and css files.
 // Error would be thrown: Refused to execute script from '...' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled.
-const build = '2.0.36';
+const build = '2.0.37';
 console.log(`Build: ${build}`);
 workbox.precaching.precacheAndRoute([
     { url: '/', revision: build.replace(/\./g, '') },
@@ -60,18 +60,18 @@ workbox.routing.registerRoute(
     })
 );
 
-// [CACHE FIRST] Cache current user from 'GET /api/users/me'
+// [STALE WHILE REVALIDATE] Cache current user from 'GET /api/users/me'
 workbox.routing.registerRoute(
     ({ url }) => url.pathname === '/api/users/me',
-    workbox.strategies.cacheFirst({
+    workbox.strategies.staleWhileRevalidate({
         cacheName: 'api-cache',
     })
 );
 
-// [CACHE FIRST] Cache current user from 'GET /api/reservations/lastsettings'
+// [STALE WHILE REVALIDATE] Cache last reservation settings from 'GET /api/reservations/lastsettings'
 workbox.routing.registerRoute(
     ({ url }) => url.pathname === '/api/reservations/lastsettings',
-    workbox.strategies.cacheFirst({
+    workbox.strategies.staleWhileRevalidate({
         cacheName: 'api-cache',
     })
 );

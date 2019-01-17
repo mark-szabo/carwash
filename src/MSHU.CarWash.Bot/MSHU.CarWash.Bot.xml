@@ -333,6 +333,15 @@
             <see cref="T:MSHU.CarWash.ClassLibrary.Models.Reservation"/> id.
             </value>
         </member>
+        <member name="P:MSHU.CarWash.Bot.Dialogs.FindReservationDialog.FindReservationDialogOptions.DisableChitChat">
+            <summary>
+            Gets or sets a value indicating whether the bot should include chit-chat in its response.
+            Like: Nice! You have 2 reservations in-progress.
+            </summary>
+            <value>
+            A value indicating whether the bot should include chit-chat in its response.
+            </value>
+        </member>
         <member name="T:MSHU.CarWash.Bot.Dialogs.NewReservationDialog">
             <summary>
             New reservation dialog.
@@ -452,6 +461,23 @@
             <summary>
             User state properties for Greeting.
             </summary>
+        </member>
+        <member name="T:MSHU.CarWash.Bot.Extensions.WaterfallStepContextExtension">
+            <summary>
+            Extension class for WaterfallStepContext.
+            </summary>
+        </member>
+        <member name="M:MSHU.CarWash.Bot.Extensions.WaterfallStepContextExtension.ClearStateAndEndDialogAsync``1(Microsoft.Bot.Builder.Dialogs.WaterfallStepContext,Microsoft.Bot.Builder.IStatePropertyAccessor{``0},System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Clears the dialog state and ends the dialog.
+            </summary>
+            <typeparam name="TState">Type of dialog state.</typeparam>
+            <param name="step">Waterflow step.</param>
+            <param name="stateAccessor">State accessor.</param>
+            <param name="result">(Optional) An object to return as the result of the dialog.</param>
+            <param name="cancellationToken" >(Optional) A <see cref="T:System.Threading.CancellationToken"/> that can be used by other objects
+            or threads to receive notice of cancellation.</param>
+            <returns>A <see cref="T:Microsoft.Bot.Builder.Dialogs.DialogTurnResult"/> object.</returns>
         </member>
         <member name="T:MSHU.CarWash.Bot.Middlewares.TeamsAuthWorkaroundMiddleware">
              <summary>

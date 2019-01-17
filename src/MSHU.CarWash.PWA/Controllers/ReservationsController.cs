@@ -59,8 +59,8 @@ namespace MSHU.CarWash.PWA.Controllers
         private static readonly List<Company> CompanyLimit = new List<Company>
         {
             new Company(Company.Carwash, 0),
-            new Company(Company.Microsoft, 14),
-            new Company(Company.Sap, 16),
+            new Company(Company.Microsoft, 12),
+            new Company(Company.Sap, 19),
             new Company(Company.Graphisoft, 5)
         };
 

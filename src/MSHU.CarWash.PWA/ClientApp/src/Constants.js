@@ -53,13 +53,13 @@ export function getStateName(state) {
         case State.ReminderSentWaitingForKey:
             return 'Leave the key at reception';
         case State.CarKeyLeftAndLocationConfirmed:
-            return 'Waiting';
+            return 'All set, ready to wash';
         case State.WashInProgress:
             return 'Wash in progress';
         case State.NotYetPaid:
             return 'You need to pay';
         case State.Done:
-            return 'Done';
+            return 'Completed';
         default:
             return 'No info';
     }
@@ -78,7 +78,7 @@ export function getAdminStateName(state) {
         case State.NotYetPaid:
             return 'Waiting for payment';
         case State.Done:
-            return 'Done';
+            return 'Completed';
         default:
             return 'No info';
     }

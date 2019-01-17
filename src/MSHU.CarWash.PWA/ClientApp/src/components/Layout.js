@@ -12,6 +12,7 @@ import Hidden from '@material-ui/core/Hidden';
 import Divider from '@material-ui/core/Divider';
 import MenuIcon from '@material-ui/icons/Menu';
 import RefreshIcon from '@material-ui/icons/Refresh';
+import FavoriteIcon from '@material-ui/icons/Favorite';
 import { drawerItems, otherDrawerItems } from './DrawerItems';
 
 const drawerWidth = 240;
@@ -57,21 +58,43 @@ const styles = theme => ({
         overflow: 'auto',
         backgroundColor: theme.palette.background.default,
         padding: theme.spacing.unit * 3,
+        marginTop: 56,
+        [`${theme.breakpoints.up('xs')} and (orientation: landscape)`]: {
+            marginTop: 48,
+        },
+        [theme.breakpoints.up('sm')]: {
+            marginTop: 64,
+        },
     },
     appTitle: {
         height: 60,
         padding: '16px 24px',
     },
+    menuList: {
+        backgroundColor: '#ffffff',
+        zIndex: 1,
+    },
     footer: {
         position: 'absolute',
         bottom: 0,
         padding: 24,
+        color: 'rgba(0, 0, 0, 0.54)',
+        fontSize: '0.8125rem',
+        fontWeight: 400,
+        zIndex: 0,
     },
     link: {
         textDecoration: 'underline',
         color: 'rgba(0, 0, 0, 0.54)',
         fontSize: '0.8125rem',
         fontWeight: 400,
+    },
+    madeWithLove: {
+        marginTop: 12,
+        display: 'block',
+    },
+    loveIcon: {
+        fontSize: '0.8125rem',
     },
 });
 
@@ -140,9 +163,9 @@ class Layout extends React.Component {
                     </Link>
                 </div>
                 <Divider />
-                <List>{drawerItems(this.handleDrawerClose, user)}</List>
+                <List className={classes.menuList}>{drawerItems(this.handleDrawerClose, user)}</List>
                 <Divider />
-                <List>{otherDrawerItems(this.handleDrawerClose)}</List>
+                <List className={classes.menuList}>{otherDrawerItems(this.handleDrawerClose)}</List>
                 <div className={classes.footer}>
                     <a href="https://go.microsoft.com/fwlink/?LinkID=206977" className={classes.link}>
                         Terms of use
@@ -151,6 +174,10 @@ class Layout extends React.Component {
                     <a href="https://go.microsoft.com/fwlink/?LinkId=521839" className={classes.link}>
                         Privacy & cookies policy
                     </a>
+                    <br />
+                    <span className={classes.madeWithLove}>
+                        Made with <FavoriteIcon className={classes.loveIcon} /> by friends at Microsoft
+                    </span>
                 </div>
             </div>
         );
@@ -199,10 +226,8 @@ class Layout extends React.Component {
                         {drawer}
                     </Drawer>
                 </Hidden>
-                <main className={classes.content}>
-                    <div className={classes.toolbar} />
-                    {this.props.children}
-                </main>
+                <div className={classes.toolbar} />
+                <main className={classes.content}>{this.props.children}</main>
             </div>
         );
     }

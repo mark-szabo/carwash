@@ -215,9 +215,18 @@ class Reserve extends TrackedComponent {
                 }
             );
         } else {
-            this.setState({
-                vehiclePlateNumber: this.props.lastSettings.vehiclePlateNumber || '',
-                garage: this.props.lastSettings.garage || '',
+            this.setState(state => {
+                const services = [...state.services];
+                const lastServices = this.props.lastSettings.services || [];
+                lastServices.forEach(s => {
+                    services[s].selected = true;
+                });
+
+                return {
+                    services,
+                    vehiclePlateNumber: this.props.lastSettings.vehiclePlateNumber || '',
+                    garage: this.props.lastSettings.garage || '',
+                };
             });
         }
 
@@ -364,6 +373,15 @@ class Reserve extends TrackedComponent {
             selectedDate: dateTime,
             timeStepLabel: dateTime.format('hh:mm A'),
         });
+
+        // Should delay leading from lastsettings as much as possible, because if the user reloads the page,
+        // it can happen that the lastsettings object is not yet populated in props.
+        if (!this.props.match.params.id) {
+            this.setState({
+                vehiclePlateNumber: this.props.lastSettings.vehiclePlateNumber || '',
+                garage: this.props.lastSettings.garage || '',
+            });
+        }
     };
 
     isTimeNotAvailable = (date, time) => {
@@ -492,7 +510,7 @@ class Reserve extends TrackedComponent {
 
                 // Refresh last settings
                 // Delete cached response for /api/reservations/lastsettings
-                // Not perfect solution as it seems Safari does not supports this
+                // Not perfect solution as it seems Safari does not support this
                 // https://developer.mozilla.org/en-US/docs/Web/API/Cache/delete#Browser_compatibility
                 try {
                     caches.open('api-cache').then(cache => {
@@ -525,6 +543,7 @@ class Reserve extends TrackedComponent {
             users,
             userId,
             vehiclePlateNumber,
+            selectedDate,
             comment,
             garage,
             floor,
@@ -533,6 +552,7 @@ class Reserve extends TrackedComponent {
             dropoffPreConfirmed,
         } = this.state;
         const today = moment();
+        const isDateToday = selectedDate.isSame(today, 'day');
 
         if (this.state.reservationCompleteRedirect) {
             return <Redirect to="/" />;
@@ -748,7 +768,7 @@ class Reserve extends TrackedComponent {
                                     </FormGroup>
                                 </div>
                                 {locationKnown && (
-                                    <React.Fragment>
+                                    <>
                                         <FormControl className={classes.formControl} error={validationErrors.garage}>
                                             <InputLabel htmlFor="garage">Building</InputLabel>
                                             <Select
@@ -797,28 +817,30 @@ class Reserve extends TrackedComponent {
                                                 onChange={this.handleSeatChange}
                                             />
                                         )}
-                                        <div>
-                                            <FormGroup className={classes.checkbox} style={{ marginTop: 8 }}>
-                                                <FormControlLabel
-                                                    control={
-                                                        <Checkbox
-                                                            checked={dropoffPreConfirmed}
-                                                            onChange={this.handleDropoffPreConfirmed}
-                                                            value="dropoffPreConfirmed"
-                                                            color="primary"
-                                                        />
-                                                    }
-                                                    label="I have already left the key at the reception"
-                                                />
-                                            </FormGroup>
-                                            {dropoffPreConfirmed && (
-                                                <Typography color="textSecondary" component="span" style={{ margin: '8px 0 0 8px' }}>
-                                                    <WarningIcon style={{ verticalAlign: 'middle' }} /> You won't be able to modify your reservation after you
-                                                    click Reserve!
-                                                </Typography>
-                                            )}
-                                        </div>
-                                    </React.Fragment>
+                                        {isDateToday && (
+                                            <>
+                                                <FormGroup className={classes.checkbox} style={{ marginTop: 8 }}>
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox
+                                                                checked={dropoffPreConfirmed}
+                                                                onChange={this.handleDropoffPreConfirmed}
+                                                                value="dropoffPreConfirmed"
+                                                                color="primary"
+                                                            />
+                                                        }
+                                                        label="I have already left the key at the reception"
+                                                    />
+                                                </FormGroup>
+                                                {dropoffPreConfirmed && (
+                                                    <Typography color="textSecondary" component="span" style={{ margin: '8px 0 0 8px' }}>
+                                                        <WarningIcon style={{ verticalAlign: 'middle' }} /> You won't be able to modify your reservation after
+                                                        you click Reserve!
+                                                    </Typography>
+                                                )}
+                                            </>
+                                        )}
+                                    </>
                                 )}
                                 <div>
                                     <TextField

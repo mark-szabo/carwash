@@ -1,5 +1,8 @@
 ﻿namespace MSHU.CarWash.ClassLibrary.Models
 {
+    /// <summary>
+    /// Representation of a company which users can use the CarWash app.
+    /// </summary>
     public class Company
     {
         public const string Carwash = "carwash";
@@ -19,10 +22,19 @@
             DailyLimit = dailyLimit;
         }
 
+        /// <summary>
+        /// Gets or sets the name of the company.
+        /// </summary>
         public string Name { get; set; }
 
+        /// <summary>
+        /// Gets or sets the tenant id of the company.
+        /// </summary>
         public string TenantId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the company's daily reservation limit.
+        /// </summary>
         public int DailyLimit { get; set; }
     }
 }

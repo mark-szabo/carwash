@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace MSHU.CarWash.ClassLibrary.Migrations
 {

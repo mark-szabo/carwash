@@ -3,6 +3,10 @@ using static MSHU.CarWash.ClassLibrary.Enums.ServiceType;
 
 namespace MSHU.CarWash.ClassLibrary.Enums
 {
+#pragma warning disable CS1591, SA1602
+    /// <summary>
+    /// Types of services the users can choose from.
+    /// </summary>
     public enum ServiceType
     {
         Exterior = 0,
@@ -22,9 +26,18 @@ namespace MSHU.CarWash.ClassLibrary.Enums
         PlasticCare = 12,
         PreWash = 13
     }
+#pragma warning restore CS1591, SA1602
 
+    /// <summary>
+    /// Extension class for ServiceType.
+    /// </summary>
     public static class ServiceExtensions
     {
+        /// <summary>
+        /// Converts the ServiceType enum to a display-friendly string.
+        /// </summary>
+        /// <param name="serviceType">The service type to convert.</param>
+        /// <returns>A display-friendly string.</returns>
         public static string ToFriendlyString(this ServiceType serviceType)
         {
             switch (serviceType)
@@ -63,8 +76,14 @@ namespace MSHU.CarWash.ClassLibrary.Enums
         }
     }
 
+    /// <summary>
+    /// Services the users can choose from.
+    /// </summary>
     public static class ServiceTypes
     {
+        /// <summary>
+        /// Services the users can choose from.
+        /// </summary>
         public static readonly List<Service> Types = new List<Service>
         {
             new Service {Type = Exterior, TimeInMinutes = 12, Price = 3213, PriceMpv = 4017, Hidden = false},
@@ -84,12 +103,34 @@ namespace MSHU.CarWash.ClassLibrary.Enums
         };
     }
 
+    /// <summary>
+    /// Representation of a service which the user can choose.
+    /// </summary>
     public class Service
     {
+        /// <summary>
+        /// Gets or sets the type of the service.
+        /// </summary>
         public ServiceType Type { get; set; }
+
+        /// <summary>
+        /// Gets or sets the time needed for this service.
+        /// </summary>
         public int TimeInMinutes { get; set; }
+
+        /// <summary>
+        /// Gets or sets the price of the service.
+        /// </summary>
         public int Price { get; set; }
+
+        /// <summary>
+        /// Gets or sets the price of the service for MPVs.
+        /// </summary>
         public int PriceMpv { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the service is hidden from normal users on the UI.
+        /// </summary>
         public bool Hidden { get; set; }
     }
 }

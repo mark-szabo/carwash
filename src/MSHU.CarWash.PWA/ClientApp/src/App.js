@@ -20,6 +20,7 @@ import { NotificationChannel, BacklogHubMethods } from './Constants';
 import Spinner from './components/Spinner';
 import { sleep } from './Helpers';
 import Blockers from './components/Blockers';
+import Analytics from './components/Analytics';
 
 // A theme with custom primary and secondary color.
 const theme = createMuiTheme({
@@ -253,6 +254,7 @@ export default class App extends Component {
                     }
                     this.setState({
                         lastSettings: {
+                            services: data.services || [],
                             vehiclePlateNumber: data.vehiclePlateNumber,
                             garage,
                         },
@@ -274,7 +276,7 @@ export default class App extends Component {
         });
 
         // Delete cached response for /api/users/me
-        // Not perfect solution as it seems Safari does not supports this
+        // Not perfect solution as it seems Safari does not support this
         // https://developer.mozilla.org/en-US/docs/Web/API/Cache/delete#Browser_compatibility
         try {
             caches.open('api-cache').then(cache => {
@@ -512,6 +514,7 @@ export default class App extends Component {
                         navbarName="Blockers"
                         render={props => <Blockers user={user} snackbarOpen={this.state.snackbarOpen} openSnackbar={this.openSnackbar} {...props} />}
                     />
+                    <Route exact path="/analytics" navbarName="Analytics" component={Analytics} />
                     <Route exact path="/support" navbarName="Support" component={Support} />
                 </Layout>
                 <Snackbar

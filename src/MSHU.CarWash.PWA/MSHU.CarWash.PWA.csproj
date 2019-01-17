@@ -21,9 +21,6 @@
     <ApplicationInsightsAnnotationResourceId>/subscriptions/a984fd43-e460-42c7-957c-a023cf7f8241/resourcegroups/carwash/providers/microsoft.insights/components/mshucarwash-dev</ApplicationInsightsAnnotationResourceId>
     <UserSecretsId>648c0d03-e4b5-4097-8360-49e5a0ced1ab</UserSecretsId>
     <WebProject_DirectoryAccessLevelKey>0</WebProject_DirectoryAccessLevelKey>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>bin\Debug\netcoreapp2.1\MSHU.CarWash.PWA.xml</DocumentationFile>
   </PropertyGroup>
 
@@ -32,10 +29,15 @@
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.5.1" />
     <PackageReference Include="Microsoft.ApplicationInsights.SnapshotCollector" Version="1.3.2" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Analyzers" Version="2.1.3" />
     <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="2.1.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="2.6.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Graph" Version="1.12.0" />
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="4.4.2" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.4" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.7" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="4.0.1" />
     <PackageReference Include="System.Drawing.Common" Version="4.5.1" />
