@@ -20,3 +20,5 @@ appsettings\.Development\.json
 CarWash\.PWA\.Windows/bld/
 
 CarWash\.PWA\.Windows/_pkginfo\.txt
+
+TestResults/

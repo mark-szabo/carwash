@@ -17,10 +17,10 @@ namespace CarWash.PWA.Services
         private readonly string _logicAppUrl;
 
         /// <inheritdoc />
-        public CalendarService(IConfiguration configuration)
+        public CalendarService(IConfiguration configuration, HttpClient httpClient = null)
         {
             _telemetryClient = new TelemetryClient();
-            _client = new HttpClient();
+            _client = httpClient ?? new HttpClient();
             _logicAppUrl = configuration.GetValue<string>("CalendarService:LogicAppUrl");
         }
 
