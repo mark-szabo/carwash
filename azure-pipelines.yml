@@ -31,12 +31,12 @@ steps:
       versionSpec: "10.x"
 
   - script: |
-      cd $(Build.SourcesDirectory)\src\CarWash.PWA\ClientApp
+      cd $(Build.SourcesDirectory)\CarWash.PWA\ClientApp
       npm install
     displayName: "Restore npm packages for PWA"
 
   - script: |
-      cd $(Build.SourcesDirectory)\src\CarWash.PWA\ClientApp
+      cd $(Build.SourcesDirectory)\CarWash.PWA\ClientApp
       npm run build
     displayName: "Build PWA"
 

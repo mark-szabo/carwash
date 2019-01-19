@@ -11,7 +11,7 @@ namespace CarWash.PWA.Tests.ApiTests
             var configuration = GetConfiguration();
             var sqlConnectionString = configuration.GetConnectionString("Database");
 
-            Assert.True(!string.IsNullOrWhiteSpace(sqlConnectionString), "SQL connection string wasn't found in 'appsettings.json'.");
+            Assert.False(string.IsNullOrWhiteSpace(sqlConnectionString), "SQL connection string wasn't found in 'appsettings.json'.");
         }
 
         [Fact]
@@ -20,7 +20,7 @@ namespace CarWash.PWA.Tests.ApiTests
             var configuration = GetConfiguration();
             var storageConnectionString = configuration.GetConnectionString("StorageAccount");
 
-            Assert.True(!string.IsNullOrWhiteSpace(storageConnectionString), "Storage Account connection string wasn't found in 'appsettings.json'.");
+            Assert.False(string.IsNullOrWhiteSpace(storageConnectionString), "Storage Account connection string wasn't found in 'appsettings.json'.");
         }
 
         [Fact]
@@ -30,8 +30,8 @@ namespace CarWash.PWA.Tests.ApiTests
             var azureAdInstance = configuration.GetValue<string>("AzureAd:Instance");
             var azureAdClientId = configuration.GetValue<string>("AzureAd:ClientId");
 
-            Assert.True(!string.IsNullOrWhiteSpace(azureAdInstance), "AzureAD instance wasn't found in 'appsettings.json'.");
-            Assert.True(!string.IsNullOrWhiteSpace(azureAdClientId), "AzureAD client id wasn't found in 'appsettings.json'.");
+            Assert.False(string.IsNullOrWhiteSpace(azureAdInstance), "AzureAD instance wasn't found in 'appsettings.json'.");
+            Assert.False(string.IsNullOrWhiteSpace(azureAdClientId), "AzureAD client id wasn't found in 'appsettings.json'.");
         }
 
         [Fact]
@@ -42,9 +42,9 @@ namespace CarWash.PWA.Tests.ApiTests
             var vapidPublicKey = configuration.GetValue<string>("Vapid:PublicKey");
             var vapidPrivateKey = configuration.GetValue<string>("Vapid:PrivateKey");
 
-            Assert.True(!string.IsNullOrWhiteSpace(vapidSubject), "VAPID subject wasn't found in 'appsettings.json'.");
-            Assert.True(!string.IsNullOrWhiteSpace(vapidPublicKey), "VAPID public key wasn't found in 'appsettings.json'.");
-            Assert.True(!string.IsNullOrWhiteSpace(vapidPrivateKey), "VAPID private key wasn't found in 'appsettings.json'.");
+            Assert.False(string.IsNullOrWhiteSpace(vapidSubject), "VAPID subject wasn't found in 'appsettings.json'.");
+            Assert.False(string.IsNullOrWhiteSpace(vapidPublicKey), "VAPID public key wasn't found in 'appsettings.json'.");
+            Assert.False(string.IsNullOrWhiteSpace(vapidPrivateKey), "VAPID private key wasn't found in 'appsettings.json'.");
         }
 
         [Fact]
@@ -53,10 +53,10 @@ namespace CarWash.PWA.Tests.ApiTests
             var configuration = GetConfiguration();
             var logicAppUrl = configuration.GetValue<string>("CalendarService:LogicAppUrl");
 
-            Assert.True(!string.IsNullOrWhiteSpace(logicAppUrl), "CalendarService's Logic App URL wasn't found in 'appsettings.json'.");
+            Assert.False(string.IsNullOrWhiteSpace(logicAppUrl), "CalendarService's Logic App URL wasn't found in 'appsettings.json'.");
         }
 
-        public IConfiguration GetConfiguration() => new ConfigurationBuilder()
+        public static IConfiguration GetConfiguration() => new ConfigurationBuilder()
             .AddJsonFile("appsettings.json", false)
             .AddJsonFile("appsettings.Development.json", true)
             .AddEnvironmentVariables().Build();
