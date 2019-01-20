@@ -1,27 +1,15 @@
 ﻿namespace CarWash.ClassLibrary.Models
 {
     /// <summary>
-    /// Representation of a company which users can use the CarWash app.
+    /// Representation of a company whose users can use the CarWash app.
     /// </summary>
     public class Company
     {
+        /// <summary>
+        /// Constant name of the CarWash "company".
+        /// </summary>
         public const string Carwash = "carwash";
-        public const string Microsoft = "microsoft";
-        public const string Sap = "sap";
-        public const string Graphisoft = "graphisoft";
-
-        public Company(string name, string tenantId)
-        {
-            Name = name;
-            TenantId = tenantId;
-        }
-
-        public Company(string name, int dailyLimit)
-        {
-            Name = name;
-            DailyLimit = dailyLimit;
-        }
-
+        
         /// <summary>
         /// Gets or sets the name of the company.
         /// </summary>

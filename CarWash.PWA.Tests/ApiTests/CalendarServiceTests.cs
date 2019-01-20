@@ -18,7 +18,7 @@ namespace CarWash.PWA.Tests.ApiTests
         public async Task CreateEventAsync_ByDefault_MakesHttpRequest()
         {
             // ARRANGE
-            var configuration = ConfigurationTests.GetConfiguration();
+            var configurationStub = CreateConfigurationStub();
             const string OUTLOOK_EVENT_ID = "thisisanoutlookeventid";
             var httpMessageHandlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
             httpMessageHandlerMock
@@ -34,13 +34,13 @@ namespace CarWash.PWA.Tests.ApiTests
                    Content = new StringContent(OUTLOOK_EVENT_ID),
                })
                .Verifiable();
-            
+
             var httpClient = new HttpClient(httpMessageHandlerMock.Object)
             {
                 BaseAddress = new Uri("https://test.com/"),
             };
-            
-            var calendarService = new CalendarService(configuration, httpClient);
+
+            var calendarService = new CalendarService(configurationStub, httpClient);
 
             var reservationStub = CreateDefaultReservation();
 
@@ -49,8 +49,8 @@ namespace CarWash.PWA.Tests.ApiTests
 
             // ASSERT
             Assert.Equal(OUTLOOK_EVENT_ID, outlookEventId);
-            
-            var expectedUri = new Uri(configuration.GetValue<string>("CalendarService:LogicAppUrl"));
+
+            var expectedUri = new Uri(configurationStub.CalendarService.LogicAppUrl);
 
             httpMessageHandlerMock.Protected().Verify(
                "SendAsync",
@@ -67,7 +67,7 @@ namespace CarWash.PWA.Tests.ApiTests
         public async Task UpdateEventAsync_ByDefault_MakesHttpRequest()
         {
             // ARRANGE
-            var configuration = ConfigurationTests.GetConfiguration();
+            var configurationStub = CreateConfigurationStub();
             const string OUTLOOK_EVENT_ID = "thisisanoutlookeventid";
             var httpMessageHandlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
             httpMessageHandlerMock
@@ -89,7 +89,7 @@ namespace CarWash.PWA.Tests.ApiTests
                 BaseAddress = new Uri("https://test.com/"),
             };
 
-            var calendarService = new CalendarService(configuration, httpClient);
+            var calendarService = new CalendarService(configurationStub, httpClient);
 
             var reservationStub = CreateDefaultReservation();
             reservationStub.OutlookEventId = OUTLOOK_EVENT_ID;
@@ -100,7 +100,7 @@ namespace CarWash.PWA.Tests.ApiTests
             // ASSERT
             Assert.Equal(OUTLOOK_EVENT_ID, outlookEventId);
 
-            var expectedUri = new Uri(configuration.GetValue<string>("CalendarService:LogicAppUrl"));
+            var expectedUri = new Uri(configurationStub.CalendarService.LogicAppUrl);
 
             httpMessageHandlerMock.Protected().Verify(
                "SendAsync",
@@ -117,7 +117,7 @@ namespace CarWash.PWA.Tests.ApiTests
         public async Task DeleteEventAsync_ByDefault_MakesHttpRequest()
         {
             // ARRANGE
-            var configuration = ConfigurationTests.GetConfiguration();
+            var configurationStub = CreateConfigurationStub();
             const string OUTLOOK_EVENT_ID = "thisisanoutlookeventid";
             var httpMessageHandlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
             httpMessageHandlerMock
@@ -139,7 +139,7 @@ namespace CarWash.PWA.Tests.ApiTests
                 BaseAddress = new Uri("https://test.com/"),
             };
 
-            var calendarService = new CalendarService(configuration, httpClient);
+            var calendarService = new CalendarService(configurationStub, httpClient);
 
             var reservationStub = CreateDefaultReservation();
             reservationStub.OutlookEventId = OUTLOOK_EVENT_ID;
@@ -148,7 +148,7 @@ namespace CarWash.PWA.Tests.ApiTests
             await calendarService.DeleteEventAsync(reservationStub);
 
             // ASSERT
-            var expectedUri = new Uri(configuration.GetValue<string>("CalendarService:LogicAppUrl"));
+            var expectedUri = new Uri(configurationStub.CalendarService.LogicAppUrl);
 
             httpMessageHandlerMock.Protected().Verify(
                "SendAsync",
@@ -171,6 +171,14 @@ namespace CarWash.PWA.Tests.ApiTests
             StartDate = new DateTime(2019, 01, 18, 11, 00, 00),
             EndDate = new DateTime(2019, 01, 18, 14, 00, 00),
             Location = "M/-3/170",
+        };
+
+        private CarWashConfiguration CreateConfigurationStub() => new CarWashConfiguration
+        {
+            CalendarService = new CarWashConfiguration.CalendarServiceConfiguration
+            {
+                LogicAppUrl = "https://test.com/",
+            }
         };
     }
 }

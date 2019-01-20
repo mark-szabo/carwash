@@ -1,5 +1,4 @@
 ﻿using Microsoft.ApplicationInsights;
-using Microsoft.Extensions.Configuration;
 using CarWash.ClassLibrary.Models;
 using Newtonsoft.Json;
 using System;
@@ -12,16 +11,16 @@ namespace CarWash.PWA.Services
     /// <inheritdoc />
     public class CalendarService : ICalendarService
     {
+        private readonly CarWashConfiguration _configuration;
         private readonly TelemetryClient _telemetryClient;
         private readonly HttpClient _client;
-        private readonly string _logicAppUrl;
 
         /// <inheritdoc />
-        public CalendarService(IConfiguration configuration, HttpClient httpClient = null)
+        public CalendarService(CarWashConfiguration configuration, HttpClient httpClient = null)
         {
+            _configuration = configuration;
             _telemetryClient = new TelemetryClient();
             _client = httpClient ?? new HttpClient();
-            _logicAppUrl = configuration.GetValue<string>("CalendarService:LogicAppUrl");
         }
 
         /// <inheritdoc />
@@ -86,7 +85,7 @@ namespace CarWash.PWA.Services
         private async Task<string> CallLogicApp(Event calendarEvent)
         {
             var content = new StringContent(JsonConvert.SerializeObject(calendarEvent), Encoding.UTF8, "application/json");
-            var response = await _client.PostAsync(_logicAppUrl, content);
+            var response = await _client.PostAsync(_configuration.CalendarService.LogicAppUrl, content);
             response.EnsureSuccessStatusCode();
 
             return await response.Content.ReadAsStringAsync();

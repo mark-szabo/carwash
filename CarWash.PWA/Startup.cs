@@ -33,8 +33,6 @@ using System.Net;
 using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.Azure.Services.AppAuthentication;
-using Microsoft.Azure.KeyVault;
 
 namespace CarWash.PWA
 {
@@ -50,15 +48,7 @@ namespace CarWash.PWA
                     "form-action 'self'; " +
                     "upgrade-insecure-requests; " +
                     "report-uri https://markszabo.report-uri.com/r/d/csp/enforce";
-
-        private readonly List<Company> _authorizedTenants = new List<Company>
-        {
-            new Company(Company.Carwash, "bca200e7-1765-4001-977f-5363e5f7a63a"),
-            new Company(Company.Microsoft, "72f988bf-86f1-41af-91ab-2d7cd011db47"),
-            new Company(Company.Sap, "42f7676c-f455-423c-82f6-dc2d99791af7"),
-            new Company(Company.Graphisoft, "917332b6-5fee-4b92-9d05-812c7f08b9b9")
-        };
-
+        
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -69,8 +59,11 @@ namespace CarWash.PWA
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var config = Configuration.Get<CarWashConfiguration>();
+
             // Add application services
             services.AddSingleton(Configuration);
+            services.AddSingleton(config);
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<UsersController, UsersController>();
             services.AddScoped<ICalendarService, CalendarService>();
@@ -85,7 +78,7 @@ namespace CarWash.PWA
             // Add SnapshotCollector telemetry processor.
             services.AddSingleton<ITelemetryProcessorFactory>(sp => new SnapshotCollectorTelemetryProcessorFactory(sp));
             
-            services.AddDbContextPool<ApplicationDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Database")));
+            services.AddDbContextPool<ApplicationDbContext>(options => options.UseSqlServer(config.ConnectionStrings.SqlDatabase));
 
             services.AddAuthentication(options =>
                 {
@@ -93,15 +86,15 @@ namespace CarWash.PWA
                 })
                 .AddJwtBearer(options =>
                 {
-                    options.Audience = Configuration["AzureAD:ClientId"];
-                    options.Authority = Configuration["AzureAD:Instance"];
+                    options.Audience = config.AzureAd.ClientId;
+                    options.Authority = config.AzureAd.Instance;
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = true,
                         IssuerValidator = (issuer, token, tvp) =>
                         {
                             issuer = issuer.Substring(24, 36); // Get the tenant id out of the issuer string (eg. https://sts.windows.net/72f988bf-86f1-41af-91ab-2d7cd011db47/)
-                            if (_authorizedTenants.Select(i => i.TenantId).Contains(issuer))
+                            if (config.Companies.Select(i => i.TenantId).Contains(issuer))
                                 return issuer;
                             else
                                 throw new SecurityTokenInvalidIssuerException("Invalid issuer");
@@ -115,7 +108,7 @@ namespace CarWash.PWA
                             //Get EF context
                             var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
 
-                            var company = _authorizedTenants.SingleOrDefault(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))?.Name ?? throw new Exception("Tenant ('tenantid') cannot be found in auth token.");
+                            var company = config.Companies.SingleOrDefault(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))?.Name ?? throw new Exception("Tenant ('tenantid') cannot be found in auth token.");
                             var email = context.Principal.FindFirstValue(ClaimTypes.Upn)?.ToLower();
                             if (email == null && company == Company.Carwash) email = context.Principal.FindFirstValue(ClaimTypes.Email)?.ToLower();
                             if (email == null) throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
@@ -247,6 +240,8 @@ namespace CarWash.PWA
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider serviceProvider)
         {
+            var config = Configuration.Get<CarWashConfiguration>();
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -261,7 +256,7 @@ namespace CarWash.PWA
 
             app.UseAuthentication();
 
-            serviceProvider.ConfigureEmailProvider(Configuration);
+            serviceProvider.ConfigureEmailProvider(config);
 
             app.Use(async (context, next) =>
             {

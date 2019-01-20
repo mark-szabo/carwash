@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
 using Newtonsoft.Json;
@@ -21,9 +20,9 @@ namespace CarWash.PWA.Extensions
         /// <param name="serviceProvider">services</param>
         /// <param name="configuration">Configuration</param>
         /// <returns>services</returns>
-        public static IServiceProvider ConfigureEmailProvider(this IServiceProvider serviceProvider, IConfiguration configuration)
+        public static IServiceProvider ConfigureEmailProvider(this IServiceProvider serviceProvider, CarWashConfiguration configuration)
         {
-            _storageAccountConnectionString = configuration.GetConnectionString("StorageAccount");
+            _storageAccountConnectionString = configuration.ConnectionStrings.StorageAccount;
 
             return serviceProvider;
         }

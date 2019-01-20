@@ -34,19 +34,16 @@ namespace CarWash.ClassLibrary.Services
         }
 
         /// <inheritdoc />
-        public PushService(ApplicationDbContext context, IConfiguration configuration)
+        public PushService(ApplicationDbContext context, CarWashConfiguration configuration)
         {
             _context = context;
             _client = new WebPushClient();
             _telemetryClient = new TelemetryClient();
 
-            var vapidSubject = configuration.GetValue<string>("Vapid:Subject");
-            var vapidPublicKey = configuration.GetValue<string>("Vapid:PublicKey");
-            var vapidPrivateKey = configuration.GetValue<string>("Vapid:PrivateKey");
+            var vapid = configuration.Vapid;
+            CheckOrGenerateVapidDetails(vapid.Subject, vapid.PublicKey, vapid.PrivateKey);
 
-            CheckOrGenerateVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
-
-            _vapidDetails = new VapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+            _vapidDetails = new VapidDetails(vapid.Subject, vapid.PublicKey, vapid.PrivateKey);
         }
 
         /// <inheritdoc />
