@@ -65,7 +65,7 @@ namespace CarWash.PWA
             services.AddSingleton(Configuration);
             services.AddSingleton(config);
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddScoped<UsersController, UsersController>();
+            services.AddScoped<IUsersController, UsersController>();
             services.AddScoped<ICalendarService, CalendarService>();
             services.AddScoped<IPushService, PushService>();
 

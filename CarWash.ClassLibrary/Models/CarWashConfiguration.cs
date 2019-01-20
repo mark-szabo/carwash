@@ -68,27 +68,27 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// CarWash app settings referring to reservations.
         /// </summary>
-        public ReservationSettings Reservation { get; set; }
+        public ReservationSettings Reservation { get; set; } = new ReservationSettings();
 
         /// <summary>
         /// Connection strings to various dependencies.
         /// </summary>
-        public ConnectionStringsConfiguration ConnectionStrings { get; set; }
+        public ConnectionStringsConfiguration ConnectionStrings { get; set; } = new ConnectionStringsConfiguration();
 
         /// <summary>
         /// Azure Active Directory configuration (used for SSO user authentication).
         /// </summary>
-        public AzureAdConfiguration AzureAd { get; set; }
+        public AzureAdConfiguration AzureAd { get; set; } = new AzureAdConfiguration();
 
         /// <summary>
         /// VAPID configuration.
         /// </summary>
-        public VapidConfiguration Vapid { get; set; }
+        public VapidConfiguration Vapid { get; set; } = new VapidConfiguration();
 
         /// <summary>
         /// Configuration for the Calendar Service (meeting request sender).
         /// </summary>
-        public CalendarServiceConfiguration CalendarService { get; set; }
+        public CalendarServiceConfiguration CalendarService { get; set; } = new CalendarServiceConfiguration();
 
         /// <summary>
         /// CarWash app settings referring to reservations.

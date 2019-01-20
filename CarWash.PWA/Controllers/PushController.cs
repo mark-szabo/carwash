@@ -22,7 +22,7 @@ namespace CarWash.PWA.Controllers
         private readonly IPushService _pushService;
 
         /// <inheritdoc />
-        public PushController(ApplicationDbContext context, UsersController usersController, IHostingEnvironment hostingEnvironment, IPushService pushService)
+        public PushController(ApplicationDbContext context, IUsersController usersController, IHostingEnvironment hostingEnvironment, IPushService pushService)
         {
             _user = usersController.GetCurrentUser();
             _env = hostingEnvironment;
