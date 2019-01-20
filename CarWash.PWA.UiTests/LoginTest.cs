@@ -57,6 +57,7 @@ namespace CarWash.PWA.UiTests
             Assert.AreEqual("", _verificationErrors.ToString());
         }
 
+        [Priority(0)]
         [TestMethod]
         public void Login()
         {
@@ -84,6 +85,71 @@ namespace CarWash.PWA.UiTests
             Assert.AreEqual("My reservations", driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Reserve'])[1]/preceding::h6[1]")).Text);
         }
 
+        [Priority(1)]
+        [TestMethod]
+        public void MakeAReservation()
+        {
+            driver.Navigate().GoToUrl(_configuration["BaseUrl"] + "/");
+            driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='My reservations'])[1]/following::span[3]")).Click();
+            driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Basic'])[1]/following::span[1]")).Click();
+            driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='exterior'])[1]/following::span[2]")).Click();
+            driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Back'])[1]/following::button[1]")).Click();
+            driver.FindElement(By.XPath("//*[@id='root']/div/main/div/div[3]/div/div/div/div/div[1]/div/div/div/div/div[2]/div/ul[3]/li[1]")).Click();
+            driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Choose time'])[1]/following::span[12]")).Click();
+            driver.FindElement(By.Id("vehiclePlateNumber")).Click();
+            driver.FindElement(By.Id("vehiclePlateNumber")).Clear();
+            driver.FindElement(By.Id("vehiclePlateNumber")).SendKeys("TEST01");
+            driver.FindElement(By.Id("comment")).Click();
+            driver.FindElement(By.Id("comment")).Clear();
+            driver.FindElement(By.Id("comment")).SendKeys("test");
+            driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Back'])[1]/following::span[2]")).Click();
+            for (int second = 0; ; second++)
+            {
+                if (second >= 60) Assert.Fail("timeout");
+                try
+                {
+                    if ("Scheduled" == driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Privacy & cookies policy'])[1]/following::span[2]")).Text) break;
+                }
+                catch (Exception)
+                { }
+                Thread.Sleep(500);
+            }
+
+            Assert.AreEqual("Scheduled", driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Privacy & cookies policy'])[1]/following::span[2]")).Text);
+
+            Assert.AreEqual("TEST01", driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Vehicle plate number'])[1]/following::p[1]")).Text);
+
+            Assert.AreEqual("test", driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Vehicle plate number'])[1]/following::p[2]")).Text);
+
+            Assert.AreEqual("exterior", driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Selected services'])[1]/following::span[1]")).Text);
+
+            Assert.AreEqual("interior", driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='exterior'])[1]/following::span[1]")).Text);
+
+        }
+
+        [Priority(2)]
+        [TestMethod]
+        public void CancelReservation()
+        {
+            driver.Navigate().GoToUrl(_configuration["BaseUrl"] + "/");
+            driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Edit'])[1]/following::span[2]")).Click();
+            driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)=concat('Don', \"'\", 't cancel')])[1]/following::span[2]")).Click();
+            for (int second = 0; ; second++)
+            {
+                if (second >= 60) Assert.Fail("timeout");
+                try
+                {
+                    if ("Your reservations will show up here..." == driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Privacy & cookies policy'])[1]/following::h6[1]")).Text) break;
+                }
+                catch (Exception)
+                { }
+                Thread.Sleep(500);
+            }
+
+            Assert.AreEqual("Your reservations will show up here...", driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Privacy & cookies policy'])[1]/following::h6[1]")).Text);
+        }
+
+        [Priority(100)]
         [TestMethod]
         public void Logout()
         {
