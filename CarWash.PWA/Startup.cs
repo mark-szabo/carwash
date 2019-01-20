@@ -48,7 +48,7 @@ namespace CarWash.PWA
                     "form-action 'self'; " +
                     "upgrade-insecure-requests; " +
                     "report-uri https://markszabo.report-uri.com/r/d/csp/enforce";
-        
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -77,7 +77,7 @@ namespace CarWash.PWA
 
             // Add SnapshotCollector telemetry processor.
             services.AddSingleton<ITelemetryProcessorFactory>(sp => new SnapshotCollectorTelemetryProcessorFactory(sp));
-            
+
             services.AddDbContextPool<ApplicationDbContext>(options => options.UseSqlServer(config.ConnectionStrings.SqlDatabase));
 
             services.AddAuthentication(options =>
@@ -215,6 +215,19 @@ namespace CarWash.PWA
             {
                 c.SwaggerDoc("v2", new Info { Title = "CarWash API", Version = "v2" });
 
+                var authority = $"{config.AzureAd.Instance}oauth2/v2.0";
+                c.AddSecurityDefinition("OAuth2", new OAuth2Scheme
+                {
+                    Description = "OAuth2 SSO authentication.",
+                    Flow = "implicit",
+                    AuthorizationUrl = authority + "/authorize",
+                    TokenUrl = authority + "/connect/token",
+                    Scopes = new Dictionary<string, string>
+                    {
+                        { "openid","User offline" },
+                    }
+                });
+
                 c.AddSecurityDefinition("Bearer", new ApiKeyScheme
                 {
                     Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
@@ -310,6 +323,8 @@ namespace CarWash.PWA
                 c.SwaggerEndpoint("/swagger/v2/swagger.json", "CarWash API");
                 c.EnableDeepLinking();
                 c.DocumentTitle = "CarWash API";
+                c.OAuth2RedirectUrl("https://localhost:44340/swagger/index.html");
+                c.OAuthClientId(config.AzureAd.ClientId);
             });
 
             app.UseSpa(spa =>
