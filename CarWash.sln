@@ -20,7 +20,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarWash.Functions", "CarWas
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarWash.Bot", "CarWash.Bot\CarWash.Bot.csproj", "{C589339E-8174-4F1F-B2C1-36C63B5E7D48}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarWash.PWA.Tests", "CarWash.PWA.Tests\CarWash.PWA.Tests.csproj", "{FA0DF964-2C02-4B90-AD6E-167A692EFED7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarWash.PWA.Tests", "CarWash.PWA.Tests\CarWash.PWA.Tests.csproj", "{FA0DF964-2C02-4B90-AD6E-167A692EFED7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarWash.PWA.UiTests", "CarWash.PWA.UiTests\CarWash.PWA.UiTests.csproj", "{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -138,6 +140,22 @@ Global
 		{FA0DF964-2C02-4B90-AD6E-167A692EFED7}.Release|x64.Build.0 = Release|Any CPU
 		{FA0DF964-2C02-4B90-AD6E-167A692EFED7}.Release|x86.ActiveCfg = Release|Any CPU
 		{FA0DF964-2C02-4B90-AD6E-167A692EFED7}.Release|x86.Build.0 = Release|Any CPU
+		{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}.Debug|ARM.Build.0 = Debug|Any CPU
+		{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}.Debug|x64.Build.0 = Debug|Any CPU
+		{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}.Debug|x86.Build.0 = Debug|Any CPU
+		{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}.Release|ARM.ActiveCfg = Release|Any CPU
+		{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}.Release|ARM.Build.0 = Release|Any CPU
+		{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}.Release|x64.ActiveCfg = Release|Any CPU
+		{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}.Release|x64.Build.0 = Release|Any CPU
+		{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}.Release|x86.ActiveCfg = Release|Any CPU
+		{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
