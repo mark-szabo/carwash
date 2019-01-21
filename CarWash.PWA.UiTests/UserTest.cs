@@ -11,7 +11,7 @@ using OpenQA.Selenium.Chrome;
 namespace CarWash.PWA.UiTests
 {
     [TestClass]
-    public class LoginTest
+    public class UserTest
     {
         private static IWebDriver driver;
         private StringBuilder _verificationErrors;
@@ -59,8 +59,9 @@ namespace CarWash.PWA.UiTests
 
         [Priority(0)]
         [TestMethod]
-        public void Login()
+        public void RunTest()
         {
+            #region Login
             TestContext.WriteLine("Navigating to CarWash app.");
             driver.Navigate().GoToUrl(_configuration["BaseUrl"] + "/");
 
@@ -83,35 +84,44 @@ namespace CarWash.PWA.UiTests
             driver.FindElement(By.Id("idSIButton9")).Click();
 
             Assert.AreEqual("My reservations", driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Reserve'])[1]/preceding::h6[1]")).Text);
-        }
+            #endregion
 
-        [Priority(1)]
-        [TestMethod]
-        public void MakeAReservation()
-        {
-            driver.Navigate().GoToUrl(_configuration["BaseUrl"] + "/");
+            #region Make a new reservation
+            TestContext.WriteLine("Clicking Reserve button.");
             driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='My reservations'])[1]/following::span[3]")).Click();
+
+            TestContext.WriteLine("Selecting services.");
             driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Basic'])[1]/following::span[1]")).Click();
             driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='exterior'])[1]/following::span[2]")).Click();
+
+            TestContext.WriteLine("Clicking Next button.");
             driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Back'])[1]/following::button[1]")).Click();
+
+            TestContext.WriteLine("Selecting date.");
             driver.FindElement(By.XPath("//*[@id='root']/div/main/div/div[3]/div/div/div/div/div[1]/div/div/div/div/div[2]/div/ul[3]/li[1]")).Click();
+
+            TestContext.WriteLine("Selecting slot.");
             driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Choose time'])[1]/following::span[12]")).Click();
+
+            TestContext.WriteLine("Typing vehicle plate number.");
             driver.FindElement(By.Id("vehiclePlateNumber")).Click();
             driver.FindElement(By.Id("vehiclePlateNumber")).Clear();
             driver.FindElement(By.Id("vehiclePlateNumber")).SendKeys("TEST01");
+
+            TestContext.WriteLine("Typing comment.");
             driver.FindElement(By.Id("comment")).Click();
             driver.FindElement(By.Id("comment")).Clear();
             driver.FindElement(By.Id("comment")).SendKeys("test");
+
+            TestContext.WriteLine("Clicking Reserve button.");
             driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Back'])[1]/following::span[2]")).Click();
-            for (int second = 0; ; second++)
+
+            TestContext.WriteLine("Waiting to save reservation.");
+            for (int retry = 0; ; retry++)
             {
-                if (second >= 60) Assert.Fail("timeout");
-                try
-                {
-                    if ("Scheduled" == driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Privacy & cookies policy'])[1]/following::span[2]")).Text) break;
-                }
-                catch (Exception)
-                { }
+                if (retry >= 5) Assert.Fail("timeout");
+                if (IsElementPresent(By.XPath("//*[@id='root']/div/main/div/div[1]/div/div/div[1]"))) break;
+                TestContext.WriteLine("Still waiting...");
                 Thread.Sleep(500);
             }
 
@@ -124,38 +134,28 @@ namespace CarWash.PWA.UiTests
             Assert.AreEqual("exterior", driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Selected services'])[1]/following::span[1]")).Text);
 
             Assert.AreEqual("interior", driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='exterior'])[1]/following::span[1]")).Text);
+            #endregion
 
-        }
-
-        [Priority(2)]
-        [TestMethod]
-        public void CancelReservation()
-        {
-            driver.Navigate().GoToUrl(_configuration["BaseUrl"] + "/");
+            #region Cancel reservation
+            TestContext.WriteLine("Clicking Cancel button.");
             driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Edit'])[1]/following::span[2]")).Click();
+
+            TestContext.WriteLine("Confirming cancellation.");
             driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)=concat('Don', \"'\", 't cancel')])[1]/following::span[2]")).Click();
-            for (int second = 0; ; second++)
+
+            TestContext.WriteLine("Waiting for reservation cancellation.");
+            for (int retry = 0; ; retry++)
             {
-                if (second >= 60) Assert.Fail("timeout");
-                try
-                {
-                    if ("Your reservations will show up here..." == driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Privacy & cookies policy'])[1]/following::h6[1]")).Text) break;
-                }
-                catch (Exception)
-                { }
+                if (retry >= 5) Assert.Fail("timeout");
+                if (IsElementPresent(By.XPath("//*[@id='root']/div/main/div/h6"))) break;
+                TestContext.WriteLine("Still waiting...");
                 Thread.Sleep(500);
             }
 
             Assert.AreEqual("Your reservations will show up here...", driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Privacy & cookies policy'])[1]/following::h6[1]")).Text);
-        }
+            #endregion
 
-        [Priority(100)]
-        [TestMethod]
-        public void Logout()
-        {
-            TestContext.WriteLine("Navigating to CarWash app.");
-            driver.Navigate().GoToUrl(_configuration["BaseUrl"] + "/");
-
+            #region Logout
             TestContext.WriteLine("Clicking Sign out button.");
             driver.FindElement(By.XPath("(.//*[normalize-space(text()) and normalize-space(.)='Contact support'])[1]/following::span[2]")).Click();
 
@@ -164,6 +164,7 @@ namespace CarWash.PWA.UiTests
 
             TestContext.WriteLine("Clicking Forget.");
             driver.FindElement(By.Id("forgetLink")).Click();
+            #endregion
         }
 
         private bool IsElementPresent(By by)
