@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
-namespace CarWash.PWA.Tests.ApiTests
+namespace CarWash.PWA.Tests
 {
     public class ReservationsControllerTests
     {

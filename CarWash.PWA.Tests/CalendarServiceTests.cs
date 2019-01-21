@@ -1,6 +1,5 @@
 ﻿using CarWash.ClassLibrary.Models;
 using CarWash.PWA.Services;
-using Microsoft.Extensions.Configuration;
 using Moq;
 using Moq.Protected;
 using System;
@@ -10,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace CarWash.PWA.Tests.ApiTests
+namespace CarWash.PWA.Tests
 {
     public class CalendarServiceTests
     {

@@ -8,7 +8,7 @@ using System.Linq;
 using System.Security.Claims;
 using Xunit;
 
-namespace CarWash.PWA.Tests.ApiTests
+namespace CarWash.PWA.Tests
 {
     public class UsersControllerTests
     {
