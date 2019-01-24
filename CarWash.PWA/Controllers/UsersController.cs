@@ -30,9 +30,15 @@ namespace CarWash.PWA.Controllers
         public UsersController(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
+
+            // Check if request is coming from an authorized service application.
+            var serviceAppId = httpContextAccessor.HttpContext.User.FindFirstValue("appid");
+            if (serviceAppId != null) return;
+
             var email = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Upn)?.ToLower() ??
                         httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Email)?.ToLower() ??
                         throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
+
             _user = _context.Users.SingleOrDefault(u => u.Email == email);
         }
 

@@ -98,14 +98,26 @@ namespace CarWash.PWA
                                 return issuer;
                             else
                                 throw new SecurityTokenInvalidIssuerException("Invalid issuer");
-                        }
-
+                        },
                     };
                     options.Events = new JwtBearerEvents
                     {
                         OnTokenValidated = async context =>
                         {
-                            //Get EF context
+                            // Check if request is coming from an authorized service application.
+                            var serviceAppId = context.Principal.FindFirstValue("appid");
+                            if (serviceAppId != null && config.AzureAd.AuthorizedApplications.Contains(serviceAppId))
+                            {
+                                context.Principal.AddIdentity(new ClaimsIdentity(
+                                    new List<Claim>
+                                    {
+                                        new Claim("appId", serviceAppId)
+                                    }));
+
+                                return;
+                            }
+
+                            // Get EF context
                             var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
 
                             var company = config.Companies.SingleOrDefault(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))?.Name ?? throw new Exception("Tenant ('tenantid') cannot be found in auth token.");
@@ -163,7 +175,6 @@ namespace CarWash.PWA
                         {
                             context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                             context.Response.ContentType = "application/json";
-                            context.Response.Body = null;
                             return Task.CompletedTask;
                         }
                     };

@@ -188,7 +188,7 @@ namespace CarWash.ClassLibrary.Models
             public string Instance { get; set; } = "https://login.microsoftonline.com/common/";
 
             /// <summary>
-            /// Client id of the registered application in the tenant.
+            /// Client id of the registered application in the tenant. Aka Application ID.
             /// </summary>
             /// <remarks>
             /// Location: Application Settings
@@ -204,6 +204,11 @@ namespace CarWash.ClassLibrary.Models
             /// Key: AzureAd--ClientSecret
             /// </remarks>
             public string ClientSecret { get; set; }
+
+            /// <summary>
+            /// List of ids of authorized service application which can use the CarWash app programmatically.
+            /// </summary>
+            public List<string> AuthorizedApplications { get; set; } = new List<string>();
         }
 
         /// <summary>
