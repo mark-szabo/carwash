@@ -14,6 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
+using CarWash.PWA.Attributes;
 
 namespace CarWash.PWA.Controllers
 {
@@ -51,9 +52,9 @@ namespace CarWash.PWA.Controllers
         /// <returns>List of <see cref="ReservationViewModel"/></returns>
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
-        [ProducesResponseType(typeof(IEnumerable<ReservationViewModel>), 200)]
+        [UserAction]
         [HttpGet]
-        public IEnumerable<object> GetReservations()
+        public IEnumerable<ReservationViewModel> GetReservations()
         {
             return _context.Reservation
                 .Where(r => r.UserId == _user.Id)
@@ -72,6 +73,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to get another user's reservation.</response>
         /// <response code="404">NotFound if reservation not found.</response>
+        [UserAction]
         [HttpGet("{id}")]
         public async Task<ActionResult<ReservationViewModel>> GetReservation([FromRoute] string id)
         {
@@ -98,6 +100,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="400">BadRequest if no service choosen / StartDate and EndDate isn't on the same day / a Date is in the past / StartDate and EndDate are not valid slot start/end times / user/company limit has been met / there is no more time in that slot.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to update another user's reservation.</response>
+        [UserAction]
         [HttpPut("{id}")]
         public async Task<ActionResult<ReservationViewModel>> PutReservation([FromRoute] string id, [FromBody] Reservation reservation, [FromQuery] bool dropoffConfirmed = false)
         {
@@ -218,6 +221,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="400">BadRequest if no service chosen / StartDate and EndDate isn't on the same day / a Date is in the past / StartDate and EndDate are not valid slot start/end times / user/company limit has been met / there is no more time in that slot.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to reserve for another user.</response>
+        [UserAction]
         [HttpPost]
         public async Task<ActionResult<ReservationViewModel>> PostReservation([FromBody] Reservation reservation, [FromQuery] bool dropoffConfirmed = false)
         {
@@ -320,6 +324,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to delete another user's reservation.</response>
         /// <response code="404">NotFound if reservation not found.</response>
+        [UserAction]
         [HttpDelete("{id}")]
         public async Task<ActionResult<ReservationViewModel>> DeleteReservation([FromRoute] string id)
         {
@@ -347,6 +352,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin.</response>
+        [UserAction]
         [HttpGet, Route("company")]
         public async Task<ActionResult<IEnumerable<AdminReservationViewModel>>> GetCompanyReservations()
         {
@@ -393,6 +399,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
+        [UserAction]
         [HttpGet, Route("backlog")]
         public async Task<ActionResult<IEnumerable<AdminReservationViewModel>>> GetBacklog()
         {
@@ -442,6 +449,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="400">BadRequest if id or location param is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to update another user's reservation.</response>
+        [UserAction]
         [HttpPost("{id}/confirmdropoff")]
         public async Task<IActionResult> ConfirmDropoff([FromRoute] string id, [FromBody] string location)
         {
@@ -486,6 +494,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="400">BadRequest if id is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
+        [UserAction]
         [HttpPost("{id}/startwash")]
         public async Task<IActionResult> StartWash([FromRoute] string id)
         {
@@ -528,6 +537,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="400">BadRequest if id is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
+        [UserAction]
         [HttpPost("{id}/completewash")]
         public async Task<IActionResult> CompleteWash([FromRoute] string id)
         {
@@ -604,6 +614,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="400">BadRequest if id is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
+        [UserAction]
         [HttpPost("{id}/confirmpayment")]
         public async Task<IActionResult> ConfirmPayment([FromRoute] string id)
         {
@@ -649,6 +660,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="400">BadRequest if id or location param is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
+        [UserAction]
         [HttpPost("{id}/state/{state}")]
         public async Task<IActionResult> SetState([FromRoute] string id, [FromRoute] State state)
         {
@@ -692,6 +704,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="400">BadRequest if id or comment is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
+        [UserAction]
         [HttpPost("{id}/carwashcomment")]
         public async Task<IActionResult> AddCarwashComment([FromRoute] string id, [FromBody] string comment)
         {
@@ -763,6 +776,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="400">BadRequest if id is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
+        [UserAction]
         [HttpPost("{id}/mpv")]
         public async Task<IActionResult> SetMpv([FromRoute] string id, [FromBody] bool mpv)
         {
@@ -806,6 +820,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="400">BadRequest if id or services param is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
+        [UserAction]
         [HttpPost("{id}/services")]
         public async Task<IActionResult> UpdateServices([FromRoute] string id, [FromBody] List<ServiceType> services)
         {
@@ -850,6 +865,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="400">BadRequest if id or services param is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
+        [UserAction]
         [HttpPost("{id}/location")]
         public async Task<IActionResult> UpdateLocation([FromRoute] string id, [FromBody] string location)
         {
@@ -915,6 +931,7 @@ namespace CarWash.PWA.Controllers
         /// <returns>List of <see cref="DateTime"/></returns>
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
+        [UserAction]
         [HttpGet, Route("notavailabledates")]
         public async Task<NotAvailableDatesAndTimesViewModel> GetNotAvailableDatesAndTimes(int daysAhead = 365)
         {
@@ -1033,6 +1050,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="200">OK</response>
         /// <response code="204">NoContent if user has no reservation yet.</response>
         /// <response code="401">Unauthorized</response>
+        [UserAction]
         [HttpGet, Route("lastsettings")]
         public async Task<ActionResult<LastSettingsViewModel>> GetLastSettings()
         {
@@ -1142,6 +1160,7 @@ namespace CarWash.PWA.Controllers
         /// <param name="endDate">end date (default: today)</param>
         /// <returns>An Excel file of the list of reservations</returns>
         [ProducesResponseType(typeof(FileStreamResult), 200)]
+        [UserAction]
         [HttpGet, Route("export")]
         public async Task<IActionResult> Export(DateTime? startDate, DateTime? endDate)
         {

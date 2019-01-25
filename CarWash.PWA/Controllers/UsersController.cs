@@ -11,6 +11,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using User = CarWash.ClassLibrary.Models.User;
+using CarWash.PWA.Attributes;
 
 namespace CarWash.PWA.Controllers
 {
@@ -19,6 +20,7 @@ namespace CarWash.PWA.Controllers
     /// </summary>
     [Produces("application/json")]
     [Authorize]
+    [UserAction]
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase, IUsersController

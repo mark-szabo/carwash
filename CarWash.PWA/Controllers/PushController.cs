@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using System.Threading.Tasks;
+using CarWash.PWA.Attributes;
 
 namespace CarWash.PWA.Controllers
 {
@@ -22,7 +23,7 @@ namespace CarWash.PWA.Controllers
         private readonly IPushService _pushService;
 
         /// <inheritdoc />
-        public PushController(ApplicationDbContext context, IUsersController usersController, IHostingEnvironment hostingEnvironment, IPushService pushService)
+        public PushController(IUsersController usersController, IHostingEnvironment hostingEnvironment, IPushService pushService)
         {
             _user = usersController.GetCurrentUser();
             _env = hostingEnvironment;
@@ -50,6 +51,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="204">NoContent</response>
         /// <response code="400">BadRequest if subscription is null or invalid.</response>
         /// <response code="401">Unauthorized</response>
+        [UserAction]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] PushSubscriptionViewModel subscription)
         {

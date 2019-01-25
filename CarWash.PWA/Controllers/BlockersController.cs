@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CarWash.PWA.Attributes;
 
 namespace CarWash.PWA.Controllers
 {
@@ -17,6 +18,7 @@ namespace CarWash.PWA.Controllers
     /// </summary>
     [Produces("application/json")]
     [Authorize]
+    [UserAction]
     [Route("api/[controller]")]
     [ApiController]
     public class BlockersController : ControllerBase
