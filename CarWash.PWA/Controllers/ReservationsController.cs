@@ -484,6 +484,90 @@ namespace CarWash.PWA.Controllers
             return NoContent();
         }
 
+        // POST: api/reservations/next/confirmdropoff
+        /// <summary>
+        /// Confirm car key dropoff and location of user's next reservation (service endpoint)
+        /// </summary>
+        /// <param name="model">Model conatining user email and car location.</param>
+        /// <returns>No content</returns>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if email or location param is null.</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="404">NotFound if user does not exist or if there's no reservation where the key can be dropped off.</response>
+        /// <response code="409">Conflict if user has more than one reservation where the key can be dropped off.</response>
+        [ServiceAction]
+        [HttpPost("next/confirmdropoff")]
+        public async Task<IActionResult> ConfirmDropoffByEmail([FromBody] ConfirmDropoffByEmailViewModel model)
+        {
+            if (model?.Email == null) return BadRequest("Email cannot be null.");
+            if (model.Location == null) return BadRequest("Reservation location cannot be null.");
+
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == model.Email);
+            if (user == null) return NotFound($"No user found with email address '{model.Email}'.");
+
+            var reservations = await _context.Reservation
+                .AsNoTracking()
+                .Where(r => r.State == State.SubmittedNotActual || r.State == State.ReminderSentWaitingForKey)
+                .OrderBy(r => r.StartDate)
+                .ToListAsync();
+
+            if (reservations == null || reservations.Count == 0) return NotFound("No reservations found.");
+
+            Reservation reservation;
+            // Only one active - straightforward
+            if (reservations.Count == 1)
+            {
+                reservation = reservations[0];
+            }
+            // Vehicle plate number was specified - easy
+            else if (model.VehiclePlateNumber != null && reservations.Count(r => r.VehiclePlateNumber == model.VehiclePlateNumber) == 1)
+            {
+                reservation = reservations.Single(r => r.VehiclePlateNumber == model.VehiclePlateNumber);
+            }
+            // Only one where we are waiting for the key - still pretty straightforward
+            else if (reservations.Count(r => r.State == State.ReminderSentWaitingForKey) == 1)
+            {
+                reservation = reservations.Single(r => r.State == State.ReminderSentWaitingForKey);
+            }
+            // One where we are waiting for the key and is today - eg. there's another one in the past where the key was not dropped off and nobody deleted it
+            else if (reservations.Count(r => r.State == State.ReminderSentWaitingForKey && r.StartDate.Date == DateTime.Today) == 1)
+            {
+                reservation = reservations.Single(r => r.State == State.ReminderSentWaitingForKey && r.StartDate.Date == DateTime.Today);
+            } 
+            // Only one active reservation today - eg. user has two reservations, one today, one in the future and on the morning drops off the keys befor reminder
+            else if (reservations.Count(r => r.StartDate.Date == DateTime.Today) == 1)
+            {
+                reservation = reservations.Single(r => r.StartDate.Date == DateTime.Today);
+            }
+            else if (model.VehiclePlateNumber == null)
+            {
+                return Conflict("More than one reservations found where the reservation state is submitted or waiting for key. Please specify vehicle plate number!");
+            }
+            else return Conflict("More than one reservations found where the reservation state is submitted or waiting for key.");
+
+            reservation.State = State.DropoffAndLocationConfirmed;
+            reservation.Location = model.Location;
+
+            try
+            {
+                _context.Reservation.Update(reservation);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Reservation.Any(e => e.Id == reservation.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
         // POST: api/reservations/{id}/startwash
         /// <summary>
         /// Log the start of the carwash
@@ -1571,6 +1655,13 @@ namespace CarWash.PWA.Controllers
     {
         public DateTime StartTime { get; set; }
         public int FreeCapacity { get; set; }
+    }
+
+    public class ConfirmDropoffByEmailViewModel
+    {
+        public string Email { get; set; }
+        public string Location { get; set; }
+        public string VehiclePlateNumber { get; set; }
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }
