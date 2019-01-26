@@ -14,7 +14,7 @@ namespace CarWash.PWA.Controllers
     /// </summary>
     [Produces("application/json")]
     [Authorize]
-    [Route("api/[controller]")]
+    [Route("api/push")]
     [ApiController]
     public class PushController : ControllerBase
     {

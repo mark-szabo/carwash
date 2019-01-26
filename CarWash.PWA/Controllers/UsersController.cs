@@ -21,7 +21,7 @@ namespace CarWash.PWA.Controllers
     [Produces("application/json")]
     [Authorize]
     [UserAction]
-    [Route("api/[controller]")]
+    [Route("api/users")]
     [ApiController]
     public class UsersController : ControllerBase, IUsersController
     {
@@ -295,6 +295,7 @@ Please keep in mind, that we are required to continue storing your previous rese
         }
 
         /// <inheritdoc />
+        [NonAction]
         public User GetCurrentUser() => _user;
     }
 

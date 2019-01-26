@@ -23,7 +23,7 @@ namespace CarWash.PWA.Controllers
     /// </summary>
     [Produces("application/json")]
     [Authorize]
-    [Route("api/[controller]")]
+    [Route("api/reservations")]
     [ApiController]
     public class ReservationsController : ControllerBase
     {
@@ -33,7 +33,7 @@ namespace CarWash.PWA.Controllers
         private readonly ICalendarService _calendarService;
         private readonly IPushService _pushService;
         private readonly TelemetryClient _telemetryClient;
-        
+
         /// <inheritdoc />
         public ReservationsController(CarWashConfiguration configuration, ApplicationDbContext context, IUsersController usersController, ICalendarService calendarService, IPushService pushService)
         {
@@ -147,8 +147,8 @@ namespace CarWash.PWA.Controllers
             #endregion
 
             // Time requirement calculation
-            dbReservation.TimeRequirement = dbReservation.Services.Contains(ServiceType.Carpet) ? 
-                2 * _configuration.Reservation.TimeUnit : 
+            dbReservation.TimeRequirement = dbReservation.Services.Contains(ServiceType.Carpet) ?
+                2 * _configuration.Reservation.TimeUnit :
                 _configuration.Reservation.TimeUnit;
 
             #region Business validation
@@ -259,7 +259,7 @@ namespace CarWash.PWA.Controllers
             #endregion
 
             // Time requirement calculation
-            reservation.TimeRequirement = reservation.Services.Contains(ServiceType.Carpet) ? 
+            reservation.TimeRequirement = reservation.Services.Contains(ServiceType.Carpet) ?
                 2 * _configuration.Reservation.TimeUnit :
                 _configuration.Reservation.TimeUnit;
 

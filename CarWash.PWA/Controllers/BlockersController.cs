@@ -19,7 +19,7 @@ namespace CarWash.PWA.Controllers
     [Produces("application/json")]
     [Authorize]
     [UserAction]
-    [Route("api/[controller]")]
+    [Route("api/blockers")]
     [ApiController]
     public class BlockersController : ControllerBase
     {
