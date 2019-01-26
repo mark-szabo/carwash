@@ -488,7 +488,7 @@ namespace CarWash.PWA.Controllers
         /// <summary>
         /// Confirm car key dropoff and location of user's next reservation (service endpoint)
         /// </summary>
-        /// <param name="model">Model conatining user email and car location.</param>
+        /// <param name="model">Model containing user email and car location.</param>
         /// <returns>No content</returns>
         /// <response code="204">NoContent</response>
         /// <response code="400">BadRequest if email or location param is null.</response>
@@ -534,16 +534,16 @@ namespace CarWash.PWA.Controllers
             {
                 reservation = reservations.Single(r => r.State == State.ReminderSentWaitingForKey && r.StartDate.Date == DateTime.Today);
             } 
-            // Only one active reservation today - eg. user has two reservations, one today, one in the future and on the morning drops off the keys befor reminder
+            // Only one active reservation today - eg. user has two reservations, one today, one in the future and on the morning drops off the keys before the reminder
             else if (reservations.Count(r => r.StartDate.Date == DateTime.Today) == 1)
             {
                 reservation = reservations.Single(r => r.StartDate.Date == DateTime.Today);
             }
             else if (model.VehiclePlateNumber == null)
             {
-                return Conflict("More than one reservations found where the reservation state is submitted or waiting for key. Please specify vehicle plate number!");
+                return Conflict("More than one reservation found where the reservation state is submitted or waiting for key. Please specify vehicle plate number!");
             }
-            else return Conflict("More than one reservations found where the reservation state is submitted or waiting for key.");
+            else return Conflict("More than one reservation found where the reservation state is submitted or waiting for key.");
 
             reservation.State = State.DropoffAndLocationConfirmed;
             reservation.Location = model.Location;

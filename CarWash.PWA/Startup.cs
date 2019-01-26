@@ -106,15 +106,19 @@ namespace CarWash.PWA
                         {
                             // Check if request is coming from an authorized service application.
                             var serviceAppId = context.Principal.FindFirstValue("appid");
-                            if (serviceAppId != null && config.AzureAd.AuthorizedApplications.Contains(serviceAppId))
+                            if (serviceAppId != null)
                             {
-                                context.Principal.AddIdentity(new ClaimsIdentity(
-                                    new List<Claim>
-                                    {
+                                if (config.AzureAd.AuthorizedApplications.Contains(serviceAppId))
+                                {
+                                    context.Principal.AddIdentity(new ClaimsIdentity(
+                                        new List<Claim>
+                                        {
                                         new Claim("appId", serviceAppId)
-                                    }));
+                                        }));
 
-                                return;
+                                    return;
+                                }
+                                throw new Exception($"Application ({serviceAppId}) is not authorized.");
                             }
 
                             // Get EF context
