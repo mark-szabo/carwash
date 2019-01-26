@@ -301,7 +301,7 @@ namespace CarWash.PWA.Tests
         //    Assert.Null(notExistentJohn);
         //}
 
-        private ApplicationDbContext CreateInMemoryDbContext()
+        private static ApplicationDbContext CreateInMemoryDbContext()
         {
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
             optionsBuilder.UseInMemoryDatabase("carwashu-test-userscontroller");
@@ -346,7 +346,7 @@ namespace CarWash.PWA.Tests
             return dbContext;
         }
 
-        private UsersController CreateDefaultController(string userEmail)
+        private static UsersController CreateDefaultController(string userEmail)
         {
             var dbContext = CreateInMemoryDbContext();
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
