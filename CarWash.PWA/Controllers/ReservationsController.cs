@@ -116,7 +116,9 @@ namespace CarWash.PWA.Controllers
             dbReservation.Location = reservation.Location;
             dbReservation.Services = reservation.Services;
             dbReservation.Private = reservation.Private;
-            dbReservation.StartDate = reservation.StartDate.ToLocalTime();
+            var oldStartDate = dbReservation.StartDate;
+            var newStartDate = reservation.StartDate.ToLocalTime();
+            dbReservation.StartDate = newStartDate;
             if (reservation.EndDate != null) dbReservation.EndDate = ((DateTime)reservation.EndDate).ToLocalTime();
             else dbReservation.EndDate = null;
             dbReservation.Comment = reservation.Comment;
@@ -172,13 +174,17 @@ namespace CarWash.PWA.Controllers
             if (await IsBlocked(dbReservation.StartDate, dbReservation.EndDate))
                 return BadRequest("This time is blocked.");
 
-            // Check if there is enough time on that day
-            if (!IsEnoughTimeOnDate(dbReservation.StartDate, dbReservation.TimeRequirement))
-                return BadRequest("Company limit has been met for this day or there is not enough time at all.");
+            // Don't check if date&slot haven't changed
+            if (newStartDate != oldStartDate)
+            {
+                // Check if there is enough time on that day
+                if (!IsEnoughTimeOnDate(dbReservation.StartDate, dbReservation.TimeRequirement))
+                    return BadRequest("Company limit has been met for this day or there is not enough time at all.");
 
-            // Check if there is enough time in that slot
-            if (!IsEnoughTimeInSlot(dbReservation.StartDate, dbReservation.TimeRequirement))
-                return BadRequest("There is not enough time in that slot.");
+                // Check if there is enough time in that slot
+                if (!IsEnoughTimeInSlot(dbReservation.StartDate, dbReservation.TimeRequirement))
+                    return BadRequest("There is not enough time in that slot.");
+            }
             #endregion
 
             // Check if MPV
