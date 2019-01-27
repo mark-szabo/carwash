@@ -571,6 +571,348 @@ namespace CarWash.PWA.Tests
             Assert.IsType<BadRequestObjectResult>(result.Result);
         }
 
+        [Theory]
+        [InlineData("TST000")]
+        [InlineData("TST 000")]
+        [InlineData("TST-000")]
+        public async Task PutReservation_ByDefault_ReturnsNewReservation(string value)
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            reservation.VehiclePlateNumber = value;
+            var NEW_START_DATE = new DateTime(2019, 12, 05, 08, 00, 00, DateTimeKind.Local);
+            reservation.StartDate = NEW_START_DATE;
+            reservation.EndDate = null;
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.PutReservation(reservation.Id, reservation);
+            var ok = (OkObjectResult)result.Result;
+            var updatedReservation = (ReservationViewModel)ok.Value;
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<OkObjectResult>(result.Result);
+            Assert.IsType<ReservationViewModel>(ok.Value);
+            Assert.Equal(NEW_START_DATE, updatedReservation.StartDate);
+            Assert.Equal(new DateTime(2019, 12, 05, 11, 00, 00), updatedReservation.EndDate);
+            Assert.Equal("TST000", updatedReservation.VehiclePlateNumber);
+            Assert.Equal(reservation.State, updatedReservation.State);
+        }
+
+        [Fact]
+        public async Task PutReservation_GivenInvalidModel_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            var controller = CreateControllerStub(dbContext);
+            controller.ModelState.AddModelError("error", "some error");
+
+            var result = await controller.PutReservation(reservation.Id, reservation);
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task PutReservation_ForOtherUserAsNotAdmin_ReturnsForbid()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            // TEST02 is admin's reservation
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST02");
+            reservation.VehiclePlateNumber = "TST000";
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.PutReservation(reservation.Id, reservation);
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<ForbidResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task PutReservation_ForOtherUserAsAdmin_ReturnsReservation()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var john = await dbContext.Users.SingleAsync(u => u.Email == JOHN_EMAIL);
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            reservation.VehiclePlateNumber = "TST000";
+            var controller = CreateControllerStub(dbContext, ADMIN_EMAIL);
+
+            var result = await controller.PutReservation(reservation.Id, reservation);
+            var ok = (OkObjectResult)result.Result;
+            var updatedReservation = (ReservationViewModel)ok.Value;
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<OkObjectResult>(result.Result);
+            Assert.IsType<ReservationViewModel>(ok.Value);
+            Assert.Equal(john.Id, updatedReservation.UserId);
+            Assert.Equal("TST000", updatedReservation.VehiclePlateNumber);
+        }
+
+        [Fact]
+        public async Task PutReservation_WithUserUpdated_ReturnsForbid()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var admin = await dbContext.Users.SingleAsync(u => u.Email == ADMIN_EMAIL);
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            reservation.UserId = admin.Id;
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.PutReservation(reservation.Id, reservation);
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task PutReservation_WithUserUpdatedAsAdmin_ReturnsReservation()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var john = await dbContext.Users.SingleAsync(u => u.Email == JOHN_EMAIL);
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST02");
+            reservation.UserId = john.Id;
+            var controller = CreateControllerStub(dbContext, ADMIN_EMAIL);
+
+            var result = await controller.PutReservation(reservation.Id, reservation);
+            var ok = (OkObjectResult)result.Result;
+            var updatedReservation = (ReservationViewModel)ok.Value;
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<OkObjectResult>(result.Result);
+            Assert.IsType<ReservationViewModel>(ok.Value);
+            Assert.Equal(john.Id, updatedReservation.UserId);
+        }
+
+        [Fact]
+        public async Task PutReservation_WithNoService_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            reservation.Services = null;
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.PutReservation(reservation.Id, reservation);
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task PutReservation_WithStartAndEndNotOnSameDay_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            reservation.StartDate = new DateTime(2019, 12, 05, 08, 00, 00, DateTimeKind.Local);
+            reservation.EndDate = new DateTime(2019, 12, 06, 11, 00, 00, DateTimeKind.Local);
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.PutReservation(reservation.Id, reservation);
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task PutReservation_WithStartLaterThanEnd_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            reservation.StartDate = new DateTime(2019, 12, 05, 14, 00, 00, DateTimeKind.Local);
+            reservation.EndDate = new DateTime(2019, 12, 05, 11, 00, 00, DateTimeKind.Local);
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.PutReservation(reservation.Id, reservation);
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task PutReservation_WithStartInPast_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            reservation.StartDate = new DateTime(2018, 12, 05, 14, 00, 00, DateTimeKind.Local);
+            reservation.EndDate = null;
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.PutReservation(reservation.Id, reservation);
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task PutReservation_WithStartInPastAsCarWashAdmin_ReturnsReservation()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var carWashAdmin = await dbContext.Users.SingleAsync(u => u.Email == CARWASH_ADMIN_EMAIL);
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST03");
+            reservation.StartDate = new DateTime(2018, 12, 05, 14, 00, 00, DateTimeKind.Local);
+            reservation.EndDate = null;
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.PutReservation(reservation.Id, reservation);
+            var ok = (OkObjectResult)result.Result;
+            var updatedReservation = (ReservationViewModel)ok.Value;
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<OkObjectResult>(result.Result);
+            Assert.IsType<ReservationViewModel>(ok.Value);
+            Assert.Equal(carWashAdmin.Id, updatedReservation.UserId);
+        }
+
+        [Fact]
+        public async Task PutReservation_WithStartNotInSlotAndEndNotSet_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            reservation.StartDate = new DateTime(2019, 12, 05, 09, 29, 29, DateTimeKind.Local);
+            reservation.EndDate = null;
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.PutReservation(reservation.Id, reservation);
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task PutReservation_WithStartAndEndNotInSlot_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            reservation.StartDate = new DateTime(2019, 12, 05, 09, 29, 29, DateTimeKind.Local);
+            reservation.EndDate = new DateTime(2019, 12, 05, 12, 29, 29, DateTimeKind.Local);
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.PutReservation(reservation.Id, reservation);
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task PutReservation_WhenBlocked_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            await dbContext.Blocker.AddAsync(new Blocker
+            {
+                StartDate = new DateTime(2019, 12, 01, 00, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(2019, 12, 30, 23, 59, 59, DateTimeKind.Local),
+            });
+            await dbContext.SaveChangesAsync();
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            reservation.StartDate = new DateTime(2019, 12, 05, 08, 00, 00, DateTimeKind.Local);
+            reservation.EndDate = null;
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.PutReservation(reservation.Id, reservation);
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task PutReservation_WhenBlockedAsCarWashAdmin_ReturnsReservation()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            await dbContext.Blocker.AddAsync(new Blocker
+            {
+                StartDate = new DateTime(2019, 12, 01, 00, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(2019, 12, 30, 23, 59, 59, DateTimeKind.Local),
+            });
+            await dbContext.SaveChangesAsync();
+            var carWashAdmin = await dbContext.Users.SingleAsync(u => u.Email == CARWASH_ADMIN_EMAIL);
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST03");
+            reservation.StartDate = new DateTime(2019, 12, 05, 08, 00, 00, DateTimeKind.Local);
+            reservation.EndDate = null;
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.PutReservation(reservation.Id, reservation);
+            var ok = (OkObjectResult)result.Result;
+            var updatedReservation = (ReservationViewModel)ok.Value;
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<OkObjectResult>(result.Result);
+            Assert.IsType<ReservationViewModel>(ok.Value);
+            Assert.Equal(carWashAdmin.Id, updatedReservation.UserId);
+        }
+
+        [Fact]
+        public async Task PutReservation_WithCompanyLimitReached_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var admin = await dbContext.Users.SingleAsync(u => u.Email == ADMIN_EMAIL);
+            await dbContext.Reservation.AddAsync(new Reservation
+            {
+                UserId = admin.Id,
+                VehiclePlateNumber = "TEST02",
+                State = State.SubmittedNotActual,
+                StartDate = new DateTime(2019, 12, 04, 11, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(2019, 12, 04, 14, 00, 00, DateTimeKind.Local),
+                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                TimeRequirement = 12,
+                Private = false,
+            });
+            await dbContext.SaveChangesAsync();
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            reservation.StartDate = new DateTime(2019, 12, 04, 14, 00, 00, DateTimeKind.Local);
+            reservation.EndDate = new DateTime(2019, 12, 04, 17, 00, 00, DateTimeKind.Local);
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.PutReservation(reservation.Id, reservation);
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task PutReservation_WithSlotLimitReached_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            reservation.StartDate = new DateTime(2019, 12, 04, 08, 00, 00, DateTimeKind.Local);
+            reservation.EndDate = new DateTime(2019, 12, 04, 11, 00, 00, DateTimeKind.Local);
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.PutReservation(reservation.Id, reservation);
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task PutReservation_WithDropoffConfirmed_ReturnsNewReservationWithLocation()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            const string LOCATION = "M/-3/180";
+            reservation.Location = LOCATION;
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.PutReservation(reservation.Id, reservation, true);
+            var ok = (OkObjectResult)result.Result;
+            var updatedReservation = (ReservationViewModel)ok.Value;
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<OkObjectResult>(result.Result);
+            Assert.IsType<ReservationViewModel>(ok.Value);
+            Assert.Equal(LOCATION, reservation.Location);
+        }
+
+        [Fact]
+        public async Task PutReservation_WithDropoffConfirmedButNoLocationSpecified_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            reservation.Location = null;
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.PutReservation(reservation.Id, reservation, true);
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
         private static ApplicationDbContext CreateInMemoryDbContext()
         {
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
@@ -602,7 +944,7 @@ namespace CarWash.PWA.Tests
                 IsCarwashAdmin = false,
             };
             dbContext.Users.Add(admin);
-            dbContext.Users.Add(new User
+            var carWashAdmin = new User
             {
                 Email = CARWASH_ADMIN_EMAIL,
                 FirstName = "John, from CarWash",
@@ -610,15 +952,16 @@ namespace CarWash.PWA.Tests
                 Company = Company.Carwash,
                 IsAdmin = false,
                 IsCarwashAdmin = true,
-            });
+            };
+            dbContext.Users.Add(carWashAdmin);
 
             dbContext.Reservation.Add(new Reservation
             {
                 UserId = john.Id,
-                VehiclePlateNumber = "TEST01",
+                VehiclePlateNumber = "TEST00",
                 State = State.Done,
-                StartDate = new DateTime(2019, 11, 06, 08, 00, 00),
-                EndDate = new DateTime(2019, 11, 06, 11, 00, 00),
+                StartDate = new DateTime(2019, 11, 06, 08, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(2019, 11, 06, 11, 00, 00, DateTimeKind.Local),
                 Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
                 TimeRequirement= 12,
                 Private = false,
@@ -628,8 +971,8 @@ namespace CarWash.PWA.Tests
                 UserId = john.Id,
                 VehiclePlateNumber = "TEST01",
                 State = State.ReminderSentWaitingForKey,
-                StartDate = new DateTime(2019, 11, 27, 11, 00, 00),
-                EndDate = new DateTime(2019, 11, 27, 14, 00, 00),
+                StartDate = new DateTime(2019, 11, 27, 11, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(2019, 11, 27, 14, 00, 00, DateTimeKind.Local),
                 Services = new List<ServiceType> { ServiceType.Exterior },
                 TimeRequirement = 12,
                 Private = false,
@@ -639,8 +982,19 @@ namespace CarWash.PWA.Tests
                 UserId = admin.Id,
                 VehiclePlateNumber = "TEST02",
                 State = State.SubmittedNotActual,
-                StartDate = new DateTime(2019, 12, 04, 08, 00, 00),
-                EndDate = new DateTime(2019, 12, 04, 11, 00, 00),
+                StartDate = new DateTime(2019, 12, 04, 08, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(2019, 12, 04, 11, 00, 00, DateTimeKind.Local),
+                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                TimeRequirement = 12,
+                Private = false,
+            });
+            dbContext.Reservation.Add(new Reservation
+            {
+                UserId = carWashAdmin.Id,
+                VehiclePlateNumber = "TEST03",
+                State = State.SubmittedNotActual,
+                StartDate = new DateTime(2019, 12, 03, 08, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(2019, 12, 03, 11, 00, 00, DateTimeKind.Local),
                 Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
                 TimeRequirement = 12,
                 Private = false,
