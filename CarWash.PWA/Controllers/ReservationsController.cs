@@ -140,11 +140,11 @@ namespace CarWash.PWA.Controllers
 
             #region Input validation
             if (dbReservation.UserId != _user.Id && !_user.IsAdmin && !_user.IsCarwashAdmin) return Forbid();
-            if (reservation.UserId != _user.Id &&
-                reservation.UserId != null &&
-                !_user.IsAdmin &&
-                !_user.IsCarwashAdmin)
-                return BadRequest("Cannot modify user of registration. You need to re-create it.");
+            if (reservation.UserId != _user.Id && reservation.UserId != null)
+            {
+                if (_user.IsAdmin || _user.IsCarwashAdmin) dbReservation.UserId = reservation.UserId;
+                else return BadRequest("Cannot modify user of registration. You need to re-create it.");
+            }
             if (reservation.Services == null) return BadRequest("No service chosen.");
             #endregion
 
@@ -539,7 +539,7 @@ namespace CarWash.PWA.Controllers
             else if (reservations.Count(r => r.State == State.ReminderSentWaitingForKey && r.StartDate.Date == DateTime.Today) == 1)
             {
                 reservation = reservations.Single(r => r.State == State.ReminderSentWaitingForKey && r.StartDate.Date == DateTime.Today);
-            } 
+            }
             // Only one active reservation today - eg. user has two reservations, one today, one in the future and on the morning drops off the keys before the reminder
             else if (reservations.Count(r => r.StartDate.Date == DateTime.Today) == 1)
             {
