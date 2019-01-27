@@ -169,7 +169,7 @@ namespace CarWash.PWA.Controllers
                 return BadRequest("Reservation can be made to slots only.");
 
             // Checks if the date/time is blocked
-            if (await IsBlocked(reservation.StartDate, reservation.EndDate))
+            if (await IsBlocked(dbReservation.StartDate, dbReservation.EndDate))
                 return BadRequest("This time is blocked.");
 
             // Check if there is enough time on that day
