@@ -25,14 +25,16 @@ namespace CarWash.PWA.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly User _user;
+        private readonly IEmailService _emailService;
         private readonly ICalendarService _calendarService;
         private readonly TelemetryClient _telemetryClient;
 
         /// <inheritdoc />
-        public BlockersController(ApplicationDbContext context, IUsersController usersController, ICalendarService calendarService)
+        public BlockersController(ApplicationDbContext context, IUsersController usersController, IEmailService emailService, ICalendarService calendarService)
         {
             _context = context;
             _user = usersController.GetCurrentUser();
+            _emailService = emailService;
             _calendarService = calendarService;
             _telemetryClient = new TelemetryClient();
         }
@@ -139,7 +141,7 @@ Sorry for the inconvenience!"
 
                 try
                 {
-                    await email.Send();
+                    await _emailService.Send(email);
 
                     // Delete calendar event using Microsoft Graph
                     await _calendarService.DeleteEventAsync(reservation);

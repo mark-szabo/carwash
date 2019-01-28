@@ -66,6 +66,7 @@ namespace CarWash.PWA
             services.AddSingleton(config);
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<IUsersController, UsersController>();
+            services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ICalendarService, CalendarService>();
             services.AddScoped<IPushService, PushService>();
 
@@ -283,8 +284,6 @@ namespace CarWash.PWA
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
-
-            serviceProvider.ConfigureEmailProvider(config);
 
             app.Use(async (context, next) =>
             {

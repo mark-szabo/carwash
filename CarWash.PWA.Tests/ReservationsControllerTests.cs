@@ -913,6 +913,21 @@ namespace CarWash.PWA.Tests
             Assert.IsType<BadRequestObjectResult>(result.Result);
         }
 
+        [Fact]
+        public async Task DeleteReservation_ByDefault_DeletesReservation()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.DeleteReservation(reservation.Id);
+            var notExistentReservation = await dbContext.Reservation.AsNoTracking().FirstOrDefaultAsync(r => r.VehiclePlateNumber == "TEST01");
+
+            Assert.IsType<ActionResult<ReservationViewModel>>(result);
+            Assert.IsType<OkObjectResult>(result.Result);
+            Assert.Null(notExistentReservation);
+        }
+
         private static ApplicationDbContext CreateInMemoryDbContext()
         {
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
@@ -963,7 +978,7 @@ namespace CarWash.PWA.Tests
                 StartDate = new DateTime(2019, 11, 06, 08, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(2019, 11, 06, 11, 00, 00, DateTimeKind.Local),
                 Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
-                TimeRequirement= 12,
+                TimeRequirement = 12,
                 Private = false,
             });
             dbContext.Reservation.Add(new Reservation
@@ -1030,6 +1045,7 @@ namespace CarWash.PWA.Tests
         private static ReservationsController CreateControllerStub(ApplicationDbContext dbContext, string email = JOHN_EMAIL)
         {
             var configurationStub = CreateConfigurationStub();
+            var emailServiceStub = new Mock<IEmailService>();
             var calendarServiceStub = new Mock<ICalendarService>();
             var pushServiceStub = new Mock<IPushService>();
             var user = dbContext.Users.Single(u => u.Email == email);
@@ -1040,6 +1056,7 @@ namespace CarWash.PWA.Tests
                 configurationStub,
                 dbContext,
                 userControllerStub.Object,
+                emailServiceStub.Object,
                 calendarServiceStub.Object,
                 pushServiceStub.Object);
         }

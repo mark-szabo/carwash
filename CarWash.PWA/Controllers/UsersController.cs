@@ -12,6 +12,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using User = CarWash.ClassLibrary.Models.User;
 using CarWash.PWA.Attributes;
+using CarWash.PWA.Services;
 
 namespace CarWash.PWA.Controllers
 {
@@ -27,11 +28,13 @@ namespace CarWash.PWA.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly User _user;
+        private readonly IEmailService _emailService;
 
         /// <inheritdoc />
-        public UsersController(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor)
+        public UsersController(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
 
             // Check if request is coming from an authorized service application.
             var serviceAppId = httpContextAccessor.HttpContext.User.FindFirstValue("appid");
@@ -277,7 +280,7 @@ Please keep in mind, that we are required to continue storing your previous rese
             try
             {
                 await _context.SaveChangesAsync();
-                await email.Send();
+                await _emailService.Send(email);
             }
             catch (DbUpdateConcurrencyException)
             {

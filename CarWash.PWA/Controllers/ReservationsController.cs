@@ -30,16 +30,18 @@ namespace CarWash.PWA.Controllers
         private readonly CarWashConfiguration _configuration;
         private readonly ApplicationDbContext _context;
         private readonly User _user;
+        private readonly IEmailService _emailService;
         private readonly ICalendarService _calendarService;
         private readonly IPushService _pushService;
         private readonly TelemetryClient _telemetryClient;
 
         /// <inheritdoc />
-        public ReservationsController(CarWashConfiguration configuration, ApplicationDbContext context, IUsersController usersController, ICalendarService calendarService, IPushService pushService)
+        public ReservationsController(CarWashConfiguration configuration, ApplicationDbContext context, IUsersController usersController, IEmailService emailService, ICalendarService calendarService, IPushService pushService)
         {
             _configuration = configuration;
             _context = context;
             _user = usersController.GetCurrentUser();
+            _emailService = emailService;
             _calendarService = calendarService;
             _pushService = pushService;
             _telemetryClient = new TelemetryClient();
@@ -669,7 +671,7 @@ namespace CarWash.PWA.Controllers
                         Subject = reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!",
                         Body = $"You can find it here: {reservation.Location}",
                     };
-                    await email.Send();
+                    await _emailService.Send(email);
                     break;
                 case NotificationChannel.Push:
                     var notification = new Notification

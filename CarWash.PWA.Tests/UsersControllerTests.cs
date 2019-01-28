@@ -1,6 +1,7 @@
 ﻿using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using CarWash.PWA.Controllers;
+using CarWash.PWA.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -26,8 +27,9 @@ namespace CarWash.PWA.Tests
             var dbContext = CreateInMemoryDbContext();
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
             httpContextAccessorStub.SetupGet(s => s.HttpContext.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new List<Claim> { })));
+            var emailServiceStub = new Mock<IEmailService>();
 
-            Assert.Throws<Exception>(() => new UsersController(dbContext, httpContextAccessorStub.Object));
+            Assert.Throws<Exception>(() => new UsersController(dbContext, httpContextAccessorStub.Object, emailServiceStub.Object));
         }
 
         [Fact]
@@ -37,7 +39,8 @@ namespace CarWash.PWA.Tests
             var john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
             httpContextAccessorStub.SetupGet(s => s.HttpContext.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new List<Claim> { new Claim(ClaimTypes.Upn, JOHN_EMAIL) })));
-            var controller = new UsersController(dbContext, httpContextAccessorStub.Object);
+            var emailServiceStub = new Mock<IEmailService>();
+            var controller = new UsersController(dbContext, httpContextAccessorStub.Object, emailServiceStub.Object);
 
             var result = controller.GetCurrentUser();
 
@@ -52,7 +55,8 @@ namespace CarWash.PWA.Tests
             var john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
             httpContextAccessorStub.SetupGet(s => s.HttpContext.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new List<Claim> { new Claim(ClaimTypes.Upn, JOHN_EMAIL) })));
-            var controller = new UsersController(dbContext, httpContextAccessorStub.Object);
+            var emailServiceStub = new Mock<IEmailService>();
+            var controller = new UsersController(dbContext, httpContextAccessorStub.Object, emailServiceStub.Object);
 
             var result = controller.GetMe();
             var ok = (OkObjectResult)result.Result;
@@ -71,7 +75,8 @@ namespace CarWash.PWA.Tests
             var john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
             httpContextAccessorStub.SetupGet(s => s.HttpContext.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new List<Claim> { new Claim(ClaimTypes.Upn, "fakeemailaddress") })));
-            var controller = new UsersController(dbContext, httpContextAccessorStub.Object);
+            var emailServiceStub = new Mock<IEmailService>();
+            var controller = new UsersController(dbContext, httpContextAccessorStub.Object, emailServiceStub.Object);
 
             var result = controller.GetMe();
 
@@ -158,7 +163,8 @@ namespace CarWash.PWA.Tests
             var john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
             httpContextAccessorStub.SetupGet(s => s.HttpContext.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new List<Claim> { new Claim(ClaimTypes.Upn, ADMIN_EMAIL) })));
-            var controller = new UsersController(dbContext, httpContextAccessorStub.Object);
+            var emailServiceStub = new Mock<IEmailService>();
+            var controller = new UsersController(dbContext, httpContextAccessorStub.Object, emailServiceStub.Object);
 
             var result = await controller.GetUser(john.Id);
             var ok = (OkObjectResult)result.Result;
@@ -177,7 +183,8 @@ namespace CarWash.PWA.Tests
             var john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
             httpContextAccessorStub.SetupGet(s => s.HttpContext.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new List<Claim> { new Claim(ClaimTypes.Upn, JOHN_EMAIL) })));
-            var controller = new UsersController(dbContext, httpContextAccessorStub.Object);
+            var emailServiceStub = new Mock<IEmailService>();
+            var controller = new UsersController(dbContext, httpContextAccessorStub.Object, emailServiceStub.Object);
 
             var result = await controller.GetUser(john.Id);
             var ok = (OkObjectResult)result.Result;
@@ -196,7 +203,8 @@ namespace CarWash.PWA.Tests
             var admin = dbContext.Users.Single(u => u.Email == ADMIN_EMAIL);
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
             httpContextAccessorStub.SetupGet(s => s.HttpContext.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new List<Claim> { new Claim(ClaimTypes.Upn, JOHN_EMAIL) })));
-            var controller = new UsersController(dbContext, httpContextAccessorStub.Object);
+            var emailServiceStub = new Mock<IEmailService>();
+            var controller = new UsersController(dbContext, httpContextAccessorStub.Object, emailServiceStub.Object);
 
             var result = await controller.GetUser(admin.Id);
 
@@ -213,7 +221,8 @@ namespace CarWash.PWA.Tests
             var john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
             httpContextAccessorStub.SetupGet(s => s.HttpContext.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new List<Claim> { new Claim(ClaimTypes.Upn, JOHN_EMAIL) })));
-            var controller = new UsersController(dbContext, httpContextAccessorStub.Object);
+            var emailServiceStub = new Mock<IEmailService>();
+            var controller = new UsersController(dbContext, httpContextAccessorStub.Object, emailServiceStub.Object);
 
             var result = await controller.PutSettings("calendarintegration", value);
             john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
@@ -232,7 +241,8 @@ namespace CarWash.PWA.Tests
             var john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
             httpContextAccessorStub.SetupGet(s => s.HttpContext.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new List<Claim> { new Claim(ClaimTypes.Upn, JOHN_EMAIL) })));
-            var controller = new UsersController(dbContext, httpContextAccessorStub.Object);
+            var emailServiceStub = new Mock<IEmailService>();
+            var controller = new UsersController(dbContext, httpContextAccessorStub.Object, emailServiceStub.Object);
 
             var result = await controller.PutSettings("notificationchannel", (long)value);
             john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
@@ -285,21 +295,23 @@ namespace CarWash.PWA.Tests
             Assert.NotNull(ok.Value);
         }
 
-        //[Fact]
-        //public async Task DeleteUser_ByDefault_DeletesUser()
-        //{
-        //    var dbContext = CreateInMemoryDbContext();
-        //    var john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
-        //    var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
-        //    httpContextAccessorStub.SetupGet(s => s.HttpContext.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new List<Claim> { new Claim(ClaimTypes.Upn, JOHN_EMAIL) })));
-        //    var controller = new UsersController(dbContext, httpContextAccessorStub.Object);
+        [Fact]
+        public async Task DeleteUser_ByDefault_DeletesUser()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
+            var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
+            httpContextAccessorStub.SetupGet(s => s.HttpContext.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new List<Claim> { new Claim(ClaimTypes.Upn, JOHN_EMAIL) })));
+            var emailServiceStub = new Mock<IEmailService>();
+            var controller = new UsersController(dbContext, httpContextAccessorStub.Object, emailServiceStub.Object);
 
-        //    var result = await controller.DeleteUser(john.Id);
-        //    var notExistentJohn = dbContext.Users.SingleOrDefault(u => u.Email == JOHN_EMAIL);
+            var result = await controller.DeleteUser(john.Id);
+            var notExistentJohn = dbContext.Users.SingleOrDefault(u => u.Email == JOHN_EMAIL);
 
-        //    Assert.IsType<OkObjectResult>(result);
-        //    Assert.Null(notExistentJohn);
-        //}
+            Assert.IsType<ActionResult<UserViewModel>>(result);
+            Assert.IsType<OkObjectResult>(result.Result);
+            Assert.Null(notExistentJohn);
+        }
 
         private static ApplicationDbContext CreateInMemoryDbContext()
         {
@@ -351,8 +363,9 @@ namespace CarWash.PWA.Tests
             var dbContext = CreateInMemoryDbContext();
             var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
             httpContextAccessorStub.SetupGet(s => s.HttpContext.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new List<Claim> { new Claim(ClaimTypes.Upn, userEmail) })));
+            var emailServiceStub = new Mock<IEmailService>();
 
-            return new UsersController(dbContext, httpContextAccessorStub.Object);
+            return new UsersController(dbContext, httpContextAccessorStub.Object, emailServiceStub.Object);
         }
     }
 }
