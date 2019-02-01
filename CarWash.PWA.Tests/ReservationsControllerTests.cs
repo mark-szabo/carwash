@@ -928,6 +928,138 @@ namespace CarWash.PWA.Tests
             Assert.Null(notExistentReservation);
         }
 
+        [Fact]
+        public async Task GetCompanyReservations_AsAdmin_ReturnsAListOfReservations()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext, ADMIN_EMAIL);
+
+            var result = await controller.GetCompanyReservations();
+            var ok = (OkObjectResult)result.Result;
+            var reservations = (IEnumerable<AdminReservationViewModel>)ok.Value;
+
+            Assert.IsType<ActionResult<IEnumerable<AdminReservationViewModel>>>(result);
+            Assert.IsType<OkObjectResult>(result.Result);
+            Assert.IsAssignableFrom<IEnumerable<AdminReservationViewModel>>(ok.Value);
+            Assert.NotEmpty(reservations);
+            const int NUMBER_OF_COMPANY_RESERVATIONS_NOT_COUNTING_ADMINS_OWN = 2;
+            Assert.Equal(NUMBER_OF_COMPANY_RESERVATIONS_NOT_COUNTING_ADMINS_OWN, reservations.Count());
+        }
+
+        [Fact]
+        public async Task GetCompanyReservations_AsNotAdmin_ReturnsForbid()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.GetCompanyReservations();
+
+            Assert.IsType<ActionResult<IEnumerable<AdminReservationViewModel>>>(result);
+            Assert.IsType<ForbidResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task GetBacklog_AsCarWashAdmin_ReturnsAListOfReservations()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.GetBacklog();
+            var ok = (OkObjectResult)result.Result;
+            var reservations = (IEnumerable<AdminReservationViewModel>)ok.Value;
+
+            Assert.IsType<ActionResult<IEnumerable<AdminReservationViewModel>>>(result);
+            Assert.IsType<OkObjectResult>(result.Result);
+            Assert.IsAssignableFrom<IEnumerable<AdminReservationViewModel>>(ok.Value);
+            Assert.NotEmpty(reservations);
+            const int NUMBER_OF_NOT_DONE_RESERVATIONS = 4;
+            Assert.Equal(NUMBER_OF_NOT_DONE_RESERVATIONS, reservations.Count());
+        }
+
+        [Fact]
+        public async Task GetBacklog_AsNotCarWashAdmin_ReturnsForbid()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.GetBacklog();
+
+            Assert.IsType<ActionResult<IEnumerable<AdminReservationViewModel>>>(result);
+            Assert.IsType<ForbidResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task ConfirmDropoff_ByDefault_ReturnsNoContent()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            const string LOCATION = "M/-3/180";
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.ConfirmDropoff(reservation.Id, LOCATION);
+
+            Assert.IsType<NoContentResult>(result);
+            var updatedReservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            Assert.Equal(LOCATION, updatedReservation.Location);
+            Assert.Equal(State.DropoffAndLocationConfirmed, updatedReservation.State);
+        }
+
+        [Fact]
+        public async Task ConfirmDropoff_WithNoLocation_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.ConfirmDropoff(reservation.Id, null);
+            
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task ConfirmDropoff_WithInvalidId_ReturnsNotFound()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            const string LOCATION = "M/-3/180";
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.ConfirmDropoff("invalid id", LOCATION);
+            
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task ConfirmDropoff_OfOtherUserAsNotAdmin_ReturnsForbid()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var admin = await dbContext.Users.SingleAsync(u => u.Email == ADMIN_EMAIL);
+            var adminReservation = await dbContext.Reservation.FirstAsync(r => r.UserId == admin.Id);
+            const string LOCATION = "M/-3/180";
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.ConfirmDropoff(adminReservation.Id, LOCATION);
+            
+            Assert.IsType<ForbidResult>(result);
+        }
+
+        [Fact]
+        public async Task ConfirmDropoff_OfOtherUserAsAdmin_ReturnsNoContent()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var john = await dbContext.Users.SingleAsync(u => u.Email == JOHN_EMAIL);
+            var johnReservation = await dbContext.Reservation.FirstAsync(r => r.UserId == john.Id);
+            const string LOCATION = "M/-3/180";
+            var controller = CreateControllerStub(dbContext, ADMIN_EMAIL);
+
+            var result = await controller.ConfirmDropoff(johnReservation.Id, LOCATION);
+
+            Assert.IsType<NoContentResult>(result);
+            var updatedReservation = await dbContext.Reservation.FirstAsync(r => r.UserId == john.Id);
+            Assert.Equal(LOCATION, updatedReservation.Location);
+            Assert.Equal(State.DropoffAndLocationConfirmed, updatedReservation.State);
+        }
+
+
         private static ApplicationDbContext CreateInMemoryDbContext()
         {
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
