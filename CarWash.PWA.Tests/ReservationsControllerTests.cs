@@ -1,4 +1,4 @@
-﻿using CarWash.ClassLibrary.Enums;
+using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Controllers;
@@ -18,6 +18,7 @@ namespace CarWash.PWA.Tests
     {
         private const string JOHN_EMAIL = "john.doe@test.com";
         private const string JANE_EMAIL = "jane.doe@test.com";
+        private const string JOHNNY_EMAIL = "johnny.doe@test.com";
         private const string ADMIN_EMAIL = "admin@test.com";
         private const string CARWASH_ADMIN_EMAIL = "carwash@test.com";
 
@@ -943,7 +944,7 @@ namespace CarWash.PWA.Tests
             Assert.IsType<OkObjectResult>(result.Result);
             Assert.IsAssignableFrom<IEnumerable<AdminReservationViewModel>>(ok.Value);
             Assert.NotEmpty(reservations);
-            const int NUMBER_OF_COMPANY_RESERVATIONS_NOT_COUNTING_ADMINS_OWN = 2;
+            const int NUMBER_OF_COMPANY_RESERVATIONS_NOT_COUNTING_ADMINS_OWN = 6;
             Assert.Equal(NUMBER_OF_COMPANY_RESERVATIONS_NOT_COUNTING_ADMINS_OWN, reservations.Count());
         }
 
@@ -973,8 +974,8 @@ namespace CarWash.PWA.Tests
             Assert.IsType<OkObjectResult>(result.Result);
             Assert.IsAssignableFrom<IEnumerable<AdminReservationViewModel>>(ok.Value);
             Assert.NotEmpty(reservations);
-            const int NUMBER_OF_NOT_DONE_RESERVATIONS = 4;
-            Assert.Equal(NUMBER_OF_NOT_DONE_RESERVATIONS, reservations.Count());
+            const int NUMBER_OF_ALL_RESERVATIONS_EXCEPT_PAST_DONE = 8;
+            Assert.Equal(NUMBER_OF_ALL_RESERVATIONS_EXCEPT_PAST_DONE, reservations.Count());
         }
 
         [Fact]
@@ -1286,7 +1287,7 @@ namespace CarWash.PWA.Tests
         }
 
         [Fact]
-        public async Task ConfirmDropoffByEmail_WithConflictAndPlateNotSpecified_ReturnsConflictt()
+        public async Task ConfirmDropoffByEmail_WithConflictAndPlateNotSpecified_ReturnsConflict()
         {
             var dbContext = CreateInMemoryDbContext();
             var admin = await dbContext.Users.SingleAsync(u => u.Email == ADMIN_EMAIL);
@@ -1319,7 +1320,7 @@ namespace CarWash.PWA.Tests
         }
 
         [Fact]
-        public async Task ConfirmDropoffByEmail_WithConflictAndPlateSpecified_ReturnsConflictt()
+        public async Task ConfirmDropoffByEmail_WithConflictAndPlateSpecified_ReturnsConflict()
         {
             var dbContext = CreateInMemoryDbContext();
             var admin = await dbContext.Users.SingleAsync(u => u.Email == ADMIN_EMAIL);
@@ -1350,6 +1351,699 @@ namespace CarWash.PWA.Tests
             Assert.IsType<ConflictObjectResult>(result);
             var message = ((ConflictObjectResult)result).Value;
             Assert.Equal("More than one reservation found where the reservation state is submitted or waiting for key.", message);
+        }
+
+        [Fact]
+        public async Task StartWash_AsCarWashAdmin_ReturnsNoContent()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.DropoffAndLocationConfirmed);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.StartWash(reservation.Id);
+
+            Assert.IsType<NoContentResult>(result);
+            var updatedReservation = await dbContext.Reservation.FindAsync(reservation.Id);
+            Assert.Equal(State.WashInProgress, updatedReservation.State);
+        }
+
+        [Fact]
+        public async Task StartWash_AsNotCarWashAdmin_ReturnsForbid()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.DropoffAndLocationConfirmed);
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.StartWash(reservation.Id);
+
+            Assert.IsType<ForbidResult>(result);
+        }
+
+        [Fact]
+        public async Task StartWash_WithNoId_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.StartWash(null);
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task StartWash_WithInvalidId_ReturnsNotFound()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.DropoffAndLocationConfirmed);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.StartWash("invalid id");
+
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task CompleteWash_AsCarWashAdmin_ReturnsNoContent()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress && !r.Private);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.CompleteWash(reservation.Id);
+
+            Assert.IsType<NoContentResult>(result);
+            var updatedReservation = await dbContext.Reservation.FindAsync(reservation.Id);
+            Assert.Equal(State.Done, updatedReservation.State);
+        }
+
+        [Fact]
+        public async Task CompleteWash_ForPrivateCarAsCarWashAdmin_ReturnsNoContent()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress && r.Private);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.CompleteWash(reservation.Id);
+
+            Assert.IsType<NoContentResult>(result);
+            var updatedReservation = await dbContext.Reservation.FindAsync(reservation.Id);
+            Assert.Equal(State.NotYetPaid, updatedReservation.State);
+        }
+
+        [Fact]
+        public async Task CompleteWash_AsNotCarWashAdmin_ReturnsForbid()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.CompleteWash(reservation.Id);
+
+            Assert.IsType<ForbidResult>(result);
+        }
+
+        [Fact]
+        public async Task CompleteWash_WithNoId_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.CompleteWash(null);
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task CompleteWash_WithInvalidId_ReturnsNotFound()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.CompleteWash("invalid id");
+
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task CompleteWash_ForUserWithDisabledNotifications_DoesNotSendsNotification()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var johnny = await dbContext.Users.SingleAsync(u => u.Email == JOHNNY_EMAIL);
+            johnny.NotificationChannel = NotificationChannel.Disabled;
+            await dbContext.SaveChangesAsync();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
+            var emailServiceMock = new Mock<IEmailService>();
+            emailServiceMock.Setup(m => m.Send(It.IsAny<Email>()));
+            var pushServiceMock = new Mock<IPushService>();
+            pushServiceMock.Setup(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>()));
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.CompleteWash(reservation.Id);
+
+            Assert.IsType<NoContentResult>(result);
+            emailServiceMock.Verify(m => m.Send(It.IsAny<Email>()), Times.Never());
+            pushServiceMock.Verify(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>()), Times.Never());
+        }
+
+        [Fact]
+        public async Task CompleteWash_ForUserWithEmailNotifications_SendsEmailNotification()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var johnny = await dbContext.Users.SingleAsync(u => u.Email == JOHNNY_EMAIL);
+            johnny.NotificationChannel = NotificationChannel.Email;
+            await dbContext.SaveChangesAsync();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
+            var emailServiceMock = new Mock<IEmailService>();
+            emailServiceMock.Setup(m => m.Send(It.IsAny<Email>())).Returns(Task.CompletedTask);
+            var pushServiceMock = new Mock<IPushService>();
+            pushServiceMock.Setup(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>())).Returns(Task.CompletedTask);
+            var calendarServiceStub = new Mock<ICalendarService>();
+            var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
+            var userControllerStub = new Mock<IUsersController>();
+            userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object);
+
+            var result = await controller.CompleteWash(reservation.Id);
+
+            Assert.IsType<NoContentResult>(result);
+            emailServiceMock.Verify(m => m.Send(It.IsAny<Email>()), Times.Once());
+            pushServiceMock.Verify(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>()), Times.Never());
+        }
+
+        [Fact]
+        public async Task CompleteWash_ForUserWithNotificationsNotSet_SendsEmailNotification()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var johnny = await dbContext.Users.SingleAsync(u => u.Email == JOHNNY_EMAIL);
+            johnny.NotificationChannel = NotificationChannel.NotSet;
+            await dbContext.SaveChangesAsync();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
+            var emailServiceMock = new Mock<IEmailService>();
+            emailServiceMock.Setup(m => m.Send(It.IsAny<Email>())).Returns(Task.CompletedTask);
+            var pushServiceMock = new Mock<IPushService>();
+            pushServiceMock.Setup(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>())).Returns(Task.CompletedTask);
+            var calendarServiceStub = new Mock<ICalendarService>();
+            var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
+            var userControllerStub = new Mock<IUsersController>();
+            userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object);
+
+            var result = await controller.CompleteWash(reservation.Id);
+
+            Assert.IsType<NoContentResult>(result);
+            emailServiceMock.Verify(m => m.Send(It.IsAny<Email>()), Times.Once());
+            pushServiceMock.Verify(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>()), Times.Never());
+        }
+
+        [Fact]
+        public async Task CompleteWash_ForUserWithPushNotifications_SendsPushNotification()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var johnny = await dbContext.Users.SingleAsync(u => u.Email == JOHNNY_EMAIL);
+            johnny.NotificationChannel = NotificationChannel.Push;
+            await dbContext.SaveChangesAsync();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
+            var emailServiceMock = new Mock<IEmailService>();
+            emailServiceMock.Setup(m => m.Send(It.IsAny<Email>())).Returns(Task.CompletedTask);
+            var pushServiceMock = new Mock<IPushService>();
+            pushServiceMock.Setup(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>())).Returns(Task.CompletedTask);
+            var calendarServiceStub = new Mock<ICalendarService>();
+            var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
+            var userControllerStub = new Mock<IUsersController>();
+            userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object);
+
+            var result = await controller.CompleteWash(reservation.Id);
+
+            Assert.IsType<NoContentResult>(result);
+            emailServiceMock.Verify(m => m.Send(It.IsAny<Email>()), Times.Never());
+            pushServiceMock.Verify(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>()), Times.Once());
+        }
+
+        [Fact]
+        public async Task ConfirmPayment_AsCarWashAdmin_ReturnsNoContent()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.NotYetPaid);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.ConfirmPayment(reservation.Id);
+
+            Assert.IsType<NoContentResult>(result);
+            var updatedReservation = await dbContext.Reservation.FindAsync(reservation.Id);
+            Assert.Equal(State.Done, updatedReservation.State);
+        }
+
+        [Fact]
+        public async Task ConfirmPayment_AsNotCarWashAdmin_ReturnsForbid()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.NotYetPaid);
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.ConfirmPayment(reservation.Id);
+
+            Assert.IsType<ForbidResult>(result);
+        }
+
+        [Fact]
+        public async Task ConfirmPayment_WithNoId_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.ConfirmPayment(null);
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task ConfirmPayment_WithInvalidId_ReturnsNotFound()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.NotYetPaid);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.ConfirmPayment("invalid id");
+
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task SetState_AsCarWashAdmin_ReturnsNoContent()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.SetState(reservation.Id, State.DropoffAndLocationConfirmed);
+
+            Assert.IsType<NoContentResult>(result);
+            var updatedReservation = await dbContext.Reservation.FindAsync(reservation.Id);
+            Assert.Equal(State.DropoffAndLocationConfirmed, updatedReservation.State);
+        }
+
+        [Fact]
+        public async Task SetState_AsNotCarWashAdmin_ReturnsForbid()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.SetState(reservation.Id, State.DropoffAndLocationConfirmed);
+
+            Assert.IsType<ForbidResult>(result);
+        }
+
+        [Fact]
+        public async Task SetState_WithNoId_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.SetState(null, State.DropoffAndLocationConfirmed);
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task SetState_WithInvalidId_ReturnsNotFound()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.SetState("invalid id", State.DropoffAndLocationConfirmed);
+
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task AddCarwashComment_AsCarWashAdmin_ReturnsNoContent()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+            const string COMMENT = "test";
+
+            var result = await controller.AddCarwashComment(reservation.Id, COMMENT);
+
+            Assert.IsType<NoContentResult>(result);
+            var updatedReservation = await dbContext.Reservation.FindAsync(reservation.Id);
+            Assert.Equal(COMMENT, updatedReservation.CarwashComment);
+        }
+
+        [Fact]
+        public async Task AddCarwashComment_AsNotCarWashAdmin_ReturnsForbid()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
+            var controller = CreateControllerStub(dbContext);
+            const string COMMENT = "test";
+
+            var result = await controller.AddCarwashComment(reservation.Id, COMMENT);
+
+            Assert.IsType<ForbidResult>(result);
+        }
+
+        [Fact]
+        public async Task AddCarwashComment_WithNoId_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+            const string COMMENT = "test";
+
+            var result = await controller.AddCarwashComment(null, COMMENT);
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task AddCarwashComment_WithNoComment_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.AddCarwashComment(reservation.Id, null);
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task AddCarwashComment_WithInvalidId_ReturnsNotFound()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+            const string COMMENT = "test";
+
+            var result = await controller.AddCarwashComment("invalid id", COMMENT);
+
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task AddCarwashComment_ForUserWithPushNotifications_SendsPushNotification()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var johnny = await dbContext.Users.SingleAsync(u => u.Email == JOHNNY_EMAIL);
+            johnny.NotificationChannel = NotificationChannel.Push;
+            await dbContext.SaveChangesAsync();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
+            var emailServiceMock = new Mock<IEmailService>();
+            emailServiceMock.Setup(m => m.Send(It.IsAny<Email>())).Returns(Task.CompletedTask);
+            var pushServiceMock = new Mock<IPushService>();
+            pushServiceMock.Setup(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>())).Returns(Task.CompletedTask);
+            var calendarServiceStub = new Mock<ICalendarService>();
+            var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
+            var userControllerStub = new Mock<IUsersController>();
+            userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object);
+            const string COMMENT = "test";
+
+            var result = await controller.AddCarwashComment(reservation.Id, COMMENT);
+
+            Assert.IsType<NoContentResult>(result);
+            emailServiceMock.Verify(m => m.Send(It.IsAny<Email>()), Times.Never());
+            pushServiceMock.Verify(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>()), Times.Once());
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task SetMpv_AsCarWashAdmin_ReturnsNoContent(bool mpv)
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.DropoffAndLocationConfirmed);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.SetMpv(reservation.Id, mpv);
+
+            Assert.IsType<NoContentResult>(result);
+            var updatedReservation = await dbContext.Reservation.FindAsync(reservation.Id);
+            Assert.Equal(mpv, updatedReservation.Mpv);
+        }
+
+        [Fact]
+        public async Task SetMpv_AsNotCarWashAdmin_ReturnsForbid()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.DropoffAndLocationConfirmed);
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.SetMpv(reservation.Id, true);
+
+            Assert.IsType<ForbidResult>(result);
+        }
+
+        [Fact]
+        public async Task SetMpv_WithNoId_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.SetMpv(null, true);
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task SetMpv_WithInvalidId_ReturnsNotFound()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.DropoffAndLocationConfirmed);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.SetMpv("invalid id", true);
+
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task UpdateServices_AsCarWashAdmin_ReturnsNoContent()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.DropoffAndLocationConfirmed);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+            var SERVICES = new List<ServiceType> { ServiceType.Exterior, ServiceType.PreWash, ServiceType.WheelCleaning };
+
+            var result = await controller.UpdateServices(reservation.Id, SERVICES);
+
+            Assert.IsType<NoContentResult>(result);
+            var updatedReservation = await dbContext.Reservation.FindAsync(reservation.Id);
+            Assert.Equal(SERVICES, updatedReservation.Services);
+        }
+
+        [Fact]
+        public async Task UpdateServices_AsNotCarWashAdmin_ReturnsForbid()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.DropoffAndLocationConfirmed);
+            var controller = CreateControllerStub(dbContext);
+            var SERVICES = new List<ServiceType> { ServiceType.Exterior, ServiceType.PreWash, ServiceType.WheelCleaning };
+
+            var result = await controller.UpdateServices(reservation.Id, SERVICES);
+
+            Assert.IsType<ForbidResult>(result);
+        }
+
+        [Fact]
+        public async Task UpdateServices_WithNoId_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+            var SERVICES = new List<ServiceType> { ServiceType.Exterior, ServiceType.PreWash, ServiceType.WheelCleaning };
+
+            var result = await controller.UpdateServices(null, SERVICES);
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task UpdateServices_WithNoService_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.DropoffAndLocationConfirmed);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.UpdateServices(reservation.Id, null);
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task UpdateServices_WithInvalidId_ReturnsNotFound()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.DropoffAndLocationConfirmed);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+            var SERVICES = new List<ServiceType> { ServiceType.Exterior, ServiceType.PreWash, ServiceType.WheelCleaning };
+
+            var result = await controller.UpdateServices("invalid id", SERVICES);
+
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task UpdateLocation_AsCarWashAdmin_ReturnsNoContent()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.DropoffAndLocationConfirmed);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+            const string LOCATION = "M/-1/15";
+
+            var result = await controller.UpdateLocation(reservation.Id, LOCATION);
+
+            Assert.IsType<NoContentResult>(result);
+            var updatedReservation = await dbContext.Reservation.FindAsync(reservation.Id);
+            Assert.Equal(LOCATION, updatedReservation.Location);
+        }
+
+        [Fact]
+        public async Task UpdateLocation_AsNotCarWashAdmin_ReturnsForbid()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.DropoffAndLocationConfirmed);
+            var controller = CreateControllerStub(dbContext);
+            const string LOCATION = "M/-1/15";
+
+            var result = await controller.UpdateLocation(reservation.Id, LOCATION);
+
+            Assert.IsType<ForbidResult>(result);
+        }
+
+        [Fact]
+        public async Task UpdateLocation_WithNoId_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+            const string LOCATION = "M/-1/15";
+
+            var result = await controller.UpdateLocation(null, LOCATION);
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task UpdateLocation_WithNoLocation_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.DropoffAndLocationConfirmed);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.UpdateLocation(reservation.Id, null);
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task UpdateLocation_WithInvalidId_ReturnsNotFound()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.DropoffAndLocationConfirmed);
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+            const string LOCATION = "M/-1/15";
+
+            var result = await controller.UpdateLocation("invalid id", LOCATION);
+
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public void GetObfuscatedReservations_ByDefault_ReturnsAListOfReservations()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext);
+
+            var result = controller.GetObfuscatedReservations();
+
+            Assert.NotEmpty(result);
+            const int NUMBER_OF_ALL_RESERVATIONS = 8;
+            Assert.Equal(NUMBER_OF_ALL_RESERVATIONS, result.Count());
+        }
+
+        [Fact]
+        public async Task GetNotAvailableDatesAndTimes_AsCarWashAdmin_ReturnsEmptyList()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.GetNotAvailableDatesAndTimes();
+
+            Assert.Empty(result.Dates);
+            Assert.Empty(result.Times);
+        }
+
+        [Fact]
+        public async Task GetNotAvailableDatesAndTimes_AsNotCarWashAdmin_ReturnsAListOfNotAvailableDatesAndTimes()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            await dbContext.Blocker.AddAsync(new Blocker
+            {
+                StartDate = new DateTime(2019, 11, 20, 00, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(2019, 11, 22, 23, 59, 59, DateTimeKind.Local),
+            });
+            await dbContext.SaveChangesAsync();
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.GetNotAvailableDatesAndTimes();
+
+            Assert.NotEmpty(result.Dates);
+            Assert.NotEmpty(result.Times);
+            Assert.True(result.Dates.Count() > 1);
+            Assert.True(result.Times.Count() > 1);
+        }
+
+        [Fact]
+        public async Task GetLastSettings_ByDefault_ReturnsLastSettings()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.GetLastSettings();
+            var ok = (OkObjectResult)result.Result;
+            var lastSettings = (LastSettingsViewModel)ok.Value;
+
+            Assert.IsType<ActionResult<LastSettingsViewModel>>(result);
+            Assert.IsType<OkObjectResult>(result.Result);
+            Assert.IsType<LastSettingsViewModel>(ok.Value);
+            Assert.Equal("TEST00", lastSettings.VehiclePlateNumber);
+            Assert.Equal("M/-1/11", lastSettings.Location);
+            Assert.Equal(new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior }, lastSettings.Services);
+        }
+
+        [Fact]
+        public async Task GetReservationCapacity_ByDefault_ReturnsAListOfSlotCapacity()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.GetReservationCapacity(new DateTime(2019, 12, 04));
+            var ok = (OkObjectResult)result.Result;
+            var slotCapacity = ((IEnumerable<ReservationCapacityViewModel>)ok.Value).ToList();
+
+            Assert.NotEmpty(slotCapacity);
+            Assert.Equal(3, slotCapacity.Count);
+            Assert.Equal(0, slotCapacity[0].FreeCapacity);
+            Assert.Equal(1, slotCapacity[1].FreeCapacity);
+            Assert.Equal(1, slotCapacity[2].FreeCapacity);
+        }
+
+        [Fact]
+        public async Task Export_AsCarWashAdmin_ReturnsFile()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.Export(new DateTime(2019, 01, 01), new DateTime(2019, 12, 31));
+
+            Assert.IsType<FileStreamResult>(result);
+            Assert.NotNull(result);
+        }
+
+        [Fact]
+        public async Task Export_AsAdmin_ReturnsFile()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext, ADMIN_EMAIL);
+
+            var result = await controller.Export(new DateTime(2019, 01, 01), new DateTime(2019, 12, 31));
+
+            Assert.IsType<FileStreamResult>(result);
+            Assert.NotNull(result);
+        }
+
+        [Fact]
+        public async Task Export_AsNotAdmin_ReturnsForbid()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.Export(new DateTime(2019, 01, 01), new DateTime(2019, 12, 31));
+
+            Assert.IsType<ForbidResult>(result);
         }
 
         private static ApplicationDbContext CreateInMemoryDbContext()
@@ -1383,6 +2077,16 @@ namespace CarWash.PWA.Tests
                 IsCarwashAdmin = false,
             };
             dbContext.Users.Add(jane);
+            var johnny = new User
+            {
+                Email = JOHNNY_EMAIL,
+                FirstName = "Johny",
+                LastName = "Doe",
+                Company = "contoso",
+                IsAdmin = false,
+                IsCarwashAdmin = false,
+            };
+            dbContext.Users.Add(johnny);
             var admin = new User
             {
                 Email = ADMIN_EMAIL,
@@ -1414,6 +2118,7 @@ namespace CarWash.PWA.Tests
                 Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
                 TimeRequirement = 12,
                 Private = false,
+                Location = "M/-1/11",
             });
             dbContext.Reservation.Add(new Reservation
             {
@@ -1425,6 +2130,50 @@ namespace CarWash.PWA.Tests
                 Services = new List<ServiceType> { ServiceType.Exterior },
                 TimeRequirement = 12,
                 Private = false,
+            });
+            dbContext.Reservation.Add(new Reservation
+            {
+                UserId = johnny.Id,
+                VehiclePlateNumber = "TEST11",
+                State = State.DropoffAndLocationConfirmed,
+                StartDate = new DateTime(2019, 11, 07, 08, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(2019, 11, 07, 11, 00, 00, DateTimeKind.Local),
+                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                TimeRequirement = 12,
+                Private = false,
+            });
+            dbContext.Reservation.Add(new Reservation
+            {
+                UserId = johnny.Id,
+                VehiclePlateNumber = "TEST12",
+                State = State.WashInProgress,
+                StartDate = new DateTime(2019, 11, 08, 08, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(2019, 11, 08, 11, 00, 00, DateTimeKind.Local),
+                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                TimeRequirement = 12,
+                Private = false,
+            });
+            dbContext.Reservation.Add(new Reservation
+            {
+                UserId = johnny.Id,
+                VehiclePlateNumber = "TEST13",
+                State = State.WashInProgress,
+                StartDate = new DateTime(2019, 11, 09, 08, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(2019, 11, 09, 11, 00, 00, DateTimeKind.Local),
+                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                TimeRequirement = 12,
+                Private = true,
+            });
+            dbContext.Reservation.Add(new Reservation
+            {
+                UserId = johnny.Id,
+                VehiclePlateNumber = "TEST14",
+                State = State.NotYetPaid,
+                StartDate = new DateTime(2019, 11, 10, 08, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(2019, 11, 10, 11, 00, 00, DateTimeKind.Local),
+                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                TimeRequirement = 12,
+                Private = true,
             });
             dbContext.Reservation.Add(new Reservation
             {

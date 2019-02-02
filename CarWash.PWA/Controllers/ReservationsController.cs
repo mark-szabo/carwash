@@ -1254,7 +1254,7 @@ namespace CarWash.PWA.Controllers
         [ProducesResponseType(typeof(FileStreamResult), 200)]
         [UserAction]
         [HttpGet, Route("export")]
-        public async Task<IActionResult> Export(DateTime? startDate, DateTime? endDate)
+        public async Task<IActionResult> Export(DateTime? startDate = null, DateTime? endDate = null)
         {
             var startDateNonNull = startDate ?? DateTime.Today.AddMonths(-1);
             var endDateNonNull = endDate ?? DateTime.Today;
