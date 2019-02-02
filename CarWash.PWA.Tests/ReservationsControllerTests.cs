@@ -17,6 +17,7 @@ namespace CarWash.PWA.Tests
     public class ReservationsControllerTests
     {
         private const string JOHN_EMAIL = "john.doe@test.com";
+        private const string JANE_EMAIL = "jane.doe@test.com";
         private const string ADMIN_EMAIL = "admin@test.com";
         private const string CARWASH_ADMIN_EMAIL = "carwash@test.com";
 
@@ -1012,7 +1013,7 @@ namespace CarWash.PWA.Tests
             var controller = CreateControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoff(reservation.Id, null);
-            
+
             Assert.IsType<BadRequestObjectResult>(result);
         }
 
@@ -1024,7 +1025,7 @@ namespace CarWash.PWA.Tests
             var controller = CreateControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoff("invalid id", LOCATION);
-            
+
             Assert.IsType<NotFoundResult>(result);
         }
 
@@ -1038,7 +1039,7 @@ namespace CarWash.PWA.Tests
             var controller = CreateControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoff(adminReservation.Id, LOCATION);
-            
+
             Assert.IsType<ForbidResult>(result);
         }
 
@@ -1059,6 +1060,297 @@ namespace CarWash.PWA.Tests
             Assert.Equal(State.DropoffAndLocationConfirmed, updatedReservation.State);
         }
 
+        [Fact]
+        public async Task ConfirmDropoffByEmail_WithNoEmail_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            const string LOCATION = "M/-3/180";
+            var model = new ConfirmDropoffByEmailViewModel
+            {
+                Location = LOCATION,
+            };
+            var controller = CreateServiceControllerStub(dbContext);
+
+            var result = await controller.ConfirmDropoffByEmail(model);
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task ConfirmDropoffByEmail_WithNoLocation_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var model = new ConfirmDropoffByEmailViewModel
+            {
+                Email = JOHN_EMAIL,
+            };
+            var controller = CreateServiceControllerStub(dbContext);
+
+            var result = await controller.ConfirmDropoffByEmail(model);
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task ConfirmDropoffByEmail_WithInvalidEmail_ReturnsNotFound()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            const string LOCATION = "M/-3/180";
+            var model = new ConfirmDropoffByEmailViewModel
+            {
+                Email = "invalid email",
+                Location = LOCATION,
+            };
+            var controller = CreateServiceControllerStub(dbContext);
+
+            var result = await controller.ConfirmDropoffByEmail(model);
+
+            Assert.IsType<NotFoundObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task ConfirmDropoffByEmail_WithNoReservations_ReturnsNotFound()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            const string LOCATION = "M/-3/180";
+            // Jane does not have any reservations.
+            var model = new ConfirmDropoffByEmailViewModel
+            {
+                Email = JANE_EMAIL,
+                Location = LOCATION,
+            };
+            var controller = CreateServiceControllerStub(dbContext);
+
+            var result = await controller.ConfirmDropoffByEmail(model);
+
+            Assert.IsType<NotFoundObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task ConfirmDropoffByEmail_WithOneActiveReservation_ReturnsNoContent()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservationIdToBeUpdated = (await dbContext.Reservation.SingleAsync(r => r.User.Email == JOHN_EMAIL && (r.State == State.SubmittedNotActual || r.State == State.ReminderSentWaitingForKey))).Id;
+            const string LOCATION = "M/-3/180";
+            // John has exactly one active reservation.
+            var model = new ConfirmDropoffByEmailViewModel
+            {
+                Email = JOHN_EMAIL,
+                Location = LOCATION,
+            };
+            var controller = CreateServiceControllerStub(dbContext);
+
+            var result = await controller.ConfirmDropoffByEmail(model);
+
+            Assert.IsType<NoContentResult>(result);
+            var updatedReservation = await dbContext.Reservation.FindAsync(reservationIdToBeUpdated);
+            Assert.Equal(LOCATION, updatedReservation.Location);
+            Assert.Equal(State.DropoffAndLocationConfirmed, updatedReservation.State);
+        }
+
+        [Fact]
+        public async Task ConfirmDropoffByEmail_WithOneReservationWaitingForKey_ReturnsNoContent()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var reservationIdToBeUpdated = (await dbContext.Reservation.SingleAsync(r => r.User.Email == JOHN_EMAIL && r.State == State.ReminderSentWaitingForKey)).Id;
+            var john = await dbContext.Users.SingleAsync(u => u.Email == JOHN_EMAIL);
+            await dbContext.Reservation.AddAsync(new Reservation
+            {
+                UserId = john.Id,
+                VehiclePlateNumber = "TEST01",
+                State = State.SubmittedNotActual,
+                StartDate = new DateTime(2019, 11, 05, 11, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(2019, 11, 05, 14, 00, 00, DateTimeKind.Local),
+                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Private = false,
+            });
+            await dbContext.SaveChangesAsync();
+            const string LOCATION = "M/-3/180";
+            // John has exactly one reservation waiting for key.
+            var model = new ConfirmDropoffByEmailViewModel
+            {
+                Email = JOHN_EMAIL,
+                Location = LOCATION,
+            };
+            var controller = CreateServiceControllerStub(dbContext);
+
+            var result = await controller.ConfirmDropoffByEmail(model);
+
+            Assert.IsType<NoContentResult>(result);
+            var updatedReservation = await dbContext.Reservation.FindAsync(reservationIdToBeUpdated);
+            Assert.Equal(LOCATION, updatedReservation.Location);
+            Assert.Equal(State.DropoffAndLocationConfirmed, updatedReservation.State);
+        }
+
+        [Fact]
+        public async Task ConfirmDropoffByEmail_WithOneReservationTodayWaitingForKey_ReturnsNoContent()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var john = await dbContext.Users.SingleAsync(u => u.Email == JOHN_EMAIL);
+            var today = DateTime.Today;
+            var reservationToBeUpdated = await dbContext.Reservation.AddAsync(new Reservation
+            {
+                UserId = john.Id,
+                VehiclePlateNumber = "TEST01",
+                State = State.ReminderSentWaitingForKey,
+                StartDate = new DateTime(today.Year, today.Month, today.Day, 11, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(today.Year, today.Month, today.Day, 14, 00, 00, DateTimeKind.Local),
+                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Private = false,
+            });
+            await dbContext.SaveChangesAsync();
+            const string LOCATION = "M/-3/180";
+            // John has two reservations waiting for key, but only one of those is today.
+            var model = new ConfirmDropoffByEmailViewModel
+            {
+                Email = JOHN_EMAIL,
+                Location = LOCATION,
+            };
+            var controller = CreateServiceControllerStub(dbContext);
+
+            var result = await controller.ConfirmDropoffByEmail(model);
+
+            Assert.IsType<NoContentResult>(result);
+            var updatedReservation = await dbContext.Reservation.FindAsync(reservationToBeUpdated.Entity.Id);
+            Assert.Equal(LOCATION, updatedReservation.Location);
+            Assert.Equal(State.DropoffAndLocationConfirmed, updatedReservation.State);
+        }
+
+        [Fact]
+        public async Task ConfirmDropoffByEmail_WithOneActiveReservationToday_ReturnsNoContent()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var admin = await dbContext.Users.SingleAsync(u => u.Email == ADMIN_EMAIL);
+            var today = DateTime.Today;
+            var reservationToBeUpdated = await dbContext.Reservation.AddAsync(new Reservation
+            {
+                UserId = admin.Id,
+                VehiclePlateNumber = "TEST02",
+                State = State.SubmittedNotActual,
+                StartDate = new DateTime(today.Year, today.Month, today.Day, 11, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(today.Year, today.Month, today.Day, 14, 00, 00, DateTimeKind.Local),
+                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Private = false,
+            });
+            await dbContext.SaveChangesAsync();
+            const string LOCATION = "M/-3/180";
+            // Admin has two reservations scheduled, but only one of those is today.
+            var model = new ConfirmDropoffByEmailViewModel
+            {
+                Email = ADMIN_EMAIL,
+                Location = LOCATION,
+            };
+            var controller = CreateServiceControllerStub(dbContext);
+
+            var result = await controller.ConfirmDropoffByEmail(model);
+
+            Assert.IsType<NoContentResult>(result);
+            var updatedReservation = await dbContext.Reservation.FindAsync(reservationToBeUpdated.Entity.Id);
+            Assert.Equal(LOCATION, updatedReservation.Location);
+            Assert.Equal(State.DropoffAndLocationConfirmed, updatedReservation.State);
+        }
+
+        [Fact]
+        public async Task ConfirmDropoffByEmail_WithPlateSpecified_ReturnsNoContent()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var admin = await dbContext.Users.SingleAsync(u => u.Email == ADMIN_EMAIL);
+            const string PLATE = "TEST05";
+            var reservationToBeUpdated = await dbContext.Reservation.AddAsync(new Reservation
+            {
+                UserId = admin.Id,
+                VehiclePlateNumber = PLATE,
+                State = State.SubmittedNotActual,
+                StartDate = new DateTime(2019, 12, 01, 11, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(2019, 12, 01, 14, 00, 00, DateTimeKind.Local),
+                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Private = false,
+            });
+            await dbContext.SaveChangesAsync();
+            const string LOCATION = "M/-3/180";
+            // Admin has two reservations scheduled, both in the future. But we specify the vehicle plate number which is unique among the active reservations of Admin.
+            var model = new ConfirmDropoffByEmailViewModel
+            {
+                Email = ADMIN_EMAIL,
+                Location = LOCATION,
+                VehiclePlateNumber = PLATE,
+            };
+            var controller = CreateServiceControllerStub(dbContext);
+
+            var result = await controller.ConfirmDropoffByEmail(model);
+
+            Assert.IsType<NoContentResult>(result);
+            var updatedReservation = await dbContext.Reservation.FindAsync(reservationToBeUpdated.Entity.Id);
+            Assert.Equal(LOCATION, updatedReservation.Location);
+            Assert.Equal(State.DropoffAndLocationConfirmed, updatedReservation.State);
+        }
+
+        [Fact]
+        public async Task ConfirmDropoffByEmail_WithConflictAndPlateNotSpecified_ReturnsConflictt()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var admin = await dbContext.Users.SingleAsync(u => u.Email == ADMIN_EMAIL);
+            const string PLATE = "TEST05";
+            var reservationToBeUpdated = await dbContext.Reservation.AddAsync(new Reservation
+            {
+                UserId = admin.Id,
+                VehiclePlateNumber = PLATE,
+                State = State.SubmittedNotActual,
+                StartDate = new DateTime(2019, 12, 01, 11, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(2019, 12, 01, 14, 00, 00, DateTimeKind.Local),
+                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Private = false,
+            });
+            await dbContext.SaveChangesAsync();
+            const string LOCATION = "M/-3/180";
+            // Admin has two reservations scheduled, both in the future. And we do not specify the vehicle plate number.
+            var model = new ConfirmDropoffByEmailViewModel
+            {
+                Email = ADMIN_EMAIL,
+                Location = LOCATION,
+            };
+            var controller = CreateServiceControllerStub(dbContext);
+
+            var result = await controller.ConfirmDropoffByEmail(model);
+
+            Assert.IsType<ConflictObjectResult>(result);
+            var message = ((ConflictObjectResult)result).Value;
+            Assert.Equal("More than one reservation found where the reservation state is submitted or waiting for key. Please specify vehicle plate number!", message);
+        }
+
+        [Fact]
+        public async Task ConfirmDropoffByEmail_WithConflictAndPlateSpecified_ReturnsConflictt()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var admin = await dbContext.Users.SingleAsync(u => u.Email == ADMIN_EMAIL);
+            const string PLATE = "TEST02";
+            var reservationToBeUpdated = await dbContext.Reservation.AddAsync(new Reservation
+            {
+                UserId = admin.Id,
+                VehiclePlateNumber = PLATE,
+                State = State.SubmittedNotActual,
+                StartDate = new DateTime(2019, 12, 01, 11, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(2019, 12, 01, 14, 00, 00, DateTimeKind.Local),
+                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Private = false,
+            });
+            await dbContext.SaveChangesAsync();
+            const string LOCATION = "M/-3/180";
+            // Admin has two reservations scheduled, both in the future. We do specify the vehicle plate number, but both of the active reservations have the same plate.
+            var model = new ConfirmDropoffByEmailViewModel
+            {
+                Email = ADMIN_EMAIL,
+                Location = LOCATION,
+                VehiclePlateNumber = PLATE,
+            };
+            var controller = CreateServiceControllerStub(dbContext);
+
+            var result = await controller.ConfirmDropoffByEmail(model);
+
+            Assert.IsType<ConflictObjectResult>(result);
+            var message = ((ConflictObjectResult)result).Value;
+            Assert.Equal("More than one reservation found where the reservation state is submitted or waiting for key.", message);
+        }
 
         private static ApplicationDbContext CreateInMemoryDbContext()
         {
@@ -1081,6 +1373,16 @@ namespace CarWash.PWA.Tests
                 IsCarwashAdmin = false,
             };
             dbContext.Users.Add(john);
+            var jane = new User
+            {
+                Email = JANE_EMAIL,
+                FirstName = "Jane",
+                LastName = "Doe",
+                Company = "contoso",
+                IsAdmin = false,
+                IsCarwashAdmin = false,
+            };
+            dbContext.Users.Add(jane);
             var admin = new User
             {
                 Email = ADMIN_EMAIL,
@@ -1183,6 +1485,24 @@ namespace CarWash.PWA.Tests
             var user = dbContext.Users.Single(u => u.Email == email);
             var userControllerStub = new Mock<IUsersController>();
             userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
+
+            return new ReservationsController(
+                configurationStub,
+                dbContext,
+                userControllerStub.Object,
+                emailServiceStub.Object,
+                calendarServiceStub.Object,
+                pushServiceStub.Object);
+        }
+
+        private static ReservationsController CreateServiceControllerStub(ApplicationDbContext dbContext)
+        {
+            var configurationStub = CreateConfigurationStub();
+            var emailServiceStub = new Mock<IEmailService>();
+            var calendarServiceStub = new Mock<ICalendarService>();
+            var pushServiceStub = new Mock<IPushService>();
+            var userControllerStub = new Mock<IUsersController>();
+            userControllerStub.Setup(s => s.GetCurrentUser()).Returns(() => null);
 
             return new ReservationsController(
                 configurationStub,
