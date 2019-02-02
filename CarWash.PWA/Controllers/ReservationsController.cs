@@ -515,7 +515,7 @@ namespace CarWash.PWA.Controllers
 
             var reservations = await _context.Reservation
                 .AsNoTracking()
-                .Where(r => r.State == State.SubmittedNotActual || r.State == State.ReminderSentWaitingForKey)
+                .Where(r => r.User.Email == user.Email && (r.State == State.SubmittedNotActual || r.State == State.ReminderSentWaitingForKey))
                 .OrderBy(r => r.StartDate)
                 .ToListAsync();
 
