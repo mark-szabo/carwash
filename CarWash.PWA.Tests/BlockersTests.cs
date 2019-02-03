@@ -1,4 +1,5 @@
-﻿using CarWash.ClassLibrary.Models;
+﻿using CarWash.ClassLibrary.Enums;
+using CarWash.ClassLibrary.Models;
 using CarWash.PWA.Controllers;
 using CarWash.PWA.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -278,7 +279,7 @@ namespace CarWash.PWA.Tests
             var result = await controller.PostBlocker(new Blocker
             {
                 StartDate = new DateTime(2019, 11, 19, 00, 00, 00, DateTimeKind.Local),
-                EndDate = new DateTime(2019, 11, 22, 23, 59, 59, DateTimeKind.Local),
+                EndDate = new DateTime(2019, 11, 23, 23, 59, 59, DateTimeKind.Local),
             });
 
             Assert.IsType<ActionResult<Blocker>>(result);
@@ -300,6 +301,105 @@ namespace CarWash.PWA.Tests
 
             Assert.IsType<ActionResult<Blocker>>(result);
             Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task PostBlocker_WithExistingReservation_CancelsReservation()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var john = await dbContext.Users.SingleAsync(u => u.Email == JOHN_EMAIL);
+            await dbContext.Reservation.AddAsync(new Reservation
+            {
+                UserId = john.Id,
+                VehiclePlateNumber = "TEST01",
+                State = State.SubmittedNotActual,
+                StartDate = new DateTime(2019, 11, 05, 11, 00, 00, DateTimeKind.Local),
+                EndDate = new DateTime(2019, 11, 05, 14, 00, 00, DateTimeKind.Local),
+                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Private = false,
+            });
+            await dbContext.SaveChangesAsync();
+            var emailServiceMock = new Mock<IEmailService>();
+            emailServiceMock.Setup(m => m.Send(It.IsAny<Email>())).Returns(Task.CompletedTask);
+            var calendarServiceMock = new Mock<ICalendarService>();
+            calendarServiceMock.Setup(m => m.DeleteEventAsync(It.IsAny<Reservation>())).Returns(Task.CompletedTask);
+            var carWashAdmin = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
+            var userControllerStub = new Mock<IUsersController>();
+            userControllerStub.Setup(s => s.GetCurrentUser()).Returns(carWashAdmin);
+            var controller = new BlockersController(
+                dbContext,
+                userControllerStub.Object,
+                emailServiceMock.Object,
+                calendarServiceMock.Object);
+
+            var result = await controller.PostBlocker(new Blocker
+            {
+                StartDate = new DateTime(2019, 11, 05, 00, 00, 00, DateTimeKind.Local),
+                EndDate = null,
+            });
+
+            Assert.IsType<ActionResult<Blocker>>(result);
+            Assert.IsType<CreatedAtActionResult>(result.Result);
+            var created = (CreatedAtActionResult)result.Result;
+            Assert.IsType<Blocker>(created.Value);
+            var blocker = (Blocker)created.Value;
+            Assert.NotNull(blocker);
+            emailServiceMock.Verify(m => m.Send(It.IsAny<Email>()), Times.Once());
+            calendarServiceMock.Verify(m => m.DeleteEventAsync(It.IsAny<Reservation>()), Times.Once());
+        }
+
+        [Fact]
+        public async Task DeleteBlocker_ByDefault_DeletesBlocker()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var blocker = await dbContext.Blocker.FirstAsync();
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.DeleteBlocker(blocker.Id);
+            var nonExistentBlocker = dbContext.Blocker.SingleOrDefault(b => b.Id == blocker.Id);
+
+            Assert.IsType<ActionResult<Blocker>>(result);
+            Assert.IsType<OkObjectResult>(result.Result);
+            Assert.Null(nonExistentBlocker);
+        }
+
+        [Fact]
+        public async Task DeleteBlocker_AsNotAdmin_ReturnsForbid()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var blocker = await dbContext.Blocker.FirstAsync();
+            var controller = CreateControllerStub(dbContext);
+
+            var result = await controller.DeleteBlocker(blocker.Id);
+
+            Assert.IsType<ActionResult<Blocker>>(result);
+            Assert.IsType<ForbidResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task DeleteBlocker_GivenInvalidModel_ReturnsBadRequest()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var blocker = await dbContext.Blocker.FirstAsync();
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+            controller.ModelState.AddModelError("error", "some error");
+
+            var result = await controller.DeleteBlocker(blocker.Id);
+
+            Assert.IsType<ActionResult<Blocker>>(result);
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task DeleteBlocker_WithInvalidId_ReturnsNotFound()
+        {
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+
+            var result = await controller.DeleteBlocker("invalid id");
+
+            Assert.IsType<ActionResult<Blocker>>(result);
+            Assert.IsType<NotFoundResult>(result.Result);
         }
 
         private static ApplicationDbContext CreateInMemoryDbContext()
