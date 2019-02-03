@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CarWash.ClassLibrary.Models;
-using CarWash.PWA.Extensions;
 using CarWash.PWA.Services;
 using System;
 using System.Collections.Generic;
@@ -107,10 +106,10 @@ namespace CarWash.PWA.Controllers
             // Check for overlapping blocker
             var overLappingBlockerCount = await _context.Blocker
                 .Where(b =>
-                    b.StartDate < blocker.StartDate && b.EndDate > blocker.StartDate || //an existing blocker is overlapping with the beginning of the new blocker
-                    b.StartDate < blocker.EndDate && b.EndDate > blocker.EndDate || //an existing blocker is overlapping with the end of the new blocker
-                    b.StartDate > blocker.StartDate && b.EndDate < blocker.EndDate || //an existing blocker is a subset of the new blocker
-                    b.StartDate < blocker.StartDate && b.EndDate > blocker.EndDate || //an existing blocker is a superset of the new blocker
+                    b.StartDate <= blocker.StartDate && b.EndDate >= blocker.StartDate || //an existing blocker is overlapping with the beginning of the new blocker
+                    b.StartDate <= blocker.EndDate && b.EndDate >= blocker.EndDate || //an existing blocker is overlapping with the end of the new blocker
+                    b.StartDate >= blocker.StartDate && b.EndDate <= blocker.EndDate || //an existing blocker is a subset of the new blocker
+                    b.StartDate <= blocker.StartDate && b.EndDate >= blocker.EndDate || //an existing blocker is a superset of the new blocker
                     b.StartDate == blocker.StartDate && b.EndDate == blocker.EndDate //an existing blocker is the same as the new
                 )
                 .CountAsync();
