@@ -96,7 +96,7 @@ namespace CarWash.ClassLibrary.Models
         /// <remarks>
         /// Change these settings by adding a key-value par to you Application Settings
         /// (appsettings.Development.json / Azure App Service Application Settings) with
-        /// the keys specified nóin the setting's remarks.
+        /// the keys specified in the setting's remarks.
         /// </remarks>
         public class ReservationSettings
         {
