@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import LockIcon from '@material-ui/icons/Lock';
+import Tooltip from '@material-ui/core/Tooltip';
 
 export const styles = theme => ({
     /* Styles applied to the root element. */
@@ -46,7 +47,7 @@ function CarwashCardHeader(props) {
             <div className={classes.content}>
                 <div className={classes.titleRow}>
                     <Typography variant="h5" component="span" className={classes.title}>
-                        {title} {priv && <LockIcon alt="Private" />}
+                        {title} {priv && <Tooltip title="Private (car is not company-owned)"><LockIcon alt="Private (car is not company-owned)" /></Tooltip>}
                     </Typography>
                     <div className={classes.logo}>
                         <img src={`/images/${company}.svg`} alt={company} height="20px" />

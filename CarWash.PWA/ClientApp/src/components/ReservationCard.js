@@ -24,6 +24,7 @@ import FormControl from '@material-ui/core/FormControl';
 import TextField from '@material-ui/core/TextField';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
+import Tooltip from '@material-ui/core/Tooltip';
 import red from '@material-ui/core/colors/red';
 import { getStateName, getServiceName, State, Garages, BacklogHubMethods } from '../Constants';
 import { formatLocation, formatDate2 } from '../Helpers';
@@ -247,7 +248,13 @@ class ReservationCard extends Component {
                     <Card className={classes.card} style={style}>
                         <CardMedia className={classes.media} image={`/images/state${reservation.state}.png`} />
                         <CardHeader
-                            action={reservation.private ? <LockIcon alt="Private" style={{ margin: '8px 16px 0 0' }} /> : null}
+                            action={
+                                reservation.private ? (
+                                    <Tooltip title="Private (car is not company-owned)">
+                                        <LockIcon alt="Private (car is not company-owned)" style={{ margin: '8px 16px 0 0' }} />
+                                    </Tooltip>
+                                ) : null
+                            }
                             title={getStateName(reservation.state)}
                             subheader={formatDate2(reservation)}
                         />

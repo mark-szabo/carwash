@@ -433,7 +433,7 @@ namespace CarWash.Bot.Dialogs
                 PrivatePromptName,
                 new PromptOptions
                 {
-                    Prompt = MessageFactory.Text("Is this your private car?"),
+                    Prompt = MessageFactory.Text("Is this your private car? I mean, not a company car?"),
                 },
                 cancellationToken);
         }

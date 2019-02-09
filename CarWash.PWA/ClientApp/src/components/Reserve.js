@@ -720,7 +720,7 @@ class Reserve extends TrackedComponent {
                                     <FormGroup className={classes.checkbox}>
                                         <FormControlLabel
                                             control={<Checkbox checked={this.state.private} onChange={this.handlePrivateChange} value="private" />}
-                                            label="Private"
+                                            label="Private (car is not company-owned)"
                                         />
                                     </FormGroup>
                                 </div>
