@@ -23,16 +23,11 @@
 
 ## Projects
 
-- `MSHU.CarWash.ClassLibrary` .NET Standard targeting reusable class library
-- `MSHU.CarWash.Functions` Azure functions app for reminder sending
-- `MSHU.CarWash.PWA` aspnetcore2.0 API & React frontent (Progressiove Web App)
-- `MSHU.CarWash.PWA.Windows` PWA wrapper for the Microsoft Store
-- `MSHU.CarWash.DAL` [deprecated] Data access layer
-- `MSHU.CarWash.DomainModel` [deprecated] Portable class library
-- `MSHU.CarWash.EmailJob` [deprecated] Sendgrid email sending webjob
-- `MSHU.CarWash.UWP` [deprecated] UWP app
-- `MSHU.CarWash.Web` [deprecated] Angular webapp & API
-- `CarWash.Azure.Deployment` [deprecated] Azure deployment project
+- `CarWash.ClassLibrary` .NET Standard targeting reusable class library
+- `CarWash.Functions` Azure functions app for reminder sending
+- `CarWash.PWA` ASP.NET Core 2.1 API & React frontent (Progressiove Web App)
+- `CarWash.PWA.Windows` PWA wrapper for the Microsoft Store
+- `CarWash.Bot` Bot with Microsoft Bot Framework
 
 ## Contributors
 
@@ -45,4 +40,4 @@
 
 ## Copyright
 
-Copyright (c) 2018 Microsoft. All rights reserved.
+Copyright (c) 2018-19 Microsoft. All rights reserved.
