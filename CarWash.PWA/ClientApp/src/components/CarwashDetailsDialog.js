@@ -668,7 +668,7 @@ class CarwashDetailsDialog extends React.Component {
                                     <React.Fragment>
                                         <TextField
                                             id="seat"
-                                            label="Seat (optional)"
+                                            label="Spot (optional)"
                                             value={seat}
                                             className={classes.textField}
                                             margin="normal"

@@ -350,7 +350,7 @@ class ReservationCard extends Component {
                         {floor && (
                             <TextField
                                 id="seat"
-                                label="Seat (optional)"
+                                label="Spot (optional)"
                                 value={seat}
                                 className={classes.textField}
                                 margin="normal"
