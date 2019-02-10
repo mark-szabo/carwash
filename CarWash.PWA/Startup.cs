@@ -19,7 +19,6 @@ using Microsoft.Net.Http.Headers;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Controllers;
-using CarWash.PWA.Extensions;
 using CarWash.PWA.Hubs;
 using CarWash.PWA.Services;
 using Swashbuckle.AspNetCore.Swagger;
@@ -33,6 +32,8 @@ using System.Net;
 using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.DataContracts;
 
 namespace CarWash.PWA
 {
@@ -72,6 +73,8 @@ namespace CarWash.PWA
 
             // Add framework services
             services.AddApplicationInsightsTelemetry(Configuration);
+            services.AddApplicationInsightsTelemetryProcessor<SignalrTelemetryFilter>();
+            // services.AddApplicationInsightsTelemetryProcessor<ForbiddenTelemetryFilter>();
 
             // Configure SnapshotCollector from application settings
             services.Configure<SnapshotCollectorConfiguration>(Configuration.GetSection(nameof(SnapshotCollectorConfiguration)));
@@ -363,6 +366,45 @@ namespace CarWash.PWA
             {
                 var snapshotConfigurationOptions = _serviceProvider.GetService<IOptions<SnapshotCollectorConfiguration>>();
                 return new SnapshotCollectorTelemetryProcessor(next, configuration: snapshotConfigurationOptions.Value);
+            }
+        }
+
+        private class ForbiddenTelemetryFilter : ITelemetryProcessor
+        {
+            private ITelemetryProcessor Next { get; set; }
+
+            public ForbiddenTelemetryFilter(ITelemetryProcessor next)
+            {
+                Next = next;
+            }
+
+            public void Process(ITelemetry item)
+            {
+                // Filter 401 Forbidden responses
+                if (item is RequestTelemetry request && request.ResponseCode.Equals("401", StringComparison.OrdinalIgnoreCase)) return;
+
+                // Send everything else
+                Next.Process(item);
+            }
+        }
+
+        private class SignalrTelemetryFilter : ITelemetryProcessor
+        {
+            private ITelemetryProcessor Next { get; set; }
+
+            public SignalrTelemetryFilter(ITelemetryProcessor next)
+            {
+                Next = next;
+            }
+
+            public void Process(ITelemetry item)
+            {
+                // Filter SignalR responses
+                if (item is RequestTelemetry request && request.Name != null && request.Name.Contains("/hub/"))
+                    return;
+
+                // Send everything else
+                Next.Process(item);
             }
         }
     }
