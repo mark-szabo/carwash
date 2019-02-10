@@ -71,6 +71,13 @@ class ReservationGrid extends React.PureComponent {
         document.getElementsByTagName('main')[0].style.overflow = 'hidden';
     }
 
+    componentWillReceiveProps() {
+        if (!this._cellPositioner) return;
+
+        this.resetCellPositioner();
+        this._masonry.recomputeCellPositions();
+    }
+
     componentWillUnmount() {
         document.getElementsByTagName('main')[0].style.overflow = 'auto';
     }
@@ -87,28 +94,6 @@ class ReservationGrid extends React.PureComponent {
         this.calculateColumnCount();
         this.resetCellPositioner();
         this._masonry.recomputeCellPositions();
-    };
-
-    renderMasonry = ({ width, height }) => {
-        this._width = width;
-
-        this.calculateColumnCount();
-        this.initCellPositioner();
-
-        return (
-            <Masonry
-                cellCount={this.props.reservations.length}
-                cellMeasurerCache={this._cache}
-                cellPositioner={this._cellPositioner}
-                cellRenderer={this.cellRenderer}
-                height={height}
-                ref={ref => {
-                    this._masonry = ref;
-                }}
-                width={width}
-                className={this.props.classes.masonry}
-            />
-        );
     };
 
     calculateColumnCount() {
@@ -138,11 +123,12 @@ class ReservationGrid extends React.PureComponent {
         const reservations = this.reorderReservations(this.props.reservations);
         const { removeReservation, updateReservation, invokeBacklogHub, openSnackbar, lastSettings, admin } = this.props;
 
+        if (!reservations[index]) return null;
+
         return (
             <CellMeasurer cache={this._cache} index={index} key={key} parent={parent}>
                 <ReservationCard
                     reservation={reservations[index]}
-                    reservations={reservations}
                     removeReservation={removeReservation}
                     updateReservation={updateReservation}
                     invokeBacklogHub={invokeBacklogHub}
@@ -179,7 +165,29 @@ class ReservationGrid extends React.PureComponent {
 
         return (
             <div className={classes.grid}>
-                <AutoSizer onResize={this.onResize}>{this.renderMasonry}</AutoSizer>
+                <AutoSizer onResize={this.onResize}>
+                    {({ width, height }) => {
+                        this._width = width;
+
+                        this.calculateColumnCount();
+                        this.initCellPositioner();
+
+                        return (
+                            <Masonry
+                                cellCount={this.props.reservations.length}
+                                cellMeasurerCache={this._cache}
+                                cellPositioner={this._cellPositioner}
+                                cellRenderer={this.cellRenderer}
+                                height={height}
+                                ref={ref => {
+                                    this._masonry = ref;
+                                }}
+                                width={width}
+                                className={this.props.classes.masonry}
+                            />
+                        );
+                    }}
+                </AutoSizer>
             </div>
         );
     }
