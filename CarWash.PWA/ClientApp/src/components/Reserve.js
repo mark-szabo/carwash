@@ -162,6 +162,8 @@ class Reserve extends TrackedComponent {
             timeStepLabel: 'Choose time',
             locationKnown: false,
             dropoffPreConfirmed: false,
+            dateSelected: false,
+            timeSelected: false,
         };
     }
 
@@ -207,6 +209,8 @@ class Reserve extends TrackedComponent {
                         dateStepLabel: date.format('MMMM D, YYYY'),
                         timeStepLabel: date.format('hh:mm A'),
                         loadingReservation: false,
+                        dateSelected: true,
+                        timeSelected: true,
                     });
                 },
                 error => {
@@ -342,6 +346,7 @@ class Reserve extends TrackedComponent {
             selectedDate,
             disabledSlots: [this.isTimeNotAvailable(selectedDate, 8), this.isTimeNotAvailable(selectedDate, 11), this.isTimeNotAvailable(selectedDate, 14)],
             dateStepLabel: selectedDate.format('MMMM D, YYYY'),
+            dateSelected: true,
         });
 
         apiFetch(`api/reservations/reservationcapacity?date=${selectedDate.toJSON()}`).then(
@@ -372,9 +377,10 @@ class Reserve extends TrackedComponent {
             activeStep: 3,
             selectedDate: dateTime,
             timeStepLabel: dateTime.format('hh:mm A'),
+            timeSelected: true,
         });
 
-        // Should delay leading from lastsettings as much as possible, because if the user reloads the page,
+        // Should delay loading from lastsettings as much as possible, because if the user reloads the page,
         // it can happen that the lastsettings object is not yet populated in props.
         if (!this.props.match.params.id) {
             this.setState({
@@ -550,6 +556,8 @@ class Reserve extends TrackedComponent {
             seat,
             locationKnown,
             dropoffPreConfirmed,
+            dateSelected,
+            timeSelected,
         } = this.state;
         const today = moment();
         const isDateToday = selectedDate.isSame(today, 'day');
@@ -645,7 +653,7 @@ class Reserve extends TrackedComponent {
                         ) : (
                             <InfiniteCalendar
                                 onSelect={date => this.handleDateSelectionComplete(date)}
-                                selected={null}
+                                selected={selectedDate}
                                 min={today.toDate()}
                                 minDate={today.toDate()}
                                 max={today.add(365, 'days').toDate()}
@@ -668,7 +676,14 @@ class Reserve extends TrackedComponent {
                                 <Button onClick={this.handleBack} className={classes.button}>
                                     Back
                                 </Button>
-                                <Button disabled variant="contained" color="primary" className={classes.button} id="reserve-date-next-button">
+                                <Button
+                                    disabled={!dateSelected}
+                                    onClick={this.handleNext}
+                                    variant="contained"
+                                    color="primary"
+                                    className={classes.button}
+                                    id="reserve-date-next-button"
+                                >
                                     Next
                                 </Button>
                             </div>
@@ -679,7 +694,13 @@ class Reserve extends TrackedComponent {
                     <StepLabel>{timeStepLabel}</StepLabel>
                     <StepContent>
                         <FormControl component="fieldset">
-                            <RadioGroup aria-label="Time" name="time" className={classes.radioGroup} onChange={this.handleTimeSelectionComplete}>
+                            <RadioGroup
+                                aria-label="Time"
+                                name="time"
+                                className={classes.radioGroup}
+                                value={`${timeSelected && selectedDate.hour()}`}
+                                onChange={this.handleTimeSelectionComplete}
+                            >
                                 <FormControlLabel
                                     value="8"
                                     control={<Radio />}
@@ -708,7 +729,14 @@ class Reserve extends TrackedComponent {
                                 <Button onClick={this.handleBackFromTimeSelection} className={classes.button}>
                                     Back
                                 </Button>
-                                <Button disabled variant="contained" color="primary" className={classes.button} id="reserve-time-next-button">
+                                <Button
+                                    disabled={!timeSelected}
+                                    onClick={this.handleNext}
+                                    variant="contained"
+                                    color="primary"
+                                    className={classes.button}
+                                    id="reserve-time-next-button"
+                                >
                                     Next
                                 </Button>
                             </div>
