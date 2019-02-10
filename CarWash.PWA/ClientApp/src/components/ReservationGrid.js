@@ -153,7 +153,7 @@ class ReservationGrid extends React.PureComponent {
 
         if (reservations.length <= 0) {
             return (
-                <div className={classes.center}>
+                <div className={classes.center} id="reservationgrid-lonely">
                     <Typography variant="h6" gutterBottom className={classes.lonelyTitle}>
                         Your reservations will show up here...
                     </Typography>
@@ -164,7 +164,7 @@ class ReservationGrid extends React.PureComponent {
         }
 
         return (
-            <div className={classes.grid}>
+            <div className={classes.grid} id="reservationgrid-grid">
                 <AutoSizer onResize={this.onResize}>
                     {({ width, height }) => {
                         this._width = width;

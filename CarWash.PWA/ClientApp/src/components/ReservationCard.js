@@ -299,10 +299,16 @@ class ReservationCard extends Component {
                 >
                     <DialogTitle id="cancel-dialog-title">Cancel this reservation?</DialogTitle>
                     <DialogActions>
-                        <Button onClick={this.handleCancelDialogClose} color="primary">
+                        <Button onClick={this.handleCancelDialogClose} color="primary" id="reservationcard-dontcancel-button">
                             Don't cancel
                         </Button>
-                        <Button onClick={this.handleCancelConfirmed} color="primary" className={classes.dangerButton} autoFocus>
+                        <Button
+                            onClick={this.handleCancelConfirmed}
+                            color="primary"
+                            className={classes.dangerButton}
+                            autoFocus
+                            id="reservationcard-cancel-button"
+                        >
                             Cancel
                         </Button>
                     </DialogActions>
