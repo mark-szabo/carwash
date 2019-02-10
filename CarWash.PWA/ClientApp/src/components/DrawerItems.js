@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import Button from '@material-ui/core/Button';
+import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import ListIcon from '@material-ui/icons/List';
 import LocalCarWashIcon from '@material-ui/icons/LocalCarWash';
@@ -27,18 +27,18 @@ function DrawerItem(props) {
 export function drawerItems(closeDrawer, user) {
     return (
         <div>
-            <Button
+            <Fab
                 component={Link}
                 to="/reserve"
                 onClick={closeDrawer}
-                variant="extendedFab"
+                variant="extended"
                 color="primary"
                 aria-label="Reserve"
                 style={{ margin: '8px 16px 16px 24px', padding: '0 24px 0 16px' }}
             >
                 <AddIcon style={{ marginRight: '16px' }} />
                 Reserve
-            </Button>
+            </Fab>
             <DrawerItem path="/" icon={<ListIcon />} title="My reservations" closeDrawer={closeDrawer} />
             {user.isCarwashAdmin && <DrawerItem path="/carwashadmin" icon={<LocalCarWashIcon />} title="CarWash admin" closeDrawer={closeDrawer} />}
             {user.isAdmin && <DrawerItem path="/admin" icon={<BuildIcon />} title="Admin" closeDrawer={closeDrawer} />}
