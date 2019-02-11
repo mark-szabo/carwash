@@ -162,6 +162,8 @@ class Reserve extends TrackedComponent {
             timeStepLabel: 'Choose time',
             locationKnown: false,
             dropoffPreConfirmed: false,
+            dateSelected: false,
+            timeSelected: false,
         };
     }
 
@@ -207,6 +209,8 @@ class Reserve extends TrackedComponent {
                         dateStepLabel: date.format('MMMM D, YYYY'),
                         timeStepLabel: date.format('hh:mm A'),
                         loadingReservation: false,
+                        dateSelected: true,
+                        timeSelected: true,
                     });
                 },
                 error => {
@@ -342,6 +346,7 @@ class Reserve extends TrackedComponent {
             selectedDate,
             disabledSlots: [this.isTimeNotAvailable(selectedDate, 8), this.isTimeNotAvailable(selectedDate, 11), this.isTimeNotAvailable(selectedDate, 14)],
             dateStepLabel: selectedDate.format('MMMM D, YYYY'),
+            dateSelected: true,
         });
 
         apiFetch(`api/reservations/reservationcapacity?date=${selectedDate.toJSON()}`).then(
@@ -372,9 +377,10 @@ class Reserve extends TrackedComponent {
             activeStep: 3,
             selectedDate: dateTime,
             timeStepLabel: dateTime.format('hh:mm A'),
+            timeSelected: true,
         });
 
-        // Should delay leading from lastsettings as much as possible, because if the user reloads the page,
+        // Should delay loading from lastsettings as much as possible, because if the user reloads the page,
         // it can happen that the lastsettings object is not yet populated in props.
         if (!this.props.match.params.id) {
             this.setState({
@@ -550,6 +556,8 @@ class Reserve extends TrackedComponent {
             seat,
             locationKnown,
             dropoffPreConfirmed,
+            dateSelected,
+            timeSelected,
         } = this.state;
         const today = moment();
         const isDateToday = selectedDate.isSame(today, 'day');
@@ -606,6 +614,7 @@ class Reserve extends TrackedComponent {
                                                 label={service.name}
                                                 onClick={this.handleServiceChipClick(service)}
                                                 className={service.selected ? classes.selectedChip : classes.chip}
+                                                id={`reserve-${service.name}-service-chip`}
                                             />
                                             {service.id === 2 && <br />}
                                             {service.id === 5 && <br />}
@@ -622,6 +631,7 @@ class Reserve extends TrackedComponent {
                                                 onClick={this.handleServiceSelectionComplete}
                                                 className={classes.button}
                                                 disabled={this.state.services.filter(service => service.selected === true).length <= 0}
+                                                id="reserve-services-next-button"
                                             >
                                                 Next
                                             </Button>
@@ -643,7 +653,7 @@ class Reserve extends TrackedComponent {
                         ) : (
                             <InfiniteCalendar
                                 onSelect={date => this.handleDateSelectionComplete(date)}
-                                selected={null}
+                                selected={selectedDate}
                                 min={today.toDate()}
                                 minDate={today.toDate()}
                                 max={today.add(365, 'days').toDate()}
@@ -658,6 +668,7 @@ class Reserve extends TrackedComponent {
                                     selectionColor: '#80d8ff',
                                     weekdayColor: '#80d8ff',
                                 }}
+                                id="reserve-calendar"
                             />
                         )}
                         <div className={classes.actionsContainer}>
@@ -665,7 +676,14 @@ class Reserve extends TrackedComponent {
                                 <Button onClick={this.handleBack} className={classes.button}>
                                     Back
                                 </Button>
-                                <Button disabled variant="contained" color="primary" className={classes.button}>
+                                <Button
+                                    disabled={!dateSelected}
+                                    onClick={this.handleNext}
+                                    variant="contained"
+                                    color="primary"
+                                    className={classes.button}
+                                    id="reserve-date-next-button"
+                                >
                                     Next
                                 </Button>
                             </div>
@@ -676,24 +694,33 @@ class Reserve extends TrackedComponent {
                     <StepLabel>{timeStepLabel}</StepLabel>
                     <StepContent>
                         <FormControl component="fieldset">
-                            <RadioGroup aria-label="Time" name="time" className={classes.radioGroup} onChange={this.handleTimeSelectionComplete}>
+                            <RadioGroup
+                                aria-label="Time"
+                                name="time"
+                                className={classes.radioGroup}
+                                value={`${timeSelected && selectedDate.hour()}`}
+                                onChange={this.handleTimeSelectionComplete}
+                            >
                                 <FormControlLabel
                                     value="8"
                                     control={<Radio />}
                                     label={`8:00 AM - 11:00 AM ${this.getSlotReservationPercentage(0)}`}
                                     disabled={disabledSlots[0]}
+                                    id="reserve-slot-0"
                                 />
                                 <FormControlLabel
                                     value="11"
                                     control={<Radio />}
                                     label={`11:00 AM - 2:00 PM ${this.getSlotReservationPercentage(1)}`}
                                     disabled={disabledSlots[1]}
+                                    id="reserve-slot-1"
                                 />
                                 <FormControlLabel
                                     value="14"
                                     control={<Radio />}
                                     label={`2:00 PM - 5:00 PM ${this.getSlotReservationPercentage(2)}`}
                                     disabled={disabledSlots[2]}
+                                    id="reserve-slot-2"
                                 />
                             </RadioGroup>
                         </FormControl>
@@ -702,7 +729,14 @@ class Reserve extends TrackedComponent {
                                 <Button onClick={this.handleBackFromTimeSelection} className={classes.button}>
                                     Back
                                 </Button>
-                                <Button disabled variant="contained" color="primary" className={classes.button}>
+                                <Button
+                                    disabled={!timeSelected}
+                                    onClick={this.handleNext}
+                                    variant="contained"
+                                    color="primary"
+                                    className={classes.button}
+                                    id="reserve-time-next-button"
+                                >
                                     Next
                                 </Button>
                             </div>
@@ -748,8 +782,7 @@ class Reserve extends TrackedComponent {
                                     <TextField
                                         required
                                         error={validationErrors.vehiclePlateNumber}
-                                        id="vehiclePlateNumber"
-                                        name="vehiclePlateNumber"
+                                        id="reserve-vehiclePlateNumber"
                                         label="Plate number"
                                         value={vehiclePlateNumber}
                                         className={classes.textField}
@@ -809,7 +842,7 @@ class Reserve extends TrackedComponent {
                                         )}
                                         {floor && (
                                             <TextField
-                                                id="seat"
+                                                id="reserve-seat"
                                                 label="Spot (optional)"
                                                 value={seat}
                                                 className={classes.textField}
@@ -844,7 +877,7 @@ class Reserve extends TrackedComponent {
                                 )}
                                 <div>
                                     <TextField
-                                        id="comment"
+                                        id="reserve-comment"
                                         label="Comment"
                                         multiline
                                         rowsMax="4"
@@ -859,7 +892,13 @@ class Reserve extends TrackedComponent {
                                         <Button onClick={this.handleBack} className={classes.button}>
                                             Back
                                         </Button>
-                                        <Button variant="contained" color="primary" onClick={this.handleReserve} className={classes.button}>
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={this.handleReserve}
+                                            className={classes.button}
+                                            id="reserve-submit-button"
+                                        >
                                             {!this.props.match.params.id ? 'Reserve' : 'Update'}
                                         </Button>
                                     </div>

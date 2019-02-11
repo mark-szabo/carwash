@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
-using CarWash.PWA.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,13 +35,14 @@ namespace CarWash.PWA.Controllers
             _context = context;
             _emailService = emailService;
 
+            var email = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Upn)?.ToLower() ??
+                        httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Email)?.ToLower();
+
             // Check if request is coming from an authorized service application.
             var serviceAppId = httpContextAccessor.HttpContext.User.FindFirstValue("appid");
-            if (serviceAppId != null) return;
+            if (serviceAppId != null && email == null) return;
 
-            var email = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Upn)?.ToLower() ??
-                        httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Email)?.ToLower() ??
-                        throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
+            if (email == null) throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
 
             _user = _context.Users.SingleOrDefault(u => u.Email == email);
         }

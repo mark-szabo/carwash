@@ -66,6 +66,27 @@ namespace CarWash.ClassLibrary.Models
         public List<Company> Companies { get; set; } = new List<Company>();
 
         /// <summary>
+        /// List of parking garages where cars are allowed to be left.
+        /// </summary>
+        /// <remarks>
+        /// Location: Application Settings
+        /// Key: Garages
+        /// </remarks>
+        /// <example>
+        /// [
+        ///   {
+        ///     "Building": "A",
+        ///     "Floors": [ "-1", "-2", "-2.5", "-3", "-3.5" ]
+        ///   },
+        ///   {
+        ///     "Building": "B",
+        ///     "Floors": [ "-1", "-2", "-3", "outdoor" ]
+        ///   },
+        /// ]
+        /// </example>
+        public List<Garage> Garages { get; set; } = new List<Garage>();
+
+        /// <summary>
         /// CarWash app settings referring to reservations.
         /// </summary>
         public ReservationSettings Reservation { get; set; } = new ReservationSettings();

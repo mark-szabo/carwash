@@ -34,7 +34,7 @@ function adalGetToken(resourceGuid) {
 }
 
 export function runWithAdal(app) {
-    // it must run in iframe to for refreshToken (parsing hash and get token)
+    // the app must run in an iframe to get a refreshToken (parsing hash and getting token)
     authContext.handleWindowCallback();
 
     // prevent iframe double app !!!
@@ -49,6 +49,11 @@ export function runWithAdal(app) {
                     adalConfig.extraQueryParameter = `login_hint=${encodeURIComponent(loginHint)}`;
                     authContext = new AuthenticationContext(adalConfig);
                     console.log(`User was prevously logged in with ${loginHint}. Using this email as login hint.`);
+                    if (!navigator.onLine) {
+                        console.error('Disconnected from network. Aborting login. Offline mode.');
+                        app();
+                        return;
+                    }
                 }
                 authContext.login();
             } else {
