@@ -177,9 +177,9 @@ class Reserve extends TrackedComponent {
             apiFetch(`api/reservations/${this.props.match.params.id}`).then(
                 data => {
                     const services = this.state.services;
-                    // data.services.forEach(s => {
-                    //     services[s].selected = true;
-                    // });
+                    data.services.forEach(s => {
+                        if (services[s]) services[s].selected = true;
+                    });
 
                     let garage;
                     let floor;
@@ -222,9 +222,9 @@ class Reserve extends TrackedComponent {
             this.setState(state => {
                 const services = [...state.services];
                 const lastServices = this.props.lastSettings.services || [];
-                // lastServices.forEach(s => {
-                //     services[s].selected = true;
-                // });
+                lastServices.forEach(s => {
+                    if (services[s]) services[s].selected = true;
+                });
 
                 return {
                     services,
