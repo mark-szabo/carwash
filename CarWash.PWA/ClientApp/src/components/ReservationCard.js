@@ -30,6 +30,7 @@ import { getStateName, getServiceName, State, Garages, BacklogHubMethods } from 
 import { formatLocation, formatDate2 } from '../Helpers';
 import Comments from './Comments';
 import * as moment from 'moment';
+import ErrorBoundary from './ErrorBoundary';
 
 const styles = theme => ({
     chip: {
@@ -48,6 +49,7 @@ const styles = theme => ({
         margin: 16,
         display: 'flex',
         flexDirection: 'column',
+        minHeight: 400,
     },
     cardActions: {
         padding: '8px 12px 12px 12px',
@@ -243,7 +245,15 @@ class ReservationCard extends Component {
         const { garage, floor, seat, validationErrors } = this.state;
         const { classes, reservation, admin, style } = this.props;
         return (
-            <React.Fragment>
+            <ErrorBoundary
+                fallback={
+                    <Card className={classes.card} style={style}>
+                        <CardContent>
+                            <Typography>Failed to load card.</Typography>
+                        </CardContent>
+                    </Card>
+                }
+            >
                 <Grow in>
                     <Card className={classes.card} style={style}>
                         <CardMedia className={classes.media} image={`/images/state${reservation.state}.png`} />
@@ -380,7 +390,7 @@ class ReservationCard extends Component {
                         </Button>
                     </DialogActions>
                 </Dialog>
-            </React.Fragment>
+            </ErrorBoundary>
         );
     }
 }

@@ -45,10 +45,12 @@ class ErrorBoundary extends React.Component {
     }
 
     render() {
-        const { classes } = this.props;
+        const { classes, disableErrorMessage, fallback } = this.props;
 
         if (this.state.hasError) {
-            if (this.props.disableErrorMessage) return null;
+            if (disableErrorMessage) return null;
+
+            if (fallback) return fallback;
 
             // Render fallback UI
             return (
@@ -70,6 +72,7 @@ class ErrorBoundary extends React.Component {
 
 ErrorBoundary.propTypes = {
     disableErrorMessage: PropTypes.bool,
+    fallback: PropTypes.node,
 };
 
 export default withStyles(styles)(ErrorBoundary);
