@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Route } from 'react-router';
+import { Route, Switch } from 'react-router';
 import { AppInsights } from 'applicationinsights-js';
 import apiFetch from './Auth';
 import registerPush from './PushService';
@@ -21,6 +21,8 @@ import Spinner from './components/Spinner';
 import { sleep } from './Helpers';
 import Blockers from './components/Blockers';
 import Analytics from './components/Analytics';
+import ErrorBoundary from './components/ErrorBoundary';
+import NotFound from './components/NotFound';
 
 // A theme with custom primary and secondary color.
 const theme = createMuiTheme({
@@ -404,139 +406,189 @@ export default class App extends Component {
 
         return (
             <MuiThemeProvider theme={theme}>
-                <Layout user={user}>
-                    <Route
-                        exact
-                        path="/"
-                        navbarName="My reservations"
-                        refresh={this.loadReservations}
-                        render={props => (
-                            <Home
-                                reservations={reservations}
-                                reservationsLoading={reservationsLoading}
-                                removeReservation={this.removeReservation}
-                                updateReservation={this.updateReservation}
-                                invokeBacklogHub={this.invokeBacklogHub}
-                                lastSettings={lastSettings}
-                                openSnackbar={this.openSnackbar}
-                                {...props}
+                <ErrorBoundary>
+                    <Layout user={user}>
+                        <Switch>
+                            <Route
+                                exact
+                                path="/"
+                                navbarName="My reservations"
+                                refresh={this.loadReservations}
+                                render={props => (
+                                    <ErrorBoundary>
+                                        <Home
+                                            reservations={reservations}
+                                            reservationsLoading={reservationsLoading}
+                                            removeReservation={this.removeReservation}
+                                            updateReservation={this.updateReservation}
+                                            invokeBacklogHub={this.invokeBacklogHub}
+                                            lastSettings={lastSettings}
+                                            openSnackbar={this.openSnackbar}
+                                            {...props}
+                                        />
+                                    </ErrorBoundary>
+                                )}
                             />
-                        )}
-                    />
-                    <Route
-                        exact
-                        path="/reserve"
-                        navbarName="Reserve"
-                        render={props =>
-                            Object.keys(user).length !== 0 ? (
-                                <Reserve
-                                    user={user}
-                                    reservations={reservations}
-                                    addReservation={this.addReservation}
-                                    invokeBacklogHub={this.invokeBacklogHub}
-                                    lastSettings={lastSettings}
-                                    loadLastSettings={this.loadLastSettings}
-                                    openSnackbar={this.openSnackbar}
-                                    openNotificationDialog={this.openNotificationDialog}
-                                    {...props}
-                                />
-                            ) : (
-                                <Spinner />
-                            )
-                        }
-                    />
-                    <Route
-                        path="/reserve/:id"
-                        navbarName="Reserve"
-                        render={props =>
-                            Object.keys(user).length !== 0 ? (
-                                <Reserve
-                                    user={user}
-                                    reservations={reservations}
-                                    addReservation={this.addReservation}
-                                    removeReservation={this.removeReservation}
-                                    invokeBacklogHub={this.invokeBacklogHub}
-                                    loadLastSettings={this.loadLastSettings}
-                                    openSnackbar={this.openSnackbar}
-                                    openNotificationDialog={this.openNotificationDialog}
-                                    {...props}
-                                />
-                            ) : (
-                                <Spinner />
-                            )
-                        }
-                    />
-                    <Route
-                        path="/settings"
-                        navbarName="Settings"
-                        render={props => <Settings user={user} updateUser={this.updateUser} openSnackbar={this.openSnackbar} {...props} />}
-                    />
-                    <Route
-                        exact
-                        path="/admin"
-                        navbarName="Admin"
-                        refresh={this.loadCompanyReservations}
-                        render={props => (
-                            <Admin
-                                reservations={companyReservations}
-                                reservationsLoading={companyReservationsLoading}
-                                removeReservation={this.removeReservationFromCompanyReservations}
-                                updateReservation={this.updateCompanyReservation}
-                                invokeBacklogHub={this.invokeBacklogHub}
-                                lastSettings={lastSettings}
-                                openSnackbar={this.openSnackbar}
-                                {...props}
+                            <Route
+                                exact
+                                path="/reserve"
+                                navbarName="Reserve"
+                                render={props =>
+                                    Object.keys(user).length !== 0 ? (
+                                        <ErrorBoundary>
+                                            <Reserve
+                                                user={user}
+                                                reservations={reservations}
+                                                addReservation={this.addReservation}
+                                                invokeBacklogHub={this.invokeBacklogHub}
+                                                lastSettings={lastSettings}
+                                                loadLastSettings={this.loadLastSettings}
+                                                openSnackbar={this.openSnackbar}
+                                                openNotificationDialog={this.openNotificationDialog}
+                                                {...props}
+                                            />
+                                        </ErrorBoundary>
+                                    ) : (
+                                        <Spinner />
+                                    )
+                                }
                             />
-                        )}
-                    />
-                    <Route
-                        exact
-                        path="/carwashadmin"
-                        navbarName="CarWash admin"
-                        refresh={this.loadBacklog}
-                        render={props => (
-                            <CarwashAdmin
-                                backlog={backlog}
-                                backlogLoading={backlogLoading}
-                                backlogUpdateFound={backlogUpdateFound}
-                                updateBacklogItem={this.updateBacklogItem}
-                                removeBacklogItem={this.removeBacklogItem}
-                                invokeBacklogHub={this.invokeBacklogHub}
-                                snackbarOpen={this.state.snackbarOpen}
-                                openSnackbar={this.openSnackbar}
-                                {...props}
+                            <Route
+                                path="/reserve/:id"
+                                navbarName="Reserve"
+                                render={props =>
+                                    Object.keys(user).length !== 0 ? (
+                                        <ErrorBoundary>
+                                            <Reserve
+                                                user={user}
+                                                reservations={reservations}
+                                                addReservation={this.addReservation}
+                                                removeReservation={this.removeReservation}
+                                                invokeBacklogHub={this.invokeBacklogHub}
+                                                loadLastSettings={this.loadLastSettings}
+                                                openSnackbar={this.openSnackbar}
+                                                openNotificationDialog={this.openNotificationDialog}
+                                                {...props}
+                                            />
+                                        </ErrorBoundary>
+                                    ) : (
+                                        <Spinner />
+                                    )
+                                }
                             />
-                        )}
+                            <Route
+                                exact
+                                path="/settings"
+                                navbarName="Settings"
+                                render={props => (
+                                    <ErrorBoundary>
+                                        <Settings user={user} updateUser={this.updateUser} openSnackbar={this.openSnackbar} {...props} />
+                                    </ErrorBoundary>
+                                )}
+                            />
+                            <Route
+                                exact
+                                path="/admin"
+                                navbarName="Admin"
+                                refresh={this.loadCompanyReservations}
+                                render={props => (
+                                    <ErrorBoundary>
+                                        <Admin
+                                            reservations={companyReservations}
+                                            reservationsLoading={companyReservationsLoading}
+                                            removeReservation={this.removeReservationFromCompanyReservations}
+                                            updateReservation={this.updateCompanyReservation}
+                                            invokeBacklogHub={this.invokeBacklogHub}
+                                            lastSettings={lastSettings}
+                                            openSnackbar={this.openSnackbar}
+                                            {...props}
+                                        />
+                                    </ErrorBoundary>
+                                )}
+                            />
+                            <Route
+                                exact
+                                path="/carwashadmin"
+                                navbarName="CarWash admin"
+                                refresh={this.loadBacklog}
+                                render={props => (
+                                    <ErrorBoundary>
+                                        <CarwashAdmin
+                                            backlog={backlog}
+                                            backlogLoading={backlogLoading}
+                                            backlogUpdateFound={backlogUpdateFound}
+                                            updateBacklogItem={this.updateBacklogItem}
+                                            removeBacklogItem={this.removeBacklogItem}
+                                            invokeBacklogHub={this.invokeBacklogHub}
+                                            snackbarOpen={this.state.snackbarOpen}
+                                            openSnackbar={this.openSnackbar}
+                                            {...props}
+                                        />
+                                    </ErrorBoundary>
+                                )}
+                            />
+                            <Route
+                                exact
+                                path="/blockers"
+                                navbarName="Blockers"
+                                render={props => (
+                                    <ErrorBoundary>
+                                        <Blockers user={user} snackbarOpen={this.state.snackbarOpen} openSnackbar={this.openSnackbar} {...props} />
+                                    </ErrorBoundary>
+                                )}
+                            />
+                            <Route
+                                exact
+                                path="/analytics"
+                                navbarName="Analytics"
+                                render={props => (
+                                    <ErrorBoundary>
+                                        <Analytics {...props} />
+                                    </ErrorBoundary>
+                                )}
+                            />
+                            <Route
+                                exact
+                                path="/support"
+                                navbarName="Support"
+                                render={props => (
+                                    <ErrorBoundary>
+                                        <Support {...props} />
+                                    </ErrorBoundary>
+                                )}
+                            />
+                            <Route
+                                path="/"
+                                navbarName="Not found"
+                                render={props => (
+                                    <ErrorBoundary>
+                                        <NotFound {...props} />
+                                    </ErrorBoundary>
+                                )}
+                            />
+                        </Switch>
+                    </Layout>
+                    <Snackbar
+                        anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'left',
+                        }}
+                        open={this.state.snackbarOpen}
+                        autoHideDuration={6000}
+                        onClose={this.handleSnackbarClose}
+                        ContentProps={{
+                            'aria-describedby': 'message-id',
+                        }}
+                        message={<span id="message-id">{getSafeString(this.state.snackbarMessage)}</span>}
+                        action={this.state.snackbarAction}
                     />
-                    <Route
-                        exact
-                        path="/blockers"
-                        navbarName="Blockers"
-                        render={props => <Blockers user={user} snackbarOpen={this.state.snackbarOpen} openSnackbar={this.openSnackbar} {...props} />}
+                    <NotificationDialog
+                        open={this.state.notificationDialogOpen}
+                        handleClose={this.handleNotificationDialogClose}
+                        openSnackbar={this.openSnackbar}
+                        updateUser={this.updateUser}
                     />
-                    <Route exact path="/analytics" navbarName="Analytics" component={Analytics} />
-                    <Route exact path="/support" navbarName="Support" component={Support} />
-                </Layout>
-                <Snackbar
-                    anchorOrigin={{
-                        vertical: 'bottom',
-                        horizontal: 'left',
-                    }}
-                    open={this.state.snackbarOpen}
-                    autoHideDuration={6000}
-                    onClose={this.handleSnackbarClose}
-                    ContentProps={{
-                        'aria-describedby': 'message-id',
-                    }}
-                    message={<span id="message-id">{getSafeString(this.state.snackbarMessage)}</span>}
-                    action={this.state.snackbarAction}
-                />
-                <NotificationDialog
-                    open={this.state.notificationDialogOpen}
-                    handleClose={this.handleNotificationDialogClose}
-                    openSnackbar={this.openSnackbar}
-                    updateUser={this.updateUser}
-                />
+                </ErrorBoundary>
             </MuiThemeProvider>
         );
     }

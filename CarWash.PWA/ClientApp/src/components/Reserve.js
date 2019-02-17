@@ -178,7 +178,7 @@ class Reserve extends TrackedComponent {
                 data => {
                     const services = this.state.services;
                     data.services.forEach(s => {
-                        services[s].selected = true;
+                        if (services[s]) services[s].selected = true;
                     });
 
                     let garage;
@@ -223,7 +223,7 @@ class Reserve extends TrackedComponent {
                 const services = [...state.services];
                 const lastServices = this.props.lastSettings.services || [];
                 lastServices.forEach(s => {
-                    services[s].selected = true;
+                    if (services[s]) services[s].selected = true;
                 });
 
                 return {

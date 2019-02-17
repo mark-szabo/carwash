@@ -7,12 +7,11 @@ import Tooltip from '@material-ui/core/Tooltip';
 
 export const styles = theme => ({
     /* Styles applied to the root element. */
-    root: theme.mixins.gutters({
+    root: {
         display: 'flex',
         alignItems: 'center',
-        paddingTop: 16,
-        paddingBottom: 16,
-    }),
+        padding: 16,
+    },
     /* Styles applied to the avatar element. */
     avatar: {
         flex: '0 0 auto',
@@ -47,7 +46,12 @@ function CarwashCardHeader(props) {
             <div className={classes.content}>
                 <div className={classes.titleRow}>
                     <Typography variant="h5" component="span" className={classes.title}>
-                        {title} {priv && <Tooltip title="Private (car is not company-owned)"><LockIcon alt="Private (car is not company-owned)" /></Tooltip>}
+                        {title}{' '}
+                        {priv && (
+                            <Tooltip disableTouchListener title="Private (car is not company-owned)">
+                                <LockIcon alt="Private (car is not company-owned)" />
+                            </Tooltip>
+                        )}
                     </Typography>
                     <div className={classes.logo}>
                         <img src={`/images/${company}.svg`} alt={company} height="20px" />

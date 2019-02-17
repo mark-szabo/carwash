@@ -21,6 +21,7 @@ import CarwashDetailsDialog from './CarwashDetailsDialog';
 import { getAdminStateName, getServiceName, BacklogHubMethods } from '../Constants';
 import { formatLocation, formatDate } from '../Helpers';
 import Comments from './Comments';
+import ErrorBoundary from './ErrorBoundary';
 
 const styles = theme => ({
     chip: {
@@ -41,6 +42,7 @@ const styles = theme => ({
         '&:hover': {
             cursor: 'pointer',
         },
+        minHeight: 400,
     },
     buttonBase: {
         width: '100%',
@@ -125,7 +127,15 @@ class CarwashCard extends Component {
         const { focused, detailsDialogOpen } = this.state;
 
         return (
-            <React.Fragment>
+            <ErrorBoundary
+                fallback={
+                    <Card className={classes.card}>
+                        <CardContent>
+                            <Typography>Failed to load card.</Typography>
+                        </CardContent>
+                    </Card>
+                }
+            >
                 <Collapse in className={classes.collapseTransition}>
                     <ButtonBase
                         className={classes.buttonBase}
@@ -152,9 +162,7 @@ class CarwashCard extends Component {
                                 <Typography variant="caption" color="textSecondary" gutterBottom>
                                     Location
                                 </Typography>
-                                <Typography gutterBottom>
-                                    {reservation.location ? formatLocation(reservation.location) : 'Not set'}
-                                </Typography>
+                                <Typography gutterBottom>{reservation.location ? formatLocation(reservation.location) : 'Not set'}</Typography>
                                 <Typography variant="caption" color="textSecondary" gutterBottom style={{ marginTop: '8px' }}>
                                     Name
                                 </Typography>
@@ -202,7 +210,7 @@ class CarwashCard extends Component {
                         </Button>
                     </DialogActions>
                 </Dialog>
-            </React.Fragment>
+            </ErrorBoundary>
         );
     }
 }
