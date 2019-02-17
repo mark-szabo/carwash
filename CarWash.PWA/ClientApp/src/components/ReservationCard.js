@@ -260,7 +260,7 @@ class ReservationCard extends Component {
                         <CardHeader
                             action={
                                 reservation.private ? (
-                                    <Tooltip title="Private (car is not company-owned)">
+                                    <Tooltip disableTouchListener title="Private (car is not company-owned)">
                                         <LockIcon alt="Private (car is not company-owned)" style={{ margin: '8px 16px 0 0' }} />
                                     </Tooltip>
                                 ) : null

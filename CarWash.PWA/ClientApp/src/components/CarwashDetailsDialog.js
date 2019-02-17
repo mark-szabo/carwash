@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import { withStyles } from '@material-ui/core/styles';
 import apiFetch from '../Auth';
 import Button from '@material-ui/core/Button';
+import Fab from '@material-ui/core/Fab';
 import Dialog from '@material-ui/core/Dialog';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -153,9 +154,8 @@ class CarwashDetailsDialog extends React.Component {
             case State.ReminderSentWaitingForKey:
             case State.CarKeyLeftAndLocationConfirmed:
                 return (
-                    <Button
+                    <Fab
                         onClick={this.handleStartWash}
-                        variant="fab"
                         color="primary"
                         aria-label="Start wash"
                         className={classNames(this.props.classes.button, {
@@ -164,13 +164,12 @@ class CarwashDetailsDialog extends React.Component {
                         autoFocus
                     >
                         <LocalCarWashIcon />
-                    </Button>
+                    </Fab>
                 );
             case State.WashInProgress:
                 return (
-                    <Button
+                    <Fab
                         onClick={this.handleCompleteWash}
-                        variant="fab"
                         color="primary"
                         aria-label="Complete wash"
                         className={classNames(this.props.classes.button, {
@@ -179,13 +178,12 @@ class CarwashDetailsDialog extends React.Component {
                         autoFocus
                     >
                         <DoneIcon />
-                    </Button>
+                    </Fab>
                 );
             case State.NotYetPaid:
                 return (
-                    <Button
+                    <Fab
                         onClick={this.handleConfirmPayment}
-                        variant="fab"
                         color="primary"
                         aria-label="Paid"
                         className={classNames(this.props.classes.button, {
@@ -194,7 +192,7 @@ class CarwashDetailsDialog extends React.Component {
                         autoFocus
                     >
                         <MoneyOffIcon />
-                    </Button>
+                    </Fab>
                 );
             default:
                 return null;
