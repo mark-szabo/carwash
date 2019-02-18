@@ -63,6 +63,8 @@ namespace CarWash.Bot.Dialogs
                 {
                     activities.Add(new Activity(type: ActivityTypes.Message, text: slot));
                 }
+
+                activities.Add(new Activity(type: ActivityTypes.Message, text: $"To make a new reservation, just say 'reserve for {freeSlots.First()}'."));
             }
             catch (AuthenticationException)
             {
