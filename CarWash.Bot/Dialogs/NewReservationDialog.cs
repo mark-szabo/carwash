@@ -358,6 +358,8 @@ namespace CarWash.Bot.Dialogs
             state.SlotChoices = new List<DateTime>();
             foreach (var slot in reservationCapacity)
             {
+                if (slot.FreeCapacity < 1) continue;
+
                 choices.Add(new Choice($"{slot.StartTime.ToNaturalLanguage()} ({slot.StartTime.Hour}-{Slots.Single(s => s.StartTime == slot.StartTime.Hour).EndTime})"));
 
                 // Save recommendations to state
