@@ -144,12 +144,22 @@ namespace CarWash.Bot.Dialogs
             await step.Context.SendActivityAsync("You are now logged in.", cancellationToken: cancellationToken);
 
             // Call Carwash API and update UserProfile state
-            var api = new CarwashService(tokenResponse.Token);
-            var carwashUser = await api.GetMe(cancellationToken);
-            var userProfile = await _userProfileAccessor.GetAsync(step.Context, () => new UserProfile());
-            userProfile.CarwashUserId = carwashUser.Id;
-            userProfile.NickName = carwashUser.FirstName;
-            await _userProfileAccessor.SetAsync(step.Context, userProfile, cancellationToken);
+            try
+            {
+                var api = new CarwashService(tokenResponse.Token);
+
+                var carwashUser = await api.GetMe(cancellationToken);
+
+                var userProfile = await _userProfileAccessor.GetAsync(step.Context, () => new UserProfile());
+                userProfile.CarwashUserId = carwashUser.Id;
+                userProfile.NickName = carwashUser.FirstName;
+                await _userProfileAccessor.SetAsync(step.Context, userProfile, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                _telemetryClient.TrackException(e);
+                await step.Context.SendActivityAsync(e.Message, cancellationToken: cancellationToken);
+            }
 
             await UpdateUserInfoForProactiveMessages(step.Context, cancellationToken).ConfigureAwait(false);
 
