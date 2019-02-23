@@ -126,7 +126,7 @@ namespace CarWash.Bot.Proactive
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
         /// <returns>An array of activities to be sent out.</returns>
-        protected abstract Task<IActivity[]> GetActivitiesAsync(DialogContext context, T message, UserProfile userProfile, CancellationToken cancellationToken = default);
+        protected abstract IActivity[] GetActivities(DialogContext context, T message, UserProfile userProfile, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Begin new dialogs if needed.
@@ -242,7 +242,7 @@ namespace CarWash.Bot.Proactive
         }
 
         /// <summary>
-        /// Sends out the activities from <see cref="GetActivitiesAsync(DialogContext, T, UserProfile, CancellationToken)"/>
+        /// Sends out the activities from <see cref="GetActivities(DialogContext, T, UserProfile, CancellationToken)"/>
         /// and calls <see cref="BeginDialogAfterMessageAsync(DialogContext, T, CancellationToken)"/> to begin new dialogs if needed.
         /// </summary>
         /// <param name="message">Serialized Service Bus message.</param>
@@ -261,7 +261,7 @@ namespace CarWash.Bot.Proactive
                     // Create a dialog context
                     var dc = await _dialogs.CreateContextAsync(turnContext, cancellationToken);
 
-                    var activities = await GetActivitiesAsync(dc, message, profile, cancellationToken);
+                    var activities = GetActivities(dc, message, profile, cancellationToken);
 
                     // Send the user a proactive reminder message.
                     await turnContext.SendActivitiesAsync(activities, cancellationToken);

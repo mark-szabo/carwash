@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using CarWash.Bot.Dialogs;
-using CarWash.Bot.Services;
 using CarWash.Bot.States;
-using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Models.ServiceBus;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Hosting;
@@ -19,54 +15,38 @@ namespace CarWash.Bot.Proactive
     /// <summary>
     /// Wash completed proactive messaging.
     /// </summary>
-    public class WashCompletedMessage : ProactiveMessage<ReservationServiceBusMessage>
+    public class DropoffReminderMessage : ProactiveMessage<ReservationServiceBusMessage>
     {
-        private readonly TelemetryClient _telemetryClient;
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="WashCompletedMessage"/> class.
+        /// Initializes a new instance of the <see cref="DropoffReminderMessage"/> class.
         /// </summary>
         /// <param name="accessors">The state accessors for managing bot state.</param>
         /// <param name="adapterIntegration">The <see cref="BotFrameworkAdapter"/> connects the bot to the service endpoint of the given channel.</param>
         /// <param name="env">Provides information about the web hosting environment an application is running in.</param>
         /// <param name="services">External services.</param>
-        public WashCompletedMessage(StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotServices services)
+        public DropoffReminderMessage(StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotServices services)
             : base(accessors, adapterIntegration, env, services, new Dialog[] { AuthDialog.LoginPromptDialog(), new FindReservationDialog() })
         {
-            _telemetryClient = new TelemetryClient();
         }
 
         /// <inheritdoc />
-        protected override string ServiceBusQueueName { get => "bot-wash-completed"; }
+        protected override string ServiceBusQueueName { get => "bot-dropoff-reminder"; }
 
         /// <inheritdoc />
-        protected override string ServiceBusQueueNameDev { get => "bot-wash-completed-dev"; }
+        protected override string ServiceBusQueueNameDev { get => "bot-dropoff-reminder-dev"; }
 
         /// <inheritdoc />
         protected override IActivity[] GetActivities(DialogContext context, ReservationServiceBusMessage message, UserProfile userProfile, CancellationToken cancellationToken = default)
         {
-            Reservation reservation = null;
-            try
-            {
-                var api = new CarwashService(context, cancellationToken);
-                reservation = api.GetReservationAsync(message.ReservationId, cancellationToken).GetAwaiter().GetResult();
-            }
-            catch (Exception e)
-            {
-                _telemetryClient.TrackException(e);
-            }
-
             var greeting = userProfile?.NickName == null ? "Hi!" : $"Hi {userProfile.NickName}!";
 
-            var activities = new List<IActivity>
+            return new IActivity[]
                 {
                     new Activity(type: ActivityTypes.Message, text: greeting),
-                    new Activity(type: ActivityTypes.Message, text: "Your car is ready!"),
+                    new Activity(type: ActivityTypes.Message, text: "Sorry for bothering!"),
+                    new Activity(type: ActivityTypes.Message, text: "Just wanted to remind you, that it's time to leave the key at the reception."),
+                    new Activity(type: ActivityTypes.Message, text: "And please don't forget to confirm the vehicle location! You can do it here by clicking the 'Confirm key drop-off' button below."),
                 };
-
-            if (reservation != null) activities.Add(new Activity(type: ActivityTypes.Message, text: $"You can find it here: {reservation.Location}"));
-
-            return activities.ToArray();
         }
 
         /// <inheritdoc />

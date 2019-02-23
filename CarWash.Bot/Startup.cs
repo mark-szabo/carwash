@@ -109,7 +109,7 @@ namespace CarWash.Bot
             services.AddSingleton<ITelemetryProcessorFactory>(sp => new SnapshotCollectorTelemetryProcessorFactory(sp));
 
             // Add proactive message services
-            services.AddSingleton<DropoffReminder, DropoffReminder>();
+            services.AddSingleton<DropoffReminderMessage, DropoffReminderMessage>();
             services.AddSingleton<WashCompletedMessage, WashCompletedMessage>();
 
             // Memory Storage is for local bot debugging only. When the bot
@@ -196,7 +196,7 @@ namespace CarWash.Bot
             _loggerFactory = loggerFactory;
 
             // Register proactive message handlers
-            serviceProvider.GetService<DropoffReminder>().RegisterHandler();
+            serviceProvider.GetService<DropoffReminderMessage>().RegisterHandler();
             serviceProvider.GetService<WashCompletedMessage>().RegisterHandler();
 
             app.UseDefaultFiles()

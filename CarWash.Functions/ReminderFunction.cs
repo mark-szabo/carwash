@@ -158,7 +158,7 @@ If don't want to get email reminders in the future, you can <a href='https://car
             var connectionString = Environment.GetEnvironmentVariable("ServiceBus", EnvironmentVariableTarget.Process);
             var queueClient = new QueueClient(connectionString, BotReminderQueueName);
 
-            var message = new DropoffReminderMessage
+            var message = new ReservationServiceBusMessage
             {
                 UserId = reservation.UserId,
                 ReservationId = reservation.Id,
