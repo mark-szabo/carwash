@@ -5,7 +5,10 @@ using Newtonsoft.Json;
 
 namespace CarWash.Bot.Proactive
 {
-    internal class UserInfoEntity : TableEntity
+    /// <summary>
+    /// Representation of the user info table in Azure Storage Tables.
+    /// </summary>
+    public class UserInfoEntity : TableEntity
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="UserInfoEntity"/> class.
@@ -64,7 +67,7 @@ namespace CarWash.Bot.Proactive
         public string ServiceUrl { get; set; }
 
         /// <summary>
-        /// Gets or sets account for the user on the channel.
+        /// Gets or sets an account for the user on the channel.
         /// </summary>
         /// <value>
         /// ChannelAccount of the user on the channel.
@@ -72,6 +75,12 @@ namespace CarWash.Bot.Proactive
         [JsonProperty(PropertyName = "user")]
         public ChannelAccount User { get; set; }
 
+        /// <summary>
+        /// Gets or sets an account for the user on the channel.
+        /// </summary>
+        /// <value>
+        /// Serialized JSON of the ChannelAccount of the user on the channel.
+        /// </value>
         [JsonProperty(PropertyName = "userJson")]
         public string UserJson
         {
@@ -80,7 +89,7 @@ namespace CarWash.Bot.Proactive
         }
 
         /// <summary>
-        /// Gets or sets account for the bot on the channel.
+        /// Gets or sets an account for the bot on the channel.
         /// </summary>
         /// <value>
         /// ChannelAccount of the bot on the channel.
@@ -88,6 +97,12 @@ namespace CarWash.Bot.Proactive
         [JsonProperty(PropertyName = "bot")]
         public ChannelAccount Bot { get; set; }
 
+        /// <summary>
+        /// Gets or sets an account for the bot on the channel.
+        /// </summary>
+        /// <value>
+        /// Serialized JSON of the ChannelAccount of the bot on the channel.
+        /// </value>
         [JsonProperty(PropertyName = "botJson")]
         public string BotJson
         {
@@ -104,6 +119,12 @@ namespace CarWash.Bot.Proactive
         [JsonProperty(PropertyName = "channelData")]
         public object ChannelData { get; set; }
 
+        /// <summary>
+        /// Gets or sets properties that are defined by the channel.
+        /// </summary>
+        /// <value>
+        /// Serialized JSON of the properties that are defined by the channel.
+        /// </value>
         [JsonProperty(PropertyName = "channelDataJson")]
         public string ChannelDataJson
         {
@@ -120,6 +141,12 @@ namespace CarWash.Bot.Proactive
         [JsonProperty(PropertyName = "currentConversation")]
         public ConversationReference CurrentConversation { get; set; }
 
+        /// <summary>
+        /// Gets or sets the reference to the current (last) converstaion of the user.
+        /// </summary>
+        /// <value>
+        /// Serialized JSON of the reference to the current (last) converstaion of the user.
+        /// </value>
         [JsonProperty(PropertyName = "currentConversationJson")]
         public string CurrentConversationJson
         {

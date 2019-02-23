@@ -110,6 +110,7 @@ namespace CarWash.Bot
 
             // Add proactive message services
             services.AddSingleton<DropoffReminder, DropoffReminder>();
+            services.AddSingleton<WashCompletedMessage, WashCompletedMessage>();
 
             // Memory Storage is for local bot debugging only. When the bot
             // is restarted, everything stored in memory will be gone.
@@ -196,6 +197,7 @@ namespace CarWash.Bot
 
             // Register proactive message handlers
             serviceProvider.GetService<DropoffReminder>().RegisterHandler();
+            serviceProvider.GetService<WashCompletedMessage>().RegisterHandler();
 
             app.UseDefaultFiles()
                 .UseStaticFiles()
