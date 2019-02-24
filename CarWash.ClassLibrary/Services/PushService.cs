@@ -1,6 +1,5 @@
 ﻿using Microsoft.ApplicationInsights;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using CarWash.ClassLibrary.Models;
 using Newtonsoft.Json;
 using System;

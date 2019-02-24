@@ -97,6 +97,11 @@ namespace CarWash.ClassLibrary.Models
         public ConnectionStringsConfiguration ConnectionStrings { get; set; } = new ConnectionStringsConfiguration();
 
         /// <summary>
+        /// Azure Service Bus Queue names.
+        /// </summary>
+        public ServiceBusQueueConfiguration ServiceBusQueues { get; set; } = new ServiceBusQueueConfiguration();
+
+        /// <summary>
         /// Azure Active Directory configuration (used for SSO user authentication).
         /// </summary>
         public AzureAdConfiguration AzureAd { get; set; } = new AzureAdConfiguration();
@@ -198,6 +203,48 @@ namespace CarWash.ClassLibrary.Models
             /// Key: ConnectionStrings--StorageAccount
             /// </remarks>
             public string StorageAccount { get; set; }
+        }
+
+        /// <summary>
+        /// Azure Service Bus Queue names.
+        /// </summary>
+        public class ServiceBusQueueConfiguration
+        {
+            /// <summary>
+            /// Service Bus queue name for the chat bot's drop-off reminders.
+            /// </summary>
+            /// <remarks>
+            /// Location: Application Settings
+            /// Key: ServiceBusQueues:BotDropoffReminderQueue
+            /// </remarks>
+            public string BotDropoffReminderQueue { get; set; }
+
+            /// <summary>
+            /// Service Bus queue name for the chat bot's wash-started messages.
+            /// </summary>
+            /// <remarks>
+            /// Location: Application Settings
+            /// Key: ServiceBusQueues:BotWashStartedQueue
+            /// </remarks>
+            public string BotWashStartedQueue { get; set; }
+
+            /// <summary>
+            /// Service Bus queue name for the chat bot's wash-completed messages.
+            /// </summary>
+            /// <remarks>
+            /// Location: Application Settings
+            /// Key: ServiceBusQueues:BotWashCompletedQueue
+            /// </remarks>
+            public string BotWashCompletedQueue { get; set; }
+
+            /// <summary>
+            /// Service Bus queue name for the chat bot's carwash-comment-left messages.
+            /// </summary>
+            /// <remarks>
+            /// Location: Application Settings
+            /// Key: ServiceBusQueues:BotCarWashCommentLeftQueue
+            /// </remarks>
+            public string BotCarWashCommentLeftQueue { get; set; }
         }
 
         /// <summary>

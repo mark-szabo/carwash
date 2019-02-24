@@ -70,6 +70,7 @@ namespace CarWash.PWA
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ICalendarService, CalendarService>();
             services.AddScoped<IPushService, PushService>();
+            services.AddScoped<IBotService, BotService>();
 
             // Add framework services
             services.AddApplicationInsightsTelemetry(Configuration);
