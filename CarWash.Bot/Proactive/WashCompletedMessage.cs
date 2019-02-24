@@ -61,7 +61,7 @@ namespace CarWash.Bot.Proactive
             var activities = new List<IActivity>
                 {
                     new Activity(type: ActivityTypes.Message, text: greeting),
-                    new Activity(type: ActivityTypes.Message, text: "Your car is ready!"),
+                    new Activity(type: ActivityTypes.Message, text: reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!"),
                 };
 
             if (reservation != null) activities.Add(new Activity(type: ActivityTypes.Message, text: $"You can find it here: {reservation.Location}"));

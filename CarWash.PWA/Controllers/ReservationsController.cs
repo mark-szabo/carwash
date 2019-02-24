@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
-using CarWash.PWA.Extensions;
+using CarWash.ClassLibrary.Extensions;
 using CarWash.PWA.Services;
 using OfficeOpenXml;
 using System;
@@ -15,6 +15,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using CarWash.PWA.Attributes;
+using Microsoft.Azure.ServiceBus;
+using CarWash.ClassLibrary.Models.ServiceBus;
+using System.Text;
+using Microsoft.AspNetCore.Hosting;
 
 namespace CarWash.PWA.Controllers
 {
@@ -30,17 +34,30 @@ namespace CarWash.PWA.Controllers
         private readonly CarWashConfiguration _configuration;
         private readonly ApplicationDbContext _context;
         private readonly User _user;
+        private readonly IHostingEnvironment _env;
         private readonly IEmailService _emailService;
         private readonly ICalendarService _calendarService;
         private readonly IPushService _pushService;
         private readonly TelemetryClient _telemetryClient;
 
+
+        /// <summary>
+        /// Service Bus queue name for the chat bot's wash-completed messages.
+        /// </summary>
+        private const string BotWashCompletedQueueName = "bot-wash-completed";
+
+        /// <summary>
+        /// Dev Service Bus queue name for the chat bot's wash-completed messages.
+        /// </summary>
+        private const string BotWashCompletedDevQueueName = "bot-wash-completed-dev";
+
         /// <inheritdoc />
-        public ReservationsController(CarWashConfiguration configuration, ApplicationDbContext context, IUsersController usersController, IEmailService emailService, ICalendarService calendarService, IPushService pushService)
+        public ReservationsController(CarWashConfiguration configuration, ApplicationDbContext context, IUsersController usersController, IHostingEnvironment env, IEmailService emailService, ICalendarService calendarService, IPushService pushService)
         {
             _configuration = configuration;
             _context = context;
             _user = usersController.GetCurrentUser();
+            _env = env;
             _emailService = emailService;
             _calendarService = calendarService;
             _pushService = pushService;
@@ -691,6 +708,31 @@ namespace CarWash.PWA.Controllers
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
+            }
+
+            // Try to send message through bot           
+            try
+            {
+                var queueName = _env.IsProduction() ? BotWashCompletedQueueName : BotWashCompletedDevQueueName;
+                var queueClient = new QueueClient(_configuration.ConnectionStrings.ServiceBus, queueName);
+
+                var message = new ReservationServiceBusMessage
+                {
+                    UserId = reservation.UserId,
+                    ReservationId = reservation.Id,
+                };
+
+                // Create a new message to send to the queue.
+                var serviceBusMessage = new Message(Encoding.UTF8.GetBytes(message.ToJson()));
+
+                // Send the message to the queue. 
+                await queueClient.SendAsync(serviceBusMessage);
+
+                await queueClient.CloseAsync();
+            }
+            catch (Exception e)
+            {
+                _telemetryClient.TrackException(e);
             }
 
             return NoContent();

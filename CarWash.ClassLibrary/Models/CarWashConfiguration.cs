@@ -173,6 +173,15 @@ namespace CarWash.ClassLibrary.Models
         public class ConnectionStringsConfiguration
         {
             /// <summary>
+            /// Azure Service Bus connection string.
+            /// </summary>
+            /// <remarks>
+            /// Location: Azure Key Vault (DO NOT store secrets in Application Settings!)
+            /// Key: ConnectionStrings--ServiceBus
+            /// </remarks>
+            public string ServiceBus { get; set; }
+
+            /// <summary>
             /// Azure SQL database connection string.
             /// </summary>
             /// <remarks>
