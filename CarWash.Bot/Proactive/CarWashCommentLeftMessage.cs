@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using CarWash.Bot.Dialogs;
@@ -17,22 +16,22 @@ using Microsoft.Bot.Schema;
 namespace CarWash.Bot.Proactive
 {
     /// <summary>
-    /// Wash completed proactive messaging.
+    /// CarWash has left a comment proactive messaging.
     /// </summary>
-    public class WashCompletedMessage : ProactiveMessage<ReservationServiceBusMessage>
+    public class CarWashCommentLeftMessage : ProactiveMessage<ReservationServiceBusMessage>
     {
         private readonly CarWashConfiguration _configuration;
         private readonly TelemetryClient _telemetryClient;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WashCompletedMessage"/> class.
+        /// Initializes a new instance of the <see cref="CarWashCommentLeftMessage"/> class.
         /// </summary>
         /// <param name="configuration">CarWash app configuration.</param>
         /// <param name="accessors">The state accessors for managing bot state.</param>
         /// <param name="adapterIntegration">The <see cref="BotFrameworkAdapter"/> connects the bot to the service endpoint of the given channel.</param>
         /// <param name="env">Provides information about the web hosting environment an application is running in.</param>
         /// <param name="services">External services.</param>
-        public WashCompletedMessage(CarWashConfiguration configuration, StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotServices services)
+        public CarWashCommentLeftMessage(CarWashConfiguration configuration, StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotServices services)
             : base(accessors, adapterIntegration, env, services, new Dialog[] { AuthDialog.LoginPromptDialog(), new FindReservationDialog() })
         {
             _configuration = configuration;
@@ -40,7 +39,7 @@ namespace CarWash.Bot.Proactive
         }
 
         /// <inheritdoc />
-        protected override string ServiceBusQueueName { get => _configuration.ServiceBusQueues.BotWashCompletedQueue; }
+        protected override string ServiceBusQueueName { get => _configuration.ServiceBusQueues.BotCarWashCommentLeftQueue; }
 
         /// <inheritdoc />
         protected override IActivity[] GetActivities(DialogContext context, ReservationServiceBusMessage message, UserProfile userProfile, CancellationToken cancellationToken = default)
@@ -58,24 +57,17 @@ namespace CarWash.Bot.Proactive
 
             var greeting = userProfile?.NickName == null ? "Hi!" : $"Hi {userProfile.NickName}!";
 
-            var activities = new List<IActivity>
+            return new IActivity[]
                 {
                     new Activity(type: ActivityTypes.Message, text: greeting),
-                    new Activity(type: ActivityTypes.Message, text: reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!"),
+                    new Activity(type: ActivityTypes.Message, text: reservation.CarwashComment),
                 };
-
-            if (reservation != null) activities.Add(new Activity(type: ActivityTypes.Message, text: $"You can find it here: {reservation.Location}"));
-
-            return activities.ToArray();
         }
 
         /// <inheritdoc />
         protected override Task BeginDialogAfterMessageAsync(DialogContext context, ReservationServiceBusMessage message, CancellationToken cancellationToken = default)
         {
-            return context.BeginDialogAsync(
-                nameof(FindReservationDialog),
-                new FindReservationDialog.FindReservationDialogOptions { ReservationId = message.ReservationId },
-                cancellationToken: cancellationToken);
+            return Task.CompletedTask;
         }
     }
 }

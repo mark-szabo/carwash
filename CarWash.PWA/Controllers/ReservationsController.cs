@@ -620,6 +620,9 @@ namespace CarWash.PWA.Controllers
                 }
             }
 
+            // Try to send message through bot
+            await _botService.SendWashStartedMessageAsync(reservation);
+
             return NoContent();
         }
 
@@ -860,6 +863,9 @@ namespace CarWash.PWA.Controllers
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
+            // Try to send message through bot
+            await _botService.SendCarWashCommentLeftMessageAsync(reservation);
 
             return NoContent();
         }

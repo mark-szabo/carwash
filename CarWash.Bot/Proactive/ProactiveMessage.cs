@@ -75,8 +75,7 @@ namespace CarWash.Bot.Proactive
             if (!services.ServiceBusServices.ContainsKey(CarWashBot.ServiceBusConfiguration))
                 throw new ArgumentException($"Invalid configuration. Please check your '.bot' file for a Service Bus service named '{CarWashBot.ServiceBusConfiguration}'.");
 
-            var queueName = env.IsProduction() ? ServiceBusQueueName : ServiceBusQueueNameDev;
-            _queueClient = new QueueClient(services.ServiceBusServices[CarWashBot.ServiceBusConfiguration], queueName, ReceiveMode.PeekLock, null);
+            _queueClient = new QueueClient(services.ServiceBusServices[CarWashBot.ServiceBusConfiguration], ServiceBusQueueName, ReceiveMode.PeekLock, null);
         }
 
         /// <summary>
@@ -86,14 +85,6 @@ namespace CarWash.Bot.Proactive
         /// Service Bus queue name.
         /// </value>
         protected abstract string ServiceBusQueueName { get; }
-
-        /// <summary>
-        /// Gets Service Bus queue name when running from Development environment.
-        /// </summary>
-        /// <value>
-        /// Service Bus queue name.
-        /// </value>
-        protected abstract string ServiceBusQueueNameDev { get; }
 
         /// <summary>
         /// Register Service Bus message handler.
