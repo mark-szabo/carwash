@@ -20,7 +20,7 @@ namespace CarWash.PWA.Services
         }
 
         /// <inheritdoc />
-        public async Task Send(Email email)
+        public async Task Send(Email email, TimeSpan? delay = null)
         {
             if (email == null) throw new ArgumentNullException(nameof(email));
 
@@ -35,7 +35,7 @@ namespace CarWash.PWA.Services
 
             // Create a message and add it to the queue.
             var message = new CloudQueueMessage(JsonConvert.SerializeObject(email));
-            await queue.AddMessageAsync(message);
+            await queue.AddMessageAsync(message, initialVisibilityDelay: delay, timeToLive: null, options: null, operationContext: null);
         }
     }
 }

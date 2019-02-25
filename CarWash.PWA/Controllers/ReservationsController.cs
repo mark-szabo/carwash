@@ -675,7 +675,7 @@ namespace CarWash.PWA.Controllers
                         Subject = reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!",
                         Body = $"You can find it here: {reservation.Location}",
                     };
-                    await _emailService.Send(email);
+                    await _emailService.Send(email, TimeSpan.FromMinutes(1));
                     break;
                 case NotificationChannel.Push:
                     var notification = new Notification
