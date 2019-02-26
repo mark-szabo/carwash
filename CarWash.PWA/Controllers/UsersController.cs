@@ -11,7 +11,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using User = CarWash.ClassLibrary.Models.User;
 using CarWash.PWA.Attributes;
-using CarWash.PWA.Services;
+using CarWash.ClassLibrary.Services;
 
 namespace CarWash.PWA.Controllers
 {

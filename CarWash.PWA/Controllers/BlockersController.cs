@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CarWash.ClassLibrary.Models;
-using CarWash.PWA.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CarWash.PWA.Attributes;
+using CarWash.ClassLibrary.Services;
 
 namespace CarWash.PWA.Controllers
 {

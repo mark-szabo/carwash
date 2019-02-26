@@ -2,7 +2,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace CarWash.PWA.Services
+namespace CarWash.ClassLibrary.Services
 {
     /// <summary>
     /// Defines a service to send out emails using a Logic App

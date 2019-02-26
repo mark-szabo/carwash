@@ -1,7 +1,7 @@
 ﻿using CarWash.ClassLibrary.Models;
 using System.Threading.Tasks;
 
-namespace CarWash.PWA.Services
+namespace CarWash.ClassLibrary.Services
 {
     /// <summary>
     /// Defines a service to create, update and remove Outlook events using a Logic App

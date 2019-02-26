@@ -1,7 +1,7 @@
 ﻿using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
+using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Controllers;
-using CarWash.PWA.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
@@ -320,7 +320,7 @@ namespace CarWash.PWA.Tests
             });
             await dbContext.SaveChangesAsync();
             var emailServiceMock = new Mock<IEmailService>();
-            emailServiceMock.Setup(m => m.Send(It.IsAny<Email>())).Returns(Task.CompletedTask);
+            emailServiceMock.Setup(m => m.Send(It.IsAny<Email>(), It.IsAny<TimeSpan?>())).Returns(Task.CompletedTask);
             var calendarServiceMock = new Mock<ICalendarService>();
             calendarServiceMock.Setup(m => m.DeleteEventAsync(It.IsAny<Reservation>())).Returns(Task.CompletedTask);
             var carWashAdmin = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
@@ -344,7 +344,7 @@ namespace CarWash.PWA.Tests
             Assert.IsType<Blocker>(created.Value);
             var blocker = (Blocker)created.Value;
             Assert.NotNull(blocker);
-            emailServiceMock.Verify(m => m.Send(It.IsAny<Email>()), Times.Once());
+            emailServiceMock.Verify(m => m.Send(It.IsAny<Email>(), It.IsAny<TimeSpan?>()), Times.Once());
             calendarServiceMock.Verify(m => m.DeleteEventAsync(It.IsAny<Reservation>()), Times.Once());
         }
 

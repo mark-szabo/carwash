@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
-using CarWash.PWA.Services;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
@@ -14,7 +13,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using CarWash.PWA.Attributes;
-using Microsoft.AspNetCore.Hosting;
 
 namespace CarWash.PWA.Controllers
 {
@@ -30,7 +28,6 @@ namespace CarWash.PWA.Controllers
         private readonly CarWashConfiguration _configuration;
         private readonly ApplicationDbContext _context;
         private readonly User _user;
-        private readonly IHostingEnvironment _env;
         private readonly IEmailService _emailService;
         private readonly ICalendarService _calendarService;
         private readonly IPushService _pushService;
@@ -38,12 +35,11 @@ namespace CarWash.PWA.Controllers
         private readonly TelemetryClient _telemetryClient;
 
         /// <inheritdoc />
-        public ReservationsController(CarWashConfiguration configuration, ApplicationDbContext context, IUsersController usersController, IHostingEnvironment env, IEmailService emailService, ICalendarService calendarService, IPushService pushService, IBotService botService)
+        public ReservationsController(CarWashConfiguration configuration, ApplicationDbContext context, IUsersController usersController, IEmailService emailService, ICalendarService calendarService, IPushService pushService, IBotService botService)
         {
             _configuration = configuration;
             _context = context;
             _user = usersController.GetCurrentUser();
-            _env = env;
             _emailService = emailService;
             _calendarService = calendarService;
             _pushService = pushService;

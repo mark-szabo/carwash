@@ -1,6 +1,6 @@
 ﻿using Microsoft.Graph;
 
-namespace CarWash.PWA.Services
+namespace CarWash.ClassLibrary.Services
 {
     /// <summary>
     /// Service to help working with Microsoft Graph

@@ -1,7 +1,7 @@
 ﻿using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
+using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Controllers;
-using CarWash.PWA.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

@@ -2,7 +2,6 @@ using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Controllers;
-using CarWash.PWA.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
@@ -1474,7 +1473,7 @@ namespace CarWash.PWA.Tests
             await dbContext.SaveChangesAsync();
             var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
             var emailServiceMock = new Mock<IEmailService>();
-            emailServiceMock.Setup(m => m.Send(It.IsAny<Email>()));
+            emailServiceMock.Setup(m => m.Send(It.IsAny<Email>(), It.IsAny<TimeSpan?>()));
             var pushServiceMock = new Mock<IPushService>();
             pushServiceMock.Setup(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>()));
             var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
@@ -1482,7 +1481,7 @@ namespace CarWash.PWA.Tests
             var result = await controller.CompleteWash(reservation.Id);
 
             Assert.IsType<NoContentResult>(result);
-            emailServiceMock.Verify(m => m.Send(It.IsAny<Email>()), Times.Never());
+            emailServiceMock.Verify(m => m.Send(It.IsAny<Email>(), It.IsAny<TimeSpan?>()), Times.Never());
             pushServiceMock.Verify(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>()), Times.Never());
         }
 
@@ -1495,20 +1494,23 @@ namespace CarWash.PWA.Tests
             await dbContext.SaveChangesAsync();
             var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
             var emailServiceMock = new Mock<IEmailService>();
-            emailServiceMock.Setup(m => m.Send(It.IsAny<Email>())).Returns(Task.CompletedTask);
+            emailServiceMock.Setup(m => m.Send(It.IsAny<Email>(), It.IsAny<TimeSpan?>())).Returns(Task.CompletedTask);
             var pushServiceMock = new Mock<IPushService>();
             pushServiceMock.Setup(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>())).Returns(Task.CompletedTask);
+            var botServiceMock = new Mock<IBotService>();
+            botServiceMock.Setup(m => m.SendWashCompletedMessageAsync(It.IsAny<Reservation>())).Returns(Task.CompletedTask);
             var calendarServiceStub = new Mock<ICalendarService>();
             var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
             var userControllerStub = new Mock<IUsersController>();
             userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object);
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object);
 
             var result = await controller.CompleteWash(reservation.Id);
 
             Assert.IsType<NoContentResult>(result);
-            emailServiceMock.Verify(m => m.Send(It.IsAny<Email>()), Times.Once());
+            emailServiceMock.Verify(m => m.Send(It.IsAny<Email>(), It.IsAny<TimeSpan?>()), Times.Once());
             pushServiceMock.Verify(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>()), Times.Never());
+            botServiceMock.Verify(m => m.SendWashCompletedMessageAsync(It.IsAny<Reservation>()), Times.Once());
         }
 
         [Fact]
@@ -1520,20 +1522,23 @@ namespace CarWash.PWA.Tests
             await dbContext.SaveChangesAsync();
             var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
             var emailServiceMock = new Mock<IEmailService>();
-            emailServiceMock.Setup(m => m.Send(It.IsAny<Email>())).Returns(Task.CompletedTask);
+            emailServiceMock.Setup(m => m.Send(It.IsAny<Email>(), It.IsAny<TimeSpan?>())).Returns(Task.CompletedTask);
             var pushServiceMock = new Mock<IPushService>();
             pushServiceMock.Setup(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>())).Returns(Task.CompletedTask);
+            var botServiceMock = new Mock<IBotService>();
+            botServiceMock.Setup(m => m.SendWashCompletedMessageAsync(It.IsAny<Reservation>())).Returns(Task.CompletedTask);
             var calendarServiceStub = new Mock<ICalendarService>();
             var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
             var userControllerStub = new Mock<IUsersController>();
             userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object);
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object);
 
             var result = await controller.CompleteWash(reservation.Id);
 
             Assert.IsType<NoContentResult>(result);
-            emailServiceMock.Verify(m => m.Send(It.IsAny<Email>()), Times.Once());
+            emailServiceMock.Verify(m => m.Send(It.IsAny<Email>(), It.IsAny<TimeSpan?>()), Times.Once());
             pushServiceMock.Verify(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>()), Times.Never());
+            botServiceMock.Verify(m => m.SendWashCompletedMessageAsync(It.IsAny<Reservation>()), Times.Once());
         }
 
         [Fact]
@@ -1545,20 +1550,23 @@ namespace CarWash.PWA.Tests
             await dbContext.SaveChangesAsync();
             var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
             var emailServiceMock = new Mock<IEmailService>();
-            emailServiceMock.Setup(m => m.Send(It.IsAny<Email>())).Returns(Task.CompletedTask);
+            emailServiceMock.Setup(m => m.Send(It.IsAny<Email>(), It.IsAny<TimeSpan?>())).Returns(Task.CompletedTask);
             var pushServiceMock = new Mock<IPushService>();
             pushServiceMock.Setup(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>())).Returns(Task.CompletedTask);
+            var botServiceMock = new Mock<IBotService>();
+            botServiceMock.Setup(m => m.SendWashCompletedMessageAsync(It.IsAny<Reservation>())).Returns(Task.CompletedTask);
             var calendarServiceStub = new Mock<ICalendarService>();
             var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
             var userControllerStub = new Mock<IUsersController>();
             userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object);
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object);
 
             var result = await controller.CompleteWash(reservation.Id);
 
             Assert.IsType<NoContentResult>(result);
-            emailServiceMock.Verify(m => m.Send(It.IsAny<Email>()), Times.Never());
+            emailServiceMock.Verify(m => m.Send(It.IsAny<Email>(), It.IsAny<TimeSpan?>()), Times.Never());
             pushServiceMock.Verify(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>()), Times.Once());
+            botServiceMock.Verify(m => m.SendWashCompletedMessageAsync(It.IsAny<Reservation>()), Times.Once());
         }
 
         [Fact]
@@ -1733,21 +1741,24 @@ namespace CarWash.PWA.Tests
             await dbContext.SaveChangesAsync();
             var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
             var emailServiceMock = new Mock<IEmailService>();
-            emailServiceMock.Setup(m => m.Send(It.IsAny<Email>())).Returns(Task.CompletedTask);
+            emailServiceMock.Setup(m => m.Send(It.IsAny<Email>(), It.IsAny<TimeSpan?>())).Returns(Task.CompletedTask);
             var pushServiceMock = new Mock<IPushService>();
             pushServiceMock.Setup(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>())).Returns(Task.CompletedTask);
+            var botServiceMock = new Mock<IBotService>();
+            botServiceMock.Setup(m => m.SendCarWashCommentLeftMessageAsync(It.IsAny<Reservation>())).Returns(Task.CompletedTask);
             var calendarServiceStub = new Mock<ICalendarService>();
             var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
             var userControllerStub = new Mock<IUsersController>();
             userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object);
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object);
             const string COMMENT = "test";
 
             var result = await controller.AddCarwashComment(reservation.Id, COMMENT);
 
             Assert.IsType<NoContentResult>(result);
-            emailServiceMock.Verify(m => m.Send(It.IsAny<Email>()), Times.Never());
+            emailServiceMock.Verify(m => m.Send(It.IsAny<Email>(), It.IsAny<TimeSpan?>()), Times.Never());
             pushServiceMock.Verify(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>()), Times.Once());
+            botServiceMock.Verify(m => m.SendCarWashCommentLeftMessageAsync(It.IsAny<Reservation>()), Times.Once());
         }
 
         [Theory]
@@ -2231,6 +2242,7 @@ namespace CarWash.PWA.Tests
             var emailServiceStub = new Mock<IEmailService>();
             var calendarServiceStub = new Mock<ICalendarService>();
             var pushServiceStub = new Mock<IPushService>();
+            var botServiceStub = new Mock<IBotService>();
             var user = dbContext.Users.Single(u => u.Email == email);
             var userControllerStub = new Mock<IUsersController>();
             userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
@@ -2241,7 +2253,8 @@ namespace CarWash.PWA.Tests
                 userControllerStub.Object,
                 emailServiceStub.Object,
                 calendarServiceStub.Object,
-                pushServiceStub.Object);
+                pushServiceStub.Object,
+                botServiceStub.Object);
         }
 
         private static ReservationsController CreateServiceControllerStub(ApplicationDbContext dbContext)
@@ -2250,6 +2263,7 @@ namespace CarWash.PWA.Tests
             var emailServiceStub = new Mock<IEmailService>();
             var calendarServiceStub = new Mock<ICalendarService>();
             var pushServiceStub = new Mock<IPushService>();
+            var botServiceStub = new Mock<IBotService>();
             var userControllerStub = new Mock<IUsersController>();
             userControllerStub.Setup(s => s.GetCurrentUser()).Returns(() => null);
 
@@ -2259,7 +2273,8 @@ namespace CarWash.PWA.Tests
                 userControllerStub.Object,
                 emailServiceStub.Object,
                 calendarServiceStub.Object,
-                pushServiceStub.Object);
+                pushServiceStub.Object,
+                botServiceStub.Object);
         }
     }
 }

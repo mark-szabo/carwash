@@ -20,7 +20,6 @@ using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Controllers;
 using CarWash.PWA.Hubs;
-using CarWash.PWA.Services;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.Collections.Generic;
