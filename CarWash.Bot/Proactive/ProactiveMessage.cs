@@ -46,8 +46,9 @@ namespace CarWash.Bot.Proactive
         /// <param name="adapterIntegration">The <see cref="BotFrameworkAdapter"/> connects the bot to the service endpoint of the given channel.</param>
         /// <param name="env">Provides information about the web hosting environment an application is running in.</param>
         /// <param name="services">External services.</param>
+        /// <param name="queueName">Service Bus queue name.</param>
         /// <param name="dialogs">List of Types of other <see cref="Dialog"/>s used when sending out the proactive message.</param>
-        public ProactiveMessage(StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotServices services, Dialog[] dialogs)
+        public ProactiveMessage(StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotServices services, string queueName, Dialog[] dialogs)
         {
             _accessors = accessors;
             _env = env;
@@ -75,16 +76,8 @@ namespace CarWash.Bot.Proactive
             if (!services.ServiceBusServices.ContainsKey(CarWashBot.ServiceBusConfiguration))
                 throw new ArgumentException($"Invalid configuration. Please check your '.bot' file for a Service Bus service named '{CarWashBot.ServiceBusConfiguration}'.");
 
-            _queueClient = new QueueClient(services.ServiceBusServices[CarWashBot.ServiceBusConfiguration], ServiceBusQueueName, ReceiveMode.PeekLock, null);
+            _queueClient = new QueueClient(services.ServiceBusServices[CarWashBot.ServiceBusConfiguration], queueName, ReceiveMode.PeekLock, null);
         }
-
-        /// <summary>
-        /// Gets Service Bus queue name.
-        /// </summary>
-        /// <value>
-        /// Service Bus queue name.
-        /// </value>
-        protected abstract string ServiceBusQueueName { get; }
 
         /// <summary>
         /// Register Service Bus message handler.

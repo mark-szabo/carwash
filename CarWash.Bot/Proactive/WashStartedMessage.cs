@@ -17,8 +17,6 @@ namespace CarWash.Bot.Proactive
     /// </summary>
     public class WashStartedMessage : ProactiveMessage<ReservationServiceBusMessage>
     {
-        private readonly CarWashConfiguration _configuration;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="WashStartedMessage"/> class.
         /// </summary>
@@ -28,13 +26,9 @@ namespace CarWash.Bot.Proactive
         /// <param name="env">Provides information about the web hosting environment an application is running in.</param>
         /// <param name="services">External services.</param>
         public WashStartedMessage(CarWashConfiguration configuration, StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotServices services)
-            : base(accessors, adapterIntegration, env, services, new Dialog[] { AuthDialog.LoginPromptDialog(), new FindReservationDialog() })
+            : base(accessors, adapterIntegration, env, services, configuration.ServiceBusQueues.BotWashStartedQueue, new Dialog[] { AuthDialog.LoginPromptDialog(), new FindReservationDialog() })
         {
-            _configuration = configuration;
         }
-
-        /// <inheritdoc />
-        protected override string ServiceBusQueueName { get => _configuration.ServiceBusQueues.BotWashStartedQueue; }
 
         /// <inheritdoc />
         protected override IActivity[] GetActivities(DialogContext context, ReservationServiceBusMessage message, UserProfile userProfile, CancellationToken cancellationToken = default)

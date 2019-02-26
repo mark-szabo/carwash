@@ -20,7 +20,6 @@ namespace CarWash.Bot.Proactive
     /// </summary>
     public class CarWashCommentLeftMessage : ProactiveMessage<ReservationServiceBusMessage>
     {
-        private readonly CarWashConfiguration _configuration;
         private readonly TelemetryClient _telemetryClient;
 
         /// <summary>
@@ -32,14 +31,10 @@ namespace CarWash.Bot.Proactive
         /// <param name="env">Provides information about the web hosting environment an application is running in.</param>
         /// <param name="services">External services.</param>
         public CarWashCommentLeftMessage(CarWashConfiguration configuration, StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotServices services)
-            : base(accessors, adapterIntegration, env, services, new Dialog[] { AuthDialog.LoginPromptDialog(), new FindReservationDialog() })
+            : base(accessors, adapterIntegration, env, services, configuration.ServiceBusQueues.BotCarWashCommentLeftQueue, new Dialog[] { AuthDialog.LoginPromptDialog(), new FindReservationDialog() })
         {
-            _configuration = configuration;
             _telemetryClient = new TelemetryClient();
         }
-
-        /// <inheritdoc />
-        protected override string ServiceBusQueueName { get => _configuration.ServiceBusQueues.BotCarWashCommentLeftQueue; }
 
         /// <inheritdoc />
         protected override IActivity[] GetActivities(DialogContext context, ReservationServiceBusMessage message, UserProfile userProfile, CancellationToken cancellationToken = default)
