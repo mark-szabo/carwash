@@ -20,7 +20,6 @@ using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Controllers;
 using CarWash.PWA.Hubs;
-using CarWash.PWA.Services;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.Collections.Generic;
@@ -70,6 +69,7 @@ namespace CarWash.PWA
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ICalendarService, CalendarService>();
             services.AddScoped<IPushService, PushService>();
+            services.AddScoped<IBotService, BotService>();
 
             // Add framework services
             services.AddApplicationInsightsTelemetry(Configuration);

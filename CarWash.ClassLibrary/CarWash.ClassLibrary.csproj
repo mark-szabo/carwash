@@ -18,6 +18,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.9.1" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="2.1.6" />
+    <PackageReference Include="Microsoft.Azure.ServiceBus" Version="3.3.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.1.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Analyzers" Version="2.1.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="2.1.4" />
@@ -26,9 +27,11 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="2.1.6" />
     <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="2.1.6" />
+    <PackageReference Include="Microsoft.Graph" Version="1.12.0" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
     <PackageReference Include="WebPush" Version="1.0.11" />
+    <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
   </ItemGroup>
 
 </Project>

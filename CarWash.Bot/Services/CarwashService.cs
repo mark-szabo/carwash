@@ -224,52 +224,9 @@ namespace CarWash.Bot.Services
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
         /// <returns>Parsed response.</returns>
-        private async Task<T> GetAsync<T>(string endpoint, CancellationToken cancellationToken = default(CancellationToken))
+        private Task<T> GetAsync<T>(string endpoint, CancellationToken cancellationToken = default(CancellationToken))
         {
-            try
-            {
-                var response = await _client.GetAsync(endpoint, cancellationToken);
-                var responseContent = await response.Content?.ReadAsStringAsync();
-
-                switch (response.StatusCode)
-                {
-                    case System.Net.HttpStatusCode.BadRequest:
-                        throw new CarwashApiException(responseContent.Trim('"'), response);
-                    case System.Net.HttpStatusCode.Forbidden:
-                        throw new CarwashApiException("Sorry, but you don't have permission to do this.", response);
-                    case System.Net.HttpStatusCode.InternalServerError:
-                        throw new CarwashApiException("I'm not able to access the CarWash app right now.", response);
-                    case System.Net.HttpStatusCode.NotFound:
-                        throw new CarwashApiException("Sorry, I haven't found this one.", response);
-                    case System.Net.HttpStatusCode.Unauthorized:
-                        throw new CarwashApiException("You are not authenticated. Log in by typing 'login'.", response);
-                }
-
-                response.EnsureSuccessStatusCode();
-
-                return JsonConvert.DeserializeObject<T>(responseContent);
-            }
-            catch (CarwashApiException e)
-            {
-                _telemetryClient.TrackException(
-                    e,
-                    new Dictionary<string, string>
-                    {
-                            { "Error message", e.Message },
-                            { "Response body", await e.Response?.Content?.ReadAsStringAsync() },
-                            { "Request body", await e.Response?.RequestMessage?.Content?.ReadAsStringAsync() },
-                            { "Request uri", $"{e.Response?.RequestMessage?.Method?.ToString()} {e.Response?.RequestMessage?.RequestUri?.AbsoluteUri}" },
-                            { "Request headers", e.Response?.RequestMessage?.Headers?.ToJson() },
-                    });
-
-                throw e;
-            }
-            catch (Exception e)
-            {
-                _telemetryClient.TrackException(e);
-
-                throw new Exception($"I'm not able to access the CarWash app right now.", e);
-            }
+            return MakeApiRequestAsync<T>(() => _client.GetAsync(endpoint, cancellationToken: cancellationToken));
         }
 
         /// <summary>
@@ -281,52 +238,9 @@ namespace CarWash.Bot.Services
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
         /// <returns>Parsed response.</returns>
-        private async Task<T> PostAsync<T>(string endpoint, HttpContent content, CancellationToken cancellationToken = default(CancellationToken))
+        private Task<T> PostAsync<T>(string endpoint, HttpContent content, CancellationToken cancellationToken = default(CancellationToken))
         {
-            try
-            {
-                var response = await _client.PostAsync(endpoint, content, cancellationToken);
-                var responseContent = await response.Content.ReadAsStringAsync();
-
-                switch (response.StatusCode)
-                {
-                    case System.Net.HttpStatusCode.BadRequest:
-                        throw new CarwashApiException(responseContent.Trim('"'), response);
-                    case System.Net.HttpStatusCode.Forbidden:
-                        throw new CarwashApiException("Sorry, but you don't have permission to do this.", response);
-                    case System.Net.HttpStatusCode.InternalServerError:
-                        throw new CarwashApiException("I'm not able to access the CarWash app right now.", response);
-                    case System.Net.HttpStatusCode.NotFound:
-                        throw new CarwashApiException("Sorry, I haven't found this one.", response);
-                    case System.Net.HttpStatusCode.Unauthorized:
-                        throw new CarwashApiException("You are not authenticated. Log in by typing 'login'.", response);
-                }
-
-                response.EnsureSuccessStatusCode();
-
-                return JsonConvert.DeserializeObject<T>(responseContent);
-            }
-            catch (CarwashApiException e)
-            {
-                _telemetryClient.TrackException(
-                    e,
-                    new Dictionary<string, string>
-                    {
-                            { "Error message", e.Message },
-                            { "Response body", await e.Response?.Content?.ReadAsStringAsync() },
-                            { "Request body", await e.Response?.RequestMessage?.Content?.ReadAsStringAsync() },
-                            { "Request uri", $"{e.Response?.RequestMessage?.Method?.ToString()} {e.Response?.RequestMessage?.RequestUri?.AbsoluteUri}" },
-                            { "Request headers", e.Response?.RequestMessage?.Headers?.ToJson() },
-                    });
-
-                throw e;
-            }
-            catch (Exception e)
-            {
-                _telemetryClient.TrackException(e);
-
-                throw new Exception($"I'm not able to access the CarWash app right now.", e);
-            }
+            return MakeApiRequestAsync<T>(() => _client.PostAsync(endpoint, content, cancellationToken: cancellationToken));
         }
 
         /// <summary>
@@ -337,17 +251,28 @@ namespace CarWash.Bot.Services
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
         /// <returns>Parsed response.</returns>
-        private async Task<T> DeleteAsync<T>(string endpoint, CancellationToken cancellationToken = default(CancellationToken))
+        private Task<T> DeleteAsync<T>(string endpoint, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return MakeApiRequestAsync<T>(() => _client.DeleteAsync(endpoint, cancellationToken));
+        }
+
+        /// <summary>
+        /// Makes a request to the api endpoint specified in the parameter and returns the parsed response.
+        /// </summary>
+        /// <typeparam name="T">Type the API response should be parsed to.</typeparam>
+        /// <param name="func">One of <see cref="HttpClient"/>'s HTTP request func. (GetAsync, PostAsync, etc).</param>
+        /// <returns>Parsed response.</returns>
+        private async Task<T> MakeApiRequestAsync<T>(Func<Task<HttpResponseMessage>> func)
         {
             try
             {
-                var response = await _client.DeleteAsync(endpoint, cancellationToken);
-                var responseContent = await response.Content.ReadAsStringAsync();
+                var response = await func();
+                var responseContent = response.Content is HttpContent c ? await c.ReadAsStringAsync() : null;
 
                 switch (response.StatusCode)
                 {
                     case System.Net.HttpStatusCode.BadRequest:
-                        throw new CarwashApiException(responseContent.Trim('"'), response);
+                        throw new CarwashApiException(responseContent?.Trim('"'), response);
                     case System.Net.HttpStatusCode.Forbidden:
                         throw new CarwashApiException("Sorry, but you don't have permission to do this.", response);
                     case System.Net.HttpStatusCode.InternalServerError:
@@ -369,8 +294,8 @@ namespace CarWash.Bot.Services
                     new Dictionary<string, string>
                     {
                             { "Error message", e.Message },
-                            { "Response body", await e.Response?.Content?.ReadAsStringAsync() },
-                            { "Request body", await e.Response?.RequestMessage?.Content?.ReadAsStringAsync() },
+                            { "Response body", e.Response?.Content is HttpContent responseContent ? await responseContent.ReadAsStringAsync() : null },
+                            { "Request body", e.Response?.RequestMessage?.Content is HttpContent requestContent ? await requestContent.ReadAsStringAsync() : null },
                             { "Request uri", $"{e.Response?.RequestMessage?.Method?.ToString()} {e.Response?.RequestMessage?.RequestUri?.AbsoluteUri}" },
                             { "Request headers", e.Response?.RequestMessage?.Headers?.ToJson() },
                     });

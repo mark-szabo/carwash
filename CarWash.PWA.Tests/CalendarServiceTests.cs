@@ -1,5 +1,5 @@
 ﻿using CarWash.ClassLibrary.Models;
-using CarWash.PWA.Services;
+using CarWash.ClassLibrary.Services;
 using Moq;
 using Moq.Protected;
 using System;

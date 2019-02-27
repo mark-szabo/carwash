@@ -2,7 +2,7 @@
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
-namespace CarWash.PWA.Services
+namespace CarWash.ClassLibrary.Services
 {
     /// <inheritdoc />
     public class GraphService : IGraphService

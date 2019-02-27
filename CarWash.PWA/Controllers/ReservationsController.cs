@@ -4,8 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
-using CarWash.PWA.Extensions;
-using CarWash.PWA.Services;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
@@ -33,10 +31,11 @@ namespace CarWash.PWA.Controllers
         private readonly IEmailService _emailService;
         private readonly ICalendarService _calendarService;
         private readonly IPushService _pushService;
+        private readonly IBotService _botService;
         private readonly TelemetryClient _telemetryClient;
 
         /// <inheritdoc />
-        public ReservationsController(CarWashConfiguration configuration, ApplicationDbContext context, IUsersController usersController, IEmailService emailService, ICalendarService calendarService, IPushService pushService)
+        public ReservationsController(CarWashConfiguration configuration, ApplicationDbContext context, IUsersController usersController, IEmailService emailService, ICalendarService calendarService, IPushService pushService, IBotService botService)
         {
             _configuration = configuration;
             _context = context;
@@ -44,6 +43,7 @@ namespace CarWash.PWA.Controllers
             _emailService = emailService;
             _calendarService = calendarService;
             _pushService = pushService;
+            _botService = botService;
             _telemetryClient = new TelemetryClient();
         }
 
@@ -616,6 +616,9 @@ namespace CarWash.PWA.Controllers
                 }
             }
 
+            // Try to send message through bot
+            await _botService.SendWashStartedMessageAsync(reservation);
+
             return NoContent();
         }
 
@@ -671,7 +674,7 @@ namespace CarWash.PWA.Controllers
                         Subject = reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!",
                         Body = $"You can find it here: {reservation.Location}",
                     };
-                    await _emailService.Send(email);
+                    await _emailService.Send(email, TimeSpan.FromMinutes(1));
                     break;
                 case NotificationChannel.Push:
                     var notification = new Notification
@@ -692,6 +695,9 @@ namespace CarWash.PWA.Controllers
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
+            // Try to send message through bot
+            await _botService.SendWashCompletedMessageAsync(reservation);
 
             return NoContent();
         }
@@ -853,6 +859,9 @@ namespace CarWash.PWA.Controllers
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
+            // Try to send message through bot
+            await _botService.SendCarWashCommentLeftMessageAsync(reservation);
 
             return NoContent();
         }

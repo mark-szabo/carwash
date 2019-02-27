@@ -265,7 +265,7 @@ class Settings extends TrackedComponent {
                         label={user.calendarIntegration ? 'On' : 'Off'}
                     />
                 </Paper>
-                {(user.isAdmin || user.IsCarwashAdmin) && (
+                {(user.isAdmin || user.isCarwashAdmin) && (
                     <Paper className={classes.paper} elevation={1}>
                         <Typography variant="h5" component="h3">
                             Export reservations to Excel

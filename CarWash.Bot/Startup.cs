@@ -6,6 +6,7 @@ using System.Linq;
 using CarWash.Bot.Middlewares;
 using CarWash.Bot.Proactive;
 using CarWash.Bot.States;
+using CarWash.ClassLibrary.Models;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.AspNetCore;
 using Microsoft.ApplicationInsights.Extensibility;
@@ -66,6 +67,9 @@ namespace CarWash.Bot
         /// <param name="services">Specifies the contract for a <see cref="IServiceCollection"/> of service descriptors.</param>
         public void ConfigureServices(IServiceCollection services)
         {
+            var config = Configuration.Get<CarWashConfiguration>();
+            services.AddSingleton(config);
+
             var secretKey = Configuration.GetSection("botFileSecret")?.Value;
             var botFilePath = Configuration.GetSection("botFilePath")?.Value;
 
@@ -109,7 +113,10 @@ namespace CarWash.Bot
             services.AddSingleton<ITelemetryProcessorFactory>(sp => new SnapshotCollectorTelemetryProcessorFactory(sp));
 
             // Add proactive message services
-            services.AddSingleton<DropoffReminder, DropoffReminder>();
+            services.AddSingleton<DropoffReminderMessage, DropoffReminderMessage>();
+            services.AddSingleton<WashStartedMessage, WashStartedMessage>();
+            services.AddSingleton<WashCompletedMessage, WashCompletedMessage>();
+            services.AddSingleton<CarWashCommentLeftMessage, CarWashCommentLeftMessage>();
 
             // Memory Storage is for local bot debugging only. When the bot
             // is restarted, everything stored in memory will be gone.
@@ -195,7 +202,10 @@ namespace CarWash.Bot
             _loggerFactory = loggerFactory;
 
             // Register proactive message handlers
-            serviceProvider.GetService<DropoffReminder>().RegisterHandler();
+            serviceProvider.GetService<DropoffReminderMessage>().RegisterHandler();
+            serviceProvider.GetService<WashStartedMessage>().RegisterHandler();
+            serviceProvider.GetService<WashCompletedMessage>().RegisterHandler();
+            serviceProvider.GetService<CarWashCommentLeftMessage>().RegisterHandler();
 
             app.UseDefaultFiles()
                 .UseStaticFiles()

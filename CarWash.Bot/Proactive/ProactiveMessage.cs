@@ -24,16 +24,12 @@ using Newtonsoft.Json;
 namespace CarWash.Bot.Proactive
 {
     /// <summary>
-    /// Proactive messaging service for sending out reminders to the users to drop-off their keys.
+    /// Proactive messaging service.
     /// </summary>
-    public class DropoffReminder
+    /// <typeparam name="T">Type the incoming Service Bus message should be serialized to.</typeparam>
+    public abstract class ProactiveMessage<T>
+        where T : ServiceBusMessage
     {
-        /// <summary>
-        /// Service Bus queue name.
-        /// </summary>
-        private const string ServiceBusQueueName = "bot-dropoff-reminder";
-        private const string ServiceBusQueueNameDev = "bot-dropoff-reminder-dev";
-
         private readonly QueueClient _queueClient;
         private readonly CloudTable _table;
         private readonly EndpointService _endpoint;
@@ -44,14 +40,15 @@ namespace CarWash.Bot.Proactive
         private readonly TelemetryClient _telemetryClient;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DropoffReminder"/> class.
+        /// Initializes a new instance of the <see cref="ProactiveMessage{T}"/> class.
         /// </summary>
         /// <param name="accessors">The state accessors for managing bot state.</param>
         /// <param name="adapterIntegration">The <see cref="BotFrameworkAdapter"/> connects the bot to the service endpoint of the given channel.</param>
         /// <param name="env">Provides information about the web hosting environment an application is running in.</param>
-        /// <param name="botConfig">The parsed .bot config file.</param>
         /// <param name="services">External services.</param>
-        public DropoffReminder(StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotConfiguration botConfig, BotServices services)
+        /// <param name="queueName">Service Bus queue name.</param>
+        /// <param name="dialogs">List of Types of other <see cref="Dialog"/>s used when sending out the proactive message.</param>
+        public ProactiveMessage(StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotServices services, string queueName, Dialog[] dialogs)
         {
             _accessors = accessors;
             _env = env;
@@ -59,7 +56,7 @@ namespace CarWash.Bot.Proactive
             _telemetryClient = new TelemetryClient();
 
             _dialogs = new DialogSet(_accessors.DialogStateAccessor);
-            _dialogs.Add(new FindReservationDialog());
+            foreach (var dialog in dialogs) _dialogs.Add(dialog);
 
             // Verify Endpoint configuration.
             var endpointConfig = env.IsProduction() ? CarWashBot.EndpointConfiguration : CarWashBot.EndpointConfigurationDev;
@@ -79,7 +76,6 @@ namespace CarWash.Bot.Proactive
             if (!services.ServiceBusServices.ContainsKey(CarWashBot.ServiceBusConfiguration))
                 throw new ArgumentException($"Invalid configuration. Please check your '.bot' file for a Service Bus service named '{CarWashBot.ServiceBusConfiguration}'.");
 
-            var queueName = env.IsProduction() ? ServiceBusQueueName : ServiceBusQueueNameDev;
             _queueClient = new QueueClient(services.ServiceBusServices[CarWashBot.ServiceBusConfiguration], queueName, ReceiveMode.PeekLock, null);
         }
 
@@ -105,6 +101,28 @@ namespace CarWash.Bot.Proactive
             _queueClient.RegisterMessageHandler(ProcessMessagesAsync, messageHandlerOptions);
         }
 
+        /// <summary>
+        /// Get activities to be sent out as proactive messages in a new conversation.
+        /// </summary>
+        /// <param name="context">Dialog context.</param>
+        /// <param name="message">Serialized Service Bus message.</param>
+        /// <param name="userProfile">User profile from state.</param>
+        /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
+        /// or threads to receive notice of cancellation.</param>
+        /// <returns>An array of activities to be sent out.</returns>
+        protected abstract IActivity[] GetActivities(DialogContext context, T message, UserProfile userProfile, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Begin new dialogs if needed.
+        /// This gets called after the proactive messages were successfully sent out.
+        /// </summary>
+        /// <param name="context">Dialog context.</param>
+        /// <param name="message">Serialized Service Bus message.</param>
+        /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
+        /// or threads to receive notice of cancellation.</param>
+        /// <returns>Task.</returns>
+        protected abstract Task BeginDialogAfterMessageAsync(DialogContext context, T message, CancellationToken cancellationToken = default);
+
         private Task ExceptionReceivedHandler(ExceptionReceivedEventArgs args)
         {
             var context = args.ExceptionReceivedContext;
@@ -118,25 +136,32 @@ namespace CarWash.Bot.Proactive
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Process incoming Service Bus messages, and create a new conversation with the user.
+        /// This will call <see cref="MessageCallback(T, UserInfoEntity)"/> when teh new conversation was successfuly created.
+        /// </summary>
+        /// <param name="message">Service Bus message object.</param>
+        /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
+        /// or threads to receive notice of cancellation.</param>
+        /// <returns>Task.</returns>
         private async Task ProcessMessagesAsync(Message message, CancellationToken cancellationToken)
         {
             var json = Encoding.UTF8.GetString(message.Body);
-            var reminder = JsonConvert.DeserializeObject<DropoffReminderMessage>(json);
+            var parsedMessage = JsonConvert.DeserializeObject<T>(json);
 
-            var userInfos = await _table.RetrieveUserInfoAsync(reminder.UserId);
+            var logProperties = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+            logProperties.Add("ProactiveMessageType", GetType().Name);
+            logProperties.Add("ServiceBusSequenceNumber", message.SystemProperties.SequenceNumber.ToString());
+
+            var userInfos = await _table.RetrieveUserInfoAsync(parsedMessage.UserId);
 
             if (userInfos == null || userInfos.Count == 0)
             {
                 await _queueClient.CompleteAsync(message.SystemProperties.LockToken);
 
                 _telemetryClient.TrackEvent(
-                    "Failed to send bot drop-off reminder proactive message: User was not found in the bot's database.",
-                    new Dictionary<string, string>
-                    {
-                        { "User Carwash ID", reminder.UserId },
-                        { "Reservation ID", reminder.ReservationId },
-                        { "SequenceNumber", message.SystemProperties.SequenceNumber.ToString() },
-                    });
+                    "Failed to send bot proactive message: User was not found in the bot's database.",
+                    logProperties);
             }
 
             if (!_env.IsProduction()) userInfos = userInfos.Where(i => i.ChannelId == ChannelIds.Emulator).ToList();
@@ -150,7 +175,7 @@ namespace CarWash.Bot.Proactive
                         userInfo.ServiceUrl,
                         new MicrosoftAppCredentials(_endpoint.AppId, _endpoint.AppPassword),
                         new ConversationParameters(bot: userInfo.Bot, members: new List<ChannelAccount> { userInfo.User }, channelData: userInfo.ChannelData),
-                        DropOffReminderCallback(reminder.ReservationId, userInfo),
+                        MessageCallback(parsedMessage, userInfo),
                         cancellationToken);
 
                     // Same with an existing conversation
@@ -161,7 +186,7 @@ namespace CarWash.Bot.Proactive
                     //   new ConversationAccount(null, null, userInfo.CurrentConversation.Conversation.Id, null, null, null),
                     //   userInfo.ChannelId,
                     //   userInfo.ServiceUrl);
-                    // await _botFrameworkAdapter.ContinueConversationAsync(_endpoint.AppId, conversation, DropOffReminderCallback(), cancellationToken);
+                    // await _botFrameworkAdapter.ContinueConversationAsync(_endpoint.AppId, conversation, MessageCallback(), cancellationToken);
                 }
                 catch (ErrorResponseException e)
                 {
@@ -191,19 +216,23 @@ namespace CarWash.Bot.Proactive
             await _queueClient.CompleteAsync(message.SystemProperties.LockToken);
 
             _telemetryClient.TrackEvent(
-                "Bot drop-off reminder proactive message sent.",
-                new Dictionary<string, string>
-                {
-                    { "Reservation ID", reminder.ReservationId },
-                    { "SequenceNumber", message.SystemProperties.SequenceNumber.ToString() },
-                },
+                "Proactive message sent by bot.",
+                logProperties,
                 new Dictionary<string, double>
                 {
                     { "Proactive message", 1 },
+                    { $"Proactive{GetType().Name}", 1 },
                 });
         }
 
-        private BotCallbackHandler DropOffReminderCallback(string reservationId, UserInfoEntity userInfo) =>
+        /// <summary>
+        /// Sends out the activities from <see cref="GetActivities(DialogContext, T, UserProfile, CancellationToken)"/>
+        /// and calls <see cref="BeginDialogAfterMessageAsync(DialogContext, T, CancellationToken)"/> to begin new dialogs if needed.
+        /// </summary>
+        /// <param name="message">Serialized Service Bus message.</param>
+        /// <param name="userInfo">User information from Storage Tables.</param>
+        /// <returns>A callback handler.</returns>
+        private BotCallbackHandler MessageCallback(T message, UserInfoEntity userInfo) =>
             async (turnContext, cancellationToken) =>
             {
                 try
@@ -212,34 +241,27 @@ namespace CarWash.Bot.Proactive
                     turnContext.Activity.From = userInfo.User;
 
                     var profile = await _accessors.UserProfileAccessor.GetAsync(turnContext, () => null, cancellationToken);
-                    var greeting = profile?.NickName == null ? "Hi!" : $"Hi {profile.NickName}!";
-
-                    // Send the user a proactive reminder message.
-                    await turnContext.SendActivitiesAsync(
-                        new IActivity[]
-                        {
-                            new Activity(type: ActivityTypes.Message, text: greeting),
-                            new Activity(type: ActivityTypes.Message, text: "Sorry for bothering!"),
-                            new Activity(type: ActivityTypes.Message, text: "Just wanted to remind you, that it's time to leave the key at the reception."),
-                            new Activity(type: ActivityTypes.Message, text: "And please don't forget to confirm the vehicle location! You can do it here by clicking the 'Confirm key drop-off' button below."),
-                        }, cancellationToken);
 
                     // Create a dialog context
                     var dc = await _dialogs.CreateContextAsync(turnContext, cancellationToken);
 
-                    // Show them the reservation
-                    await dc.BeginDialogAsync(
-                        nameof(FindReservationDialog),
-                        new FindReservationDialog.FindReservationDialogOptions { ReservationId = reservationId },
-                        cancellationToken: cancellationToken);
+                    var activities = GetActivities(dc, message, profile, cancellationToken);
+
+                    // Send the user a proactive reminder message.
+                    await turnContext.SendActivitiesAsync(activities, cancellationToken);
+
+                    // Start a dialog after proactive message was sent to user
+                    await BeginDialogAfterMessageAsync(dc, message, cancellationToken);
                 }
                 catch (Exception e)
                 {
-                    _telemetryClient.TrackException(e, new Dictionary<string, string>
+                    var logProperties = new Dictionary<string, string>
                     {
                         { "Activity", turnContext?.Activity?.ToJson() ?? "No activity." },
-                        { "Reservation ID", reservationId ?? "Reservation ID missing." },
-                    });
+                    };
+                    if (message is ReservationServiceBusMessage m) logProperties.Add("Reservation ID", m.ReservationId ?? "Reservation ID missing.");
+
+                    _telemetryClient.TrackException(e, logProperties);
                 }
             };
     }

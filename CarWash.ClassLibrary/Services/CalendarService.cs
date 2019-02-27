@@ -6,7 +6,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CarWash.PWA.Services
+namespace CarWash.ClassLibrary.Services
 {
     /// <inheritdoc />
     public class CalendarService : ICalendarService
