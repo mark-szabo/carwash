@@ -264,7 +264,7 @@ namespace CarWash.Bot.Dialogs
                 await _stateAccessor.SetAsync(step.Context, state, cancellationToken);
             }
 
-            var prompt = MessageFactory.Text("Which spot? If you don't know, just say skip.");
+            var prompt = MessageFactory.Text("Which spot? If you don't know, just type skip.");
             prompt.SuggestedActions = new SuggestedActions
             {
                 Actions = new List<CardAction>

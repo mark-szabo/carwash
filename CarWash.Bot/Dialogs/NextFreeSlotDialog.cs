@@ -49,10 +49,10 @@ namespace CarWash.Bot.Dialogs
                 switch (numberOfSlots)
                 {
                     case 0:
-                        await dc.Context.SendActivityAsync("I haven't found any free slots in the next year! Crazy times... 🤦‍", cancellationToken: cancellationToken);
+                        await dc.Context.SendActivityAsync("I couldn't find ANY free slots in the next year! Crazy times... 🤦‍", cancellationToken: cancellationToken);
                         return await dc.EndDialogAsync(cancellationToken: cancellationToken);
                     case 1:
-                        activities.Add(new Activity(type: ActivityTypes.Message, text: "I have found just this one:"));
+                        activities.Add(new Activity(type: ActivityTypes.Message, text: "Currently there is only one free slot:"));
                         break;
                     default:
                         activities.Add(new Activity(type: ActivityTypes.Message, text: $"Here are the next {numberOfSlots} free slots:"));
@@ -64,7 +64,7 @@ namespace CarWash.Bot.Dialogs
                     activities.Add(new Activity(type: ActivityTypes.Message, text: slot));
                 }
 
-                activities.Add(new Activity(type: ActivityTypes.Message, text: $"To make a new reservation, just say 'reserve for {freeSlots.First()}'."));
+                activities.Add(new Activity(type: ActivityTypes.Message, text: $"To make a new reservation, just type 'reserve for {freeSlots.First()}'."));
             }
             catch (AuthenticationException)
             {

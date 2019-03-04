@@ -166,7 +166,7 @@ namespace CarWash.Bot.Dialogs
                 ConfirmationPromptName,
                 new PromptOptions
                 {
-                    Prompt = MessageFactory.Text($"Are you sure you want to cancel your reservation for {reservation.StartDate.ToNaturalLanguage()} for {reservation.VehiclePlateNumber}?"),
+                    Prompt = MessageFactory.Text($"Are you sure you want to cancel your reservation on {reservation.StartDate.ToNaturalLanguage()} for {reservation.VehiclePlateNumber}?"),
                 },
                 cancellationToken);
         }
