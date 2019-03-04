@@ -240,7 +240,7 @@ namespace CarWash.Bot.Dialogs
                 RecommendedSlotsPromptName,
                 new PromptOptions
                 {
-                    Prompt = MessageFactory.Text("Can I recommend you one of these slots? If you want to choose something else, just say skip."),
+                    Prompt = MessageFactory.Text("Can I recommend you one of these slots? If you want to choose something else, just type skip."),
                     Choices = choices,
                 },
                 cancellationToken);
@@ -435,7 +435,7 @@ namespace CarWash.Bot.Dialogs
                 PrivatePromptName,
                 new PromptOptions
                 {
-                    Prompt = MessageFactory.Text("Is this your private car? I mean, not a company car?"),
+                    Prompt = MessageFactory.Text("Is this your private (not company-owned, but privately held) car?"),
                 },
                 cancellationToken);
         }
@@ -603,13 +603,13 @@ namespace CarWash.Bot.Dialogs
 
                 if (date.Subtract(DateTime.Today).Days > 365)
                 {
-                    await promptContext.Context.SendActivityAsync($"Sorry, you cannot reserve for more than 365 days in the future.").ConfigureAwait(false);
+                    await promptContext.Context.SendActivityAsync($"Sorry, you cannot make a reservation more than 365 days into the future.").ConfigureAwait(false);
                     return false;
                 }
 
                 if (date < DateTime.Today)
                 {
-                    await promptContext.Context.SendActivityAsync($"Sorry, you cannot reserve in the past.").ConfigureAwait(false);
+                    await promptContext.Context.SendActivityAsync($"Sorry, you cannot make a reservation in the past - the time machine is down 😊").ConfigureAwait(false);
                     return false;
                 }
 
@@ -617,7 +617,7 @@ namespace CarWash.Bot.Dialogs
             }
             else
             {
-                await promptContext.Context.SendActivityAsync($"Sorry, I wasn't able to get the date. Can you please rephrase it?").ConfigureAwait(false);
+                await promptContext.Context.SendActivityAsync($"Sorry, I couldn't understand the date. Can you please rephrase it?").ConfigureAwait(false);
                 return false;
             }
         }
@@ -660,7 +660,7 @@ namespace CarWash.Bot.Dialogs
             foreach (var service in servicesStringArray)
             {
                 if (Enum.TryParse(service, true, out ServiceType serviceType)) services.Add(serviceType);
-                else _telemetryClient.TrackEvent("Failed to parse choosen services.", new Dictionary<string, string> { { "Activity value", activity.Value.ToJson() } });
+                else _telemetryClient.TrackEvent("Failed to parse chosen services.", new Dictionary<string, string> { { "Activity value", activity.Value.ToJson() } });
             }
 
             return services;

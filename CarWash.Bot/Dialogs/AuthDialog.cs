@@ -107,7 +107,7 @@ namespace CarWash.Bot.Dialogs
                 {
                     ConnectionName = AuthConnectionName,
                     Text = "Click to sign in!",
-                    Title = "Sign in",
+                    Title = "Sign In",
                     Timeout = 300000, // User has 5 minutes to login (1000 * 60 * 5)
                 });
         }
