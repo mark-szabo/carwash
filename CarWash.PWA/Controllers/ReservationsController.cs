@@ -308,11 +308,23 @@ namespace CarWash.PWA.Controllers
             // Check if MPV
             reservation.Mpv = await IsMpvAsync(reservation.VehiclePlateNumber);
 
-            // Add calendar event using Microsoft Graph
-            if (reservation.UserId == _user.Id && _user.CalendarIntegration)
+            // Send meeting request
+            if (reservation.UserId == _user.Id)
             {
-                reservation.User = _user;
-                reservation.OutlookEventId = await _calendarService.CreateEventAsync(reservation);
+                if (_user.CalendarIntegration)
+                {
+                    reservation.User = _user;
+                    reservation.OutlookEventId = await _calendarService.CreateEventAsync(reservation);
+                }
+            }
+            else
+            {
+                var user = await _context.Users.FindAsync(reservation.UserId);
+                if (user.CalendarIntegration)
+                {
+                    reservation.User = user;
+                    reservation.OutlookEventId = await _calendarService.CreateEventAsync(reservation);
+                }
             }
 
             _context.Reservation.Add(reservation);
