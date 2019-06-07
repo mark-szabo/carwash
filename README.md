@@ -1,6 +1,6 @@
 # CarWash app
 
-[![Build Status](https://dev.azure.com/mark-szabo/carwash/_apis/build/status/CarWash%20CI?branchName=master)](https://dev.azure.com/mark-szabo/carwash/_build/latest?definitionId=2?branchName=master)
+[![License](https://img.shields.io/:license-mit-blue.svg)](http://microsoft.mit-license.org) [![Build Status](https://dev.azure.com/mark-szabo/carwash/_apis/build/status/CarWash%20CI?branchName=master)](https://dev.azure.com/mark-szabo/carwash/_build/latest?definitionId=2?branchName=master)
 
 The CarWash app is a demo app running in production, demonstrating Microsoft Hungary's digital transformation and the benefits of using Azure platform services.
 
