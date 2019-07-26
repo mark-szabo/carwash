@@ -215,6 +215,16 @@ namespace CarWash.PWA.Controllers
                 }
             }
 
+            // Track event with AppInsight
+            _telemetryClient.TrackEvent(
+                "Reservation was updated.",
+                new Dictionary<string, string>
+                {
+                    { "Reservation ID", dbReservation.Id },
+                    { "Reservation user ID", dbReservation.UserId },
+                    { "Action user ID", _user.Id },
+                });
+
             return Ok(new ReservationViewModel(dbReservation));
         }
 
@@ -330,6 +340,16 @@ namespace CarWash.PWA.Controllers
             _context.Reservation.Add(reservation);
             await _context.SaveChangesAsync();
 
+            // Track event with AppInsight
+            _telemetryClient.TrackEvent(
+                "New reservation was submitted.",
+                new Dictionary<string, string>
+                {
+                    { "Reservation ID", reservation.Id },
+                    { "Reservation user ID", reservation.UserId },
+                    { "Action user ID", _user.Id },
+                });
+
             return CreatedAtAction("GetReservation", new { id = reservation.Id }, new ReservationViewModel(reservation));
         }
 
@@ -360,6 +380,16 @@ namespace CarWash.PWA.Controllers
 
             // Delete calendar event using Microsoft Graph
             await _calendarService.DeleteEventAsync(reservation);
+
+            // Track event with AppInsight
+            _telemetryClient.TrackEvent(
+                "Reservation was deleted.",
+                new Dictionary<string, string>
+                {
+                    { "Reservation ID", reservation.Id },
+                    { "Reservation user ID", reservation.UserId },
+                    { "Action user ID", _user.Id },
+                });
 
             return Ok(new ReservationViewModel(reservation));
         }
@@ -501,6 +531,16 @@ namespace CarWash.PWA.Controllers
                 }
             }
 
+            // Track event with AppInsight
+            _telemetryClient.TrackEvent(
+                "Key dropoff was confirmed by user.",
+                new Dictionary<string, string>
+                {
+                    { "Reservation ID", reservation.Id },
+                    { "Reservation user ID", reservation.UserId },
+                    { "Action user ID", _user.Id },
+                });
+
             return NoContent();
         }
 
@@ -534,30 +574,36 @@ namespace CarWash.PWA.Controllers
             if (reservations == null || reservations.Count == 0) return NotFound("No reservations found.");
 
             Reservation reservation;
+            string reservationResolution;
             // Only one active - straightforward
             if (reservations.Count == 1)
             {
                 reservation = reservations[0];
+                reservationResolution = "Only one active reservation.";
             }
-            // Vehicle plate number was specified - easy
-            else if (model.VehiclePlateNumber != null && reservations.Count(r => r.VehiclePlateNumber == model.VehiclePlateNumber) == 1)
+            // Vehicle plate number was specified and only one reservation for that car - easy
+            else if (model.VehiclePlateNumber?.ToUpper() != null && reservations.Count(r => r.VehiclePlateNumber == model.VehiclePlateNumber) == 1)
             {
-                reservation = reservations.Single(r => r.VehiclePlateNumber == model.VehiclePlateNumber);
+                reservation = reservations.Single(r => r.VehiclePlateNumber == model.VehiclePlateNumber.ToUpper());
+                reservationResolution = "Vehicle plate number was specified and only one reservation exists for that car.";
             }
             // Only one where we are waiting for the key - still pretty straightforward
             else if (reservations.Count(r => r.State == State.ReminderSentWaitingForKey) == 1)
             {
                 reservation = reservations.Single(r => r.State == State.ReminderSentWaitingForKey);
+                reservationResolution = "Only one reservation in 'waiting for key' state.";
             }
             // One where we are waiting for the key and is today - eg. there's another one in the past where the key was not dropped off and nobody deleted it
             else if (reservations.Count(r => r.State == State.ReminderSentWaitingForKey && r.StartDate.Date == DateTime.Today) == 1)
             {
                 reservation = reservations.Single(r => r.State == State.ReminderSentWaitingForKey && r.StartDate.Date == DateTime.Today);
+                reservationResolution = "Only one reservation TODAY in 'waiting for key' state.";
             }
             // Only one active reservation today - eg. user has two reservations, one today, one in the future and on the morning drops off the keys before the reminder
             else if (reservations.Count(r => r.StartDate.Date == DateTime.Today) == 1)
             {
                 reservation = reservations.Single(r => r.StartDate.Date == DateTime.Today);
+                reservationResolution = "Only one reservation today.";
             }
             else if (model.VehiclePlateNumber == null)
             {
@@ -584,6 +630,21 @@ namespace CarWash.PWA.Controllers
                     throw;
                 }
             }
+
+            // Track event with AppInsight
+            _telemetryClient.TrackEvent(
+                "Key dropoff was confirmed by 3rd party service.",
+                new Dictionary<string, string>
+                {
+                    { "Reservation ID", reservation.Id },
+                    { "Reservation user ID", reservation.UserId },
+                    { "Reservation resolution method", reservationResolution },
+                    { "Number of active reservation of the user", reservations.Count.ToString() },
+                },
+                new Dictionary<string, double>
+                {
+                    { "Service dropoff", 1 },
+                });
 
             return NoContent();
         }
