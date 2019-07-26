@@ -30,7 +30,7 @@
     "@material-ui/core": "^3.9.2",
     "@material-ui/icons": "^3.0.2",
     "adal-angular": "^1.0.17",
-    "ajv": "^6.10.0",
+    "ajv": "^6.10.2",
     "applicationinsights-js": "^1.0.20",
     "downloadjs": "^1.4.7",
     "moment": "^2.24.0",
@@ -44,7 +44,7 @@
     "react-scripts": "^3.0.1",
     "react-virtualized": "^9.21.1",
     "rimraf": "^2.6.3",
-    "tslib": "^1.9.3"
+    "tslib": "^1.10.0"
   },
   "scripts": {
     "start": "rimraf ./build && react-scripts start",
