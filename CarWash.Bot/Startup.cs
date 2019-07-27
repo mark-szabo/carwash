@@ -117,6 +117,7 @@ namespace CarWash.Bot
             services.AddSingleton<WashStartedMessage, WashStartedMessage>();
             services.AddSingleton<WashCompletedMessage, WashCompletedMessage>();
             services.AddSingleton<CarWashCommentLeftMessage, CarWashCommentLeftMessage>();
+            services.AddSingleton<VehicleArrivedMessage, VehicleArrivedMessage>();
 
             // Memory Storage is for local bot debugging only. When the bot
             // is restarted, everything stored in memory will be gone.
@@ -206,6 +207,7 @@ namespace CarWash.Bot
             serviceProvider.GetService<WashStartedMessage>().RegisterHandler();
             serviceProvider.GetService<WashCompletedMessage>().RegisterHandler();
             serviceProvider.GetService<CarWashCommentLeftMessage>().RegisterHandler();
+            serviceProvider.GetService<VehicleArrivedMessage>().RegisterHandler();
 
             app.UseDefaultFiles()
                 .UseStaticFiles()

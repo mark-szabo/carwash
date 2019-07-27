@@ -245,6 +245,15 @@ namespace CarWash.ClassLibrary.Models
             /// Key: ServiceBusQueues:BotCarWashCommentLeftQueue
             /// </remarks>
             public string BotCarWashCommentLeftQueue { get; set; }
+
+            /// <summary>
+            /// Service Bus queue name for the chat bot's vehicle-arrived notifications.
+            /// </summary>
+            /// <remarks>
+            /// Location: Application Settings
+            /// Key: ServiceBusQueues:BotVehicleArrivedNotificationQueue
+            /// </remarks>
+            public string BotVehicleArrivedNotificationQueue { get; set; }
         }
 
         /// <summary>
