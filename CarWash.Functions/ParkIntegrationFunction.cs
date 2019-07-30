@@ -46,15 +46,19 @@ namespace CarWash.Functions
             log.LogInformation($"Parking sessions retrived from Park API. ({watch.ElapsedMilliseconds}ms)");
 
             var licensePlates = parkingSessions
-                .Where(s => s.start > DateTime.Now.AddMinutes(-5))
+                .Where(s => s.start > DateTime.UtcNow.AddMinutes(-5))
                 .Select(s => s.vehicle.normalized_licence_plate.ToUpper())
                 .ToList();
+
+            log.LogMetric("VehicleArrived", parkingSessions.Count(s => s.start > DateTime.UtcNow.AddMinutes(-1)));
 
             if (licensePlates.Count == 0)
             {
                 log.LogInformation($"No new vehicles have arrived. Exiting. ({watch.ElapsedMilliseconds}ms)");
                 return;
             }
+            log.LogInformation($"{licensePlates.Count} vehicles have arrived in the last 5 minutes. ({watch.ElapsedMilliseconds}ms)");
+
 
             // Get reservations from SQL database where the car has just arrived
             var reservations = await _context.Reservation
@@ -137,6 +141,7 @@ If don't want to get email reminders in the future, you can <a href='https://car
                 log.LogInformation($"Bot reminder was sent to the user ({reservation.User.Id}) about the reservation with id: {reservation.Id}. ({watch.ElapsedMilliseconds}ms)");
             }
 
+            log.LogMetric("VehicleArrivedNotificationSent", reservations.Count);
             log.LogInformation("All reminders have been sent successfully.");
             watch.Stop();
         }
