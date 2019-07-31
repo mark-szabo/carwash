@@ -22,7 +22,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarWash.Bot", "CarWash.Bot\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarWash.PWA.Tests", "CarWash.PWA.Tests\CarWash.PWA.Tests.csproj", "{FA0DF964-2C02-4B90-AD6E-167A692EFED7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarWash.PWA.UiTests", "CarWash.PWA.UiTests\CarWash.PWA.UiTests.csproj", "{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarWash.PWA.UiTests", "CarWash.PWA.UiTests\CarWash.PWA.UiTests.csproj", "{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
