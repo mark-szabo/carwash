@@ -28,7 +28,7 @@
                   "maxLines": 1
                 }
               ],
-              "width": 1
+              "width": 5
             },
             {
               "type": "Column",
@@ -44,7 +44,7 @@
                   "maxLines": 1
                 }
               ],
-              "width": "stretch"
+              "width": 1
             }
           ]
         },
