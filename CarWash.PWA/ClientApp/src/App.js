@@ -25,7 +25,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import NotFound from './components/NotFound';
 
 // A theme with custom primary and secondary color.
-const theme = createMuiTheme({
+const lightTheme = createMuiTheme({
     palette: {
         primary: {
             light: '#b5ffff',
@@ -57,6 +57,10 @@ const darkTheme = createMuiTheme({
             light: '#b5ffff',
             main: '#80d8ff',
             dark: '#49a7cc',
+        },
+        background: {
+            default: '#1d1d1d',
+            paper: '#323232',
         },
     },
     typography: {
@@ -424,6 +428,8 @@ export default class App extends Component {
             backlogUpdateFound,
             lastSettings,
         } = this.state;
+
+        const theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? darkTheme : lightTheme;
 
         return (
             <MuiThemeProvider theme={theme}>

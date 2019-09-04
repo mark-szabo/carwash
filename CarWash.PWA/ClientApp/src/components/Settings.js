@@ -27,14 +27,14 @@ import Spinner from './Spinner';
 
 const styles = theme => ({
     dangerButton: {
-        color: red[300],
+        color: theme.palette.type === 'dark' ? '#CF6679' : red[300],
         '&:hover': {
             backgroundColor: 'rgba(229,115,115,0.08)',
         },
     },
     dangerButtonContained: {
         color: '#FFFFFF',
-        backgroundColor: 'rgb(225, 0, 80)',
+        backgroundColor: theme.palette.type === 'dark' ? '#CF6679' : 'rgb(225, 0, 80)',
         '&:hover': {
             backgroundColor: 'rgb(157, 0, 56)',
         },

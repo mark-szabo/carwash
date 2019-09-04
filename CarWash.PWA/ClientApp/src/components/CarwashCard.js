@@ -50,6 +50,7 @@ const styles = theme => ({
     media: {
         height: 0,
         paddingTop: '48.83%', // 512:250
+        opacity: 0.75,
     },
     dangerButton: {
         color: red[300],
