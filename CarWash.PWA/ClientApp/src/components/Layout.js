@@ -36,6 +36,9 @@ const styles = theme => ({
         [theme.breakpoints.up('md')]: {
             width: `calc(100% - ${drawerWidth}px)`,
         },
+        ...(theme.palette.type === 'dark' && {
+            backgroundColor: theme.palette.background.paper,
+        }),
     },
     navIconHide: {
         [theme.breakpoints.up('md')]: {
@@ -71,21 +74,21 @@ const styles = theme => ({
         padding: '16px 24px',
     },
     menuList: {
-        backgroundColor: '#ffffff',
+        backgroundColor: theme.palette.background.paper,
         zIndex: 1,
     },
     footer: {
         position: 'absolute',
         bottom: 0,
         padding: 24,
-        color: 'rgba(0, 0, 0, 0.54)',
+        color: theme.palette.type === 'dark' ? 'rgba(255, 255, 255, 0.54)' : 'rgba(0, 0, 0, 0.54)',
         fontSize: '0.8125rem',
         fontWeight: 400,
         zIndex: 0,
     },
     link: {
         textDecoration: 'underline',
-        color: 'rgba(0, 0, 0, 0.54)',
+        color: theme.palette.type === 'dark' ? 'rgba(255, 255, 255, 0.54)' : 'rgba(0, 0, 0, 0.54)',
         fontSize: '0.8125rem',
         fontWeight: 400,
     },
@@ -194,14 +197,14 @@ class Layout extends React.Component {
             <div className={classes.root}>
                 <AppBar className={classes.appBar}>
                     <Toolbar>
-                        <IconButton color="inherit" aria-label="open drawer" onClick={this.handleDrawerToggle} className={classes.navIconHide}>
+                        <IconButton aria-label="open drawer" onClick={this.handleDrawerToggle} className={classes.navIconHide}>
                             <MenuIcon />
                         </IconButton>
-                        <Typography variant="h6" color="inherit" noWrap className={classes.flex}>
+                        <Typography variant="h6" noWrap className={classes.flex}>
                             {this.getNavbarName()}
                         </Typography>
                         {refresh && (
-                            <IconButton color="inherit" aria-label="refresh" onClick={refresh}>
+                            <IconButton aria-label="refresh" onClick={refresh}>
                                 <RefreshIcon />
                             </IconButton>
                         )}

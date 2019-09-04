@@ -53,3 +53,7 @@ iframe {
     border-radius: 4px;
   }
 }
+
+:focus {
+  outline: none;
+}

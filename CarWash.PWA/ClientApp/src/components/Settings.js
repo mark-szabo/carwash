@@ -60,7 +60,7 @@ const styles = theme => ({
     },
     link: {
         textDecoration: 'underline',
-        color: 'initial',
+        color: theme.palette.text.primary,
     },
     title: {
         marginTop: '16px',

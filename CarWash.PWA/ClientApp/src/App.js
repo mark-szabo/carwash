@@ -44,6 +44,27 @@ const theme = createMuiTheme({
     },
 });
 
+// DARK MODE
+const darkTheme = createMuiTheme({
+    palette: {
+        type: 'dark',
+        primary: {
+            light: '#b5ffff',
+            main: '#80d8ff',
+            dark: '#49a7cc',
+        },
+        secondary: {
+            light: '#b5ffff',
+            main: '#80d8ff',
+            dark: '#49a7cc',
+        },
+    },
+    typography: {
+        fontFamily: ['"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'].join(','),
+        useNextVariants: true,
+    },
+});
+
 function getSafeString(obj) {
     return JSON.stringify(obj)
         .replace(/'|"|{|}|\[|\]/g, ' ')
