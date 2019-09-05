@@ -57,9 +57,10 @@ const styles = theme => ({
     media: {
         height: 0,
         paddingTop: '48.83%', // 512:250
+        opacity: 0.75,
     },
     dangerButton: {
-        color: red[300],
+        color: theme.palette.type === 'dark' ? '#CF6679' : red[300],
         '&:hover': {
             backgroundColor: 'rgba(229,115,115,0.08)',
         },

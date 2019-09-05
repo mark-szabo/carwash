@@ -18,6 +18,8 @@ const styles = theme => {
     const transition = {
         duration: theme.transitions.duration.shortest,
     };
+    const secodaryColor = theme.palette.type === 'dark' ? 'rgba(255, 255, 255, 0.54)' : 'rgba(0, 0, 0, 0.54)';
+
     return {
         title: {
             paddingTop: theme.spacing.unit,
@@ -80,25 +82,25 @@ const styles = theme => {
         },
         cell: {
             padding: '16px 8px 16px 24px',
-            borderBottom: 'initial',
-            borderTop: '1px solid rgba(224, 224, 224, 1)',
+            borderBottom: 'none',
+            borderTop: theme.palette.type === 'dark' ? '1px solid rgba(81, 81, 81, 1)' : '1px solid rgba(224, 224, 224, 1)',
         },
         titleCell: {
             padding: '16px 8px 8px 24px',
         },
         descriptionCell: {
             padding: '0 8px 16px 24px',
-            color: 'rgba(0, 0, 0, 0.54)',
+            color: secodaryColor,
         },
         row: {
             height: 'initial',
         },
         contactUs: {
             padding: 24,
-            color: 'rgba(0, 0, 0, 0.54)',
+            color: secodaryColor,
         },
         link: {
-            color: 'rgba(0, 0, 0, 0.54)',
+            color: secodaryColor,
             textDecoration: 'underline',
         },
     };

@@ -7,7 +7,7 @@ import { withStyles } from '@material-ui/core/styles';
 const styles = theme => ({
     link: {
         textDecoration: 'underline',
-        color: 'initial',
+        color: theme.palette.text.primary,
     },
     paper: {
         ...theme.mixins.gutters(),

@@ -3,12 +3,12 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 
-const styles = {
+const styles = theme => ({
     comment: {
         borderTopRightRadius: '1.3em',
         borderTopLeftRadius: '1.3em',
         borderBottomRightRadius: '1.3em',
-        backgroundColor: '#e0e0e0',
+        backgroundColor: theme.palette.type === 'dark' ? '#616161' : '#e0e0e0',
         padding: '6px 12px',
         margin: '1px 0',
         clear: 'left',
@@ -17,7 +17,7 @@ const styles = {
         whiteSpace: 'pre-wrap',
     },
     commentName: {
-        color: 'rgba(0, 0, 0, .40)',
+        color: theme.palette.type === 'dark' ? 'rgba(255, 255, 255, .40)' : 'rgba(0, 0, 0, .40)',
         fontSize: '12px',
         fontWeight: 'normal',
         lineHeight: '1.1',
@@ -35,7 +35,7 @@ const styles = {
         lineHeight: 0,
         visibility: 'hidden',
     },
-};
+});
 
 class CommentIncoming extends Component {
     displayName = 'CommentIncoming';
