@@ -154,7 +154,7 @@ export function getServiceList() {
             name: getServiceName(Service.VignetteRemoval),
             price: 466,
             priceMpv: 466,
-            description: 'eg. highway tickets on the windscreen',
+            description: 'eg. highway vignettes on the windscreen',
         },
         {
             id: Service.Polishing,
@@ -168,7 +168,7 @@ export function getServiceList() {
             name: getServiceName(Service.AcCleaningOzon),
             price: 8033,
             priceMpv: 8033,
-            description: 'disinfects the molecules with ozone',
+            description: 'disinfects molecules with ozone',
         },
         {
             id: Service.AcCleaningBomba,
@@ -176,6 +176,20 @@ export function getServiceList() {
             price: 6426,
             priceMpv: 6426,
             description: 'blowing chemical spray in the AC system',
+        },
+        {
+            id: Service.PreWash,
+            name: getServiceName(Service.PreWash),
+            price: 804,
+            priceMpv: 804,
+            description: "we'll add this if it's needed",
+        },
+        {
+            id: Service.TireCare,
+            name: getServiceName(Service.TireCare),
+            price: 804,
+            priceMpv: 804,
+            description: "we'll add this if it's needed",
         },
     ];
 }
