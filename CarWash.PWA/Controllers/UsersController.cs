@@ -284,7 +284,7 @@ Please keep in mind, that we are required to continue storing your previous rese
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!_context.Users.Any(e => e.Id == id))
                 {
                     return NotFound();
                 }
