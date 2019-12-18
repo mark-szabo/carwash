@@ -35,7 +35,7 @@ namespace CarWash.PWA.Controllers
         private readonly TelemetryClient _telemetryClient;
 
         /// <inheritdoc />
-        public ReservationsController(CarWashConfiguration configuration, ApplicationDbContext context, IUsersController usersController, IEmailService emailService, ICalendarService calendarService, IPushService pushService, IBotService botService)
+        public ReservationsController(CarWashConfiguration configuration, ApplicationDbContext context, IUsersController usersController, IEmailService emailService, ICalendarService calendarService, IPushService pushService, IBotService botService, TelemetryClient telemetryClient)
         {
             _configuration = configuration;
             _context = context;
@@ -44,7 +44,7 @@ namespace CarWash.PWA.Controllers
             _calendarService = calendarService;
             _pushService = pushService;
             _botService = botService;
-            _telemetryClient = new TelemetryClient();
+            _telemetryClient = telemetryClient;
         }
 
         // GET: api/reservations

@@ -2,6 +2,7 @@
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Controllers;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
@@ -330,7 +331,8 @@ namespace CarWash.PWA.Tests
                 dbContext,
                 userControllerStub.Object,
                 emailServiceMock.Object,
-                calendarServiceMock.Object);
+                calendarServiceMock.Object,
+                CreateTelemetryClientStub());
 
             var result = await controller.PostBlocker(new Blocker
             {
@@ -465,7 +467,10 @@ namespace CarWash.PWA.Tests
                 dbContext,
                 userControllerStub.Object,
                 emailServiceStub.Object,
-                calendarServiceStub.Object);
+                calendarServiceStub.Object,
+                CreateTelemetryClientStub());
         }
+
+        private static TelemetryClient CreateTelemetryClientStub() => new Mock<TelemetryClient>().Object;
     }
 }

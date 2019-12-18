@@ -2,6 +2,7 @@ using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Controllers;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
@@ -1503,7 +1504,7 @@ namespace CarWash.PWA.Tests
             var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
             var userControllerStub = new Mock<IUsersController>();
             userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object);
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
 
             var result = await controller.CompleteWash(reservation.Id);
 
@@ -1531,7 +1532,7 @@ namespace CarWash.PWA.Tests
             var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
             var userControllerStub = new Mock<IUsersController>();
             userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object);
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
 
             var result = await controller.CompleteWash(reservation.Id);
 
@@ -1559,7 +1560,7 @@ namespace CarWash.PWA.Tests
             var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
             var userControllerStub = new Mock<IUsersController>();
             userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object);
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
 
             var result = await controller.CompleteWash(reservation.Id);
 
@@ -1750,7 +1751,7 @@ namespace CarWash.PWA.Tests
             var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
             var userControllerStub = new Mock<IUsersController>();
             userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object);
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
             const string COMMENT = "test";
 
             var result = await controller.AddCarwashComment(reservation.Id, COMMENT);
@@ -2254,7 +2255,8 @@ namespace CarWash.PWA.Tests
                 emailServiceStub.Object,
                 calendarServiceStub.Object,
                 pushServiceStub.Object,
-                botServiceStub.Object);
+                botServiceStub.Object,
+                CreateTelemetryClientStub());
         }
 
         private static ReservationsController CreateServiceControllerStub(ApplicationDbContext dbContext)
@@ -2274,7 +2276,10 @@ namespace CarWash.PWA.Tests
                 emailServiceStub.Object,
                 calendarServiceStub.Object,
                 pushServiceStub.Object,
-                botServiceStub.Object);
+                botServiceStub.Object,
+                CreateTelemetryClientStub());
         }
+
+        private static TelemetryClient CreateTelemetryClientStub() => new Mock<TelemetryClient>().Object;
     }
 }
