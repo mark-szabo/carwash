@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using CarWash.ClassLibrary.Models;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Queue;
+using Microsoft.Azure.Storage;
+using Microsoft.Azure.Storage.Queue;
 using Newtonsoft.Json;
 
 namespace CarWash.ClassLibrary.Services
