@@ -36,10 +36,11 @@ namespace CarWash.Bot.Dialogs
         /// Initializes a new instance of the <see cref="ConfirmDropoffDialog"/> class.
         /// </summary>
         /// <param name="stateAccessor">The <see cref="ConversationState"/> for storing properties at conversation-scope.</param>
-        public ConfirmDropoffDialog(IStatePropertyAccessor<ConfirmDropoffState> stateAccessor) : base(nameof(ConfirmDropoffDialog))
+        /// <param name="telemetryClient">Telemetry client.</param>
+        public ConfirmDropoffDialog(IStatePropertyAccessor<ConfirmDropoffState> stateAccessor, TelemetryClient telemetryClient) : base(nameof(ConfirmDropoffDialog))
         {
             _stateAccessor = stateAccessor ?? throw new ArgumentNullException(nameof(stateAccessor));
-            _telemetryClient = new TelemetryClient();
+            _telemetryClient = telemetryClient;
 
             var dialogSteps = new WaterfallStep[]
             {
@@ -53,7 +54,7 @@ namespace CarWash.Bot.Dialogs
 
             AddDialog(new WaterfallDialog(Name, dialogSteps));
             AddDialog(AuthDialog.LoginPromptDialog());
-            AddDialog(new FindReservationDialog());
+            AddDialog(new FindReservationDialog(telemetryClient));
 
             AddDialog(new ChoicePrompt(BuildingPromptName));
             AddDialog(new ChoicePrompt(FloorPromptName));
@@ -86,7 +87,7 @@ namespace CarWash.Bot.Dialogs
             List<Reservation> reservations;
             try
             {
-                var api = new CarwashService(step, cancellationToken);
+                var api = new CarwashService(step, _telemetryClient, cancellationToken);
 
                 reservations = (await api.GetMyActiveReservationsAsync(cancellationToken))
                     .Where(r => r.State == State.SubmittedNotActual || r.State == State.ReminderSentWaitingForKey)
@@ -163,7 +164,7 @@ namespace CarWash.Bot.Dialogs
             Reservation reservation;
             try
             {
-                var api = new CarwashService(step, cancellationToken);
+                var api = new CarwashService(step, _telemetryClient, cancellationToken);
 
                 reservation = await api.GetReservationAsync(state.ReservationId, cancellationToken);
             }
@@ -295,7 +296,7 @@ namespace CarWash.Bot.Dialogs
             Reservation reservation;
             try
             {
-                var api = new CarwashService(step, cancellationToken);
+                var api = new CarwashService(step, _telemetryClient, cancellationToken);
 
                 // Confirm key drop-off and location
                 await api.ConfirmDropoffAsync(state.ReservationId, state.Location, cancellationToken);

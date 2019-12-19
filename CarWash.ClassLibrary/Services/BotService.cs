@@ -16,10 +16,10 @@ namespace CarWash.ClassLibrary.Services
         private readonly TelemetryClient _telemetryClient;
 
         /// <inheritdoc />
-        public BotService(CarWashConfiguration configuration)
+        public BotService(CarWashConfiguration configuration, TelemetryClient telemetryClient)
         {
             _configuration = configuration;
-            _telemetryClient = new TelemetryClient();
+            _telemetryClient = telemetryClient;
         }
 
         /// <inheritdoc />

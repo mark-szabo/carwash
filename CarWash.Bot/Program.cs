@@ -21,7 +21,7 @@ namespace CarWash.Bot
                 .ConfigureLogging((hostingContext, logging) =>
                 {
                     // Add Azure Logging
-                    logging.AddAzureWebAppDiagnostics();
+                    // logging.AddAzureWebAppDiagnostics();
 
                     // Other Loggers.
                     // There are other logging options available:
@@ -29,11 +29,6 @@ namespace CarWash.Bot
                     // logging.AddDebug();
                     // logging.AddConsole();
                 })
-
-                // Application Insights.
-                // An alternative logging and metrics service for your application.
-                // https://azure.microsoft.com/en-us/services/application-insights/
-                .UseApplicationInsights()
                 .UseStartup<Startup>()
                 .Build();
     }

@@ -21,11 +21,11 @@ namespace CarWash.ClassLibrary.Services
         private readonly VapidDetails _vapidDetails;
 
         /// <inheritdoc />
-        public PushService(IPushDbContext context, string vapidSubject, string vapidPublicKey, string vapidPrivateKey)
+        public PushService(IPushDbContext context, string vapidSubject, string vapidPublicKey, string vapidPrivateKey, TelemetryClient telemetryClient)
         {
             _context = context;
             _client = new WebPushClient();
-            _telemetryClient = new TelemetryClient();
+            _telemetryClient = telemetryClient;
 
             CheckOrGenerateVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
 
@@ -33,11 +33,11 @@ namespace CarWash.ClassLibrary.Services
         }
 
         /// <inheritdoc />
-        public PushService(ApplicationDbContext context, CarWashConfiguration configuration)
+        public PushService(ApplicationDbContext context, CarWashConfiguration configuration, TelemetryClient telemetryClient)
         {
             _context = context;
             _client = new WebPushClient();
-            _telemetryClient = new TelemetryClient();
+            _telemetryClient = telemetryClient;
 
             var vapid = configuration.Vapid;
             CheckOrGenerateVapidDetails(vapid.Subject, vapid.PublicKey, vapid.PrivateKey);

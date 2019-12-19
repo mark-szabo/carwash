@@ -30,10 +30,11 @@ namespace CarWash.Bot.Proactive
         /// <param name="adapterIntegration">The <see cref="BotFrameworkAdapter"/> connects the bot to the service endpoint of the given channel.</param>
         /// <param name="env">Provides information about the web hosting environment an application is running in.</param>
         /// <param name="services">External services.</param>
-        public CarWashCommentLeftMessage(CarWashConfiguration configuration, StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotServices services)
-            : base(accessors, adapterIntegration, env, services, configuration.ServiceBusQueues.BotCarWashCommentLeftQueue, new Dialog[] { AuthDialog.LoginPromptDialog(), new FindReservationDialog() })
+        /// <param name="telemetryClient">Telemetry client.</param>
+        public CarWashCommentLeftMessage(CarWashConfiguration configuration, StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotServices services, TelemetryClient telemetryClient)
+            : base(accessors, adapterIntegration, env, services, configuration.ServiceBusQueues.BotCarWashCommentLeftQueue, new Dialog[] { AuthDialog.LoginPromptDialog(), new FindReservationDialog(telemetryClient) }, telemetryClient)
         {
-            _telemetryClient = new TelemetryClient();
+            _telemetryClient = telemetryClient;
         }
 
         /// <inheritdoc />
@@ -42,7 +43,7 @@ namespace CarWash.Bot.Proactive
             Reservation reservation = null;
             try
             {
-                var api = new CarwashService(context, cancellationToken);
+                var api = new CarwashService(context, _telemetryClient, cancellationToken);
                 reservation = api.GetReservationAsync(message.ReservationId, cancellationToken).GetAwaiter().GetResult();
             }
             catch (Exception e)

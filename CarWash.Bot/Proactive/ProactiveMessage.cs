@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -48,12 +48,13 @@ namespace CarWash.Bot.Proactive
         /// <param name="services">External services.</param>
         /// <param name="queueName">Service Bus queue name.</param>
         /// <param name="dialogs">List of Types of other <see cref="Dialog"/>s used when sending out the proactive message.</param>
-        public ProactiveMessage(StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotServices services, string queueName, Dialog[] dialogs)
+        /// <param name="telemetryClient">Telemetry client.</param>
+        public ProactiveMessage(StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotServices services, string queueName, Dialog[] dialogs, TelemetryClient telemetryClient)
         {
             _accessors = accessors;
             _env = env;
             _botFrameworkAdapter = (BotFrameworkAdapter)adapterIntegration;
-            _telemetryClient = new TelemetryClient();
+            _telemetryClient = telemetryClient;
 
             _dialogs = new DialogSet(_accessors.DialogStateAccessor);
             foreach (var dialog in dialogs) _dialogs.Add(dialog);

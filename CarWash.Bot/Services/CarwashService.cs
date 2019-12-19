@@ -33,7 +33,8 @@ namespace CarWash.Bot.Services
         /// CarWash Service for accessing the CarWash API.
         /// </summary>
         /// <param name="token">Authentication token.</param>
-        internal CarwashService(string token)
+        /// <param name="telemetryClient">Telemetry client.</param>
+        internal CarwashService(string token, TelemetryClient telemetryClient)
         {
             if (string.IsNullOrEmpty(token)) throw new AuthenticationException("Not authenticated.");
 
@@ -41,7 +42,7 @@ namespace CarWash.Bot.Services
             _client.BaseAddress = new Uri("https://carwashu.azurewebsites.net/");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            _telemetryClient = new TelemetryClient();
+            _telemetryClient = telemetryClient;
         }
 
         /// <summary>
@@ -49,9 +50,10 @@ namespace CarWash.Bot.Services
         /// CarWash Service for accessing the CarWash API.
         /// </summary>
         /// <param name="dc">Dialog context.</param>
+        /// <param name="telemetryClient">Telemetry client.</param>
         /// <param name="cancellationToken" >(Optional) A <see cref="CancellationToken"/> that can be used by other objects
         /// or threads to receive notice of cancellation.</param>
-        internal CarwashService(DialogContext dc, CancellationToken cancellationToken = default(CancellationToken))
+        internal CarwashService(DialogContext dc, TelemetryClient telemetryClient, CancellationToken cancellationToken = default(CancellationToken))
         {
             var token = AuthDialog.GetToken(dc, cancellationToken).GetAwaiter().GetResult();
             if (string.IsNullOrEmpty(token)) throw new AuthenticationException("Not authenticated.");
@@ -60,7 +62,7 @@ namespace CarWash.Bot.Services
             _client.BaseAddress = new Uri("https://carwashu.azurewebsites.net/");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            _telemetryClient = new TelemetryClient();
+            _telemetryClient = telemetryClient;
         }
 
         /// <summary>

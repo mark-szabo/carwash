@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using System;
@@ -41,11 +41,12 @@ namespace CarWash.Bot.Dialogs
         /// </summary>
         /// <param name="userProfileAccessor">The <see cref="UserProfile"/> for storing properties at user-scope.</param>
         /// <param name="storage">Storage account.</param>
-        public AuthDialog(IStatePropertyAccessor<UserProfile> userProfileAccessor, CloudStorageAccount storage) : base(nameof(AuthDialog))
+        /// <param name="telemetryClient">Telemetry client.</param>
+        public AuthDialog(IStatePropertyAccessor<UserProfile> userProfileAccessor, CloudStorageAccount storage, TelemetryClient telemetryClient) : base(nameof(AuthDialog))
         {
             _userProfileAccessor = userProfileAccessor;
             _table = storage.CreateCloudTableClient().GetTableReference(CarWashBot.UserStorageTableName);
-            _telemetryClient = new TelemetryClient();
+            _telemetryClient = telemetryClient;
 
             var dialogSteps = new WaterfallStep[]
             {
@@ -56,7 +57,7 @@ namespace CarWash.Bot.Dialogs
             // Add the OAuth prompts and related dialogs into the dialog set
             AddDialog(new WaterfallDialog(Name, dialogSteps));
             AddDialog(LoginPromptDialog());
-            AddDialog(new FindReservationDialog());
+            AddDialog(new FindReservationDialog(telemetryClient));
         }
 
         /// <summary>
@@ -146,7 +147,7 @@ namespace CarWash.Bot.Dialogs
             // Call Carwash API and update UserProfile state
             try
             {
-                var api = new CarwashService(tokenResponse.Token);
+                var api = new CarwashService(tokenResponse.Token, _telemetryClient);
 
                 var carwashUser = await api.GetMe(cancellationToken);
 

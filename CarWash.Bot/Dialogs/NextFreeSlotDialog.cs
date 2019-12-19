@@ -21,9 +21,10 @@ namespace CarWash.Bot.Dialogs
         /// <summary>
         /// Initializes a new instance of the <see cref="NextFreeSlotDialog"/> class.
         /// </summary>
-        public NextFreeSlotDialog() : base(nameof(NextFreeSlotDialog))
+        /// <param name="telemetryClient">Telemetry client.</param>
+        public NextFreeSlotDialog(TelemetryClient telemetryClient) : base(nameof(NextFreeSlotDialog))
         {
-            _telemetryClient = new TelemetryClient();
+            _telemetryClient = telemetryClient;
         }
 
         /// <summary>
@@ -40,7 +41,7 @@ namespace CarWash.Bot.Dialogs
 
             try
             {
-                var api = new CarwashService(dc, cancellationToken);
+                var api = new CarwashService(dc, _telemetryClient, cancellationToken);
 
                 var freeSlots = await api.GetNextFreeSlotsAsync(cancellationToken: cancellationToken);
                 var numberOfSlots = freeSlots.Count();

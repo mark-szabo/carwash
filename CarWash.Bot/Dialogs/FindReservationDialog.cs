@@ -22,9 +22,10 @@ namespace CarWash.Bot.Dialogs
         /// <summary>
         /// Initializes a new instance of the <see cref="FindReservationDialog"/> class.
         /// </summary>
-        public FindReservationDialog() : base(nameof(FindReservationDialog))
+        /// <param name="telemetryClient">Telemetry client.</param>
+        public FindReservationDialog(TelemetryClient telemetryClient) : base(nameof(FindReservationDialog))
         {
-            _telemetryClient = new TelemetryClient();
+            _telemetryClient = telemetryClient;
         }
 
         /// <summary>
@@ -44,7 +45,7 @@ namespace CarWash.Bot.Dialogs
             {
                 var o = options as FindReservationDialogOptions ?? new FindReservationDialogOptions();
 
-                var api = o.Token != null ? new CarwashService(o.Token) : new CarwashService(dc, cancellationToken);
+                var api = o.Token != null ? new CarwashService(o.Token, _telemetryClient) : new CarwashService(dc, _telemetryClient, cancellationToken);
 
                 if (o.ReservationId != null)
                 {
