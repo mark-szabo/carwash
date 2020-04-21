@@ -203,8 +203,7 @@ namespace CarWash.Bot.Dialogs
             // Check whether we already know something about the date.
             if (state.StartDate != null) return await step.NextAsync(cancellationToken: cancellationToken);
 
-            var recommendedSlots = new List<DateTime>();
-
+            List<DateTime> recommendedSlots;
             try
             {
                 var api = new CarwashService(step, _telemetryClient, cancellationToken);

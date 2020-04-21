@@ -1,5 +1,6 @@
 ﻿using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
+using Microsoft.ApplicationInsights;
 using Moq;
 using Moq.Protected;
 using System;
@@ -39,7 +40,7 @@ namespace CarWash.PWA.Tests
                 BaseAddress = new Uri("https://test.com/"),
             };
 
-            var calendarService = new CalendarService(configurationStub, httpClient);
+            var calendarService = new CalendarService(configurationStub, CreateTelemetryClientStub(),  httpClient);
 
             var reservationStub = CreateDefaultReservation();
 
@@ -88,7 +89,7 @@ namespace CarWash.PWA.Tests
                 BaseAddress = new Uri("https://test.com/"),
             };
 
-            var calendarService = new CalendarService(configurationStub, httpClient);
+            var calendarService = new CalendarService(configurationStub, CreateTelemetryClientStub(), httpClient);
 
             var reservationStub = CreateDefaultReservation();
             reservationStub.OutlookEventId = OUTLOOK_EVENT_ID;
@@ -138,7 +139,7 @@ namespace CarWash.PWA.Tests
                 BaseAddress = new Uri("https://test.com/"),
             };
 
-            var calendarService = new CalendarService(configurationStub, httpClient);
+            var calendarService = new CalendarService(configurationStub, CreateTelemetryClientStub(), httpClient);
 
             var reservationStub = CreateDefaultReservation();
             reservationStub.OutlookEventId = OUTLOOK_EVENT_ID;
@@ -179,5 +180,7 @@ namespace CarWash.PWA.Tests
                 LogicAppUrl = "https://test.com/",
             }
         };
+
+        private static TelemetryClient CreateTelemetryClientStub() => new Mock<TelemetryClient>().Object;
     }
 }
