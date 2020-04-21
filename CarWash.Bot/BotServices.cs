@@ -1,13 +1,13 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License
 
 using System;
 using System.Collections.Generic;
 using Microsoft.Azure.ServiceBus;
-using Microsoft.Azure.Storage;
 using Microsoft.Bot.Builder.AI.Luis;
 using Microsoft.Bot.Builder.AI.QnA;
 using Microsoft.Bot.Configuration;
+using Microsoft.WindowsAzure.Storage;
 
 namespace CarWash.Bot
 {
@@ -47,10 +47,6 @@ namespace CarWash.Bot
 
                             var storageAccount = CloudStorageAccount.Parse(storage.ConnectionString);
                             StorageServices.Add(storage.Name, storageAccount);
-
-                            // Create a Cosmos Table Storage client.
-                            var tableStorageAccount = Microsoft.Azure.Cosmos.Table.CloudStorageAccount.Parse(storage.ConnectionString);
-                            TableServices.Add(storage.Name, tableStorageAccount);
 
                             break;
                         }
@@ -144,18 +140,6 @@ namespace CarWash.Bot
         /// A <see cref="CloudStorageAccount"/> client instance created based on configuration in the .bot file.
         /// </value>
         public Dictionary<string, CloudStorageAccount> StorageServices { get; } = new Dictionary<string, CloudStorageAccount>();
-
-        /// <summary>
-        /// Gets the set of Cosmos Table services used.
-        /// Given there can be multiple <see cref="Microsoft.Azure.Cosmos.Table.CloudStorageAccount"/> services used in a single bot,
-        /// Storage Account instances are represented as a Dictionary. This is also modeled in the
-        /// ".bot" file using named elements.
-        /// </summary>
-        /// <remarks>The Cosmos Table services collection should not be modified while the bot is running.</remarks>
-        /// <value>
-        /// A <see cref="Microsoft.Azure.Cosmos.Table.CloudStorageAccount"/> client instance created based on configuration in the .bot file.
-        /// </value>
-        public Dictionary<string, Microsoft.Azure.Cosmos.Table.CloudStorageAccount> TableServices { get; } = new Dictionary<string, Microsoft.Azure.Cosmos.Table.CloudStorageAccount>();
 
         /// <summary>
         /// Gets the set of QnA Maker services used.

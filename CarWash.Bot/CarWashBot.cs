@@ -12,8 +12,6 @@ using CarWash.Bot.States;
 using CarWash.ClassLibrary.Enums;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
-using Microsoft.Azure.Storage;
-using Microsoft.Azure.Storage.Blob;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.AI.Luis;
 using Microsoft.Bot.Builder.AI.QnA;
@@ -22,6 +20,8 @@ using Microsoft.Bot.Configuration;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
 using Microsoft.Recognizers.Text.DataTypes.TimexExpression;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
 using Newtonsoft.Json;
 
 namespace CarWash.Bot
@@ -85,7 +85,6 @@ namespace CarWash.Bot
         private readonly LuisRecognizer _luis;
         private readonly QnAMaker _qna;
         private readonly CloudStorageAccount _storage;
-        private readonly Microsoft.Azure.Cosmos.Table.CloudStorageAccount _tableStorage;
         private readonly TelemetryClient _telemetryClient;
 
         /// <summary>
@@ -118,7 +117,6 @@ namespace CarWash.Bot
             if (!services.StorageServices.ContainsKey(StorageConfiguration))
                 throw new ArgumentException($"Invalid configuration. Please check your '.bot' file for a Storage service named '{StorageConfiguration}'.");
             _storage = services.StorageServices[StorageConfiguration];
-            _tableStorage = services.TableServices[StorageConfiguration];
 
             Dialogs = new DialogSet(_accessors.DialogStateAccessor);
             Dialogs.Add(new NewReservationDialog(_accessors.NewReservationStateAccessor, telemetryClient));
@@ -126,7 +124,7 @@ namespace CarWash.Bot
             Dialogs.Add(new CancelReservationDialog(_accessors.CancelReservationStateAccessor, telemetryClient));
             Dialogs.Add(new FindReservationDialog(telemetryClient));
             Dialogs.Add(new NextFreeSlotDialog(telemetryClient));
-            Dialogs.Add(new AuthDialog(accessors.UserProfileAccessor, _tableStorage, telemetryClient));
+            Dialogs.Add(new AuthDialog(accessors.UserProfileAccessor, _storage, telemetryClient));
             Dialogs.Add(AuthDialog.LoginPromptDialog());
 
             // Dialogs.Add(FormDialog.FromForm(NewReservationForm.BuildForm));

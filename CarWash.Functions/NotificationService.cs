@@ -26,7 +26,7 @@ namespace CarWash.Functions
             var vapidPublicKey = Environment.GetEnvironmentVariable("VapidPublicKey", EnvironmentVariableTarget.Process);
             var vapidPrivateKey = Environment.GetEnvironmentVariable("VapidPrivateKey", EnvironmentVariableTarget.Process);
 
-            var pushService = new PushService(context, vapidSubject, vapidPublicKey, vapidPrivateKey);
+            var pushService = new PushService(context, vapidSubject, vapidPublicKey, vapidPrivateKey, new Microsoft.ApplicationInsights.TelemetryClient());
 
             try { await pushService.Send(reservation.UserId, notification); }
             catch (Exception e)

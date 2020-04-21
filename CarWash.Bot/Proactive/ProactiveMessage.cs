@@ -10,7 +10,6 @@ using CarWash.ClassLibrary.Extensions;
 using CarWash.ClassLibrary.Models.ServiceBus;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Azure.ServiceBus;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
@@ -18,6 +17,7 @@ using Microsoft.Bot.Builder.Integration;
 using Microsoft.Bot.Configuration;
 using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Bot.Schema;
+using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
 
 namespace CarWash.Bot.Proactive
@@ -69,7 +69,7 @@ namespace CarWash.Bot.Proactive
             if (!services.StorageServices.ContainsKey(CarWashBot.StorageConfiguration))
                 throw new ArgumentException($"Invalid configuration. Please check your '.bot' file for a Storage service named '{CarWashBot.StorageConfiguration}'.");
 
-            var tableClient = services.TableServices[CarWashBot.StorageConfiguration].CreateCloudTableClient();
+            var tableClient = services.StorageServices[CarWashBot.StorageConfiguration].CreateCloudTableClient();
             _table = tableClient.GetTableReference(CarWashBot.UserStorageTableName);
 
             // Verify ServiceBus configuration.
