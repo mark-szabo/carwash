@@ -6,6 +6,7 @@ using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using System.Threading.Tasks;
 using CarWash.PWA.Attributes;
+using Microsoft.Extensions.Hosting;
 
 namespace CarWash.PWA.Controllers
 {
@@ -19,11 +20,11 @@ namespace CarWash.PWA.Controllers
     public class PushController : ControllerBase
     {
         private readonly User _user;
-        private readonly IHostingEnvironment _env;
+        private readonly IWebHostEnvironment _env;
         private readonly IPushService _pushService;
 
         /// <inheritdoc />
-        public PushController(IUsersController usersController, IHostingEnvironment hostingEnvironment, IPushService pushService)
+        public PushController(IUsersController usersController, IWebHostEnvironment hostingEnvironment, IPushService pushService)
         {
             _user = usersController.GetCurrentUser();
             _env = hostingEnvironment;
