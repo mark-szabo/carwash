@@ -20,6 +20,7 @@ using Microsoft.Bot.Configuration;
 using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -38,7 +39,7 @@ namespace CarWash.Bot
         /// This method gets called by the runtime and adds services to the container.
         /// </summary>
         /// <param name="env">Provides information about the web hosting environment an application is running in.</param>
-        public Startup(IHostingEnvironment env)
+        public Startup(IWebHostEnvironment env)
         {
             _isProduction = env.IsProduction();
 
@@ -161,7 +162,7 @@ namespace CarWash.Bot
                 ILogger logger = _loggerFactory.CreateLogger<CarWashBot>();
                 options.OnTurnError = async (context, exception) =>
                 {
-                    var telemetryClient = services.BuildServiceProvider().GetRequiredService<TelemetryClient>();
+                    var telemetryClient = new TelemetryClient();
                     telemetryClient.TrackException(exception);
                     logger.LogError($"Exception caught : {exception}");
                     await context.SendActivityAsync("Sorry, it looks like something went wrong.");
@@ -197,7 +198,7 @@ namespace CarWash.Bot
         /// <param name="env">Hosting Environment.</param>
         /// <param name="serviceProvider">Service Provider.</param>
         /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to create logger object for tracing.</param>
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider serviceProvider, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider serviceProvider, ILoggerFactory loggerFactory)
         {
             _loggerFactory = loggerFactory;
 
