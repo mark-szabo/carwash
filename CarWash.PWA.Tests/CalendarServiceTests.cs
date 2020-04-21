@@ -1,6 +1,8 @@
 ﻿using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.Extensibility;
 using Moq;
 using Moq.Protected;
 using System;
@@ -181,6 +183,16 @@ namespace CarWash.PWA.Tests
             }
         };
 
-        private static TelemetryClient CreateTelemetryClientStub() => new Mock<TelemetryClient>().Object;
+        private static TelemetryClient CreateTelemetryClientStub()
+        {
+            TelemetryConfiguration configuration = new TelemetryConfiguration
+            {
+                TelemetryChannel = new Mock<ITelemetryChannel>().Object,
+                InstrumentationKey = Guid.NewGuid().ToString()
+            };
+            configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
+
+            return new TelemetryClient(configuration);
+        }
     }
 }

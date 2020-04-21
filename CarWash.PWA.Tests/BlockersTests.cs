@@ -3,6 +3,8 @@ using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Controllers;
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
@@ -141,6 +143,7 @@ namespace CarWash.PWA.Tests
 
             var result = await controller.PostBlocker(new Blocker
             {
+                Id = Guid.NewGuid().ToString(),
                 StartDate = new DateTime(2019, 12, 02, 00, 00, 00, DateTimeKind.Local),
                 EndDate = null,
             });
@@ -311,6 +314,7 @@ namespace CarWash.PWA.Tests
             var john = await dbContext.Users.SingleAsync(u => u.Email == JOHN_EMAIL);
             await dbContext.Reservation.AddAsync(new Reservation
             {
+                Id = Guid.NewGuid().ToString(),
                 UserId = john.Id,
                 VehiclePlateNumber = "TEST01",
                 State = State.SubmittedNotActual,
@@ -336,6 +340,7 @@ namespace CarWash.PWA.Tests
 
             var result = await controller.PostBlocker(new Blocker
             {
+                Id = Guid.NewGuid().ToString(),
                 StartDate = new DateTime(2019, 11, 05, 00, 00, 00, DateTimeKind.Local),
                 EndDate = null,
             });
@@ -417,6 +422,7 @@ namespace CarWash.PWA.Tests
             // Seed database
             var john = new User
             {
+                Id = Guid.NewGuid().ToString(),
                 Email = JOHN_EMAIL,
                 FirstName = "John",
                 LastName = "Doe",
@@ -427,6 +433,7 @@ namespace CarWash.PWA.Tests
             dbContext.Users.Add(john);
             dbContext.Users.Add(new User
             {
+                Id = Guid.NewGuid().ToString(),
                 Email = ADMIN_EMAIL,
                 FirstName = "John, the admin",
                 LastName = "Doe",
@@ -436,6 +443,7 @@ namespace CarWash.PWA.Tests
             });
             dbContext.Users.Add(new User
             {
+                Id = Guid.NewGuid().ToString(),
                 Email = CARWASH_ADMIN_EMAIL,
                 FirstName = "John, from CarWash",
                 LastName = "Doe",
@@ -446,6 +454,7 @@ namespace CarWash.PWA.Tests
 
             dbContext.Blocker.Add(new Blocker
             {
+                Id = Guid.NewGuid().ToString(),
                 StartDate = new DateTime(2019, 11, 20, 00, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(2019, 11, 22, 23, 59, 59, DateTimeKind.Local),
             });
@@ -471,6 +480,16 @@ namespace CarWash.PWA.Tests
                 CreateTelemetryClientStub());
         }
 
-        private static TelemetryClient CreateTelemetryClientStub() => new Mock<TelemetryClient>().Object;
+        private static TelemetryClient CreateTelemetryClientStub()
+        {
+            TelemetryConfiguration configuration = new TelemetryConfiguration
+            {
+                TelemetryChannel = new Mock<ITelemetryChannel>().Object,
+                InstrumentationKey = Guid.NewGuid().ToString()
+            };
+            configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
+
+            return new TelemetryClient(configuration);
+        }
     }
 }
