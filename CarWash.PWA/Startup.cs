@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.EntityFrameworkCore;
@@ -33,6 +32,9 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
+using Microsoft.Azure.Amqp.Framing;
 
 namespace CarWash.PWA
 {
@@ -188,8 +190,6 @@ namespace CarWash.PWA
                     };
                 });
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
             {
@@ -232,30 +232,52 @@ namespace CarWash.PWA
             // Swagger API Documentation generator
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v2", new Info { Title = "CarWash API", Version = "v2" });
+                c.SwaggerDoc("v2", new OpenApiInfo { Title = "CarWash API", Version = "v2" });
 
                 var authority = $"{config.AzureAd.Instance}oauth2/v2.0";
-                c.AddSecurityDefinition("OAuth2", new OAuth2Scheme
+                c.AddSecurityDefinition("OAuth2", new OpenApiSecurityScheme
                 {
                     Description = "OAuth2 SSO authentication.",
-                    Flow = "implicit",
-                    AuthorizationUrl = authority + "/authorize",
-                    TokenUrl = authority + "/connect/token",
-                    Scopes = new Dictionary<string, string>
+                    Type = SecuritySchemeType.OAuth2,
+                    Flows = new OpenApiOAuthFlows
                     {
-                        { "openid","User offline" },
+                        Implicit = new OpenApiOAuthFlow
+                        {
+                            AuthorizationUrl = new Uri(authority + "/authorize"),
+                            TokenUrl = new Uri(authority + "/connect/token"),
+                            Scopes = new Dictionary<string, string>
+                            {
+                                { "openid","User offline" },
+                            }
+                        }
                     }
                 });
 
-                c.AddSecurityDefinition("Bearer", new ApiKeyScheme
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
                     Name = "Authorization",
-                    In = "header",
-                    Type = "apiKey"
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer"
                 });
-                c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>> {
-                    { "Bearer", Enumerable.Empty<string>() },
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            },
+                            Scheme = "oauth2",
+                            Name = "Bearer",
+                            In = ParameterLocation.Header
+                        },
+                        new List<string>()
+                    }
                 });
 
                 // Set the comments path for the Swagger JSON and UI.
@@ -267,10 +289,14 @@ namespace CarWash.PWA
                 }
                 catch (FileNotFoundException) { }
             });
+
+            services.AddHealthChecks();
+
+            services.AddControllers();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider serviceProvider)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider serviceProvider)
         {
             var config = Configuration.Get<CarWashConfiguration>();
 
@@ -316,18 +342,15 @@ namespace CarWash.PWA
             });
             app.UseSpaStaticFiles();
 
-            app.UseSignalR(routes =>
-            {
-                routes.MapHub<BacklogHub>("/hub/backlog");
-            });
+            app.UseRouting();
 
-            app.UseMvc();
+            app.UseAuthorization();
 
-            app.UseMvc(routes =>
+            app.UseEndpoints(endpoints =>
             {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller}/{action=Index}/{id?}");
+                endpoints.MapHealthChecks("/healthcheck");
+                endpoints.MapHub<BacklogHub>("/hub/backlog");
+                endpoints.MapControllerRoute("default", "{controller}/{action=Index}/{id?}");
             });
 
             // Enable middleware to serve generated Swagger as a JSON endpoint.

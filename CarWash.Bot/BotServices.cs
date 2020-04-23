@@ -93,7 +93,7 @@ namespace CarWash.Bot
                                 throw new InvalidOperationException("The LUIS Region ('region') is required. Please update your '.bot' file.");
 
                             var app = new LuisApplication(luis.AppId, luis.AuthoringKey, luis.GetEndpoint());
-                            var recognizer = new LuisRecognizer(app);
+                            var recognizer = new LuisRecognizer(new LuisRecognizerOptionsV3(app));
                             LuisServices.Add(luis.Name, recognizer);
 
                             break;

@@ -94,13 +94,14 @@ namespace CarWash.Bot
         /// <param name="botConfig">The parsed .bot config file.</param>
         /// <param name="services">External services.</param>
         /// <param name="loggerFactory">Logger.</param>
-        public CarWashBot(StateAccessors accessors, BotConfiguration botConfig, BotServices services, ILoggerFactory loggerFactory)
+        /// <param name="telemetryClient">Telemetry client.</param>
+        public CarWashBot(StateAccessors accessors, BotConfiguration botConfig, BotServices services, ILoggerFactory loggerFactory, TelemetryClient telemetryClient)
         {
             _accessors = accessors ?? throw new ArgumentNullException(nameof(accessors));
             if (botConfig == null) throw new ArgumentNullException(nameof(botConfig));
             if (services == null) throw new ArgumentNullException(nameof(services));
 
-            _telemetryClient = new TelemetryClient();
+            _telemetryClient = telemetryClient;
 
             // Verify LUIS configuration.
             if (!services.LuisServices.ContainsKey(LuisConfiguration))
@@ -118,12 +119,12 @@ namespace CarWash.Bot
             _storage = services.StorageServices[StorageConfiguration];
 
             Dialogs = new DialogSet(_accessors.DialogStateAccessor);
-            Dialogs.Add(new NewReservationDialog(_accessors.NewReservationStateAccessor));
-            Dialogs.Add(new ConfirmDropoffDialog(_accessors.ConfirmDropoffStateAccessor));
-            Dialogs.Add(new CancelReservationDialog(_accessors.CancelReservationStateAccessor));
-            Dialogs.Add(new FindReservationDialog());
-            Dialogs.Add(new NextFreeSlotDialog());
-            Dialogs.Add(new AuthDialog(accessors.UserProfileAccessor, _storage));
+            Dialogs.Add(new NewReservationDialog(_accessors.NewReservationStateAccessor, telemetryClient));
+            Dialogs.Add(new ConfirmDropoffDialog(_accessors.ConfirmDropoffStateAccessor, telemetryClient));
+            Dialogs.Add(new CancelReservationDialog(_accessors.CancelReservationStateAccessor, telemetryClient));
+            Dialogs.Add(new FindReservationDialog(telemetryClient));
+            Dialogs.Add(new NextFreeSlotDialog(telemetryClient));
+            Dialogs.Add(new AuthDialog(accessors.UserProfileAccessor, _storage, telemetryClient));
             Dialogs.Add(AuthDialog.LoginPromptDialog());
 
             // Dialogs.Add(FormDialog.FromForm(NewReservationForm.BuildForm));

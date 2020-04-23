@@ -46,14 +46,16 @@ namespace CarWash.Bot.Dialogs
         /// Initializes a new instance of the <see cref="NewReservationDialog"/> class.
         /// </summary>
         /// <param name="stateAccessor">The <see cref="ConversationState"/> for storing properties at conversation-scope.</param>
-        public NewReservationDialog(IStatePropertyAccessor<NewReservationState> stateAccessor) : base(nameof(NewReservationDialog))
+        /// <param name="telemetryClient">Telemetry client.</param>
+        public NewReservationDialog(IStatePropertyAccessor<NewReservationState> stateAccessor, TelemetryClient telemetryClient) : base(nameof(NewReservationDialog))
         {
             _stateAccessor = stateAccessor ?? throw new ArgumentNullException(nameof(stateAccessor));
-            _telemetryClient = new TelemetryClient();
+            _telemetryClient = telemetryClient;
 
             var dialogSteps = new WaterfallStep[]
             {
                 InitializeStateStepAsync,
+
                 // PromptUsualStepAsync, // Can I start your usual order?
                 PromptForServicesStepAsync,
                 RecommendSlotsStepAsync,
@@ -68,7 +70,7 @@ namespace CarWash.Bot.Dialogs
 
             AddDialog(new WaterfallDialog(Name, dialogSteps));
             AddDialog(AuthDialog.LoginPromptDialog());
-            AddDialog(new FindReservationDialog());
+            AddDialog(new FindReservationDialog(telemetryClient));
 
             AddDialog(new TextPrompt(ServicesPromptName, ValidateServices));
             AddDialog(new ChoicePrompt(RecommendedSlotsPromptName, ValidateRecommendedSlots));
@@ -141,7 +143,7 @@ namespace CarWash.Bot.Dialogs
             {
                 try
                 {
-                    var api = new CarwashService(step, cancellationToken);
+                    var api = new CarwashService(step, _telemetryClient, cancellationToken);
 
                     state.LastSettings = await api.GetLastSettingsAsync(cancellationToken);
                 }
@@ -201,11 +203,10 @@ namespace CarWash.Bot.Dialogs
             // Check whether we already know something about the date.
             if (state.StartDate != null) return await step.NextAsync(cancellationToken: cancellationToken);
 
-            var recommendedSlots = new List<DateTime>();
-
+            List<DateTime> recommendedSlots;
             try
             {
-                var api = new CarwashService(step, cancellationToken);
+                var api = new CarwashService(step, _telemetryClient, cancellationToken);
 
                 var notAvailable = await api.GetNotAvailableDatesAndTimesAsync(cancellationToken);
                 recommendedSlots = GetRecommendedSlots(notAvailable);
@@ -290,7 +291,7 @@ namespace CarWash.Bot.Dialogs
             var reservationCapacity = new List<CarwashService.ReservationCapacity>();
             try
             {
-                var api = new CarwashService(step, cancellationToken);
+                var api = new CarwashService(step, _telemetryClient, cancellationToken);
 
                 reservationCapacity = (List<CarwashService.ReservationCapacity>)await api.GetReservationCapacityAsync(state.StartDate.Value, cancellationToken);
             }
@@ -482,7 +483,7 @@ namespace CarWash.Bot.Dialogs
 
             try
             {
-                var api = new CarwashService(step, cancellationToken);
+                var api = new CarwashService(step, _telemetryClient, cancellationToken);
 
                 // Submit reservation
                 reservation = await api.SubmitReservationAsync(reservation, cancellationToken);

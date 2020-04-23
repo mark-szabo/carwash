@@ -28,8 +28,7 @@ namespace CarWash.PWA
                     builder.AddAzureKeyVault(
                         keyVaultBaseUrl, keyVaultClient, new DefaultKeyVaultSecretManager());
                 })
-                .UseApplicationInsights()
-                .UseKestrel(c => c.AddServerHeader = false)
+                .ConfigureKestrel(c => c.AddServerHeader = false)
                 .UseStartup<Startup>();
     }
 }

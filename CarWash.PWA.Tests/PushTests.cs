@@ -17,7 +17,7 @@ namespace CarWash.PWA.Tests
         public void GetVapidPublicKey_ByDefault_ReturnsVapidPublicKey()
         {
             var userControllerStub = new Mock<IUsersController>();
-            var hostingEnvironmentStub = new Mock<IHostingEnvironment>();
+            var hostingEnvironmentStub = new Mock<IWebHostEnvironment>();
             var pushServiceMock = new Mock<IPushService>();
             const string PUBLIC_KEY = "test public key";
             pushServiceMock.Setup(m => m.GetVapidPublicKey()).Returns(PUBLIC_KEY);
@@ -38,7 +38,7 @@ namespace CarWash.PWA.Tests
         public async Task Register_ByDefault_ReturnsNoContent()
         {
             var userControllerStub = CreateUserControllerStub();
-            var hostingEnvironmentStub = new Mock<IHostingEnvironment>();
+            var hostingEnvironmentStub = new Mock<IWebHostEnvironment>();
             var pushServiceMock = new Mock<IPushService>();
             pushServiceMock.Setup(m => m.Register(It.IsAny<PushSubscription>())).Returns(Task.CompletedTask);
             var controller = new PushController(userControllerStub.Object, hostingEnvironmentStub.Object, pushServiceMock.Object);

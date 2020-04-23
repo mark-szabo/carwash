@@ -4,6 +4,7 @@ using CarWash.Bot.Dialogs;
 using CarWash.Bot.States;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Models.ServiceBus;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
@@ -25,8 +26,9 @@ namespace CarWash.Bot.Proactive
         /// <param name="adapterIntegration">The <see cref="BotFrameworkAdapter"/> connects the bot to the service endpoint of the given channel.</param>
         /// <param name="env">Provides information about the web hosting environment an application is running in.</param>
         /// <param name="services">External services.</param>
-        public VehicleArrivedMessage(CarWashConfiguration configuration, StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotServices services)
-            : base(accessors, adapterIntegration, env, services, configuration.ServiceBusQueues.BotVehicleArrivedNotificationQueue, new Dialog[] { AuthDialog.LoginPromptDialog(), new FindReservationDialog() })
+        /// <param name="telemetryClient">Telemetry client.</param>
+        public VehicleArrivedMessage(CarWashConfiguration configuration, StateAccessors accessors, IAdapterIntegration adapterIntegration, IHostingEnvironment env, BotServices services, TelemetryClient telemetryClient)
+            : base(accessors, adapterIntegration, env, services, configuration.ServiceBusQueues.BotVehicleArrivedNotificationQueue, new Dialog[] { AuthDialog.LoginPromptDialog(), new FindReservationDialog(telemetryClient) }, telemetryClient)
         {
         }
 

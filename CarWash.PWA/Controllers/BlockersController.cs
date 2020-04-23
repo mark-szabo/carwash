@@ -29,13 +29,13 @@ namespace CarWash.PWA.Controllers
         private readonly TelemetryClient _telemetryClient;
 
         /// <inheritdoc />
-        public BlockersController(ApplicationDbContext context, IUsersController usersController, IEmailService emailService, ICalendarService calendarService)
+        public BlockersController(ApplicationDbContext context, IUsersController usersController, IEmailService emailService, ICalendarService calendarService, TelemetryClient telemetryClient)
         {
             _context = context;
             _user = usersController.GetCurrentUser();
             _emailService = emailService;
             _calendarService = calendarService;
-            _telemetryClient = new TelemetryClient();
+            _telemetryClient = telemetryClient;
         }
 
         // GET: api/blockers

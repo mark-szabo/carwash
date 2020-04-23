@@ -1,5 +1,8 @@
 ﻿using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.Extensibility;
 using Moq;
 using Moq.Protected;
 using System;
@@ -39,7 +42,7 @@ namespace CarWash.PWA.Tests
                 BaseAddress = new Uri("https://test.com/"),
             };
 
-            var calendarService = new CalendarService(configurationStub, httpClient);
+            var calendarService = new CalendarService(configurationStub, CreateTelemetryClientStub(),  httpClient);
 
             var reservationStub = CreateDefaultReservation();
 
@@ -88,7 +91,7 @@ namespace CarWash.PWA.Tests
                 BaseAddress = new Uri("https://test.com/"),
             };
 
-            var calendarService = new CalendarService(configurationStub, httpClient);
+            var calendarService = new CalendarService(configurationStub, CreateTelemetryClientStub(), httpClient);
 
             var reservationStub = CreateDefaultReservation();
             reservationStub.OutlookEventId = OUTLOOK_EVENT_ID;
@@ -138,7 +141,7 @@ namespace CarWash.PWA.Tests
                 BaseAddress = new Uri("https://test.com/"),
             };
 
-            var calendarService = new CalendarService(configurationStub, httpClient);
+            var calendarService = new CalendarService(configurationStub, CreateTelemetryClientStub(), httpClient);
 
             var reservationStub = CreateDefaultReservation();
             reservationStub.OutlookEventId = OUTLOOK_EVENT_ID;
@@ -179,5 +182,17 @@ namespace CarWash.PWA.Tests
                 LogicAppUrl = "https://test.com/",
             }
         };
+
+        private static TelemetryClient CreateTelemetryClientStub()
+        {
+            TelemetryConfiguration configuration = new TelemetryConfiguration
+            {
+                TelemetryChannel = new Mock<ITelemetryChannel>().Object,
+                InstrumentationKey = Guid.NewGuid().ToString()
+            };
+            configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
+
+            return new TelemetryClient(configuration);
+        }
     }
 }

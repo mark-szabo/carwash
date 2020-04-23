@@ -16,10 +16,10 @@ namespace CarWash.ClassLibrary.Services
         private readonly HttpClient _client;
 
         /// <inheritdoc />
-        public CalendarService(CarWashConfiguration configuration, HttpClient httpClient = null)
+        public CalendarService(CarWashConfiguration configuration, TelemetryClient telemetryClient, HttpClient httpClient = null)
         {
             _configuration = configuration;
-            _telemetryClient = new TelemetryClient();
+            _telemetryClient = telemetryClient;
             _client = httpClient ?? new HttpClient();
         }
 
