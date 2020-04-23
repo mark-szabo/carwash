@@ -291,6 +291,8 @@ namespace CarWash.PWA
             });
 
             services.AddHealthChecks();
+
+            services.AddControllers();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -341,6 +343,8 @@ namespace CarWash.PWA
             app.UseSpaStaticFiles();
 
             app.UseRouting();
+
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
