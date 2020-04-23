@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using CarWash.ClassLibrary.Models;
+using CarWash.ClassLibrary.Enums;
 
 namespace CarWash.PWA.Controllers
 {
@@ -19,7 +20,7 @@ namespace CarWash.PWA.Controllers
             _configuration = configuration;
         }
 
-        // GET: api/push/vapidpublickey
+        // GET: api/.well-known/configuration
         /// <summary>
         /// Get CarWash Configuration
         /// </summary>
@@ -33,6 +34,7 @@ namespace CarWash.PWA.Controllers
                 Slots = _configuration.Slots,
                 Companies = _configuration.Companies,
                 Garages = _configuration.Garages,
+                Services = ServiceTypes.Types,
                 ReservationSettings = _configuration.Reservation,
             };
 
