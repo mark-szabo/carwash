@@ -96,9 +96,16 @@ export default class App extends Component {
         snackbarMessage: '',
         snackbarAction: null,
         notificationDialogOpen: false,
+        theme: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? darkTheme : lightTheme,
     };
 
     componentDidMount() {
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                this.setState({ theme: e.matches ? darkTheme : lightTheme });
+            });
+        }
+
         apiFetch('api/reservations').then(
             data => {
                 this.setState({
@@ -427,9 +434,8 @@ export default class App extends Component {
             backlogLoading,
             backlogUpdateFound,
             lastSettings,
+            theme,
         } = this.state;
-
-        const theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? darkTheme : lightTheme;
 
         return (
             <MuiThemeProvider theme={theme}>
