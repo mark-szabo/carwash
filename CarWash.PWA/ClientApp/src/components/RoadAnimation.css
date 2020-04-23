@@ -5,10 +5,16 @@
   --border-mid: 33%;
   --border-soft: 5%;
   --color-land: rgb(250, 250, 250);
+  --color-land-dark: rgb(29, 29, 29);
   --color-sand: radial-gradient(
     ellipse at 62%,
     rgba(250, 250, 250, 0) 15%,
     rgba(250, 250, 250, 1) 67%
+  );
+  --color-sand-dark: radial-gradient(
+    ellipse at 62%,
+    rgba(29, 29, 29, 0) 15%,
+    rgba(29, 29, 29, 1) 67%
   );
   --color-road: linear-gradient(to right, #3d3445 0%, #30243c 100%);
   --color-stripe: linear-gradient(
@@ -265,5 +271,17 @@
   }
   100% {
     opacity: 1;
+  }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .scene {
+    background: var(--color-land-dark);
+  }
+  
+  .inner-scene:after,
+  .inner-scene:before {
+    background: var(--color-sand-dark);
   }
 }
