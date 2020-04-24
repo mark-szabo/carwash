@@ -12,6 +12,7 @@ namespace CarWash.ClassLibrary.Models
     public class Blocker : ApplicationDbContext.IEntity
     {
         /// <inheritdoc />
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public string Id { get; set; }
 
         /// <summary>

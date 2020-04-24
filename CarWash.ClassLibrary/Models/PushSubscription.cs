@@ -32,6 +32,7 @@ namespace CarWash.ClassLibrary.Models
 
         /// <inheritdoc />
         [Required]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public string Id { get; set; }
 
         /// <summary>
