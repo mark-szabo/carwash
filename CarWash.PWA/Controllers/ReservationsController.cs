@@ -147,7 +147,7 @@ namespace CarWash.PWA.Controllers
                 if (_user.IsAdmin || _user.IsCarwashAdmin) dbReservation.UserId = reservation.UserId;
                 else return BadRequest("Cannot modify user of registration. You need to re-create it.");
             }
-            if (reservation.Services == null) return BadRequest("No service chosen.");
+            if (reservation.Services == null || reservation.Services.Count == 0) return BadRequest("No service chosen.");
             #endregion
 
             // Time requirement calculation
@@ -273,7 +273,7 @@ namespace CarWash.PWA.Controllers
 
             #region Input validation
             if (reservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin)) return Forbid();
-            if (reservation.Services == null) return BadRequest("No service chosen.");
+            if (reservation.Services == null || reservation.Services.Count == 0) return BadRequest("No service chosen.");
             #endregion
 
             // Time requirement calculation

@@ -34,7 +34,7 @@ using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using Microsoft.Azure.Amqp.Framing;
+using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 
 namespace CarWash.PWA
 {
@@ -292,7 +292,7 @@ namespace CarWash.PWA
 
             services.AddHealthChecks();
 
-            services.AddControllers();
+            services.AddControllers().AddNewtonsoftJson();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
