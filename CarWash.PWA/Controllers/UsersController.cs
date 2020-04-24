@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 using User = CarWash.ClassLibrary.Models.User;
 using CarWash.PWA.Attributes;
 using CarWash.ClassLibrary.Services;
-using System.Text.Json;
 
 namespace CarWash.PWA.Controllers
 {
@@ -165,17 +164,16 @@ namespace CarWash.PWA.Controllers
         public async Task<IActionResult> PutSettings([FromRoute] string key, [FromBody] object value)
         {
             if (value == null) return BadRequest("Setting value cannot be null.");
-            var json = (JsonElement)value;
 
             try
             {
                 switch (key.ToLower())
                 {
                     case "calendarintegration":
-                        _user.CalendarIntegration = json.GetBoolean();
+                        _user.CalendarIntegration = (bool)value;
                         break;
                     case "notificationchannel":
-                        _user.NotificationChannel = (NotificationChannel)json.GetInt32();
+                        _user.NotificationChannel = (NotificationChannel)(int)(long)value;
                         break;
                     default:
                         return BadRequest("Setting key is not valid.");
