@@ -121,7 +121,6 @@ namespace CarWash.PWA.Tests
             var dbContext = CreateInMemoryDbContext();
             var newReservation = new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 VehiclePlateNumber = value,
                 StartDate = new DateTime(2020, 12, 05, 08, 00, 00, DateTimeKind.Local),
                 Services = new List<ServiceType> { ServiceType.Interior },
@@ -188,7 +187,6 @@ namespace CarWash.PWA.Tests
             var john = await dbContext.Users.SingleAsync(u => u.Email == JOHN_EMAIL);
             var newReservation = new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = john.Id,
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(2020, 12, 05, 08, 00, 00, DateTimeKind.Local),
@@ -291,7 +289,6 @@ namespace CarWash.PWA.Tests
             var carWashAdmin = await dbContext.Users.SingleAsync(u => u.Email == CARWASH_ADMIN_EMAIL);
             var newReservation = new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(2018, 12, 05, 14, 00, 00, DateTimeKind.Local),
                 Services = new List<ServiceType> { ServiceType.Interior },
@@ -355,7 +352,6 @@ namespace CarWash.PWA.Tests
             var john = await dbContext.Users.SingleAsync(u => u.Email == JOHN_EMAIL);
             await dbContext.Reservation.AddAsync(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = john.Id,
                 VehiclePlateNumber = "TEST01",
                 State = State.SubmittedNotActual,
@@ -367,7 +363,6 @@ namespace CarWash.PWA.Tests
             await dbContext.SaveChangesAsync();
             var newReservation = new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(2020, 12, 12, 11, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(2020, 12, 12, 14, 00, 00, DateTimeKind.Local),
@@ -389,7 +384,6 @@ namespace CarWash.PWA.Tests
             var admin = await dbContext.Users.SingleAsync(u => u.Email == ADMIN_EMAIL);
             await dbContext.Reservation.AddAsync(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = admin.Id,
                 VehiclePlateNumber = "TEST01",
                 State = State.SubmittedNotActual,
@@ -400,7 +394,6 @@ namespace CarWash.PWA.Tests
             });
             await dbContext.Reservation.AddAsync(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = admin.Id,
                 VehiclePlateNumber = "TEST01",
                 State = State.SubmittedNotActual,
@@ -412,7 +405,6 @@ namespace CarWash.PWA.Tests
             await dbContext.SaveChangesAsync();
             var newReservation = new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(2020, 12, 12, 11, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(2020, 12, 12, 14, 00, 00, DateTimeKind.Local),
@@ -437,14 +429,12 @@ namespace CarWash.PWA.Tests
             var dbContext = CreateInMemoryDbContext();
             await dbContext.Blocker.AddAsync(new Blocker
             {
-                Id = Guid.NewGuid().ToString(),
                 StartDate = new DateTime(2020, 12, 01, 00, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(2020, 12, 30, 23, 59, 59, DateTimeKind.Local),
             });
             await dbContext.SaveChangesAsync();
             var newReservation = new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(2020, 12, 05, 08, 00, 00, DateTimeKind.Local),
                 Services = new List<ServiceType> { ServiceType.Interior },
@@ -464,7 +454,6 @@ namespace CarWash.PWA.Tests
             var dbContext = CreateInMemoryDbContext();
             await dbContext.Blocker.AddAsync(new Blocker
             {
-                Id = Guid.NewGuid().ToString(),
                 StartDate = new DateTime(2020, 12, 01, 00, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(2020, 12, 30, 23, 59, 59, DateTimeKind.Local),
             });
@@ -472,7 +461,6 @@ namespace CarWash.PWA.Tests
             var carWashAdmin = await dbContext.Users.SingleAsync(u => u.Email == CARWASH_ADMIN_EMAIL);
             var newReservation = new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(2020, 12, 05, 08, 00, 00, DateTimeKind.Local),
                 Services = new List<ServiceType> { ServiceType.Interior },
@@ -497,7 +485,6 @@ namespace CarWash.PWA.Tests
             var admin = await dbContext.Users.SingleAsync(u => u.Email == ADMIN_EMAIL);
             await dbContext.Reservation.AddAsync(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = admin.Id,
                 VehiclePlateNumber = "TEST01",
                 State = State.SubmittedNotActual,
@@ -510,7 +497,6 @@ namespace CarWash.PWA.Tests
             await dbContext.SaveChangesAsync();
             var newReservation = new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(2020, 12, 04, 14, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(2020, 12, 04, 17, 00, 00, DateTimeKind.Local),
@@ -552,7 +538,6 @@ namespace CarWash.PWA.Tests
             const string LOCATION = "M/-3/180";
             var newReservation = new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(2020, 12, 05, 08, 00, 00, DateTimeKind.Local),
                 Services = new List<ServiceType> { ServiceType.Interior },
@@ -815,7 +800,6 @@ namespace CarWash.PWA.Tests
             var dbContext = CreateInMemoryDbContext();
             await dbContext.Blocker.AddAsync(new Blocker
             {
-                Id = Guid.NewGuid().ToString(),
                 StartDate = new DateTime(2020, 12, 01, 00, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(2020, 12, 30, 23, 59, 59, DateTimeKind.Local),
             });
@@ -837,7 +821,6 @@ namespace CarWash.PWA.Tests
             var dbContext = CreateInMemoryDbContext();
             await dbContext.Blocker.AddAsync(new Blocker
             {
-                Id = Guid.NewGuid().ToString(),
                 StartDate = new DateTime(2020, 12, 01, 00, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(2020, 12, 30, 23, 59, 59, DateTimeKind.Local),
             });
@@ -865,7 +848,6 @@ namespace CarWash.PWA.Tests
             var admin = await dbContext.Users.SingleAsync(u => u.Email == ADMIN_EMAIL);
             await dbContext.Reservation.AddAsync(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = admin.Id,
                 VehiclePlateNumber = "TEST02",
                 State = State.SubmittedNotActual,
@@ -1177,7 +1159,6 @@ namespace CarWash.PWA.Tests
             var john = await dbContext.Users.SingleAsync(u => u.Email == JOHN_EMAIL);
             await dbContext.Reservation.AddAsync(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = john.Id,
                 VehiclePlateNumber = "TEST01",
                 State = State.SubmittedNotActual,
@@ -1212,7 +1193,6 @@ namespace CarWash.PWA.Tests
             var today = DateTime.Today;
             var reservationToBeUpdated = await dbContext.Reservation.AddAsync(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = john.Id,
                 VehiclePlateNumber = "TEST01",
                 State = State.ReminderSentWaitingForKey,
@@ -1247,7 +1227,6 @@ namespace CarWash.PWA.Tests
             var today = DateTime.Today;
             var reservationToBeUpdated = await dbContext.Reservation.AddAsync(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = admin.Id,
                 VehiclePlateNumber = "TEST02",
                 State = State.SubmittedNotActual,
@@ -1282,7 +1261,6 @@ namespace CarWash.PWA.Tests
             const string PLATE = "TEST05";
             var reservationToBeUpdated = await dbContext.Reservation.AddAsync(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = admin.Id,
                 VehiclePlateNumber = PLATE,
                 State = State.SubmittedNotActual,
@@ -1318,7 +1296,6 @@ namespace CarWash.PWA.Tests
             const string PLATE = "TEST05";
             var reservationToBeUpdated = await dbContext.Reservation.AddAsync(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = admin.Id,
                 VehiclePlateNumber = PLATE,
                 State = State.SubmittedNotActual,
@@ -1352,7 +1329,6 @@ namespace CarWash.PWA.Tests
             const string PLATE = "TEST02";
             var reservationToBeUpdated = await dbContext.Reservation.AddAsync(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = admin.Id,
                 VehiclePlateNumber = PLATE,
                 State = State.SubmittedNotActual,
@@ -2000,7 +1976,6 @@ namespace CarWash.PWA.Tests
             var dbContext = CreateInMemoryDbContext();
             await dbContext.Blocker.AddAsync(new Blocker
             {
-                Id = Guid.NewGuid().ToString(),
                 StartDate = new DateTime(2020, 11, 20, 00, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(2020, 11, 22, 23, 59, 59, DateTimeKind.Local),
             });
@@ -2098,7 +2073,6 @@ namespace CarWash.PWA.Tests
             // Seed database
             var john = new User
             {
-                Id = Guid.NewGuid().ToString(),
                 Email = JOHN_EMAIL,
                 FirstName = "John",
                 LastName = "Doe",
@@ -2109,7 +2083,6 @@ namespace CarWash.PWA.Tests
             dbContext.Users.Add(john);
             var jane = new User
             {
-                Id = Guid.NewGuid().ToString(),
                 Email = JANE_EMAIL,
                 FirstName = "Jane",
                 LastName = "Doe",
@@ -2120,7 +2093,6 @@ namespace CarWash.PWA.Tests
             dbContext.Users.Add(jane);
             var johnny = new User
             {
-                Id = Guid.NewGuid().ToString(),
                 Email = JOHNNY_EMAIL,
                 FirstName = "Johny",
                 LastName = "Doe",
@@ -2131,7 +2103,6 @@ namespace CarWash.PWA.Tests
             dbContext.Users.Add(johnny);
             var admin = new User
             {
-                Id = Guid.NewGuid().ToString(),
                 Email = ADMIN_EMAIL,
                 FirstName = "John, the admin",
                 LastName = "Doe",
@@ -2142,7 +2113,6 @@ namespace CarWash.PWA.Tests
             dbContext.Users.Add(admin);
             var carWashAdmin = new User
             {
-                Id = Guid.NewGuid().ToString(),
                 Email = CARWASH_ADMIN_EMAIL,
                 FirstName = "John, from CarWash",
                 LastName = "Doe",
@@ -2154,7 +2124,6 @@ namespace CarWash.PWA.Tests
 
             dbContext.Reservation.Add(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = john.Id,
                 VehiclePlateNumber = "TEST00",
                 State = State.Done,
@@ -2167,7 +2136,6 @@ namespace CarWash.PWA.Tests
             });
             dbContext.Reservation.Add(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = john.Id,
                 VehiclePlateNumber = "TEST01",
                 State = State.ReminderSentWaitingForKey,
@@ -2179,7 +2147,6 @@ namespace CarWash.PWA.Tests
             });
             dbContext.Reservation.Add(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = johnny.Id,
                 VehiclePlateNumber = "TEST11",
                 State = State.DropoffAndLocationConfirmed,
@@ -2191,7 +2158,6 @@ namespace CarWash.PWA.Tests
             });
             dbContext.Reservation.Add(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = johnny.Id,
                 VehiclePlateNumber = "TEST12",
                 State = State.WashInProgress,
@@ -2203,7 +2169,6 @@ namespace CarWash.PWA.Tests
             });
             dbContext.Reservation.Add(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = johnny.Id,
                 VehiclePlateNumber = "TEST13",
                 State = State.WashInProgress,
@@ -2215,7 +2180,6 @@ namespace CarWash.PWA.Tests
             });
             dbContext.Reservation.Add(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = johnny.Id,
                 VehiclePlateNumber = "TEST14",
                 State = State.NotYetPaid,
@@ -2227,7 +2191,6 @@ namespace CarWash.PWA.Tests
             });
             dbContext.Reservation.Add(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = admin.Id,
                 VehiclePlateNumber = "TEST02",
                 State = State.SubmittedNotActual,
@@ -2239,7 +2202,6 @@ namespace CarWash.PWA.Tests
             });
             dbContext.Reservation.Add(new Reservation
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = carWashAdmin.Id,
                 VehiclePlateNumber = "TEST03",
                 State = State.SubmittedNotActual,

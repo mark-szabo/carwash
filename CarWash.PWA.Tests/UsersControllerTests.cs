@@ -1,4 +1,4 @@
-﻿using CarWash.ClassLibrary.Enums;
+using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Controllers;
@@ -326,7 +326,6 @@ namespace CarWash.PWA.Tests
             // Seed database
             var john = new User
             {
-                Id = Guid.NewGuid().ToString(),
                 Email = JOHN_EMAIL,
                 FirstName = "John",
                 LastName = "Doe",
@@ -337,7 +336,6 @@ namespace CarWash.PWA.Tests
             dbContext.Users.Add(john);
             dbContext.Users.Add(new User
             {
-                Id = Guid.NewGuid().ToString(),
                 Email = ADMIN_EMAIL,
                 FirstName = "John, the admin",
                 LastName = "Doe",
@@ -347,7 +345,6 @@ namespace CarWash.PWA.Tests
             });
             dbContext.Users.Add(new User
             {
-                Id = Guid.NewGuid().ToString(),
                 Email = CARWASH_ADMIN_EMAIL,
                 FirstName = "John, from CarWash",
                 LastName = "Doe",
