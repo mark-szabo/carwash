@@ -56,7 +56,7 @@ steps:
 
   - script: |
       dotnet tool install dotnet-reportgenerator-globaltool --tool-path . --version 4.0.0-rc4
-      .\reportgenerator "-reports:$(Build.SourcesDirectory)\CarWash.PWA.Tests\coverage.cobertura.xml" "-reporttypes:HTMLInline;HTMLChart"
+      .\reportgenerator "-reports:$(Build.SourcesDirectory)\CarWash.PWA.Tests\coverage.cobertura.xml" "-targetdir:\" "-reporttypes:HTMLInline;HTMLChart"
     displayName: 'Collect code coverage results'
 
   - task: PublishCodeCoverageResults@1
