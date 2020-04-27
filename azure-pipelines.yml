@@ -52,7 +52,7 @@ steps:
     inputs:
       command: test
       projects: "**/*.Tests/*.csproj"
-      arguments: "--configuration $(buildConfiguration) --logger trx /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura"
+      arguments: "--configuration $(buildConfiguration) --logger trx /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Exclude=\"[*]CarWash.ClassLibrary.Migrations.*\""
 
   - task: PublishCodeCoverageResults@1
     displayName: 'Publish code coverage results'
