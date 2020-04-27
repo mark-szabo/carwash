@@ -54,16 +54,11 @@ steps:
       projects: "**/*.Tests/*.csproj"
       arguments: "--configuration $(buildConfiguration) --logger trx /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura"
 
-  - script: |
-      mkdir $(Build.SourcesDirectory)\results
-      copy $(Build.SourcesDirectory)\CarWash.PWA.Tests\coverage.cobertura.xml $(Build.SourcesDirectory)\results
-    displayName: 'Collect code coverage results'
-
   - task: PublishCodeCoverageResults@1
     displayName: 'Publish code coverage results'
     inputs:
-      summaryFileLocation: $(Build.SourcesDirectory)\results\coverage.cobertura.xml
-      reportDirectory: $(Build.SourcesDirectory)\results
+      summaryFileLocation: $(Build.SourcesDirectory)\CarWash.PWA.Tests\coverage.cobertura.xml
+      reportDirectory: $(Build.SourcesDirectory)\CarWash.PWA.Tests
       codecoverageTool: cobertura
 
   - task: DotNetCoreCLI@2
