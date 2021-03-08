@@ -28,7 +28,7 @@
     <PackageReference Include="Microsoft.Bot.Builder.Dialogs" Version="4.8.0" />
     <PackageReference Include="Microsoft.Bot.Builder.Integration.AspNet.Core" Version="4.8.0" />
     <PackageReference Include="Microsoft.Bot.Configuration" Version="4.8.0" />
-    <PackageReference Include="Microsoft.Bot.Connector" Version="4.8.0" />
+    <PackageReference Include="Microsoft.Bot.Connector" Version="4.8.2" />
     <PackageReference Include="Microsoft.Bot.Schema" Version="4.8.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.0.0">
       <PrivateAssets>all</PrivateAssets>
