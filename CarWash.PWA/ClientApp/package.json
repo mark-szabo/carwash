@@ -30,7 +30,7 @@
     "@material-ui/core": "^3.9.2",
     "@material-ui/icons": "^3.0.2",
     "adal-angular": "^1.0.17",
-    "ajv": "^6.12.2",
+    "ajv": "^6.12.3",
     "applicationinsights-js": "^1.0.21",
     "downloadjs": "^1.4.7",
     "moment": "^2.24.0",
