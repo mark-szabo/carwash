@@ -152,7 +152,7 @@ namespace CarWash.PWA.Controllers
 
             // Time requirement calculation
             dbReservation.TimeRequirement = dbReservation.Services.Contains(ServiceType.Carpet) ?
-                2 * _configuration.Reservation.TimeUnit :
+                _configuration.Reservation.CarpetCleaningMultiplier * _configuration.Reservation.TimeUnit :
                 _configuration.Reservation.TimeUnit;
 
             #region Business validation
@@ -278,7 +278,7 @@ namespace CarWash.PWA.Controllers
 
             // Time requirement calculation
             reservation.TimeRequirement = reservation.Services.Contains(ServiceType.Carpet) ?
-                2 * _configuration.Reservation.TimeUnit :
+                _configuration.Reservation.CarpetCleaningMultiplier * _configuration.Reservation.TimeUnit :
                 _configuration.Reservation.TimeUnit;
 
             #region Business validation

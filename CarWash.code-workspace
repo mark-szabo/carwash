@@ -1,8 +1,10 @@
 {
-	"folders": [
-		{
-			"path": "C:\\Users\\a-marks\\Source\\Repos\\CarWash"
-		}
-	],
-	"settings": {}
+    "folders": [
+        {
+            "path": "C:\\Users\\maork\\Source\\Repos\\CarWash"
+        }
+    ],
+    "settings": {
+        "jira-plugin.workingProject": ""
+    }
 }

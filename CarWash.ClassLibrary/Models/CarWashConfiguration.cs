@@ -167,6 +167,16 @@ namespace CarWash.ClassLibrary.Models
             /// Default value: 11
             /// </remarks>
             public int HoursAfterCompanyLimitIsNotChecked { get; set; } = 11;
+
+            /// <summary>
+            /// Time requirement multiplier for carpet cleaning.
+            /// </summary>
+            /// <remarks>
+            /// Location: Application Settings
+            /// Key: Reservation:CarpetCleaningMultiplier
+            /// Default value: 2
+            /// </remarks>
+            public int CarpetCleaningMultiplier { get; set; } = 2;
         }
 
         /// <summary>
