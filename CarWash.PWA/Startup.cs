@@ -45,7 +45,7 @@ namespace CarWash.PWA
                     "style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com; " +
                     "img-src 'self' data:; " +
                     "connect-src https: wss: 'self' fonts.googleapis.com fonts.gstatic.com; " +
-                    "font-src 'self' fonts.googleapis.com fonts.gstatic.com; " +
+                    "font-src 'self' data: fonts.googleapis.com fonts.gstatic.com; " +
                     "frame-src 'self' login.microsoftonline.com *.powerbi.com; " +
                     "form-action 'self'; " +
                     "upgrade-insecure-requests; " +
@@ -318,7 +318,6 @@ namespace CarWash.PWA
             {
                 context.Response.Headers.Add("X-Frame-Options", new[] { "SAMEORIGIN" });
                 //context.Response.Headers.Add("Strict-Transport-Security", new[] { "max-age=31536000; includeSubDomains" });
-                context.Response.Headers.Add("Expect-CT", new[] { "expect-ct: max-age=604800, report-uri=https://markszabo.report-uri.com/r/d/ct/enforce" });
                 context.Response.Headers.Add("X-XSS-Protection", new[] { "1; mode=block; report=https://markszabo.report-uri.com/r/d/xss/enforce" });
                 context.Response.Headers.Add("X-Content-Type-Options", new[] { "nosniff" });
                 context.Response.Headers.Add("Referrer-Policy", new[] { "strict-origin-when-cross-origin" });
