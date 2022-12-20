@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
-import Grid from '@material-ui/core/Grid';
-import Typography from '@material-ui/core/Typography';
+import { withStyles } from '@mui/styles';
+import Grid from '@mui/material/Grid';
+import Typography from '@mui/material/Typography';
 import * as moment from 'moment';
 import CarwashCard from './CarwashCard';
 import CardSection from './CardSection';
@@ -11,7 +11,7 @@ import Spinner from './Spinner';
 
 const styles = theme => ({
     card: {
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             minWidth: '100%',
             maxWidth: '100%',
         },
@@ -83,7 +83,7 @@ class CarwashGrid extends Component {
         const later = backlog.filter(r => moment(r.startDate).isAfter(tomorrowMidnight));
 
         return (
-            <Grid container direction="row" justify="flex-start" alignItems="flex-start" spacing={16} className={classes.grid}>
+            <Grid container direction="row" justifyContent="flex-start" alignItems="flex-start" spacing={16} className={classes.grid}>
                 <CardSection title="Earlier">
                     {earlier.map(reservation => (
                         <Grid item key={reservation.id} className={classes.card}>

@@ -3,32 +3,32 @@ import PropTypes from 'prop-types';
 import TrackedComponent from './TrackedComponent';
 import { Redirect } from 'react-router';
 import apiFetch from '../Auth';
-import { withStyles } from '@material-ui/core/styles';
-import Stepper from '@material-ui/core/Stepper';
-import Step from '@material-ui/core/Step';
-import StepLabel from '@material-ui/core/StepLabel';
-import StepContent from '@material-ui/core/StepContent';
-import Button from '@material-ui/core/Button';
-import Chip from '@material-ui/core/Chip';
-import Typography from '@material-ui/core/Typography';
-import Radio from '@material-ui/core/Radio';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import FormGroup from '@material-ui/core/FormGroup';
-import Checkbox from '@material-ui/core/Checkbox';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import FormControl from '@material-ui/core/FormControl';
-import TextField from '@material-ui/core/TextField';
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import Select from '@material-ui/core/Select';
-import InfiniteCalendar from 'react-infinite-calendar';
-import CloudOffIcon from '@material-ui/icons/CloudOff';
-import ErrorOutlineIcon from '@material-ui/icons/ErrorOutline';
-import WarningIcon from '@material-ui/icons/Warning';
-import Grid from '@material-ui/core/Grid';
+import { withStyles } from '@mui/styles';
+import Stepper from '@mui/material/Stepper';
+import Step from '@mui/material/Step';
+import StepLabel from '@mui/material/StepLabel';
+import StepContent from '@mui/material/StepContent';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import Typography from '@mui/material/Typography';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormGroup from '@mui/material/FormGroup';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormControl from '@mui/material/FormControl';
+import TextField from '@mui/material/TextField';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import InfiniteCalendar from '@appannie/react-infinite-calendar';
+import CloudOffIcon from '@mui/icons-material/CloudOff';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import WarningIcon from '@mui/icons-material/Warning';
+import Grid from '@mui/material/Grid';
 import * as moment from 'moment';
 import { Garages, Service, NotificationChannel, BacklogHubMethods } from '../Constants';
-import 'react-infinite-calendar/styles.css';
+import '@appannie/react-infinite-calendar/styles.css';
 import './Reserve.css';
 import ServiceDetailsTable from './ServiceDetailsTable';
 import Spinner from './Spinner';
@@ -81,7 +81,7 @@ const styles = theme => ({
     textField: {
         marginLeft: theme.spacing.unit,
         marginRight: theme.spacing.unit,
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             width: '100%',
         },
         [theme.breakpoints.up('md')]: {
@@ -94,7 +94,7 @@ const styles = theme => ({
     },
     formControl: {
         margin: theme.spacing.unit,
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             width: '100%',
         },
         [theme.breakpoints.up('md')]: {
@@ -880,7 +880,7 @@ class Reserve extends TrackedComponent {
                                         id="reserve-comment"
                                         label="Comment"
                                         multiline
-                                        rowsMax="4"
+                                        maxRows="4"
                                         value={comment}
                                         onChange={this.handleCommentChange}
                                         className={classes.textField}

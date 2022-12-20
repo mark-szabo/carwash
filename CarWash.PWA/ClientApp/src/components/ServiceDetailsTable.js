@@ -1,24 +1,24 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { withStyles } from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
-import ButtonBase from '@material-ui/core/ButtonBase';
-import IconButton from '@material-ui/core/IconButton';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import Paper from '@material-ui/core/Paper';
+import { withStyles } from '@mui/styles';
+import Typography from '@mui/material/Typography';
+import ButtonBase from '@mui/material/ButtonBase';
+import IconButton from '@mui/material/IconButton';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
 import { getServiceList } from '../Constants';
 
 const styles = theme => {
     const transition = {
         duration: theme.transitions.duration.shortest,
     };
-    const secodaryColor = theme.palette.type === 'dark' ? 'rgba(255, 255, 255, 0.54)' : 'rgba(0, 0, 0, 0.54)';
+    const secodaryColor = theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.54)' : 'rgba(0, 0, 0, 0.54)';
 
     return {
         title: {
@@ -83,7 +83,7 @@ const styles = theme => {
         cell: {
             padding: '16px 8px 16px 24px',
             borderBottom: 'none',
-            borderTop: theme.palette.type === 'dark' ? '1px solid rgba(81, 81, 81, 1)' : '1px solid rgba(224, 224, 224, 1)',
+            borderTop: theme.palette.mode === 'dark' ? '1px solid rgba(81, 81, 81, 1)' : '1px solid rgba(224, 224, 224, 1)',
         },
         titleCell: {
             padding: '16px 8px 8px 24px',
@@ -211,7 +211,7 @@ class ServiceDetailsTable extends React.Component {
                         tabIndex={-1}
                         aria-hidden="true"
                         disableRipple
-                    >
+                        size="large">
                         <ExpandMoreIcon />
                     </IconButton>
                     <div className={classNames(classes.titleText, { [classes.expanded]: expanded })}>

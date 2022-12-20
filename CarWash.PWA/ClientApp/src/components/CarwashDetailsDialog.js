@@ -1,36 +1,36 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { withStyles } from '@material-ui/core/styles';
+import { withStyles } from '@mui/styles';
+import { useTheme, useMediaQuery } from '@mui/material';
 import apiFetch from '../Auth';
-import Button from '@material-ui/core/Button';
-import Fab from '@material-ui/core/Fab';
-import Dialog from '@material-ui/core/Dialog';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import red from '@material-ui/core/colors/red';
-import withMobileDialog from '@material-ui/core/withMobileDialog';
-import Typography from '@material-ui/core/Typography';
-import Chip from '@material-ui/core/Chip';
-import IconButton from '@material-ui/core/IconButton';
-import Input from '@material-ui/core/Input';
-import InputLabel from '@material-ui/core/InputLabel';
-import InputAdornment from '@material-ui/core/InputAdornment';
-import FormControl from '@material-ui/core/FormControl';
-import TextField from '@material-ui/core/TextField';
-import MenuItem from '@material-ui/core/MenuItem';
-import Select from '@material-ui/core/Select';
-import LocalCarWashIcon from '@material-ui/icons/LocalCarWash';
-import LocalShippingIcon from '@material-ui/icons/LocalShipping';
-import LocalShippingOutlinedIcon from '@material-ui/icons/LocalShippingOutlined';
-import CloseIcon from '@material-ui/icons/Close';
-import DoneIcon from '@material-ui/icons/Done';
-import EditIcon from '@material-ui/icons/Edit';
-import MoneyOffIcon from '@material-ui/icons/MoneyOff';
-import SendIcon from '@material-ui/icons/Send';
-import SaveIcon from '@material-ui/icons/Save';
-import DeleteForeverIcon from '@material-ui/icons/DeleteForever';
+import Button from '@mui/material/Button';
+import Fab from '@mui/material/Fab';
+import Dialog from '@mui/material/Dialog';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import DialogTitle from '@mui/material/DialogTitle';
+import red from '@mui/material/colors/red';
+import Typography from '@mui/material/Typography';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Input from '@mui/material/Input';
+import InputLabel from '@mui/material/InputLabel';
+import InputAdornment from '@mui/material/InputAdornment';
+import FormControl from '@mui/material/FormControl';
+import TextField from '@mui/material/TextField';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import LocalCarWashIcon from '@mui/icons-material/LocalCarWash';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
+import CloseIcon from '@mui/icons-material/Close';
+import DoneIcon from '@mui/icons-material/Done';
+import EditIcon from '@mui/icons-material/Edit';
+import MoneyOffIcon from '@mui/icons-material/MoneyOff';
+import SendIcon from '@mui/icons-material/Send';
+import SaveIcon from '@mui/icons-material/Save';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { State, getServiceName, getAdminStateName, Garages, Service, BacklogHubMethods } from '../Constants';
 import { formatLocation, formatDate } from '../Helpers';
 import Comments from './Comments';
@@ -54,7 +54,7 @@ const styles = theme => ({
         },
     },
     details: {
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             minWidth: '100%',
             maxWidth: '100%',
         },
@@ -96,14 +96,14 @@ const styles = theme => ({
     },
     comments: {
         maxWidth: 300,
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             maxWidth: '100%',
         },
     },
     formControl: {
         marginRight: theme.spacing.unit,
         marginBottom: theme.spacing.unit,
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             width: '100%',
         },
         [theme.breakpoints.up('md')]: {
@@ -593,20 +593,22 @@ class CarwashDetailsDialog extends React.Component {
 
     render() {
         const { editLocation, garage, floor, seat, validationErrors, editServices } = this.state;
-        const { reservation, open, snackbarOpen, fullScreen, classes } = this.props;
+        const { reservation, open, snackbarOpen, classes } = this.props;
+        const theme = useTheme();
+        const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
         return (
             <React.Fragment>
                 <Dialog open={open} onClose={this.handleClose} fullScreen={fullScreen}>
                     <DialogContent className={classes.details}>
                         <div className={classes.closeButton}>
-                            <IconButton onClick={this.handleCancelDialogOpen} aria-label="Delete">
+                            <IconButton onClick={this.handleCancelDialogOpen} aria-label="Delete" size="large">
                                 <DeleteForeverIcon />
                             </IconButton>
-                            <IconButton onClick={this.handleToggleMpv} aria-label="MPV">
+                            <IconButton onClick={this.handleToggleMpv} aria-label="MPV" size="large">
                                 {reservation.mpv ? <LocalShippingIcon /> : <LocalShippingOutlinedIcon />}
                             </IconButton>
-                            <IconButton onClick={this.handleClose} aria-label="Close">
+                            <IconButton onClick={this.handleClose} aria-label="Close" size="large">
                                 <CloseIcon />
                             </IconButton>
                         </div>
@@ -618,7 +620,7 @@ class CarwashDetailsDialog extends React.Component {
                         {!editLocation ? (
                             <Typography variant="subtitle1" gutterBottom>
                                 {reservation.location ? formatLocation(reservation.location) : 'Location not set'}
-                                <IconButton onClick={this.handleEditLocation} aria-label="Edit location">
+                                <IconButton onClick={this.handleEditLocation} aria-label="Edit location" size="large">
                                     <EditIcon />
                                 </IconButton>
                             </Typography>
@@ -672,7 +674,10 @@ class CarwashDetailsDialog extends React.Component {
                                             margin="normal"
                                             onChange={this.handleSeatChange}
                                         />
-                                        <IconButton onClick={this.handleUpdateLocation} aria-label="Save location">
+                                        <IconButton
+                                            onClick={this.handleUpdateLocation}
+                                            aria-label="Save location"
+                                            size="large">
                                             <SaveIcon />
                                         </IconButton>
                                     </React.Fragment>
@@ -697,7 +702,11 @@ class CarwashDetailsDialog extends React.Component {
                                     endAdornment={
                                         <InputAdornment position="end">
                                             {this.state.commentTextfield && (
-                                                <IconButton aria-label="Save comment" onClick={this.handleAddComment} onMouseDown={this.preventDefault}>
+                                                <IconButton
+                                                    aria-label="Save comment"
+                                                    onClick={this.handleAddComment}
+                                                    onMouseDown={this.preventDefault}
+                                                    size="large">
                                                     <SendIcon />
                                                 </IconButton>
                                             )}
@@ -714,7 +723,7 @@ class CarwashDetailsDialog extends React.Component {
                                 {reservation.services.map(service => (
                                     <Chip label={getServiceName(service)} className={classes.chip} key={service} />
                                 ))}
-                                <IconButton onClick={this.handleEditServices} aria-label="Add service">
+                                <IconButton onClick={this.handleEditServices} aria-label="Add service" size="large">
                                     <EditIcon />
                                 </IconButton>
                             </React.Fragment>
@@ -732,7 +741,10 @@ class CarwashDetailsDialog extends React.Component {
                                         onClick={this.handleAddService(service)}
                                     />
                                 ))}
-                                <IconButton onClick={this.handleUpdateServices(reservation.services)} aria-label="Save services">
+                                <IconButton
+                                    onClick={this.handleUpdateServices(reservation.services)}
+                                    aria-label="Save services"
+                                    size="large">
                                     <SaveIcon />
                                 </IconButton>
                             </React.Fragment>
@@ -771,7 +783,6 @@ class CarwashDetailsDialog extends React.Component {
 CarwashDetailsDialog.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     reservation: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
-    fullScreen: PropTypes.bool.isRequired,
     open: PropTypes.bool.isRequired,
     handleClose: PropTypes.func.isRequired,
     updateReservation: PropTypes.func.isRequired,
@@ -781,4 +792,4 @@ CarwashDetailsDialog.propTypes = {
     openSnackbar: PropTypes.func.isRequired,
 };
 
-export default withStyles(styles)(withMobileDialog()(CarwashDetailsDialog));
+export default withStyles(styles)(CarwashDetailsDialog);

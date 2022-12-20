@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
+import { withStyles } from '@mui/styles';
+import Typography from '@mui/material/Typography';
 
 const styles = theme => ({
     comment: {
         borderTopRightRadius: '1.3em',
         borderTopLeftRadius: '1.3em',
         borderBottomRightRadius: '1.3em',
-        backgroundColor: theme.palette.type === 'dark' ? '#616161' : '#e0e0e0',
+        backgroundColor: theme.palette.mode === 'dark' ? '#616161' : '#e0e0e0',
         padding: '6px 12px',
         margin: '1px 0',
         clear: 'left',
@@ -17,7 +17,7 @@ const styles = theme => ({
         whiteSpace: 'pre-wrap',
     },
     commentName: {
-        color: theme.palette.type === 'dark' ? 'rgba(255, 255, 255, .40)' : 'rgba(0, 0, 0, .40)',
+        color: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, .40)' : 'rgba(0, 0, 0, .40)',
         fontSize: '12px',
         fontWeight: 'normal',
         lineHeight: '1.1',

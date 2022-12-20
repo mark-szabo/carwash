@@ -1,13 +1,13 @@
 import React from 'react';
-import { withStyles } from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
+import { withStyles } from '@mui/styles';
+import Typography from '@mui/material/Typography';
 
 const styles = theme => ({
     center: {
         display: 'grid',
         placeItems: 'center',
         height: '80%',
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             gridTemplateColumns: '1fr',
         },
         [theme.breakpoints.up('md')]: {

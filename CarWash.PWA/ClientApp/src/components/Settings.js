@@ -2,23 +2,23 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import TrackedComponent from './TrackedComponent';
 import apiFetch from '../Auth';
-import { withStyles } from '@material-ui/core/styles';
-import Button from '@material-ui/core/Button';
-import Typography from '@material-ui/core/Typography';
-import Paper from '@material-ui/core/Paper';
-import Dialog from '@material-ui/core/Dialog';
-import Radio from '@material-ui/core/Radio';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import FormControl from '@material-ui/core/FormControl';
-import Switch from '@material-ui/core/Switch';
-import TextField from '@material-ui/core/TextField';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DeleteForeverIcon from '@material-ui/icons/DeleteForever';
-import red from '@material-ui/core/colors/red';
+import { withStyles } from '@mui/styles';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import Dialog from '@mui/material/Dialog';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormControl from '@mui/material/FormControl';
+import Switch from '@mui/material/Switch';
+import TextField from '@mui/material/TextField';
+import DialogActions from '@mui/material/DialogActions';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import red from '@mui/material/colors/red';
 import * as download from 'downloadjs';
 import * as moment from 'moment';
 import { NotificationChannel } from '../Constants';
@@ -27,14 +27,14 @@ import Spinner from './Spinner';
 
 const styles = theme => ({
     dangerButton: {
-        color: theme.palette.type === 'dark' ? '#CF6679' : red[300],
+        color: theme.palette.mode === 'dark' ? '#CF6679' : red[300],
         '&:hover': {
             backgroundColor: 'rgba(229,115,115,0.08)',
         },
     },
     dangerButtonContained: {
         color: '#FFFFFF',
-        backgroundColor: theme.palette.type === 'dark' ? '#CF6679' : 'rgb(225, 0, 80)',
+        backgroundColor: theme.palette.mode === 'dark' ? '#CF6679' : 'rgb(225, 0, 80)',
         '&:hover': {
             backgroundColor: 'rgb(157, 0, 56)',
         },

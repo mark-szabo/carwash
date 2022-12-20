@@ -1,26 +1,26 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import * as moment from 'moment';
-import { withStyles } from '@material-ui/core/styles';
+import { withStyles } from '@mui/styles';
 import apiFetch from '../Auth';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemAvatar from '@material-ui/core/ListItemAvatar';
-import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
-import ListItemText from '@material-ui/core/ListItemText';
-import Avatar from '@material-ui/core/Avatar';
-import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
-import IconButton from '@material-ui/core/IconButton';
-import DeleteIcon from '@material-ui/icons/Delete';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import ListItemText from '@mui/material/ListItemText';
+import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
 import Spinner from './Spinner';
 import TrackedComponent from './TrackedComponent';
 import { format2Dates } from '../Helpers';
-import { Typography } from '@material-ui/core';
+import { Typography } from '@mui/material';
 
 const styles = theme => ({
     list: {
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             width: '100%',
         },
         [theme.breakpoints.up('md')]: {
@@ -218,7 +218,7 @@ function BlockerListItem(props) {
             <ListItemText primary={format2Dates(blocker.startDate, blocker.endDate)} secondary={blocker.comment} />
             {user.isCarwashAdmin && (
                 <ListItemSecondaryAction>
-                    <IconButton aria-label="Delete" onClick={() => handleDelete(blocker.id)}>
+                    <IconButton aria-label="Delete" onClick={() => handleDelete(blocker.id)} size="large">
                         <DeleteIcon />
                     </IconButton>
                 </ListItemSecondaryAction>

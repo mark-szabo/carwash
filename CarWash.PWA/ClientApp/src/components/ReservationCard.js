@@ -2,30 +2,30 @@
 import PropTypes from 'prop-types';
 import apiFetch from '../Auth';
 import { Link } from 'react-router-dom';
-import { withStyles } from '@material-ui/core/styles';
-import Card from '@material-ui/core/Card';
-import CardActions from '@material-ui/core/CardActions';
-import CardContent from '@material-ui/core/CardContent';
-import CardMedia from '@material-ui/core/CardMedia';
-import CardHeader from '@material-ui/core/CardHeader';
-import Button from '@material-ui/core/Button';
-import Typography from '@material-ui/core/Typography';
-import Grow from '@material-ui/core/Grow';
-import LockIcon from '@material-ui/icons/Lock';
-import Chip from '@material-ui/core/Chip';
-import Divider from '@material-ui/core/Divider';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import InputLabel from '@material-ui/core/InputLabel';
-import FormControl from '@material-ui/core/FormControl';
-import TextField from '@material-ui/core/TextField';
-import MenuItem from '@material-ui/core/MenuItem';
-import Select from '@material-ui/core/Select';
-import Tooltip from '@material-ui/core/Tooltip';
-import red from '@material-ui/core/colors/red';
+import { withStyles } from '@mui/styles';
+import Card from '@mui/material/Card';
+import CardActions from '@mui/material/CardActions';
+import CardContent from '@mui/material/CardContent';
+import CardMedia from '@mui/material/CardMedia';
+import CardHeader from '@mui/material/CardHeader';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Grow from '@mui/material/Grow';
+import LockIcon from '@mui/icons-material/Lock';
+import Chip from '@mui/material/Chip';
+import Divider from '@mui/material/Divider';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import InputLabel from '@mui/material/InputLabel';
+import FormControl from '@mui/material/FormControl';
+import TextField from '@mui/material/TextField';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import Tooltip from '@mui/material/Tooltip';
+import red from '@mui/material/colors/red';
 import { getStateName, getServiceName, State, Garages, BacklogHubMethods } from '../Constants';
 import { formatLocation, formatDate2 } from '../Helpers';
 import Comments from './Comments';
@@ -40,7 +40,7 @@ const styles = theme => ({
         margin: '24px 0',
     },
     card: {
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             width: 'calc(100% - 32px)!important',
         },
         [theme.breakpoints.up('md')]: {
@@ -60,7 +60,7 @@ const styles = theme => ({
         opacity: 0.75,
     },
     dangerButton: {
-        color: theme.palette.type === 'dark' ? '#CF6679' : red[300],
+        color: theme.palette.mode === 'dark' ? '#CF6679' : red[300],
         '&:hover': {
             backgroundColor: 'rgba(229,115,115,0.08)',
         },
@@ -68,7 +68,7 @@ const styles = theme => ({
     formControl: {
         marginRight: theme.spacing.unit,
         marginBottom: theme.spacing.unit,
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             width: '100%',
         },
         [theme.breakpoints.up('md')]: {

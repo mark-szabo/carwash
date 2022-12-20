@@ -1,8 +1,8 @@
 ﻿import React from 'react';
 import TrackedComponent from './TrackedComponent';
-import Typography from '@material-ui/core/Typography';
-import Paper from '@material-ui/core/Paper';
-import { withStyles } from '@material-ui/core/styles';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import { withStyles } from '@mui/styles';
 
 const styles = theme => ({
     link: {

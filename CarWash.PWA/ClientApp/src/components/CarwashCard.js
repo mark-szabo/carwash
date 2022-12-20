@@ -2,20 +2,20 @@
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import apiFetch from '../Auth';
-import { withStyles } from '@material-ui/core/styles';
-import Card from '@material-ui/core/Card';
-import CardContent from '@material-ui/core/CardContent';
-import CardMedia from '@material-ui/core/CardMedia';
-import Button from '@material-ui/core/Button';
-import Typography from '@material-ui/core/Typography';
-import ButtonBase from '@material-ui/core/ButtonBase';
-import Collapse from '@material-ui/core/Collapse';
-import Chip from '@material-ui/core/Chip';
-import Divider from '@material-ui/core/Divider';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import red from '@material-ui/core/colors/red';
+import { withStyles } from '@mui/styles';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardMedia from '@mui/material/CardMedia';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import ButtonBase from '@mui/material/ButtonBase';
+import Collapse from '@mui/material/Collapse';
+import Chip from '@mui/material/Chip';
+import Divider from '@mui/material/Divider';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogTitle from '@mui/material/DialogTitle';
+import red from '@mui/material/colors/red';
 import CarwashCardHeader from './CarwashCardHeader';
 import CarwashDetailsDialog from './CarwashDetailsDialog';
 import { getAdminStateName, getServiceName, BacklogHubMethods } from '../Constants';
@@ -31,7 +31,7 @@ const styles = theme => ({
         margin: '24px 0',
     },
     card: {
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             minWidth: '100%',
             maxWidth: '100%',
         },

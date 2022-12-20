@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
-import Divider from '@material-ui/core/Divider';
+import { withStyles } from '@mui/styles';
+import Divider from '@mui/material/Divider';
 import CommentOutgoing from './CommentOutgoing';
 import CommentIncoming from './CommentIncoming';
 

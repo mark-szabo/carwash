@@ -1,8 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
-import { AppInsights } from 'applicationinsights-js';
+import { withStyles } from '@mui/styles';
+import Typography from '@mui/material/Typography';
 
 const styles = theme => ({
     center: {
@@ -38,7 +37,7 @@ class ErrorBoundary extends React.Component {
     componentDidCatch(error, info) {
         // Log the error to AppInsights
         try {
-            AppInsights.trackException(error, info.componentStack);
+            appInsights.trackException(error, info.componentStack);
         } catch (e) {
             console.error(`AppInsights is not loaded: ${e}`);
         }
