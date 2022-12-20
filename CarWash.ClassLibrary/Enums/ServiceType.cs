@@ -91,16 +91,16 @@ namespace CarWash.ClassLibrary.Enums
                 Type = Exterior,
                 Name = "exterior",
                 TimeInMinutes = 12,
-                Price = 3535,
-                PriceMpv = 4420,
+                Price = 3712,
+                PriceMpv = 4641,
                 Hidden = false
             },
             new Service {
                 Type = Interior,
                 Name = "interior",
                 TimeInMinutes = 12,
-                Price = 1770,
-                PriceMpv = 2650,
+                Price = 2124,
+                PriceMpv = 3180,
                 Hidden = false},
             new Service {
                 Type = Carpet,
@@ -116,8 +116,8 @@ namespace CarWash.ClassLibrary.Enums
                 Name = "spot cleaning",
                 Description = "partial cleaning of the carpet, only where it is needed (eg. when something is spilled in the car)",
                 TimeInMinutes = 0,
-                Price = 3890,
-                PriceMpv = 3890,
+                Price = 4474,
+                PriceMpv = 4474,
                 Hidden = false
             },
             new Service {
@@ -125,8 +125,8 @@ namespace CarWash.ClassLibrary.Enums
                 Name = "vignette removal",
                 Description = "eg. highway vignettes on the windscreen",
                 TimeInMinutes = 0,
-                Price = 515,
-                PriceMpv = 515,
+                Price = 593,
+                PriceMpv = 593,
                 Hidden = false
             },
             new Service {
@@ -134,8 +134,8 @@ namespace CarWash.ClassLibrary.Enums
                 Name = "polishing",
                 Description = "for small scratches",
                 TimeInMinutes = 0,
-                Price = 4950,
-                PriceMpv = 4950,
+                Price = 5693,
+                PriceMpv = 5693,
                 Hidden = false
             },
             new Service {
@@ -143,8 +143,8 @@ namespace CarWash.ClassLibrary.Enums
                 Name = "AC cleaning 'ozon'",
                 Description = "disinfects molecules with ozone",
                 TimeInMinutes = 0,
-                Price = 8840,
-                PriceMpv = 8840,
+                Price = 10166,
+                PriceMpv = 10166,
                 Hidden = false
             },
             new Service {
@@ -152,8 +152,8 @@ namespace CarWash.ClassLibrary.Enums
                 Name = "AC cleaning 'bomba'",
                 Description = "blowing chemical spray in the AC system",
                 TimeInMinutes = 0,
-                Price = 7070,
-                PriceMpv = 7070,
+                Price = 8131,
+                PriceMpv = 8131,
                 Hidden = false
             },
             new Service {
@@ -161,8 +161,8 @@ namespace CarWash.ClassLibrary.Enums
                 Name = "bug removal",
                 Description = "we'll add this if it's needed",
                 TimeInMinutes = 0,
-                Price = 885,
-                PriceMpv = 885,
+                Price = 1018,
+                PriceMpv = 1018,
                 Hidden = true
             },
             new Service {
@@ -170,8 +170,8 @@ namespace CarWash.ClassLibrary.Enums
                 Name = "wheel cleaning",
                 Description = "we'll add this if it's needed",
                 TimeInMinutes = 0,
-                Price = 1060,
-                PriceMpv = 1060,
+                Price = 1219,
+                PriceMpv = 1219,
                 Hidden = true
             },
             new Service {
@@ -179,8 +179,8 @@ namespace CarWash.ClassLibrary.Enums
                 Name = "tire care",
                 Description = "we'll add this if it's needed",
                 TimeInMinutes = 0,
-                Price = 885,
-                PriceMpv = 885,
+                Price = 1018,
+                PriceMpv = 1018,
                 Hidden = true
             },
             new Service {
@@ -188,8 +188,8 @@ namespace CarWash.ClassLibrary.Enums
                 Name = "leather care",
                 Description = "we'll add this if it's needed",
                 TimeInMinutes = 0,
-                Price = 8840,
-                PriceMpv = 8840,
+                Price = 10166,
+                PriceMpv = 10166,
                 Hidden = true
             },
             new Service {
@@ -197,8 +197,8 @@ namespace CarWash.ClassLibrary.Enums
                 Name = "plastic care",
                 Description = "we'll add this if it's needed",
                 TimeInMinutes = 0,
-                Price = 7955,
-                PriceMpv = 7955,
+                Price = 9149,
+                PriceMpv = 9149,
                 Hidden = true
             },
             new Service {
@@ -206,8 +206,8 @@ namespace CarWash.ClassLibrary.Enums
                 Name = "prewash",
                 Description = "we'll add this if it's needed",
                 TimeInMinutes = 0,
-                Price = 855,
-                PriceMpv = 855,
+                Price = 1018,
+                PriceMpv = 1018,
                 Hidden = true
             }
         };
