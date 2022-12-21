@@ -1,10 +1,9 @@
-﻿using CarWash.ClassLibrary.Extensions;
+﻿using Azure.Messaging.ServiceBus;
+using CarWash.ClassLibrary.Extensions;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Models.ServiceBus;
 using Microsoft.ApplicationInsights;
-using Microsoft.Azure.ServiceBus;
 using System;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CarWash.ClassLibrary.Services
@@ -76,19 +75,20 @@ namespace CarWash.ClassLibrary.Services
         /// <param name="queueName">Service Bus Queue name</param>
         /// <param name="message">Service Bus Queue message</param>
         /// <returns></returns>
-        private async Task SendMessage(string queueName, ServiceBusMessage message)
+        private async Task SendMessage(string queueName, Models.ServiceBus.ServiceBusMessage message)
         {
             try
             {
-                var queueClient = new QueueClient(_configuration.ConnectionStrings.ServiceBus, queueName);
+                // since ServiceBusClient implements IAsyncDisposable we create it with "await using"
+                await using var client = new ServiceBusClient(_configuration.ConnectionStrings.ServiceBus);
 
-                // Create a new message to send to the queue.
-                var serviceBusMessage = new Message(Encoding.UTF8.GetBytes(message.ToJson()));
+                // create the sender
+                var sender = client.CreateSender(queueName);
 
-                // Send the message to the queue. 
-                await queueClient.SendAsync(serviceBusMessage);
+                // send the message
+                await sender.SendMessageAsync(new Azure.Messaging.ServiceBus.ServiceBusMessage(message.ToJson()));
 
-                await queueClient.CloseAsync();
+                await sender.CloseAsync();
             }
             catch (Exception e)
             {
