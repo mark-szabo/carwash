@@ -64,16 +64,16 @@ const styles = theme => ({
         },
     },
     button: {
-        margin: theme.spacing.unit,
+        margin: theme.spacing(1),
         position: 'absolute',
-        bottom: theme.spacing.unit * 2,
-        right: theme.spacing.unit * 2,
+        bottom: theme.spacing(2),
+        right: theme.spacing(2),
         '&$pushActionsUp': {
-            bottom: theme.spacing.unit * 2 + 48,
+            bottom: theme.spacing(2) + 48,
         },
     },
     closeButton: {
-        margin: theme.spacing.unit,
+        margin: theme.spacing(1),
         position: 'absolute',
         top: 0,
         right: 0,
@@ -92,7 +92,7 @@ const styles = theme => ({
         width: '100%',
     },
     subheader: {
-        marginTop: theme.spacing.unit * 4,
+        marginTop: theme.spacing(4),
     },
     comments: {
         maxWidth: 300,
@@ -101,8 +101,8 @@ const styles = theme => ({
         },
     },
     formControl: {
-        marginRight: theme.spacing.unit,
-        marginBottom: theme.spacing.unit,
+        marginRight: theme.spacing(1),
+        marginBottom: theme.spacing(1),
         [theme.breakpoints.down('md')]: {
             width: '100%',
         },

@@ -66,8 +66,8 @@ const styles = theme => ({
         },
     },
     formControl: {
-        marginRight: theme.spacing.unit,
-        marginBottom: theme.spacing.unit,
+        marginRight: theme.spacing(1),
+        marginBottom: theme.spacing(1),
         [theme.breakpoints.down('md')]: {
             width: '100%',
         },

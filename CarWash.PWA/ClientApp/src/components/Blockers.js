@@ -30,11 +30,11 @@ const styles = theme => ({
         marginTop: 48,
     },
     primaryButtonContained: {
-        marginTop: theme.spacing.unit,
+        marginTop: theme.spacing(1),
     },
     formControl: {
-        marginTop: theme.spacing.unit * 2,
-        marginBottom: theme.spacing.unit * 2,
+        marginTop: theme.spacing(2),
+        marginBottom: theme.spacing(2),
     },
     inputField: {
         minWidth: 220,

@@ -48,7 +48,7 @@ const styles = theme => ({
     },
     lonelyTitle: {
         color: '#9E9E9E',
-        marginTop: theme.spacing.unit * 4,
+        marginTop: theme.spacing(4),
     },
 });
 

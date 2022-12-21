@@ -60,7 +60,7 @@ const styles = theme => ({
         flexGrow: 1,
         overflow: 'auto',
         backgroundColor: theme.palette.background.default,
-        padding: theme.spacing.unit * 3,
+        padding: theme.spacing(3),
         marginTop: 56,
         [`${theme.breakpoints.up('xs')} and (orientation: landscape)`]: {
             marginTop: 48,

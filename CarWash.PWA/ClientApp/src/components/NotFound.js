@@ -15,7 +15,7 @@ const styles = theme => ({
         },
     },
     errorIcon: {
-        margin: theme.spacing.unit,
+        margin: theme.spacing(1),
         color: '#BDBDBD',
         width: '300px',
         height: '300px',

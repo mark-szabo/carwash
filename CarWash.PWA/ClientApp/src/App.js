@@ -411,19 +411,19 @@ export default class App extends Component {
         const keys = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         document.addEventListener('keydown', event => {
             keys.shift();
-            keys.push(event.keyCode);
+            keys.push(event.key);
             if (
-                keys[0] === 38 &&
-                keys[1] === 38 &&
-                keys[2] === 40 &&
-                keys[3] === 40 &&
-                keys[4] === 37 &&
-                keys[5] === 39 &&
-                keys[6] === 37 &&
-                keys[7] === 39 &&
-                keys[8] === 66 &&
-                keys[9] === 65 &&
-                keys[10] === 13
+                keys[0] === 'ArrowUp' &&
+                keys[1] === 'ArrowUp' &&
+                keys[2] === 'ArrowDown' &&
+                keys[3] === 'ArrowDown' &&
+                keys[4] === 'ArrowLeft' &&
+                keys[5] === 'ArrowRight' &&
+                keys[6] === 'ArrowLeft' &&
+                keys[7] === 'ArrowRight' &&
+                keys[8] === 'b' &&
+                keys[9] === 'a' &&
+                keys[10] === 'Enter'
             ) {
                 this.openSnackbar(
                     'Nice catch! Shoot me a message - I owe you a bier!',

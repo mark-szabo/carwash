@@ -39,21 +39,21 @@ const styles = theme => ({
         backgroundColor: 'inherit',
     },
     button: {
-        marginTop: theme.spacing.unit,
-        marginRight: theme.spacing.unit,
+        marginTop: theme.spacing(1),
+        marginRight: theme.spacing(1),
     },
     actionsContainer: {
-        marginTop: theme.spacing.unit,
-        marginBottom: theme.spacing.unit * 2,
+        marginTop: theme.spacing(1),
+        marginBottom: theme.spacing(2),
     },
     resetContainer: {
-        padding: theme.spacing.unit * 3,
+        padding: theme.spacing(3),
     },
     chip: {
-        margin: theme.spacing.unit / 2,
+        margin: theme.spacing(0.5),
     },
     selectedChip: {
-        margin: theme.spacing.unit / 2,
+        margin: theme.spacing(0.5),
         backgroundColor: theme.palette.primary.main,
         '&:hover': {
             backgroundColor: theme.palette.primary.dark,
@@ -66,21 +66,21 @@ const styles = theme => ({
         },
     },
     chipGroupTitle: {
-        marginTop: theme.spacing.unit / 2,
+        marginTop: theme.spacing(0.5),
     },
     calendar: {
         maxWidth: '400px',
     },
     radioGroup: {
-        margin: `${theme.spacing.unit}px 0`,
+        margin: `${theme.spacing(1)}px 0`,
     },
     container: {
         display: 'flex',
         flexWrap: 'wrap',
     },
     textField: {
-        marginLeft: theme.spacing.unit,
-        marginRight: theme.spacing.unit,
+        marginLeft: theme.spacing(1),
+        marginRight: theme.spacing(1),
         [theme.breakpoints.down('md')]: {
             width: '100%',
         },
@@ -89,11 +89,11 @@ const styles = theme => ({
         },
     },
     checkbox: {
-        marginLeft: theme.spacing.unit,
-        marginRight: theme.spacing.unit,
+        marginLeft: theme.spacing(1),
+        marginRight: theme.spacing(1),
     },
     formControl: {
-        margin: theme.spacing.unit,
+        margin: theme.spacing(1),
         [theme.breakpoints.down('md')]: {
             width: '100%',
         },
@@ -108,7 +108,7 @@ const styles = theme => ({
         height: '80%',
     },
     errorIcon: {
-        margin: theme.spacing.unit,
+        margin: theme.spacing(1),
         color: '#BDBDBD',
         width: '100px',
         height: '100px',

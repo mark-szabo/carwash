@@ -4,7 +4,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 const styles = theme => ({
     progress: {
-        margin: theme.spacing.unit * 2,
+        margin: theme.spacing(2),
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',

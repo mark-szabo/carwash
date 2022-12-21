@@ -38,10 +38,10 @@ const styles = theme => ({
         '&:hover': {
             backgroundColor: 'rgb(157, 0, 56)',
         },
-        marginTop: theme.spacing.unit,
+        marginTop: theme.spacing(1),
     },
     primaryButtonContained: {
-        marginTop: theme.spacing.unit,
+        marginTop: theme.spacing(1),
     },
     center: {
         display: 'grid',
@@ -50,7 +50,7 @@ const styles = theme => ({
         height: '80%',
     },
     errorIcon: {
-        margin: theme.spacing.unit,
+        margin: theme.spacing(1),
         color: '#BDBDBD',
         width: '100px',
         height: '100px',
@@ -67,17 +67,17 @@ const styles = theme => ({
     },
     paper: {
         ...theme.mixins.gutters(),
-        paddingTop: theme.spacing.unit * 2,
-        paddingBottom: theme.spacing.unit * 2,
+        paddingTop: theme.spacing(2),
+        paddingBottom: theme.spacing(2),
         maxWidth: '600px',
-        marginBottom: theme.spacing.unit * 2,
+        marginBottom: theme.spacing(2),
     },
     group: {
-        margin: `${theme.spacing.unit}px 0`,
+        margin: `${theme.spacing(1)}px 0`,
     },
     formControl: {
-        marginTop: theme.spacing.unit * 2,
-        marginBottom: theme.spacing.unit * 2,
+        marginTop: theme.spacing(2),
+        marginBottom: theme.spacing(2),
     },
     dateField: {
         minWidth: 220,
