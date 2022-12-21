@@ -398,7 +398,7 @@ namespace CarWash.PWA.Controllers
         /// <summary>
         /// Get reservations in my company
         /// </summary>
-        /// <returns>List of <see cref="AdminReservationViewModel"/></returns>
+        /// <returns>List of latest 100 <see cref="AdminReservationViewModel"/></returns>
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin.</response>
@@ -412,6 +412,7 @@ namespace CarWash.PWA.Controllers
                 .Include(r => r.User)
                 .Where(r => r.User.Company == _user.Company && r.UserId != _user.Id)
                 .OrderByDescending(r => r.StartDate)
+                .Take(100)
                 .Select(reservation => new AdminReservationViewModel
                 {
                     Id = reservation.Id,
