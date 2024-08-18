@@ -33,7 +33,7 @@ namespace CarWash.ClassLibrary.Models
         /// Gets or sets the reservation vehicle plate number.
         /// </summary>
         [Required]
-        [StringLength(7)]
+        [StringLength(8)]
         public string VehiclePlateNumber { get; set; }
 
         /// <summary>

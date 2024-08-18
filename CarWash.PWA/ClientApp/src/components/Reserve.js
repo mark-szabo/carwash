@@ -451,7 +451,7 @@ class Reserve extends TrackedComponent {
 
     handleReserve = () => {
         const validationErrors = {
-            vehiclePlateNumber: this.state.vehiclePlateNumber === '',
+            vehiclePlateNumber: this.state.vehiclePlateNumber === '' && this.state.vehiclePlateNumber.length > 8,
             garage: this.state.garage === '' && this.state.locationKnown,
             floor: this.state.floor === '' && this.state.locationKnown,
         };
@@ -788,6 +788,7 @@ class Reserve extends TrackedComponent {
                                         className={classes.textField}
                                         margin="normal"
                                         onChange={this.handlePlateNumberChange}
+                                        inputProps={{ maxLength: 8 }}
                                     />
                                 </div>
                                 <div>
