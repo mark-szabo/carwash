@@ -2,12 +2,13 @@ import React, { Component } from 'react';
 import { Route, Switch } from 'react-router';
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import { ReactPlugin } from '@microsoft/applicationinsights-react-js';
-import { createBrowserHistory } from "history";
+import { createBrowserHistory } from 'history';
 import apiFetch from './Auth';
 import registerPush from './PushService';
 import { ThemeProvider, StyledEngineProvider, createTheme, adaptV4Theme } from '@mui/material/styles';
 import Snackbar from '@mui/material/Snackbar';
 import Button from '@mui/material/Button';
+import CssBaseline from '@mui/material/CssBaseline';
 import moment from 'moment';
 import * as signalR from '@microsoft/signalr';
 import Layout from './components/Layout';
@@ -152,15 +153,15 @@ export default class App extends Component {
         this.loadLastSettings();
 
         const browserHistory = createBrowserHistory({ basename: '' });
-        var reactPlugin = new ReactPlugin();
-        var appInsights = new ApplicationInsights({
+        const reactPlugin = new ReactPlugin();
+        const appInsights = new ApplicationInsights({
             config: {
                 instrumentationKey: 'd1ce1965-2171-4a11-9438-66114b31f88f',
                 extensions: [reactPlugin],
                 extensionConfig: {
-                    [reactPlugin.identifier]: { history: browserHistory }
-                }
-            }
+                    [reactPlugin.identifier]: { history: browserHistory },
+                },
+            },
         });
         appInsights.loadAppInsights();
 
@@ -452,6 +453,7 @@ export default class App extends Component {
         return (
             <StyledEngineProvider injectFirst>
                 <ThemeProvider theme={theme}>
+                    <CssBaseline enableColorScheme />
                     <ErrorBoundary>
                         <Layout user={user}>
                             <Switch>

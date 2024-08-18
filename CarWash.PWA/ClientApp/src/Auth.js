@@ -114,6 +114,9 @@ export default async function apiFetch(url, options, errorIfOffline = false) {
                 console.info(response);
                 try {
                     const errorMessage = await response.json();
+                    if (!(typeof errorMessage === 'string' || errorMessage instanceof String)) {
+                        return Promise.reject(`An error has occured: ${Object.values(errorMessage?.errors)[0]}`);
+                    }
                     return Promise.reject(`An error has occured: ${errorMessage}`);
                 } catch (jsonError) {
                     return Promise.reject('An error has occured.');

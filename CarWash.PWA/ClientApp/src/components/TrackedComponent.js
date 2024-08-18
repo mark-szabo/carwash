@@ -1,7 +1,7 @@
 import React from 'react';
 import { ReactPlugin, withAITracking } from '@microsoft/applicationinsights-react-js';
 
-var reactPlugin = new ReactPlugin();
+const reactPlugin = new ReactPlugin();
 
 class TrackedComponent extends React.Component {
     displayName = 'TrackedComponent';

@@ -39,6 +39,7 @@ const styles = theme => ({
         ...(theme.palette.mode === 'dark' && {
             backgroundColor: theme.palette.background.paper,
         }),
+        backgroundImage: 'none',
     },
     navIconHide: {
         [theme.breakpoints.up('md')]: {
