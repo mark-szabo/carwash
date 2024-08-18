@@ -316,13 +316,13 @@ namespace CarWash.PWA
 
             app.Use(async (context, next) =>
             {
-                context.Response.Headers.Add("X-Frame-Options", new[] { "SAMEORIGIN" });
-                //context.Response.Headers.Add("Strict-Transport-Security", new[] { "max-age=31536000; includeSubDomains" });
-                context.Response.Headers.Add("X-XSS-Protection", new[] { "1; mode=block; report=https://markszabo.report-uri.com/r/d/xss/enforce" });
-                context.Response.Headers.Add("X-Content-Type-Options", new[] { "nosniff" });
-                context.Response.Headers.Add("Referrer-Policy", new[] { "strict-origin-when-cross-origin" });
-                context.Response.Headers.Add("Feature-Policy", new[] { "accelerometer 'none'; camera 'none'; geolocation 'self'; gyroscope 'none'; magnetometer 'none'; microphone 'none'; payment 'none'; usb 'none'" });
-                context.Response.Headers.Add("Content-Security-Policy", new[] { ContentSecurityPolicy });
+                context.Response.Headers.Append("X-Frame-Options", new[] { "SAMEORIGIN" });
+                //context.Response.Headers.Append("Strict-Transport-Security", new[] { "max-age=31536000; includeSubDomains" });
+                context.Response.Headers.Append("X-XSS-Protection", new[] { "1; mode=block; report=https://markszabo.report-uri.com/r/d/xss/enforce" });
+                context.Response.Headers.Append("X-Content-Type-Options", new[] { "nosniff" });
+                context.Response.Headers.Append("Referrer-Policy", new[] { "strict-origin-when-cross-origin" });
+                context.Response.Headers.Append("Feature-Policy", new[] { "accelerometer 'none'; camera 'none'; geolocation 'self'; gyroscope 'none'; magnetometer 'none'; microphone 'none'; payment 'none'; usb 'none'" });
+                context.Response.Headers.Append("Content-Security-Policy", new[] { ContentSecurityPolicy });
                 context.Response.Headers.Remove(HeaderNames.Server);
                 context.Response.Headers.Remove("X-Powered-By");
                 await next();

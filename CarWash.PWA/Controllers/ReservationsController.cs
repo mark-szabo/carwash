@@ -1359,6 +1359,7 @@ namespace CarWash.PWA.Controllers
                     .ToListAsync();
             else return Forbid();
 
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             using (var package = new ExcelPackage())
             {
                 // Add a new worksheet to the empty workbook
