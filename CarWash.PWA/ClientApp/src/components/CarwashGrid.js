@@ -19,6 +19,7 @@ const styles = theme => ({
             minWidth: 'inherit',
             maxWidth: 'inherit',
         },
+        padding: "8px",
     },
     grid: {
         maxHeight: 'calc(100% + 48px)',
@@ -83,7 +84,7 @@ class CarwashGrid extends Component {
         const later = backlog.filter(r => moment(r.startDate).isAfter(tomorrowMidnight));
 
         return (
-            <Grid container direction="row" justifyContent="flex-start" alignItems="flex-start" spacing={16} className={classes.grid}>
+            <Grid container direction="row" justifyContent="flex-start" alignItems="flex-start" spacing={1} className={classes.grid}>
                 <CardSection title="Earlier">
                     {earlier.map(reservation => (
                         <Grid item key={reservation.id} className={classes.card}>

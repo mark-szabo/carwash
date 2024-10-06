@@ -594,12 +594,10 @@ class CarwashDetailsDialog extends React.Component {
     render() {
         const { editLocation, garage, floor, seat, validationErrors, editServices } = this.state;
         const { reservation, open, snackbarOpen, classes } = this.props;
-        const theme = useTheme();
-        const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
         return (
             <React.Fragment>
-                <Dialog open={open} onClose={this.handleClose} fullScreen={fullScreen}>
+                <Dialog open={open} onClose={this.handleClose} fullScreen={this.props.fullScreen}>
                     <DialogContent className={classes.details}>
                         <div className={classes.closeButton}>
                             <IconButton onClick={this.handleCancelDialogOpen} aria-label="Delete" size="large">
@@ -753,7 +751,7 @@ class CarwashDetailsDialog extends React.Component {
                     </DialogContent>
                     <DialogActions
                         className={classNames(classes.actions, {
-                            [classes.pushActionsUp]: fullScreen && snackbarOpen,
+                            [classes.pushActionsUp]: this.props.fullScreen && snackbarOpen,
                         })}
                     >
                         {this.getActions(reservation.state)}
@@ -792,4 +790,16 @@ CarwashDetailsDialog.propTypes = {
     openSnackbar: PropTypes.func.isRequired,
 };
 
-export default withStyles(styles)(CarwashDetailsDialog);
+const withMediaQuery =
+    (...args) =>
+    (Component) =>
+    (props) => {
+        const mediaQuery = useMediaQuery(...args);
+        return <Component fullScreen={mediaQuery} {...props} />;
+    };
+
+export default withStyles(styles)(
+    withMediaQuery((theme) => theme.breakpoints.down("sm"))(
+        CarwashDetailsDialog
+    )
+);
