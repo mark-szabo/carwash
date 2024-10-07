@@ -19,7 +19,7 @@ const styles = theme => ({
             minWidth: 'inherit',
             maxWidth: 'inherit',
         },
-        padding: "8px",
+        padding: '8px',
     },
     grid: {
         maxHeight: 'calc(100% + 48px)',
