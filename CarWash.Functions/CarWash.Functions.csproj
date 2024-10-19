@@ -14,13 +14,13 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="8.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="8.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.2.0" />
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.17.4" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.18.1" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.23.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.3.1" />
   </ItemGroup>
