@@ -4,6 +4,7 @@ import TrackedComponent from './TrackedComponent';
 import { Redirect } from 'react-router';
 import apiFetch from '../Auth';
 import { withStyles } from '@mui/styles';
+import Alert from '@mui/material/Alert';
 import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
@@ -606,9 +607,9 @@ class Reserve extends TrackedComponent {
                                 <Grid item xs={12} md={6}>
                                     {this.state.services.map(service => (
                                         <span key={service.id}>
-                                            {service.id === 0 && <Typography variant="caption">Basic</Typography>}
-                                            {service.id === 3 && <Typography variant="caption">Extras</Typography>}
-                                            {service.id === 6 && <Typography variant="caption">AC</Typography>}
+                                            {service.id === 0 && <div><Typography variant="caption">Basic</Typography></div>}
+                                            {service.id === 3 && <div><Typography variant="caption">Extras</Typography></div>}
+                                            {service.id === 6 && <div><Typography variant="caption">AC</Typography></div>}
                                             <Chip
                                                 key={service.id}
                                                 label={service.name}
@@ -693,6 +694,10 @@ class Reserve extends TrackedComponent {
                 <Step>
                     <StepLabel>{timeStepLabel}</StepLabel>
                     <StepContent>
+                        <Alert variant="outlined" severity="info">
+                            Drop the car key before your slot starts to ensure timely completion.
+                            Ending times are indicative. For special requests, use the comment field.
+                        </Alert>
                         <FormControl component="fieldset">
                             <RadioGroup
                                 aria-label="Time"

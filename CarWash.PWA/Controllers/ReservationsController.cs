@@ -1572,8 +1572,12 @@ namespace CarWash.PWA.Controllers
         {
             if (_user.IsCarwashAdmin) return true;
 
+            var userCompanyLimit = _configuration.Companies.Find(c => c.Name == _user.Company).DailyLimit;
+
             // Do not validate against company limit after {HoursAfterCompanyLimitIsNotChecked} for today
-            if (date.Date == DateTime.Today && DateTime.Now.Hour >= _configuration.Reservation.HoursAfterCompanyLimitIsNotChecked)
+            // or if company limit is 0 (meaning unlimited)
+            if ((date.Date == DateTime.Today && DateTime.Now.Hour >= _configuration.Reservation.HoursAfterCompanyLimitIsNotChecked)
+                || userCompanyLimit == 0)
             {
                 var allCompanyLimit = _configuration.Companies.Sum(c => c.DailyLimit);
 
@@ -1588,7 +1592,6 @@ namespace CarWash.PWA.Controllers
             }
             else
             {
-                var userCompanyLimit = _configuration.Companies.Find(c => c.Name == _user.Company).DailyLimit;
 
                 // Cannot use SumAsync because of this EF issue:
                 // https://github.com/aspnet/EntityFrameworkCore/issues/12314

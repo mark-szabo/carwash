@@ -57,12 +57,16 @@ function CarwashCardHeader(props) {
                         <img src={`/images/${company}.svg`} alt={company} height="20px" />
                     </div>
                 </div>
-                <Typography className={classes.subheader} color="textSecondary" component="span">
-                    {subheader}
-                </Typography>
-                <Typography className={classes.subheader} color="textSecondary" component="span">
-                    {subheaderSecondLine}
-                </Typography>
+                <div>
+                    <Typography className={classes.subheader} color="textSecondary" component="span">
+                        {subheader}
+                    </Typography>
+                </div>
+                <div>
+                    <Typography className={classes.subheader} color="textSecondary" component="span">
+                        {subheaderSecondLine}
+                    </Typography>
+                </div>
             </div>
         </div>
     );
