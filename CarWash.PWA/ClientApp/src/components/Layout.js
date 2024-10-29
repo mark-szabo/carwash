@@ -203,7 +203,8 @@ class Layout extends React.Component {
                             aria-label="open drawer"
                             onClick={this.handleDrawerToggle}
                             className={classes.navIconHide}
-                            size="large">
+                            size="large"
+                        >
                             <MenuIcon />
                         </IconButton>
                         <Typography variant="h6" noWrap className={classes.flex}>

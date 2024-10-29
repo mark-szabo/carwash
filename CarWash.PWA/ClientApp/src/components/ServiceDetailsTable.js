@@ -211,7 +211,8 @@ class ServiceDetailsTable extends React.Component {
                         tabIndex={-1}
                         aria-hidden="true"
                         disableRipple
-                        size="large">
+                        size="large"
+                    >
                         <ExpandMoreIcon />
                     </IconButton>
                     <div className={classNames(classes.titleText, { [classes.expanded]: expanded })}>

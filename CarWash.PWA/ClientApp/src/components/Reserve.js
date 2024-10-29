@@ -921,7 +921,7 @@ class Reserve extends TrackedComponent {
 Reserve.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     user: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
-    reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
+    reservations: PropTypes.arrayOf(PropTypes.object).isRequired, // eslint-disable-line react/forbid-prop-types
     addReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func,
     lastSettings: PropTypes.object, // eslint-disable-line react/forbid-prop-types

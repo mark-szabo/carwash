@@ -40,6 +40,9 @@ const lightTheme = createTheme(adaptV4Theme({
             main: '#80d8ff',
             dark: '#49a7cc',
         },
+        background: {
+            default: '#fafafa',
+        },
     },
     typography: {
         fontFamily: ['"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'].join(','),
@@ -427,7 +430,7 @@ export default class App extends Component {
                 keys[10] === 'Enter'
             ) {
                 this.openSnackbar(
-                    'Nice catch! Shoot me a message - I owe you a bier!',
+                    'Nice catch! Shoot me a message - let\'s have a coffee!',
                     <Button href="https://www.linkedin.com/in/mark-szabo/" color="secondary" size="small">
                         Contact
                     </Button>

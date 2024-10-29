@@ -675,7 +675,8 @@ class CarwashDetailsDialog extends React.Component {
                                         <IconButton
                                             onClick={this.handleUpdateLocation}
                                             aria-label="Save location"
-                                            size="large">
+                                            size="large"
+                                        >
                                             <SaveIcon />
                                         </IconButton>
                                     </React.Fragment>
@@ -704,7 +705,8 @@ class CarwashDetailsDialog extends React.Component {
                                                     aria-label="Save comment"
                                                     onClick={this.handleAddComment}
                                                     onMouseDown={this.preventDefault}
-                                                    size="large">
+                                                    size="large"
+                                                >
                                                     <SendIcon />
                                                 </IconButton>
                                             )}
@@ -742,7 +744,8 @@ class CarwashDetailsDialog extends React.Component {
                                 <IconButton
                                     onClick={this.handleUpdateServices(reservation.services)}
                                     aria-label="Save services"
-                                    size="large">
+                                    size="large"
+                                >
                                     <SaveIcon />
                                 </IconButton>
                             </React.Fragment>
