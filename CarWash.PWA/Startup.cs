@@ -33,6 +33,7 @@ using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Rewrite;
 
 namespace CarWash.PWA
 {
@@ -309,6 +310,11 @@ namespace CarWash.PWA
             }
 
             app.UseHttpsRedirection();
+
+            // Apex to www. redirection (Azure CDN is not working on apex).
+            var rewriteOptions = new RewriteOptions()
+                .AddRedirectToWwwPermanent();
+            app.UseRewriter(rewriteOptions);
 
             app.UseAuthentication();
 
