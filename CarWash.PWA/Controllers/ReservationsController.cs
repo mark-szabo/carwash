@@ -184,7 +184,7 @@ namespace CarWash.PWA.Controllers
                     return BadRequest("Company limit has been met for this day or there is not enough time at all.");
 
                 // Check if there is enough time in that slot
-                if (!IsEnoughTimeInSlot(dbReservation.StartDate, dbReservation.TimeRequirement))
+                if (!await IsEnoughTimeInSlotAsync(dbReservation.StartDate, dbReservation.TimeRequirement))
                     return BadRequest("There is not enough time in that slot.");
             }
             #endregion
@@ -311,7 +311,7 @@ namespace CarWash.PWA.Controllers
                 return BadRequest("Company limit has been met for this day or there is not enough time at all.");
 
             // Check if there is enough time in that slot
-            if (!IsEnoughTimeInSlot(reservation.StartDate, reservation.TimeRequirement))
+            if (!await IsEnoughTimeInSlotAsync(reservation.StartDate, reservation.TimeRequirement))
                 return BadRequest("There is not enough time in that slot.");
             #endregion
 
@@ -1134,12 +1134,10 @@ namespace CarWash.PWA.Controllers
 
             if (!notAvailableDates.Contains(DateTime.Today))
             {
-                // Cannot use SumAsync because of this EF issue:
-                // https://github.com/aspnet/EntityFrameworkCore/issues/12314
-                // Current milestone to be fixed is EF 2.1.3
-                var toBeDoneTodayTime = _context.Reservation
+                var toBeDoneTodayTime = await _context.Reservation
                     .Where(r => r.StartDate >= DateTime.Now && r.StartDate.Date == DateTime.Today)
-                    .Sum(r => r.TimeRequirement);
+                    .SumAsync(r => r.TimeRequirement);
+
                 if (toBeDoneTodayTime >= GetRemainingSlotCapacityToday() * _configuration.Reservation.TimeUnit) notAvailableDates.Add(DateTime.Today);
             }
             #endregion
@@ -1581,36 +1579,28 @@ namespace CarWash.PWA.Controllers
             {
                 var allCompanyLimit = await _context.Company.SumAsync(c => c.DailyLimit);
 
-                // Cannot use SumAsync because of this EF issue:
-                // https://github.com/aspnet/EntityFrameworkCore/issues/12314
-                // Current milestone to be fixed is EF 2.1.3
-                var reservedTimeOnDate = _context.Reservation
+                var reservedTimeOnDate = await _context.Reservation
                     .Where(r => r.StartDate.Date == date.Date)
-                    .Sum(r => r.TimeRequirement);
+                    .SumAsync(r => r.TimeRequirement);
 
                 if (reservedTimeOnDate + timeRequirement > allCompanyLimit * _configuration.Reservation.TimeUnit) return false;
             }
             else
             {
 
-                // Cannot use SumAsync because of this EF issue:
-                // https://github.com/aspnet/EntityFrameworkCore/issues/12314
-                // Current milestone to be fixed is EF 2.1.3
-                var reservedTimeOnDate = _context.Reservation
+                var reservedTimeOnDate = await _context.Reservation
                     .Where(r => r.StartDate.Date == date.Date && r.User.Company == _user.Company)
-                    .Sum(r => r.TimeRequirement);
+                    .SumAsync(r => r.TimeRequirement);
 
                 if (reservedTimeOnDate + timeRequirement > userCompanyLimit * _configuration.Reservation.TimeUnit) return false;
             }
 
             if (date.Date == DateTime.Today)
             {
-                // Cannot use SumAsync because of this EF issue:
-                // https://github.com/aspnet/EntityFrameworkCore/issues/12314
-                // Current milestone to be fixed is EF 2.1.3
-                var toBeDoneTodayTime = _context.Reservation
+                var toBeDoneTodayTime = await _context.Reservation
                     .Where(r => r.StartDate >= DateTime.Now && r.StartDate.Date == DateTime.Today)
-                    .Sum(r => r.TimeRequirement);
+                    .SumAsync(r => r.TimeRequirement);
+
                 if (toBeDoneTodayTime + timeRequirement > GetRemainingSlotCapacityToday() * _configuration.Reservation.TimeUnit) return false;
             }
 
@@ -1623,16 +1613,13 @@ namespace CarWash.PWA.Controllers
         /// <param name="dateTime">Date and time of reservation</param>
         /// <param name="timeRequirement">time requirement of the reservation in minutes</param>
         /// <returns>true if there is enough time left or user is carwash admin</returns>
-        private bool IsEnoughTimeInSlot(DateTime dateTime, int timeRequirement)
+        private async Task<bool> IsEnoughTimeInSlotAsync(DateTime dateTime, int timeRequirement)
         {
             if (_user.IsCarwashAdmin) return true;
 
-            // Cannot use SumAsync because of this EF issue:
-            // https://github.com/aspnet/EntityFrameworkCore/issues/12314
-            // Current milestone to be fixed is EF 2.1.3
-            var reservedTimeInSlot = _context.Reservation
+            var reservedTimeInSlot = await _context.Reservation
                 .Where(r => r.StartDate == dateTime)
-                .Sum(r => r.TimeRequirement);
+                .SumAsync(r => r.TimeRequirement);
 
             return reservedTimeInSlot + timeRequirement <=
                    _configuration.Slots.Find(s => s.StartTime == dateTime.Hour)?.Capacity * _configuration.Reservation.TimeUnit;
