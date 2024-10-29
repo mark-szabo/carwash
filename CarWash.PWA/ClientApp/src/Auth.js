@@ -2,20 +2,14 @@
 import * as download from 'downloadjs';
 
 const adalConfig = {
-    clientId: '6e291d40-2613-4a74-9af5-790eb496a828',
+    clientId: '212c82d9-446d-48f5-8f95-88ebe2e78dbd',
     endpoints: {
-        api: '6e291d40-2613-4a74-9af5-790eb496a828',
+        api: '212c82d9-446d-48f5-8f95-88ebe2e78dbd',
     },
     cacheLocation: 'localStorage',
     extraQueryParameter: '',
+    redirectUri: window.location.origin,
 };
-
-const authorizedTenantIds = [
-    'bca200e7-1765-4001-977f-5363e5f7a63a', // carwash
-    '72f988bf-86f1-41af-91ab-2d7cd011db47', // microsoft
-    '42f7676c-f455-423c-82f6-dc2d99791af7', // sap
-    '917332b6-5fee-4b92-9d05-812c7f08b9b9', // graphisoft
-];
 
 // https://github.com/salvoravida/react-adal
 
@@ -33,7 +27,7 @@ function adalGetToken(resourceGuid) {
     });
 }
 
-export function runWithAdal(app) {
+export function runWithAdal(configuration, app) {
     // the app must run in an iframe to get a refreshToken (parsing hash and getting token)
     authContext.handleWindowCallback();
 
@@ -60,7 +54,7 @@ export function runWithAdal(app) {
                 const user = authContext.getCachedUser();
                 console.log('User is authenticated.');
                 // console.log(user);
-                if (authorizedTenantIds.filter(id => id === user.profile.tid).length > 0) {
+                if (configuration.companies.filter(c => c.tenantId === user.profile.tid).length > 0) {
                     app();
                 } else {
                     console.error(`Tenant ${user.profile.tid} is not athorized to use this application!`);
