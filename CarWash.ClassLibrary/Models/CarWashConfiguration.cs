@@ -46,7 +46,7 @@ namespace CarWash.ClassLibrary.Models
         /// </summary>
         /// <remarks>
         /// You MUST include the CarWash as a company!
-        /// Location: Application Settings
+        /// Location: Database
         /// Key: Companies
         /// </remarks>
         /// <example>
@@ -63,7 +63,7 @@ namespace CarWash.ClassLibrary.Models
         ///   }
         /// ]
         /// </example>
-        public List<Company> Companies { get; set; } = new List<Company>();
+        //public List<Company> Companies { get; set; } = new List<Company>();
 
         /// <summary>
         /// List of parking garages where cars are allowed to be left.
@@ -167,6 +167,16 @@ namespace CarWash.ClassLibrary.Models
             /// Default value: 11
             /// </remarks>
             public int HoursAfterCompanyLimitIsNotChecked { get; set; } = 11;
+
+            /// <summary>
+            /// Time requirement multiplier for carpet cleaning.
+            /// </summary>
+            /// <remarks>
+            /// Location: Application Settings
+            /// Key: Reservation:CarpetCleaningMultiplier
+            /// Default value: 2
+            /// </remarks>
+            public int CarpetCleaningMultiplier { get; set; } = 2;
         }
 
         /// <summary>

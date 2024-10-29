@@ -1,4 +1,3 @@
-using Microsoft.Azure.WebJobs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
@@ -8,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
+using Microsoft.Azure.Functions.Worker;
 
 namespace CarWash.Functions
 {
@@ -33,7 +33,7 @@ namespace CarWash.Functions
         /// </summary>
         /// <param name="timer"></param>
         /// <param name="log"></param>
-        [FunctionName("ReminderFunction")]
+        [Function("ReminderFunction")]
         public static async Task Run([TimerTrigger("*/10 * * * *")]TimerInfo timer, ILogger log)
         {
             log.LogInformation($"Reminder function executed at: {DateTime.Now}");

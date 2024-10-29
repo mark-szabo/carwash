@@ -1,11 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { withStyles } from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
-import ButtonBase from '@material-ui/core/ButtonBase';
-import IconButton from '@material-ui/core/IconButton';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import { withStyles } from '@mui/styles';
+import Typography from '@mui/material/Typography';
+import ButtonBase from '@mui/material/ButtonBase';
+import IconButton from '@mui/material/IconButton';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const styles = theme => {
     const transition = {
@@ -13,9 +13,9 @@ const styles = theme => {
     };
     return {
         title: {
-            paddingTop: theme.spacing.unit,
-            paddingLeft: theme.spacing.unit,
-            paddingRight: theme.spacing.unit,
+            paddingTop: theme.spacing(1),
+            paddingLeft: theme.spacing(1),
+            paddingRight: theme.spacing(1),
             paddingBottom: '0',
             width: '100%',
             display: 'flex',
@@ -124,7 +124,7 @@ class CardSection extends React.Component {
                         tabIndex={-1}
                         aria-hidden="true"
                         disableRipple
-                    >
+                        size="large">
                         <ExpandMoreIcon />
                     </IconButton>
                     <div className={classNames(classes.titleText, { [classes.expanded]: expanded })}>

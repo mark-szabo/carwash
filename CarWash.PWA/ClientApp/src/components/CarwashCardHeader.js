@@ -1,9 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
-import LockIcon from '@material-ui/icons/Lock';
-import Tooltip from '@material-ui/core/Tooltip';
+import { withStyles } from '@mui/styles';
+import Typography from '@mui/material/Typography';
+import LockIcon from '@mui/icons-material/Lock';
+import Tooltip from '@mui/material/Tooltip';
 
 export const styles = theme => ({
     /* Styles applied to the root element. */
@@ -57,12 +57,16 @@ function CarwashCardHeader(props) {
                         <img src={`/images/${company}.svg`} alt={company} height="20px" />
                     </div>
                 </div>
-                <Typography className={classes.subheader} color="textSecondary" component="span">
-                    {subheader}
-                </Typography>
-                <Typography className={classes.subheader} color="textSecondary" component="span">
-                    {subheaderSecondLine}
-                </Typography>
+                <div>
+                    <Typography className={classes.subheader} color="textSecondary" component="span">
+                        {subheader}
+                    </Typography>
+                </div>
+                <div>
+                    <Typography className={classes.subheader} color="textSecondary" component="span">
+                        {subheaderSecondLine}
+                    </Typography>
+                </div>
             </div>
         </div>
     );

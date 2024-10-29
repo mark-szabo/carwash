@@ -1,18 +1,18 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
-import { withStyles } from '@material-ui/core/styles';
-import Drawer from '@material-ui/core/Drawer';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import List from '@material-ui/core/List';
-import Typography from '@material-ui/core/Typography';
-import IconButton from '@material-ui/core/IconButton';
-import Hidden from '@material-ui/core/Hidden';
-import Divider from '@material-ui/core/Divider';
-import MenuIcon from '@material-ui/icons/Menu';
-import RefreshIcon from '@material-ui/icons/Refresh';
-import FavoriteIcon from '@material-ui/icons/Favorite';
+import { withStyles } from '@mui/styles';
+import Drawer from '@mui/material/Drawer';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import List from '@mui/material/List';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import Hidden from '@mui/material/Hidden';
+import Divider from '@mui/material/Divider';
+import MenuIcon from '@mui/icons-material/Menu';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import { drawerItems, otherDrawerItems } from './DrawerItems';
 
 const drawerWidth = 240;
@@ -36,9 +36,10 @@ const styles = theme => ({
         [theme.breakpoints.up('md')]: {
             width: `calc(100% - ${drawerWidth}px)`,
         },
-        ...(theme.palette.type === 'dark' && {
+        ...(theme.palette.mode === 'dark' && {
             backgroundColor: theme.palette.background.paper,
         }),
+        backgroundImage: 'none',
     },
     navIconHide: {
         [theme.breakpoints.up('md')]: {
@@ -48,6 +49,7 @@ const styles = theme => ({
     toolbar: theme.mixins.toolbar,
     drawerPaper: {
         width: drawerWidth,
+        backgroundImage: 'none',
         [theme.breakpoints.up('md')]: {
             position: 'relative',
         },
@@ -60,7 +62,7 @@ const styles = theme => ({
         flexGrow: 1,
         overflow: 'auto',
         backgroundColor: theme.palette.background.default,
-        padding: theme.spacing.unit * 3,
+        padding: theme.spacing(3),
         marginTop: 56,
         [`${theme.breakpoints.up('xs')} and (orientation: landscape)`]: {
             marginTop: 48,
@@ -81,14 +83,14 @@ const styles = theme => ({
         position: 'absolute',
         bottom: 0,
         padding: 24,
-        color: theme.palette.type === 'dark' ? 'rgba(255, 255, 255, 0.54)' : 'rgba(0, 0, 0, 0.54)',
+        color: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.54)' : 'rgba(0, 0, 0, 0.54)',
         fontSize: '0.8125rem',
         fontWeight: 400,
         zIndex: 0,
     },
     link: {
         textDecoration: 'underline',
-        color: theme.palette.type === 'dark' ? 'rgba(255, 255, 255, 0.54)' : 'rgba(0, 0, 0, 0.54)',
+        color: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.54)' : 'rgba(0, 0, 0, 0.54)',
         fontSize: '0.8125rem',
         fontWeight: 400,
     },
@@ -197,14 +199,18 @@ class Layout extends React.Component {
             <div className={classes.root}>
                 <AppBar className={classes.appBar}>
                     <Toolbar>
-                        <IconButton aria-label="open drawer" onClick={this.handleDrawerToggle} className={classes.navIconHide}>
+                        <IconButton
+                            aria-label="open drawer"
+                            onClick={this.handleDrawerToggle}
+                            className={classes.navIconHide}
+                            size="large">
                             <MenuIcon />
                         </IconButton>
                         <Typography variant="h6" noWrap className={classes.flex}>
                             {this.getNavbarName()}
                         </Typography>
                         {refresh && (
-                            <IconButton aria-label="refresh" onClick={refresh}>
+                            <IconButton aria-label="refresh" onClick={refresh} size="large">
                                 <RefreshIcon />
                             </IconButton>
                         )}
@@ -226,7 +232,7 @@ class Layout extends React.Component {
                         {drawer}
                     </Drawer>
                 </Hidden>
-                <Hidden smDown implementation="css">
+                <Hidden mdDown implementation="css">
                     <Drawer
                         variant="permanent"
                         open

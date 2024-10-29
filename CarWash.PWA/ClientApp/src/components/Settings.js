@@ -2,23 +2,23 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import TrackedComponent from './TrackedComponent';
 import apiFetch from '../Auth';
-import { withStyles } from '@material-ui/core/styles';
-import Button from '@material-ui/core/Button';
-import Typography from '@material-ui/core/Typography';
-import Paper from '@material-ui/core/Paper';
-import Dialog from '@material-ui/core/Dialog';
-import Radio from '@material-ui/core/Radio';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import FormControl from '@material-ui/core/FormControl';
-import Switch from '@material-ui/core/Switch';
-import TextField from '@material-ui/core/TextField';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DeleteForeverIcon from '@material-ui/icons/DeleteForever';
-import red from '@material-ui/core/colors/red';
+import { withStyles } from '@mui/styles';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import Dialog from '@mui/material/Dialog';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormControl from '@mui/material/FormControl';
+import Switch from '@mui/material/Switch';
+import TextField from '@mui/material/TextField';
+import DialogActions from '@mui/material/DialogActions';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import red from '@mui/material/colors/red';
 import * as download from 'downloadjs';
 import * as moment from 'moment';
 import { NotificationChannel } from '../Constants';
@@ -27,21 +27,21 @@ import Spinner from './Spinner';
 
 const styles = theme => ({
     dangerButton: {
-        color: theme.palette.type === 'dark' ? '#CF6679' : red[300],
+        color: theme.palette.mode === 'dark' ? '#CF6679' : red[300],
         '&:hover': {
             backgroundColor: 'rgba(229,115,115,0.08)',
         },
     },
     dangerButtonContained: {
         color: '#FFFFFF',
-        backgroundColor: theme.palette.type === 'dark' ? '#CF6679' : 'rgb(225, 0, 80)',
+        backgroundColor: theme.palette.mode === 'dark' ? '#CF6679' : 'rgb(225, 0, 80)',
         '&:hover': {
             backgroundColor: 'rgb(157, 0, 56)',
         },
-        marginTop: theme.spacing.unit,
+        marginTop: theme.spacing(1),
     },
     primaryButtonContained: {
-        marginTop: theme.spacing.unit,
+        marginTop: theme.spacing(1),
     },
     center: {
         display: 'grid',
@@ -50,7 +50,7 @@ const styles = theme => ({
         height: '80%',
     },
     errorIcon: {
-        margin: theme.spacing.unit,
+        margin: theme.spacing(1),
         color: '#BDBDBD',
         width: '100px',
         height: '100px',
@@ -67,17 +67,17 @@ const styles = theme => ({
     },
     paper: {
         ...theme.mixins.gutters(),
-        paddingTop: theme.spacing.unit * 2,
-        paddingBottom: theme.spacing.unit * 2,
+        paddingTop: theme.spacing(2),
+        paddingBottom: theme.spacing(2),
         maxWidth: '600px',
-        marginBottom: theme.spacing.unit * 2,
+        marginBottom: theme.spacing(2),
     },
     group: {
-        margin: `${theme.spacing.unit}px 0`,
+        margin: `${theme.spacing(1)}px 0`,
     },
     formControl: {
-        marginTop: theme.spacing.unit * 2,
-        marginBottom: theme.spacing.unit * 2,
+        marginTop: theme.spacing(2),
+        marginBottom: theme.spacing(2),
     },
     dateField: {
         minWidth: 220,

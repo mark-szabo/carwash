@@ -1,7 +1,7 @@
 {
   /* See all the pre-defined configs here: https://www.npmjs.com/package/eslint-config-defaults */
   "extends": "defaults/configurations/airbnb/es6",
-  "parser": "babel-eslint",
+  "parser": "@babel/eslint-parser",
   "plugins": ["react", "import"],
   "env": {
     "amd": true,
@@ -54,6 +54,8 @@
     "react/sort-comp": 1,
     "react/jsx-wrap-multilines": 1,
 
+    "no-param-reassign": 0,
+    "no-use-before-define": "off",
     "no-empty-label": 0,
     "space-after-keywords": 0,
     "space-return-throw-case": 0

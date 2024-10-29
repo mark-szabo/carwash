@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Queue;
-using CarWash.ClassLibrary;
+using Azure.Storage.Queues;
 using CarWash.ClassLibrary.Models;
 using Newtonsoft.Json;
 
@@ -25,20 +23,17 @@ namespace CarWash.Functions
             var connectionString = Environment.GetEnvironmentVariable("StorageAccount", EnvironmentVariableTarget.Process);
 
             // Parse the connection string and return a reference to the storage account.
-            var storage = CloudStorageAccount.Parse(connectionString);
-
-            // Create the queue client.
-            var queueClient = storage.CreateCloudQueueClient();
+            var storage = new QueueServiceClient(connectionString);
 
             // Retrieve a reference to a container.
-            var queue = queueClient.GetQueueReference("email");
+            var queue = storage.GetQueueClient("email");
 
             // Create the queue if it doesn't already exist
             await queue.CreateIfNotExistsAsync();
 
             // Create a message and add it to the queue.
-            var message = new CloudQueueMessage(JsonConvert.SerializeObject(email));
-            await queue.AddMessageAsync(message);
+            var message = JsonConvert.SerializeObject(email);
+            await queue.SendMessageAsync(message);
         }
     }
 }

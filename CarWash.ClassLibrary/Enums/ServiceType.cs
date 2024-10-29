@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using static CarWash.ClassLibrary.Enums.ServiceType;
 
 namespace CarWash.ClassLibrary.Enums
@@ -86,20 +87,129 @@ namespace CarWash.ClassLibrary.Enums
         /// </summary>
         public static readonly List<Service> Types = new List<Service>
         {
-            new Service {Type = Exterior, TimeInMinutes = 12, Price = 3213, PriceMpv = 4017, Hidden = false},
-            new Service {Type = Interior, TimeInMinutes = 12, Price = 1607, PriceMpv = 2410, Hidden = false},
-            new Service {Type = Carpet, TimeInMinutes = 24, Price = -1, PriceMpv = -1, Hidden = false},
-            new Service {Type = SpotCleaning, TimeInMinutes = 0, Price = 3534, PriceMpv = 3534, Hidden = false},
-            new Service {Type = VignetteRemoval, TimeInMinutes = 0, Price = 466, PriceMpv = 466, Hidden = false},
-            new Service {Type = Polishing, TimeInMinutes = 0, Price = 4498, PriceMpv = 4498, Hidden = false},
-            new Service {Type = AcCleaningOzon, TimeInMinutes = 0, Price = 8033, PriceMpv = 8033, Hidden = false},
-            new Service {Type = AcCleaningBomba, TimeInMinutes = 0, Price = 6426, PriceMpv = 6426, Hidden = false},
-            new Service {Type = BugRemoval, TimeInMinutes = 0, Price = 804, PriceMpv = 804, Hidden = true},
-            new Service {Type = WheelCleaning, TimeInMinutes = 0, Price = 964, PriceMpv = 964, Hidden = true},
-            new Service {Type = TireCare, TimeInMinutes = 0, Price = 804, PriceMpv = 804, Hidden = true},
-            new Service {Type = LeatherCare, TimeInMinutes = 0, Price = 8033, PriceMpv = 8033, Hidden = true},
-            new Service {Type = PlasticCare, TimeInMinutes = 0, Price = 7230, PriceMpv = 7230, Hidden = true},
-            new Service {Type = PreWash, TimeInMinutes = 0, Price = 804, PriceMpv = 804, Hidden = true}
+            new Service {
+                Type = Exterior,
+                Name = "exterior",
+                TimeInMinutes = 12,
+                Price = 3712,
+                PriceMpv = 4641,
+                Hidden = false
+            },
+            new Service {
+                Type = Interior,
+                Name = "interior",
+                TimeInMinutes = 12,
+                Price = 2124,
+                PriceMpv = 3180,
+                Hidden = false},
+            new Service {
+                Type = Carpet,
+                Name = "carpet",
+                Description = "whole carpet cleaning, including all the seats",
+                TimeInMinutes = 24,
+                Price = -1,
+                PriceMpv = -1,
+                Hidden = false
+            },
+            new Service {
+                Type = SpotCleaning,
+                Name = "spot cleaning",
+                Description = "partial cleaning of the carpet, only where it is needed (eg. when something is spilled in the car)",
+                TimeInMinutes = 0,
+                Price = 4474,
+                PriceMpv = 4474,
+                Hidden = false
+            },
+            new Service {
+                Type = VignetteRemoval,
+                Name = "vignette removal",
+                Description = "eg. highway vignettes on the windscreen",
+                TimeInMinutes = 0,
+                Price = 593,
+                PriceMpv = 593,
+                Hidden = false
+            },
+            new Service {
+                Type = Polishing,
+                Name = "polishing",
+                Description = "for small scratches",
+                TimeInMinutes = 0,
+                Price = 5693,
+                PriceMpv = 5693,
+                Hidden = false
+            },
+            new Service {
+                Type = AcCleaningOzon,
+                Name = "AC cleaning 'ozon'",
+                Description = "disinfects molecules with ozone",
+                TimeInMinutes = 0,
+                Price = 10166,
+                PriceMpv = 10166,
+                Hidden = false
+            },
+            new Service {
+                Type = AcCleaningBomba,
+                Name = "AC cleaning 'bomba'",
+                Description = "blowing chemical spray in the AC system",
+                TimeInMinutes = 0,
+                Price = 8131,
+                PriceMpv = 8131,
+                Hidden = false
+            },
+            new Service {
+                Type = BugRemoval,
+                Name = "bug removal",
+                Description = "we'll add this if it's needed",
+                TimeInMinutes = 0,
+                Price = 1018,
+                PriceMpv = 1018,
+                Hidden = true
+            },
+            new Service {
+                Type = WheelCleaning,
+                Name = "wheel cleaning",
+                Description = "we'll add this if it's needed",
+                TimeInMinutes = 0,
+                Price = 1219,
+                PriceMpv = 1219,
+                Hidden = true
+            },
+            new Service {
+                Type = TireCare,
+                Name = "tire care",
+                Description = "we'll add this if it's needed",
+                TimeInMinutes = 0,
+                Price = 1018,
+                PriceMpv = 1018,
+                Hidden = true
+            },
+            new Service {
+                Type = LeatherCare,
+                Name = "leather care",
+                Description = "we'll add this if it's needed",
+                TimeInMinutes = 0,
+                Price = 10166,
+                PriceMpv = 10166,
+                Hidden = true
+            },
+            new Service {
+                Type = PlasticCare,
+                Name = "plastic care",
+                Description = "we'll add this if it's needed",
+                TimeInMinutes = 0,
+                Price = 9149,
+                PriceMpv = 9149,
+                Hidden = true
+            },
+            new Service {
+                Type = PreWash,
+                Name = "prewash",
+                Description = "we'll add this if it's needed",
+                TimeInMinutes = 0,
+                Price = 1018,
+                PriceMpv = 1018,
+                Hidden = true
+            }
         };
     }
 
@@ -111,7 +221,18 @@ namespace CarWash.ClassLibrary.Enums
         /// <summary>
         /// Gets or sets the type of the service.
         /// </summary>
+        [JsonPropertyName("id")]
         public ServiceType Type { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the service.
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the description of the service.
+        /// </summary>
+        public string Description { get; set; }
 
         /// <summary>
         /// Gets or sets the time needed for this service.

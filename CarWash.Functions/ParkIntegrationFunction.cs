@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Extensions;
 using CarWash.ClassLibrary.Models;
-using Microsoft.Azure.WebJobs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Microsoft.Azure.Functions.Worker;
 
 namespace CarWash.Functions
 {
@@ -36,7 +36,7 @@ namespace CarWash.Functions
         /// </summary>
         /// <param name="timer"></param>
         /// <param name="log"></param>
-        [FunctionName("ParkIntegrationFunction")]
+        [Function("ParkIntegrationFunction")]
         public static async Task RunAsync([TimerTrigger("0 * 6-15 * * 1-5")]TimerInfo timer, ILogger log)
         {
             log.LogInformation($"Park integration function executed at: {DateTime.Now}");

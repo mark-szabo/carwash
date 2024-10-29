@@ -15,6 +15,7 @@ namespace CarWash.ClassLibrary.Models
     public class Reservation : ApplicationDbContext.IEntity
     {
         /// <inheritdoc />
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public string Id { get; set; }
 
         /// <summary>
@@ -32,7 +33,7 @@ namespace CarWash.ClassLibrary.Models
         /// Gets or sets the reservation vehicle plate number.
         /// </summary>
         [Required]
-        [StringLength(7)]
+        [StringLength(8)]
         public string VehiclePlateNumber { get; set; }
 
         /// <summary>
@@ -117,7 +118,7 @@ namespace CarWash.ClassLibrary.Models
         public string CreatedById { get; set; }
 
         /// <summary>
-        /// Gets or sets the date and time whenthe reservation was created.
+        /// Gets or sets the date and time when the reservation was created.
         /// </summary>
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime CreatedOn { get; set; }

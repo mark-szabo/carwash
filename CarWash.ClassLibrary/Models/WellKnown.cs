@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using CarWash.ClassLibrary.Enums;
+using System.Collections.Generic;
 
 namespace CarWash.ClassLibrary.Models
 {
@@ -24,6 +25,11 @@ namespace CarWash.ClassLibrary.Models
         /// List of parking garages where cars are allowed to be left.
         /// </summary>
         public List<Garage> Garages { get; set; } = new List<Garage>();
+
+        /// <summary>
+        /// List of services available to users.
+        /// </summary>
+        public List<Service> Services { get; set; } = new List<Service>();
 
         /// <summary>
         /// CarWash app settings referring to reservations.

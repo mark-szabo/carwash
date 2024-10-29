@@ -19,7 +19,6 @@ using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Controllers;
 using CarWash.PWA.Hubs;
-using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -34,7 +33,7 @@ using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using Microsoft.Azure.Amqp.Framing;
+using Microsoft.AspNetCore.Rewrite;
 
 namespace CarWash.PWA
 {
@@ -45,7 +44,7 @@ namespace CarWash.PWA
                     "style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com; " +
                     "img-src 'self' data:; " +
                     "connect-src https: wss: 'self' fonts.googleapis.com fonts.gstatic.com; " +
-                    "font-src 'self' fonts.googleapis.com fonts.gstatic.com; " +
+                    "font-src 'self' data: fonts.googleapis.com fonts.gstatic.com; " +
                     "frame-src 'self' login.microsoftonline.com *.powerbi.com; " +
                     "form-action 'self'; " +
                     "upgrade-insecure-requests; " +
@@ -96,15 +95,15 @@ namespace CarWash.PWA
                     options.Authority = config.AzureAd.Instance;
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidateIssuer = true,
-                        IssuerValidator = (issuer, token, tvp) =>
+                        ValidateIssuer = false,
+                        /*IssuerValidator = (issuer, token, tvp) =>
                         {
                             issuer = issuer.Substring(24, 36); // Get the tenant id out of the issuer string (eg. https://sts.windows.net/72f988bf-86f1-41af-91ab-2d7cd011db47/)
                             if (config.Companies.Select(i => i.TenantId).Contains(issuer))
                                 return issuer;
                             else
                                 throw new SecurityTokenInvalidIssuerException("Invalid issuer");
-                        },
+                        },*/
                     };
                     options.Events = new JwtBearerEvents
                     {
@@ -130,9 +129,9 @@ namespace CarWash.PWA
                             // Get EF context
                             var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
 
-                            var company = config.Companies.SingleOrDefault(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))?.Name ?? throw new Exception("Tenant ('tenantid') cannot be found in auth token.");
+                            var company = (await dbContext.Company.SingleOrDefaultAsync(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))) ?? throw new SecurityTokenInvalidIssuerException("Tenant ('tenantid') cannot be found in auth token.");
                             var email = context.Principal.FindFirstValue(ClaimTypes.Upn)?.ToLower();
-                            if (email == null && company == Company.Carwash) email = context.Principal.FindFirstValue(ClaimTypes.Email)?.ToLower();
+                            if (email == null && company.Name == Company.Carwash) email = context.Principal.FindFirstValue(ClaimTypes.Email)?.ToLower();
                             if (email == null) throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
 
                             var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
@@ -144,8 +143,8 @@ namespace CarWash.PWA
                                     FirstName = context.Principal.FindFirstValue(ClaimTypes.GivenName) ?? throw new Exception("First name ('givenname') cannot be found in auth token."),
                                     LastName = context.Principal.FindFirstValue(ClaimTypes.Surname),
                                     Email = email,
-                                    Company = company,
-                                    IsCarwashAdmin = company == Company.Carwash
+                                    Company = company.Name,
+                                    IsCarwashAdmin = company.Name == Company.Carwash
                                 };
 
                                 await dbContext.Users.AddAsync(user);
@@ -292,7 +291,7 @@ namespace CarWash.PWA
 
             services.AddHealthChecks();
 
-            services.AddControllers();
+            services.AddControllers().AddNewtonsoftJson();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -312,18 +311,22 @@ namespace CarWash.PWA
 
             app.UseHttpsRedirection();
 
+            // Apex to www. redirection (Azure CDN is not working on apex).
+            var rewriteOptions = new RewriteOptions()
+                .AddRedirectToWwwPermanent();
+            app.UseRewriter(rewriteOptions);
+
             app.UseAuthentication();
 
             app.Use(async (context, next) =>
             {
-                context.Response.Headers.Add("X-Frame-Options", new[] { "SAMEORIGIN" });
-                //context.Response.Headers.Add("Strict-Transport-Security", new[] { "max-age=31536000; includeSubDomains" });
-                context.Response.Headers.Add("Expect-CT", new[] { "expect-ct: max-age=604800, report-uri=https://markszabo.report-uri.com/r/d/ct/enforce" });
-                context.Response.Headers.Add("X-XSS-Protection", new[] { "1; mode=block; report=https://markszabo.report-uri.com/r/d/xss/enforce" });
-                context.Response.Headers.Add("X-Content-Type-Options", new[] { "nosniff" });
-                context.Response.Headers.Add("Referrer-Policy", new[] { "strict-origin-when-cross-origin" });
-                context.Response.Headers.Add("Feature-Policy", new[] { "accelerometer 'none'; camera 'none'; geolocation 'self'; gyroscope 'none'; magnetometer 'none'; microphone 'none'; payment 'none'; usb 'none'" });
-                context.Response.Headers.Add("Content-Security-Policy", new[] { ContentSecurityPolicy });
+                context.Response.Headers.Append("X-Frame-Options", new[] { "SAMEORIGIN" });
+                //context.Response.Headers.Append("Strict-Transport-Security", new[] { "max-age=31536000; includeSubDomains" });
+                context.Response.Headers.Append("X-XSS-Protection", new[] { "1; mode=block; report=https://markszabo.report-uri.com/r/d/xss/enforce" });
+                context.Response.Headers.Append("X-Content-Type-Options", new[] { "nosniff" });
+                context.Response.Headers.Append("Referrer-Policy", new[] { "strict-origin-when-cross-origin" });
+                context.Response.Headers.Append("Feature-Policy", new[] { "accelerometer 'none'; camera 'none'; geolocation 'self'; gyroscope 'none'; magnetometer 'none'; microphone 'none'; payment 'none'; usb 'none'" });
+                context.Response.Headers.Append("Content-Security-Policy", new[] { ContentSecurityPolicy });
                 context.Response.Headers.Remove(HeaderNames.Server);
                 context.Response.Headers.Remove("X-Powered-By");
                 await next();

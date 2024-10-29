@@ -3,32 +3,33 @@ import PropTypes from 'prop-types';
 import TrackedComponent from './TrackedComponent';
 import { Redirect } from 'react-router';
 import apiFetch from '../Auth';
-import { withStyles } from '@material-ui/core/styles';
-import Stepper from '@material-ui/core/Stepper';
-import Step from '@material-ui/core/Step';
-import StepLabel from '@material-ui/core/StepLabel';
-import StepContent from '@material-ui/core/StepContent';
-import Button from '@material-ui/core/Button';
-import Chip from '@material-ui/core/Chip';
-import Typography from '@material-ui/core/Typography';
-import Radio from '@material-ui/core/Radio';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import FormGroup from '@material-ui/core/FormGroup';
-import Checkbox from '@material-ui/core/Checkbox';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import FormControl from '@material-ui/core/FormControl';
-import TextField from '@material-ui/core/TextField';
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import Select from '@material-ui/core/Select';
-import InfiniteCalendar from 'react-infinite-calendar';
-import CloudOffIcon from '@material-ui/icons/CloudOff';
-import ErrorOutlineIcon from '@material-ui/icons/ErrorOutline';
-import WarningIcon from '@material-ui/icons/Warning';
-import Grid from '@material-ui/core/Grid';
+import { withStyles } from '@mui/styles';
+import Alert from '@mui/material/Alert';
+import Stepper from '@mui/material/Stepper';
+import Step from '@mui/material/Step';
+import StepLabel from '@mui/material/StepLabel';
+import StepContent from '@mui/material/StepContent';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import Typography from '@mui/material/Typography';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormGroup from '@mui/material/FormGroup';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormControl from '@mui/material/FormControl';
+import TextField from '@mui/material/TextField';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import InfiniteCalendar from '@appannie/react-infinite-calendar';
+import CloudOffIcon from '@mui/icons-material/CloudOff';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import WarningIcon from '@mui/icons-material/Warning';
+import Grid from '@mui/material/Grid';
 import * as moment from 'moment';
 import { Garages, Service, NotificationChannel, BacklogHubMethods } from '../Constants';
-import 'react-infinite-calendar/styles.css';
+import '@appannie/react-infinite-calendar/styles.css';
 import './Reserve.css';
 import ServiceDetailsTable from './ServiceDetailsTable';
 import Spinner from './Spinner';
@@ -39,21 +40,21 @@ const styles = theme => ({
         backgroundColor: 'inherit',
     },
     button: {
-        marginTop: theme.spacing.unit,
-        marginRight: theme.spacing.unit,
+        marginTop: theme.spacing(1),
+        marginRight: theme.spacing(1),
     },
     actionsContainer: {
-        marginTop: theme.spacing.unit,
-        marginBottom: theme.spacing.unit * 2,
+        marginTop: theme.spacing(1),
+        marginBottom: theme.spacing(2),
     },
     resetContainer: {
-        padding: theme.spacing.unit * 3,
+        padding: theme.spacing(3),
     },
     chip: {
-        margin: theme.spacing.unit / 2,
+        margin: theme.spacing(0.5),
     },
     selectedChip: {
-        margin: theme.spacing.unit / 2,
+        margin: theme.spacing(0.5),
         backgroundColor: theme.palette.primary.main,
         '&:hover': {
             backgroundColor: theme.palette.primary.dark,
@@ -66,22 +67,22 @@ const styles = theme => ({
         },
     },
     chipGroupTitle: {
-        marginTop: theme.spacing.unit / 2,
+        marginTop: theme.spacing(0.5),
     },
     calendar: {
         maxWidth: '400px',
     },
     radioGroup: {
-        margin: `${theme.spacing.unit}px 0`,
+        margin: `${theme.spacing(1)}px 0`,
     },
     container: {
         display: 'flex',
         flexWrap: 'wrap',
     },
     textField: {
-        marginLeft: theme.spacing.unit,
-        marginRight: theme.spacing.unit,
-        [theme.breakpoints.down('sm')]: {
+        marginLeft: theme.spacing(1),
+        marginRight: theme.spacing(1),
+        [theme.breakpoints.down('md')]: {
             width: '100%',
         },
         [theme.breakpoints.up('md')]: {
@@ -89,12 +90,12 @@ const styles = theme => ({
         },
     },
     checkbox: {
-        marginLeft: theme.spacing.unit,
-        marginRight: theme.spacing.unit,
+        marginLeft: theme.spacing(1),
+        marginRight: theme.spacing(1),
     },
     formControl: {
-        margin: theme.spacing.unit,
-        [theme.breakpoints.down('sm')]: {
+        margin: theme.spacing(1),
+        [theme.breakpoints.down('md')]: {
             width: '100%',
         },
         [theme.breakpoints.up('md')]: {
@@ -108,7 +109,7 @@ const styles = theme => ({
         height: '80%',
     },
     errorIcon: {
-        margin: theme.spacing.unit,
+        margin: theme.spacing(1),
         color: '#BDBDBD',
         width: '100px',
         height: '100px',
@@ -451,7 +452,7 @@ class Reserve extends TrackedComponent {
 
     handleReserve = () => {
         const validationErrors = {
-            vehiclePlateNumber: this.state.vehiclePlateNumber === '',
+            vehiclePlateNumber: this.state.vehiclePlateNumber === '' && this.state.vehiclePlateNumber.length > 8,
             garage: this.state.garage === '' && this.state.locationKnown,
             floor: this.state.floor === '' && this.state.locationKnown,
         };
@@ -606,9 +607,9 @@ class Reserve extends TrackedComponent {
                                 <Grid item xs={12} md={6}>
                                     {this.state.services.map(service => (
                                         <span key={service.id}>
-                                            {service.id === 0 && <Typography variant="caption">Basic</Typography>}
-                                            {service.id === 3 && <Typography variant="caption">Extras</Typography>}
-                                            {service.id === 6 && <Typography variant="caption">AC</Typography>}
+                                            {service.id === 0 && <div><Typography variant="caption">Basic</Typography></div>}
+                                            {service.id === 3 && <div><Typography variant="caption">Extras</Typography></div>}
+                                            {service.id === 6 && <div><Typography variant="caption">AC</Typography></div>}
                                             <Chip
                                                 key={service.id}
                                                 label={service.name}
@@ -693,6 +694,10 @@ class Reserve extends TrackedComponent {
                 <Step>
                     <StepLabel>{timeStepLabel}</StepLabel>
                     <StepContent>
+                        <Alert variant="outlined" severity="info">
+                            Drop the car key before your slot starts to ensure timely completion.
+                            Ending times are indicative. For special requests, use the comment field.
+                        </Alert>
                         <FormControl component="fieldset">
                             <RadioGroup
                                 aria-label="Time"
@@ -788,6 +793,7 @@ class Reserve extends TrackedComponent {
                                         className={classes.textField}
                                         margin="normal"
                                         onChange={this.handlePlateNumberChange}
+                                        inputProps={{ maxLength: 8 }}
                                     />
                                 </div>
                                 <div>
@@ -880,7 +886,7 @@ class Reserve extends TrackedComponent {
                                         id="reserve-comment"
                                         label="Comment"
                                         multiline
-                                        rowsMax="4"
+                                        maxRows="4"
                                         value={comment}
                                         onChange={this.handleCommentChange}
                                         className={classes.textField}

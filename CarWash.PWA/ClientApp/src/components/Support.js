@@ -1,8 +1,8 @@
 ﻿import React from 'react';
 import TrackedComponent from './TrackedComponent';
-import Typography from '@material-ui/core/Typography';
-import Paper from '@material-ui/core/Paper';
-import { withStyles } from '@material-ui/core/styles';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import { withStyles } from '@mui/styles';
 
 const styles = theme => ({
     link: {
@@ -11,10 +11,10 @@ const styles = theme => ({
     },
     paper: {
         ...theme.mixins.gutters(),
-        paddingTop: theme.spacing.unit * 2,
-        paddingBottom: theme.spacing.unit * 2,
+        paddingTop: theme.spacing(2),
+        paddingBottom: theme.spacing(2),
         maxWidth: '600px',
-        marginBottom: theme.spacing.unit * 2,
+        marginBottom: theme.spacing(2),
     },
 });
 
@@ -55,8 +55,8 @@ class Support extends TrackedComponent {
                     </Typography>
                     <Typography component="p">
                         If you experience any problem with the app, please contact support on{' '}
-                        <a href="mailto:carwashapp@microsoft.com" className={classes.link}>
-                            carwashapp@microsoft.com
+                        <a href="mailto:carwashapp@qubyte.tech" className={classes.link}>
+                            carwashapp@qubyte.tech
                         </a>
                         !
                     </Typography>

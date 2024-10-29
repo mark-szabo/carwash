@@ -61,7 +61,8 @@ namespace CarWash.PWA.Controllers
             if (!_user.IsAdmin) return Forbid();
             return Ok(_context.Users
             .Where(u => u.Company == _user.Company && u.FirstName != "[deleted user]")
-            .OrderBy(u => $"{u.FirstName} {u.LastName}")
+            .AsEnumerable()
+            .OrderBy(u => u.FullName)
             .Select(u => new UserViewModel(u)));
         }
 
@@ -78,11 +79,12 @@ namespace CarWash.PWA.Controllers
         {
             if (_user.IsAdmin)
             {
-                var dictionary = await _context.Users
+                var dictionary = (await _context.Users
                 .Where(u => u.Company == _user.Company && u.FirstName != "[deleted user]")
-                .Select(u => new { u.Id, FullName = $"{u.FirstName} {u.LastName}" })
+                    .ToListAsync())
+                .Select(u => new { u.Id, u.FullName })
                 .OrderBy(u => u.FullName)
-                .ToDictionaryAsync(u => u.Id, u => u.FullName);
+                .ToDictionary(u => u.Id, u => u.FullName);
 
                 return Ok(dictionary);
             }
@@ -91,8 +93,8 @@ namespace CarWash.PWA.Controllers
             {
                 var dictionary = (await _context.Users
                     .Where(u => u.FirstName != "[deleted user]")
-                    .Select(u => new { u.Id, FullName = $"{u.FullName} ({u.Company})" })
                     .ToListAsync())
+                    .Select(u => new { u.Id, FullName = $"{u.FullName} ({u.Company})" })
                     .OrderBy(u => u.FullName)
                     .ToDictionary(u => u.Id, u => u.FullName);
 

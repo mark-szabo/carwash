@@ -1,92 +1,96 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
-    <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
-    <IsPackable>false</IsPackable>
-    <SpaRoot>ClientApp\</SpaRoot>
-    <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
-    <Version>2.1.0</Version>
-    <PackageProjectUrl>https://github.com/mark-szabo/carwash</PackageProjectUrl>
-    <Company>Microsoft</Company>
-    <Copyright>Copyright © 2018-2020 Microsoft</Copyright>
-    <PackageTags>PWA, React, aspnetcore3.1</PackageTags>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/mark-szabo/carwash</RepositoryUrl>
-    <Product>CarWash</Product>
-    <Authors>Mark Szabo, Jozsef Vadkerti, Akos Szego, Tamas Veiland</Authors>
-    <Description>This app is intended to help employees working in Graphisoft park (Budapest, Hungary) reserve car washing services.</Description>
-    <ApplicationInsightsResourceId>/subscriptions/a984fd43-e460-42c7-957c-a023cf7f8241/resourcegroups/carwash/providers/microsoft.insights/components/mshucarwash-dev</ApplicationInsightsResourceId>
-    <ApplicationInsightsAnnotationResourceId>/subscriptions/a984fd43-e460-42c7-957c-a023cf7f8241/resourcegroups/carwash/providers/microsoft.insights/components/mshucarwash-dev</ApplicationInsightsAnnotationResourceId>
-    <UserSecretsId>648c0d03-e4b5-4097-8360-49e5a0ced1ab</UserSecretsId>
-    <WebProject_DirectoryAccessLevelKey>0</WebProject_DirectoryAccessLevelKey>
-    <DocumentationFile>bin\Debug\netcoreapp2.1\CarWash.PWA.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="EPPlus" Version="4.5.3.3"><NoWarn>NU1701</NoWarn></PackageReference>
-    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.13.1" />
-    <PackageReference Include="Microsoft.ApplicationInsights.SnapshotCollector" Version="1.3.7" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.3" />
-    <PackageReference Include="Microsoft.AspNetCore.AzureKeyVault.HostingStartup" Version="2.0.4" />
-    <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="3.1.3" />
-    <PackageReference Include="Microsoft.Azure.KeyVault" Version="3.0.5" />
-    <PackageReference Include="Microsoft.Azure.ServiceBus" Version="4.1.3" />
-    <PackageReference Include="Microsoft.Azure.Services.AppAuthentication" Version="1.4.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.0.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.5.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.3" />
-    <PackageReference Include="Microsoft.Graph" Version="3.3.0" />
-    <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="5.2.7" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="5.3.3" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="5.3.3" />
-    <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
-    <PackageReference Include="WebPush" Version="1.0.11" />
-    <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- Don't publish the SPA source files, but do show them in the project files list -->
-    <Content Remove="$(SpaRoot)**" />
-    <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\CarWash.ClassLibrary\CarWash.ClassLibrary.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <WCFMetadata Include="Connected Services" />
-  </ItemGroup>
-
-  <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
-    <!-- Ensure Node.js is installed -->
-    <Exec Command="node --version" ContinueOnError="true">
-      <Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
-    </Exec>
-    <Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE." />
-    <Message Importance="high" Text="Restoring dependencies using 'npm'. This may take several minutes..." />
-    <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
-  </Target>
-
-  <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
-    <!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
-    <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
-    <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
-
-    <!-- Include the newly-built files in the publish output -->
-    <ItemGroup>
-      <DistFiles Include="$(SpaRoot)build\**" />
-      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
-        <RelativePath>%(DistFiles.Identity)</RelativePath>
-        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      </ResolvedFileToPublish>
-    </ItemGroup>
-  </Target>
-
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+		<TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
+		<IsPackable>false</IsPackable>
+		<SpaRoot>ClientApp\</SpaRoot>
+		<DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
+		<Version>2.1.0</Version>
+		<PackageProjectUrl>https://github.com/mark-szabo/carwash</PackageProjectUrl>
+		<Company>Microsoft</Company>
+		<Copyright>Copyright © 2018-2020 Microsoft</Copyright>
+		<PackageTags>PWA, React, aspnetcore3.1</PackageTags>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/mark-szabo/carwash</RepositoryUrl>
+		<Product>CarWash</Product>
+		<Authors>Mark Szabo, Jozsef Vadkerti, Akos Szego, Tamas Veiland</Authors>
+		<Description>This app is intended to help employees working in Graphisoft park (Budapest, Hungary) reserve car washing services.</Description>
+		<ApplicationInsightsResourceId>/subscriptions/a984fd43-e460-42c7-957c-a023cf7f8241/resourcegroups/carwash/providers/microsoft.insights/components/mshucarwash-dev</ApplicationInsightsResourceId>
+		<ApplicationInsightsAnnotationResourceId>/subscriptions/a984fd43-e460-42c7-957c-a023cf7f8241/resourcegroups/carwash/providers/microsoft.insights/components/mshucarwash-dev</ApplicationInsightsAnnotationResourceId>
+		<UserSecretsId>648c0d03-e4b5-4097-8360-49e5a0ced1ab</UserSecretsId>
+		<WebProject_DirectoryAccessLevelKey>0</WebProject_DirectoryAccessLevelKey>
+		<DocumentationFile>bin\Debug\netcoreapp2.1\CarWash.PWA.xml</DocumentationFile>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.3.2" />
+		<PackageReference Include="Azure.Identity" Version="1.13.1" />
+		<PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.2" />
+		<PackageReference Include="Azure.Security.KeyVault.Certificates" Version="4.7.0" />
+		<PackageReference Include="Azure.Storage.Common" Version="12.21.1" />
+		<PackageReference Include="EPPlus" Version="7.4.2">
+			<NoWarn>NU1701</NoWarn>
+		</PackageReference>
+		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
+		<PackageReference Include="Microsoft.ApplicationInsights.SnapshotCollector" Version="1.4.6" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.9.2" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.10">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.Graph" Version="5.61.0" />
+		<PackageReference Include="Microsoft.Identity.Client" Version="4.66.1" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.9.0" />
+		<PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
+		<PackageReference Include="WebPush" Version="1.0.12" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.10" />
+		<PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="8.0.10" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="System.Drawing.Common" Version="8.0.10" />
+	</ItemGroup>
+	<ItemGroup>
+		<!-- Don't publish the SPA source files, but do show them in the project files list -->
+		<Content Remove="$(SpaRoot)**" />
+		<None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\CarWash.ClassLibrary\CarWash.ClassLibrary.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<WCFMetadata Include="Connected Services" />
+	</ItemGroup>
+	<Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
+		<!-- Ensure Node.js is installed -->
+		<Exec Command="node --version" ContinueOnError="true">
+			<Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
+		</Exec>
+		<Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE." />
+		<Message Importance="high" Text="Restoring dependencies using 'npm'. This may take several minutes..." />
+		<Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
+	</Target>
+	<Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
+		<!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
+		<Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
+		<Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
+		<!-- Include the newly-built files in the publish output -->
+		<ItemGroup>
+			<DistFiles Include="$(SpaRoot)build\**" />
+			<ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+				<RelativePath>%(DistFiles.Identity)</RelativePath>
+				<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+			</ResolvedFileToPublish>
+		</ItemGroup>
+	</Target>
 </Project>

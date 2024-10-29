@@ -1,13 +1,15 @@
 import React from 'react';
-import { AppInsights } from 'applicationinsights-js';
+import { ReactPlugin, withAITracking } from '@microsoft/applicationinsights-react-js';
 
-export default class TrackedComponent extends React.Component {
+const reactPlugin = new ReactPlugin();
+
+class TrackedComponent extends React.Component {
     displayName = 'TrackedComponent';
 
     componentDidMount() {
         this.componentDidMountTimestamp = Date.now();
         try {
-            AppInsights.trackPageView(
+            appInsights.trackPageView(
                 this.displayName, // name
                 null, // url
                 null, // properties
@@ -24,7 +26,7 @@ export default class TrackedComponent extends React.Component {
             throw new Error('componentDidMountTimestamp was not initialized. Check if super.componentDidMount() was called');
         }
         try {
-            AppInsights.trackMetric(
+            appInsights.trackMetric(
                 `${this.displayName} component engagement time (seconds)`, // name
                 (Date.now() - this.componentDidMountTimestamp) / 1000, // average
                 1, // sampleCount
@@ -41,3 +43,5 @@ export default class TrackedComponent extends React.Component {
         return false;
     }
 }
+
+export default withAITracking(reactPlugin, TrackedComponent);
