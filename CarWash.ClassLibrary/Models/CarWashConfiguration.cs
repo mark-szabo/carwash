@@ -46,7 +46,7 @@ namespace CarWash.ClassLibrary.Models
         /// </summary>
         /// <remarks>
         /// You MUST include the CarWash as a company!
-        /// Location: Application Settings
+        /// Location: Database
         /// Key: Companies
         /// </remarks>
         /// <example>
@@ -63,7 +63,7 @@ namespace CarWash.ClassLibrary.Models
         ///   }
         /// ]
         /// </example>
-        public List<Company> Companies { get; set; } = new List<Company>();
+        //public List<Company> Companies { get; set; } = new List<Company>();
 
         /// <summary>
         /// List of parking garages where cars are allowed to be left.

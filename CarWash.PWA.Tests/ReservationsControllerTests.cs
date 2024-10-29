@@ -2219,6 +2219,20 @@ namespace CarWash.PWA.Tests
                 Private = false,
             });
 
+            dbContext.Company.Add(new Company 
+            { 
+                Name = Company.Carwash, 
+                TenantId = "00000000-0000-0000-0000-000000000000", 
+                DailyLimit = 0 
+            });
+
+            dbContext.Company.Add(new Company 
+            { 
+                Name = "contoso", 
+                TenantId = "11111111-1111-1111-1111-111111111111", 
+                DailyLimit = 2 
+            });
+
             dbContext.SaveChanges();
 
             return dbContext;
@@ -2226,11 +2240,6 @@ namespace CarWash.PWA.Tests
 
         private static CarWashConfiguration CreateConfigurationStub() => new CarWashConfiguration
         {
-            Companies = new List<Company>
-            {
-                new Company { Name = Company.Carwash, TenantId = "00000000-0000-0000-0000-000000000000", DailyLimit = 0 },
-                new Company { Name = "contoso", TenantId = "11111111-1111-1111-1111-111111111111", DailyLimit = 2 },
-            },
             Slots = new List<Slot>
             {
                 new Slot {StartTime = 8, EndTime = 11, Capacity = 1},

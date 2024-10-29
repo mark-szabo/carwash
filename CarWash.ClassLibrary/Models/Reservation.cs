@@ -118,7 +118,7 @@ namespace CarWash.ClassLibrary.Models
         public string CreatedById { get; set; }
 
         /// <summary>
-        /// Gets or sets the date and time whenthe reservation was created.
+        /// Gets or sets the date and time when the reservation was created.
         /// </summary>
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime CreatedOn { get; set; }
