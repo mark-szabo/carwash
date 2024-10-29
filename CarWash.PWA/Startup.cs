@@ -115,11 +115,7 @@ namespace CarWash.PWA
                             {
                                 if (config.AzureAd.AuthorizedApplications.Contains(serviceAppId))
                                 {
-                                    context.Principal.AddIdentity(new ClaimsIdentity(
-                                        new List<Claim>
-                                        {
-                                        new Claim("appId", serviceAppId)
-                                        }));
+                                    context.Principal.AddIdentity(new ClaimsIdentity([new("appId", serviceAppId)]));
 
                                     return;
                                 }
@@ -140,7 +136,7 @@ namespace CarWash.PWA
                             {
                                 user = new User
                                 {
-                                    FirstName = context.Principal.FindFirstValue(ClaimTypes.GivenName) ?? throw new Exception("First name ('givenname') cannot be found in auth token."),
+                                    FirstName = context.Principal.FindFirstValue(ClaimTypes.GivenName) ?? "User", // throw new Exception("First name ('givenname') cannot be found in auth token."),
                                     LastName = context.Principal.FindFirstValue(ClaimTypes.Surname),
                                     Email = email,
                                     Company = company.Name,
