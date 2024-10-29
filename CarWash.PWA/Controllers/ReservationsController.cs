@@ -1412,7 +1412,7 @@ namespace CarWash.PWA.Controllers
                 }
 
                 // Format as table
-                var dataRange = worksheet.Cells[1, 1, i - 1, 12];
+                var dataRange = worksheet.Cells[1, 1, i == 2 ? i : i - 1, 12]; //cannot create table with only one row
                 var table = worksheet.Tables.Add(dataRange, $"reservations_{startDateNonNull.Year}_{startDateNonNull.Month}");
                 table.ShowTotal = false;
                 table.ShowHeader = true;
