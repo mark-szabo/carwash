@@ -6,6 +6,10 @@ import App from './App';
 import registerServiceWorker from './registerServiceWorker';
 import { runWithAdal } from './Auth';
 
+if (!window.location.host.startsWith('www') && !window.location.host.startsWith('localhost')) {
+    window.location = `https://www.${window.location.host}${window.location.pathname}`;
+}
+
 const baseUrl = document.getElementsByTagName('base')[0].getAttribute('href');
 const rootElement = document.getElementById('root');
 

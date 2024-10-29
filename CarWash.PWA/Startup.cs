@@ -307,11 +307,6 @@ namespace CarWash.PWA
 
             app.UseHttpsRedirection();
 
-            // Apex to www. redirection (Azure CDN is not working on apex).
-            var rewriteOptions = new RewriteOptions()
-                .AddRedirectToWwwPermanent();
-            app.UseRewriter(rewriteOptions);
-
             app.UseAuthentication();
 
             app.Use(async (context, next) =>
