@@ -536,7 +536,7 @@ class Reserve extends TrackedComponent {
     };
 
     render() {
-        const { classes, user } = this.props;
+        const { classes, user, configuration } = this.props;
         const {
             activeStep,
             servicesStepLabel,
@@ -640,7 +640,7 @@ class Reserve extends TrackedComponent {
                                     </div>
                                 </Grid>
                                 <Grid item xs={12} md={6}>
-                                    <ServiceDetailsTable />
+                                    <ServiceDetailsTable configuration={configuration} />
                                 </Grid>
                             </Grid>
                         )}
@@ -922,6 +922,7 @@ Reserve.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     user: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     reservations: PropTypes.arrayOf(PropTypes.object).isRequired, // eslint-disable-line react/forbid-prop-types
+    configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     addReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func,
     lastSettings: PropTypes.object, // eslint-disable-line react/forbid-prop-types

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { Route, Switch } from 'react-router';
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import { ReactPlugin } from '@microsoft/applicationinsights-react-js';
@@ -440,6 +441,8 @@ export default class App extends Component {
     };
 
     render() {
+        const { configuration } = this.props;
+
         const {
             user,
             reservations,
@@ -490,6 +493,7 @@ export default class App extends Component {
                                                 <Reserve
                                                     user={user}
                                                     reservations={reservations}
+                                                    configuration={configuration}
                                                     addReservation={this.addReservation}
                                                     invokeBacklogHub={this.invokeBacklogHub}
                                                     lastSettings={lastSettings}
@@ -513,6 +517,7 @@ export default class App extends Component {
                                                 <Reserve
                                                     user={user}
                                                     reservations={reservations}
+                                                    configuration={configuration}
                                                     addReservation={this.addReservation}
                                                     removeReservation={this.removeReservation}
                                                     invokeBacklogHub={this.invokeBacklogHub}
@@ -645,6 +650,10 @@ export default class App extends Component {
         );
     }
 }
+
+App.propTypes = {
+    configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+};
 
 /**
 <!-- Messenger Chat Plugin Code -->

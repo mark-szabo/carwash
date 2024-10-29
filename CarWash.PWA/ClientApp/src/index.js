@@ -28,7 +28,7 @@ try {
 runWithAdal(configuration, () => {
     ReactDOM.render(
         <BrowserRouter basename={baseUrl}>
-            <App />
+            <App configuration={configuration} />
         </BrowserRouter>,
         rootElement
     );

@@ -12,7 +12,6 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { getServiceList } from '../Constants';
 
 const styles = theme => {
     const transition = {
@@ -81,12 +80,12 @@ const styles = theme => {
             minWidth: 200,
         },
         cell: {
-            padding: '16px 8px 16px 24px',
+            padding: '16px 24px 16px 24px',
             borderBottom: 'none',
             borderTop: theme.palette.mode === 'dark' ? '1px solid rgba(81, 81, 81, 1)' : '1px solid rgba(224, 224, 224, 1)',
         },
         titleCell: {
-            padding: '16px 8px 8px 24px',
+            padding: '16px 24px 8px 24px',
         },
         descriptionCell: {
             padding: '0 8px 16px 24px',
@@ -98,6 +97,7 @@ const styles = theme => {
         contactUs: {
             padding: 24,
             color: secodaryColor,
+            lineHeight: 1.6,
         },
         link: {
             color: secodaryColor,
@@ -126,30 +126,30 @@ class ServiceDetailsTable extends React.Component {
         this.setState(state => ({ expanded: !state.expanded }));
     };
 
-    getTable = () => (
+    getTable = (configuration) => (
         <Table className={this.props.classes.table}>
             <TableHead>
                 <TableRow>
                     <TableCell className={this.props.classes.titleCell}>Name</TableCell>
-                    <TableCell numeric className={this.props.classes.titleCell}>
+                    <TableCell align="right" className={this.props.classes.titleCell}>
                         Price
                     </TableCell>
-                    <TableCell numeric className={this.props.classes.titleCell}>
+                    <TableCell align="right" className={this.props.classes.titleCell}>
                         Price - MPV
                     </TableCell>
                 </TableRow>
             </TableHead>
             <TableBody>
-                {getServiceList().map(service => (
-                    <React.Fragment key={service.id}>
+                {configuration.services.map(service => (
+                    <React.Fragment key={service.type}>
                         <TableRow className={this.props.classes.row}>
                             <TableCell component="th" scope="row" className={this.props.classes.cell}>
                                 {service.name}
                             </TableCell>
-                            <TableCell numeric className={this.props.classes.cell}>
+                            <TableCell align="right" className={this.props.classes.cell}>
                                 {service.price !== -1 ? `${service.price} Ft` : 'Ask for offer'}
                             </TableCell>
-                            <TableCell numeric className={this.props.classes.cell}>
+                            <TableCell align="right" className={this.props.classes.cell}>
                                 {service.priceMpv !== -1 ? `${service.priceMpv} Ft` : 'Ask for offer'}
                             </TableCell>
                         </TableRow>
@@ -164,6 +164,8 @@ class ServiceDetailsTable extends React.Component {
                 ))}
                 <TableRow className={this.props.classes.row}>
                     <TableCell colSpan="3" className={this.props.classes.contactUs}>
+                        Prices are for reference and may vary by company according to individual agreements.
+                        <br/>
                         Call us (
                         <a href="tel:+36704506612" className={this.props.classes.link}>
                             +36 70 701 5803
@@ -184,7 +186,7 @@ class ServiceDetailsTable extends React.Component {
     );
 
     render() {
-        const { classes } = this.props;
+        const { classes, configuration } = this.props;
         const { expanded, focused } = this.state;
         // const width = window.innerWidth > 0 ? window.innerWidth : window.screen.width;
         // const mobile = width <= 960;
@@ -220,7 +222,7 @@ class ServiceDetailsTable extends React.Component {
                     </div>
                 </ButtonBase>
 
-                {expanded && this.getTable()}
+                {expanded && this.getTable(configuration)}
             </Paper>
         );
     }
@@ -228,6 +230,7 @@ class ServiceDetailsTable extends React.Component {
 
 ServiceDetailsTable.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+    configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
 };
 
 export default withStyles(styles)(ServiceDetailsTable);

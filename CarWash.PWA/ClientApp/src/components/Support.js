@@ -55,8 +55,8 @@ class Support extends TrackedComponent {
                     </Typography>
                     <Typography component="p">
                         If you experience any problem with the app, please contact support on{' '}
-                        <a href="mailto:carwashapp@qubyte.tech" className={classes.link}>
-                            carwashapp@qubyte.tech
+                        <a href="mailto:support@mimosonk.hu" className={classes.link}>
+                            support@mimosonk.hu
                         </a>
                         !
                     </Typography>
