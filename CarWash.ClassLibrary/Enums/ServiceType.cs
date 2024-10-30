@@ -48,7 +48,7 @@ namespace CarWash.ClassLibrary.Enums
                 Name = "exterior",
                 TimeInMinutes = 12,
                 Price = 6311,
-                PriceMpv = 10728,
+                PriceMpv = 7889,
                 Hidden = false
             },
             new Service {
@@ -56,7 +56,7 @@ namespace CarWash.ClassLibrary.Enums
                 Name = "interior",
                 TimeInMinutes = 12,
                 Price = 3610,
-                PriceMpv = 6137,
+                PriceMpv = 5406,
                 Hidden = false},
             new Service {
                 Type = Carpet,
@@ -72,8 +72,8 @@ namespace CarWash.ClassLibrary.Enums
                 Name = "spot cleaning",
                 Description = "partial cleaning of the carpet, only where it is needed (eg. when something is spilled in the car)",
                 TimeInMinutes = 0,
-                Price = 4474,
-                PriceMpv = 4474,
+                Price = 7606,
+                PriceMpv = 7606,
                 Hidden = false
             },
             new Service {
