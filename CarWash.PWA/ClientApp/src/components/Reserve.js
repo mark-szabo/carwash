@@ -535,6 +535,30 @@ class Reserve extends TrackedComponent {
         );
     };
 
+    getServiceListComponent = (services, classes) => {
+        const jsx = [];
+        const serviceGroups = Object.groupBy(services, ({ group }) => group);
+        console.log(serviceGroups);
+
+        for (const serviceGroup in serviceGroups) {
+            jsx.push(<div><Typography variant="caption">{serviceGroup}</Typography></div>)
+            jsx.push(serviceGroups[serviceGroup].map(service => (
+                <span key={service.id}>
+                    <Chip
+                        key={service.id}
+                        label={service.name}
+                        onClick={this.handleServiceChipClick(service)}
+                        className={service.selected ? classes.selectedChip : classes.chip}
+                        id={`reserve-${service.name}-service-chip`}
+                    />
+                </span>
+            )));
+            jsx.push(<br />);
+        }
+
+        return jsx;
+    }
+
     render() {
         const { classes, user, configuration } = this.props;
         const {
@@ -605,22 +629,7 @@ class Reserve extends TrackedComponent {
                         ) : (
                             <Grid container spacing={24}>
                                 <Grid item xs={12} md={6}>
-                                    {this.state.services.map(service => (
-                                        <span key={service.id}>
-                                            {service.id === 0 && <div><Typography variant="caption">Basic</Typography></div>}
-                                            {service.id === 3 && <div><Typography variant="caption">Extras</Typography></div>}
-                                            {service.id === 6 && <div><Typography variant="caption">AC</Typography></div>}
-                                            <Chip
-                                                key={service.id}
-                                                label={service.name}
-                                                onClick={this.handleServiceChipClick(service)}
-                                                className={service.selected ? classes.selectedChip : classes.chip}
-                                                id={`reserve-${service.name}-service-chip`}
-                                            />
-                                            {service.id === 2 && <br />}
-                                            {service.id === 5 && <br />}
-                                        </span>
-                                    ))}
+                                    {this.getServiceListComponent(configuration.services, classes)}
                                     <div className={classes.actionsContainer}>
                                         <div>
                                             <Button disabled className={classes.button}>
