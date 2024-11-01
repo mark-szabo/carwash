@@ -161,19 +161,19 @@ namespace CarWash.PWA.Controllers
         /// <response code="400">BadRequest if setting key is not valid or value param is null.</response>
         /// <response code="401">Unauthorized</response>
         [HttpPut("settings/{key}")]
-        public async Task<IActionResult> PutSettings([FromRoute] string key, [FromBody] object value)
+        public async Task<IActionResult> PutSettings([FromRoute] string key, [FromBody] System.Text.Json.JsonElement value)
         {
-            if (value == null) return BadRequest("Setting value cannot be null.");
+            if (value.GetRawText() == null) return BadRequest("Setting value cannot be null.");
 
             try
             {
                 switch (key.ToLower())
                 {
                     case "calendarintegration":
-                        _user.CalendarIntegration = (bool)value;
+                        _user.CalendarIntegration = value.GetBoolean();
                         break;
                     case "notificationchannel":
-                        _user.NotificationChannel = (NotificationChannel)(int)(long)value;
+                        _user.NotificationChannel = (NotificationChannel)value.GetInt32();
                         break;
                     default:
                         return BadRequest("Setting key is not valid.");
