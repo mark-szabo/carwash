@@ -34,6 +34,7 @@ using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Rewrite;
+using System.Text.Json;
 
 namespace CarWash.PWA
 {
@@ -319,7 +320,7 @@ namespace CarWash.PWA
                 context.Response.Headers.Append("X-XSS-Protection", new[] { "1; mode=block; report=https://markszabo.report-uri.com/r/d/xss/enforce" });
                 context.Response.Headers.Append("X-Content-Type-Options", new[] { "nosniff" });
                 context.Response.Headers.Append("Referrer-Policy", new[] { "strict-origin-when-cross-origin" });
-                context.Response.Headers.Append("Feature-Policy", new[] { "accelerometer 'none'; camera 'none'; geolocation 'self'; gyroscope 'none'; magnetometer 'none'; microphone 'none'; payment 'none'; usb 'none'" });
+                context.Response.Headers.Append("Permissions-Policy", new[] { "accelerometer=(); camera=(); geolocation=(); gyroscope=(); magnetometer=(); microphone=(); payment=(); usb=()" });
                 context.Response.Headers.Append("Content-Security-Policy", new[] { ContentSecurityPolicy });
                 context.Response.Headers.Remove(HeaderNames.Server);
                 context.Response.Headers.Remove("X-Powered-By");
@@ -345,7 +346,7 @@ namespace CarWash.PWA
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHealthChecks("/healthcheck");
+                endpoints.MapHealthChecks("/api/healthcheck");
                 endpoints.MapHub<BacklogHub>("/hub/backlog");
                 endpoints.MapControllerRoute("default", "{controller}/{action=Index}/{id?}");
             });
