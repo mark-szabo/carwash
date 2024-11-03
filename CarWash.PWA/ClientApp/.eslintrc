@@ -2,7 +2,10 @@
   /* See all the pre-defined configs here: https://www.npmjs.com/package/eslint-config-defaults */
   "extends": "defaults/configurations/airbnb/es6",
   "parser": "@babel/eslint-parser",
-  "plugins": ["react", "import"],
+  "parserOptions": {
+    "requireConfigFile": false
+  },
+  "plugins": ["react", "import", "jsx"],
   "env": {
     "amd": true,
     "browser": true,

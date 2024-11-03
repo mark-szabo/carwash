@@ -14,15 +14,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarWash.PWA", "CarWash.PWA\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarWash.ClassLibrary", "CarWash.ClassLibrary\CarWash.ClassLibrary.csproj", "{9BF0D315-2297-44A9-95DF-1E41E50E2F93}"
 EndProject
-Project("{262852C6-CD72-467D-83FE-5EEB1973A190}") = "CarWash.PWA.Windows", "CarWash.PWA.Windows\CarWash.PWA.Windows.jsproj", "{880ECB1F-978C-4CF2-96B7-36EA720F7F3B}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarWash.Functions", "CarWash.Functions\CarWash.Functions.csproj", "{629F392E-FC51-49D9-9433-DF1994C17D86}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarWash.Bot", "CarWash.Bot\CarWash.Bot.csproj", "{C589339E-8174-4F1F-B2C1-36C63B5E7D48}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarWash.PWA.Tests", "CarWash.PWA.Tests\CarWash.PWA.Tests.csproj", "{FA0DF964-2C02-4B90-AD6E-167A692EFED7}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarWash.PWA.UiTests", "CarWash.PWA.UiTests\CarWash.PWA.UiTests.csproj", "{2ED84318-CBF1-4C0A-8927-E8D0AE3A4226}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

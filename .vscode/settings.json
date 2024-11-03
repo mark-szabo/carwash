@@ -5,5 +5,5 @@
     "**/obj": true
   },
   "azureFunctions.projectLanguage": "C#",
-  "azureFunctions.projectRuntime": "~2"
+  "azureFunctions.projectRuntime": "~4"
 }
