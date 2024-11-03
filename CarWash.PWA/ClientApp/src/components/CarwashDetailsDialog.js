@@ -224,7 +224,7 @@ class CarwashDetailsDialog extends React.Component {
     };
 
     getUnselectedServices = services => {
-        const defaultServices = Object.values(Service);
+        const defaultServices = this.props.configuration.services.map(s => s.id);
         return defaultServices.filter(s => services.filter(z => z === s).length <= 0);
     };
 
@@ -593,7 +593,7 @@ class CarwashDetailsDialog extends React.Component {
 
     render() {
         const { editLocation, garage, floor, seat, validationErrors, editServices } = this.state;
-        const { reservation, open, snackbarOpen, classes } = this.props;
+        const { reservation, configuration, open, snackbarOpen, classes } = this.props;
 
         return (
             <React.Fragment>
@@ -720,8 +720,8 @@ class CarwashDetailsDialog extends React.Component {
                         </Typography>
                         {!editServices ? (
                             <React.Fragment>
-                                {reservation.services.map(service => (
-                                    <Chip label={getServiceName(service)} className={classes.chip} key={service} />
+                                {reservation.services.map(serviceId => (
+                                    <Chip label={getServiceName(configuration, serviceId)} className={classes.chip} key={serviceId} />
                                 ))}
                                 <IconButton onClick={this.handleEditServices} aria-label="Add service" size="large">
                                     <EditIcon />
@@ -729,16 +729,16 @@ class CarwashDetailsDialog extends React.Component {
                             </React.Fragment>
                         ) : (
                             <React.Fragment>
-                                {reservation.services.map(service => (
-                                    <Chip label={getServiceName(service)} className={classes.chip} key={service} onDelete={this.handleRemoveService(service)} />
+                                {reservation.services.map(serviceId => (
+                                    <Chip label={getServiceName(configuration, serviceId)} className={classes.chip} key={serviceId} onDelete={this.handleRemoveService(serviceId)} />
                                 ))}
-                                {this.getUnselectedServices(reservation.services).map(service => (
+                                {this.getUnselectedServices(reservation.services).map(serviceId => (
                                     <Chip
-                                        label={getServiceName(service)}
+                                        label={getServiceName(configuration, serviceId)}
                                         className={classes.unselectedChip}
-                                        key={service}
+                                        key={serviceId}
                                         variant="outlined"
-                                        onClick={this.handleAddService(service)}
+                                        onClick={this.handleAddService(serviceId)}
                                     />
                                 ))}
                                 <IconButton
@@ -784,6 +784,7 @@ class CarwashDetailsDialog extends React.Component {
 CarwashDetailsDialog.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     reservation: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+    configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     open: PropTypes.bool.isRequired,
     handleClose: PropTypes.func.isRequired,
     updateReservation: PropTypes.func.isRequired,

@@ -131,6 +131,7 @@ class Reserve extends TrackedComponent {
             loading: true,
             loadingReservation: false,
             reservationCompleteRedirect: false,
+            selectedServices: [],
             services: [
                 { id: 0, name: 'exterior', selected: false },
                 { id: 1, name: 'interior', selected: false },

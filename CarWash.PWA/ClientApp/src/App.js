@@ -472,6 +472,7 @@ export default class App extends Component {
                                         <ErrorBoundary>
                                             <Home
                                                 reservations={reservations}
+                                                configuration={configuration}
                                                 reservationsLoading={reservationsLoading}
                                                 removeReservation={this.removeReservation}
                                                 updateReservation={this.updateReservation}
@@ -551,6 +552,7 @@ export default class App extends Component {
                                         <ErrorBoundary>
                                             <Admin
                                                 reservations={companyReservations}
+                                                configuration={configuration}
                                                 reservationsLoading={companyReservationsLoading}
                                                 removeReservation={this.removeReservationFromCompanyReservations}
                                                 updateReservation={this.updateCompanyReservation}
@@ -570,6 +572,7 @@ export default class App extends Component {
                                     render={props => (
                                         <ErrorBoundary>
                                             <CarwashAdmin
+                                                configuration={configuration}
                                                 backlog={backlog}
                                                 backlogLoading={backlogLoading}
                                                 backlogUpdateFound={backlogUpdateFound}

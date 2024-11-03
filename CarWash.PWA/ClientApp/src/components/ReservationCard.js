@@ -1,4 +1,4 @@
-﻿import React, { Component } from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import apiFetch from '../Auth';
 import { Link } from 'react-router-dom';
@@ -244,7 +244,7 @@ class ReservationCard extends Component {
 
     render() {
         const { garage, floor, seat, validationErrors } = this.state;
-        const { classes, reservation, admin, style } = this.props;
+        const { classes, reservation, configuration, admin, style } = this.props;
         return (
             <ErrorBoundary
                 fallback={
@@ -295,8 +295,8 @@ class ReservationCard extends Component {
                             <Comments commentOutgoing={reservation.comment} commentIncoming={reservation.carwashComment} commentIncomingName="CarWash" />
                             <Divider className={classes.divider} />
                             <Typography variant="subtitle1">Selected services</Typography>
-                            {reservation.services.map(service => (
-                                <Chip label={getServiceName(service)} className={classes.chip} key={service} />
+                            {reservation.services.map(serviceId => (
+                                <Chip label={getServiceName(configuration, serviceId)} className={classes.chip} key={serviceId} />
                             ))}
                         </CardContent>
                         {this.getButtons(reservation, classes, this.handleCancelDialogOpen)}
@@ -399,6 +399,7 @@ class ReservationCard extends Component {
 ReservationCard.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     reservation: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+    configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     updateReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func.isRequired,
     invokeBacklogHub: PropTypes.func.isRequired,

@@ -7,22 +7,16 @@ export const State = Object.freeze({
     Done: 5,
 });
 
+/**
+ * Only those services are marked here which have some special front-end ruling (like only one type of AC cleaning can be selected).
+ * @deprecated
+ */
 export const Service = Object.freeze({
     Exterior: 0,
     Interior: 1,
     Carpet: 2,
-    SpotCleaning: 3,
-    VignetteRemoval: 4,
-    Polishing: 5,
     AcCleaningOzon: 6,
     AcCleaningBomba: 7,
-    // below are those services that are hidden from the user
-    BugRemoval: 8,
-    WheelCleaning: 9,
-    TireCare: 10,
-    LeatherCare: 11,
-    PlasticCare: 12,
-    PreWash: 13,
 });
 
 export const NotificationChannel = Object.freeze({
@@ -32,6 +26,9 @@ export const NotificationChannel = Object.freeze({
     Push: 3,
 });
 
+/**
+ * @deprecated
+ */
 export const Garages = Object.freeze({
     M: ['-1', '-2', '-2.5', '-3', '-3.5', 'outdoor'],
     S1: ['-1', '-2', '-3'],
@@ -84,112 +81,6 @@ export function getAdminStateName(state) {
     }
 }
 
-export function getServiceName(service) {
-    switch (service) {
-        case Service.Exterior:
-            return 'exterior';
-        case Service.Interior:
-            return 'interior';
-        case Service.Carpet:
-            return 'carpet';
-        case Service.SpotCleaning:
-            return 'spot cleaning';
-        case Service.VignetteRemoval:
-            return 'vignette removal';
-        case Service.Polishing:
-            return 'polishing';
-        case Service.AcCleaningOzon:
-            return "AC cleaning 'ozon'";
-        case Service.AcCleaningBomba:
-            return "AC cleaning 'bomba'";
-        case Service.BugRemoval:
-            return 'bug removal';
-        case Service.WheelCleaning:
-            return 'wheel cleaning';
-        case Service.TireCare:
-            return 'tire care';
-        case Service.LeatherCare:
-            return 'leather care';
-        case Service.PlasticCare:
-            return 'plastic care';
-        case Service.PreWash:
-            return 'prewash';
-        default:
-            return 'no info';
-    }
-}
-
-export function getServiceList() {
-    return [
-        {
-            id: Service.Exterior,
-            name: getServiceName(Service.Exterior),
-            price: 3535,
-            priceMpv: 4420,
-            description: null,
-        },
-        {
-            id: Service.Interior,
-            name: getServiceName(Service.Interior),
-            price: 1770,
-            priceMpv: 2650,
-            description: null,
-        },
-        {
-            id: Service.Carpet,
-            name: getServiceName(Service.Carpet),
-            price: -1,
-            priceMpv: -1,
-            description: 'whole carpet cleaning, including all the seats',
-        },
-        {
-            id: Service.SpotCleaning,
-            name: getServiceName(Service.SpotCleaning),
-            price: 3890,
-            priceMpv: 3890,
-            description: 'partial cleaning of the carpet, only where it is needed (eg. when something is spilled in the car)',
-        },
-        {
-            id: Service.VignetteRemoval,
-            name: getServiceName(Service.VignetteRemoval),
-            price: 515,
-            priceMpv: 515,
-            description: 'eg. highway vignettes on the windscreen',
-        },
-        {
-            id: Service.Polishing,
-            name: getServiceName(Service.Polishing),
-            price: 4950,
-            priceMpv: 4950,
-            description: 'for small scratches',
-        },
-        {
-            id: Service.AcCleaningOzon,
-            name: getServiceName(Service.AcCleaningOzon),
-            price: 8840,
-            priceMpv: 8840,
-            description: 'disinfects molecules with ozone',
-        },
-        {
-            id: Service.AcCleaningBomba,
-            name: getServiceName(Service.AcCleaningBomba),
-            price: 7070,
-            priceMpv: 7070,
-            description: 'blowing chemical spray in the AC system',
-        },
-        {
-            id: Service.PreWash,
-            name: getServiceName(Service.PreWash),
-            price: 855,
-            priceMpv: 855,
-            description: "we'll add this if it's needed",
-        },
-        {
-            id: Service.TireCare,
-            name: getServiceName(Service.TireCare),
-            price: 885,
-            priceMpv: 885,
-            description: "we'll add this if it's needed",
-        },
-    ];
+export function getServiceName(configuration, serviceId) {
+    return configuration.services.find(s => s.id == serviceId)?.name;
 }

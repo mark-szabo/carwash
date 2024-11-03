@@ -45,7 +45,7 @@ class CarwashGrid extends Component {
     }
 
     render() {
-        const { classes, backlog, backlogLoading, updateBacklogItem, removeBacklogItem, invokeBacklogHub, openSnackbar, snackbarOpen } = this.props;
+        const { classes, configuration, backlog, backlogLoading, updateBacklogItem, removeBacklogItem, invokeBacklogHub, openSnackbar, snackbarOpen } = this.props;
 
         if (backlogLoading) {
             return <Spinner />;
@@ -90,6 +90,7 @@ class CarwashGrid extends Component {
                         <Grid item key={reservation.id} className={classes.card}>
                             <CarwashCard
                                 reservation={reservation}
+                                configuration={configuration}
                                 snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
                                 removeReservation={removeBacklogItem}
@@ -104,6 +105,7 @@ class CarwashGrid extends Component {
                         <Grid item key={reservation.id} className={classes.card}>
                             <CarwashCard
                                 reservation={reservation}
+                                configuration={configuration}
                                 snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
                                 removeReservation={removeBacklogItem}
@@ -124,6 +126,7 @@ class CarwashGrid extends Component {
                         <Grid item key={reservation.id} className={classes.card}>
                             <CarwashCard
                                 reservation={reservation}
+                                configuration={configuration}
                                 snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
                                 removeReservation={removeBacklogItem}
@@ -138,6 +141,7 @@ class CarwashGrid extends Component {
                         <Grid item key={reservation.id} className={classes.card}>
                             <CarwashCard
                                 reservation={reservation}
+                                configuration={configuration}
                                 snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
                                 removeReservation={removeBacklogItem}
@@ -152,6 +156,7 @@ class CarwashGrid extends Component {
                         <Grid item key={reservation.id} className={classes.card}>
                             <CarwashCard
                                 reservation={reservation}
+                                configuration={configuration}
                                 snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
                                 removeReservation={removeBacklogItem}
@@ -168,6 +173,7 @@ class CarwashGrid extends Component {
 
 CarwashGrid.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+    configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     backlog: PropTypes.arrayOf(PropTypes.object).isRequired, // eslint-disable-line react/forbid-prop-types
     backlogLoading: PropTypes.bool.isRequired,
     updateBacklogItem: PropTypes.func.isRequired,
