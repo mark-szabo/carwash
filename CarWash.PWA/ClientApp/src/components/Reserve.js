@@ -28,7 +28,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import WarningIcon from '@mui/icons-material/Warning';
 import Grid from '@mui/material/Grid';
 import * as moment from 'moment';
-import { Garages, Service, NotificationChannel, BacklogHubMethods } from '../Constants';
+import { Garages, Service, NotificationChannel, BacklogHubMethods, getServiceName } from '../Constants';
 import '@appannie/react-infinite-calendar/styles.css';
 import './Reserve.css';
 import ServiceDetailsTable from './ServiceDetailsTable';
@@ -73,7 +73,7 @@ const styles = theme => ({
         maxWidth: '400px',
     },
     radioGroup: {
-        margin: `${theme.spacing(1)}px 0`,
+        margin: `${theme.spacing(1)} 0`,
     },
     container: {
         display: 'flex',
@@ -117,6 +117,10 @@ const styles = theme => ({
     errorText: {
         color: '#9E9E9E',
     },
+    infoAlert: {
+        width: 'fit-content',
+        margin: `${theme.spacing(1)} 0`,
+    },
 });
 
 class Reserve extends TrackedComponent {
@@ -132,16 +136,6 @@ class Reserve extends TrackedComponent {
             loadingReservation: false,
             reservationCompleteRedirect: false,
             selectedServices: [],
-            services: [
-                { id: 0, name: 'exterior', selected: false },
-                { id: 1, name: 'interior', selected: false },
-                { id: 2, name: 'carpet', selected: false },
-                { id: 3, name: 'spot cleaning', selected: false },
-                { id: 4, name: 'vignette removal', selected: false },
-                { id: 5, name: 'polishing', selected: false },
-                { id: 6, name: "AC cleaning 'ozon'", selected: false },
-                { id: 7, name: "AC cleaning 'bomba'", selected: false },
-            ],
             validationErrors: {
                 vehiclePlateNumber: false,
                 garage: false,
@@ -178,11 +172,6 @@ class Reserve extends TrackedComponent {
             });
             apiFetch(`api/reservations/${this.props.match.params.id}`).then(
                 data => {
-                    const services = this.state.services;
-                    data.services.forEach(s => {
-                        if (services[s]) services[s].selected = true;
-                    });
-
                     let garage;
                     let floor;
                     let seat;
@@ -196,7 +185,7 @@ class Reserve extends TrackedComponent {
 
                     const date = moment(data.startDate);
                     this.setState({
-                        services,
+                        selectedServices: data.services,
                         selectedDate: date,
                         vehiclePlateNumber: data.vehiclePlateNumber,
                         garage,
@@ -204,9 +193,8 @@ class Reserve extends TrackedComponent {
                         seat,
                         private: data.private,
                         comment: data.comment,
-                        servicesStepLabel: services
-                            .filter(s => s.selected)
-                            .map(s => s.name)
+                        servicesStepLabel: data.services
+                            .map(s => getServiceName(this.props.configuration, s))
                             .join(', '),
                         dateStepLabel: date.format('MMMM D, YYYY'),
                         timeStepLabel: date.format('hh:mm A'),
@@ -221,18 +209,10 @@ class Reserve extends TrackedComponent {
                 }
             );
         } else {
-            this.setState(state => {
-                const services = [...state.services];
-                const lastServices = this.props.lastSettings.services || [];
-                lastServices.forEach(s => {
-                    if (services[s]) services[s].selected = true;
-                });
-
-                return {
-                    services,
-                    vehiclePlateNumber: this.props.lastSettings.vehiclePlateNumber || '',
-                    garage: this.props.lastSettings.garage || '',
-                };
+            this.setState({
+                selectedServices: this.props.lastSettings.services || [],
+                vehiclePlateNumber: this.props.lastSettings.vehiclePlateNumber || '',
+                garage: this.props.lastSettings.garage || '',
             });
         }
 
@@ -307,34 +287,59 @@ class Reserve extends TrackedComponent {
         }));
     };
 
+    toggleServiceSelection(services, selectedServiceId) {
+        const i = services.indexOf(selectedServiceId);
+
+        // remove if found in array
+        if (i >= 0) {
+            services.splice(i, 1);
+        } else {
+            services.push(selectedServiceId);
+        }
+
+        return services;
+    }
+
+    setServiceSelection(services, selectedServiceId, shouldContain) {
+        const i = services.indexOf(selectedServiceId);
+
+        // remove if found in array
+        if ((i >= 0) && !shouldContain) {
+            services.splice(i, 1);
+        }  else if ((i < 0) && shouldContain) {
+            services.push(selectedServiceId);
+        }
+
+        return services;
+    }
+
     handleServiceChipClick = service => () => {
         this.setState(state => {
-            const services = [...state.services];
-            services[service.id].selected = !services[service.id].selected;
+            const selectedServices = [...state.selectedServices];
+            this.toggleServiceSelection(selectedServices, service.id);
 
             // if carpet, must include exterior and interior too
-            if (service.id === Service.Carpet && service.selected) {
-                services[Service.Exterior].selected = true;
-                services[Service.Interior].selected = true;
+            if (service.id === Service.Carpet && selectedServices.includes(service.id)) {
+                this.setServiceSelection(selectedServices, Service.Exterior, true);
+                this.setServiceSelection(selectedServices, Service.Interior, true);
             }
-            if ((service.id === Service.Exterior || service.id === Service.Interior) && !service.selected) {
-                services[Service.Carpet].selected = false;
+            if ((service.id === Service.Exterior || service.id === Service.Interior) && !selectedServices.includes(service.id)) {
+                this.setServiceSelection(selectedServices, Service.Carpet, false);
             }
 
             // cannot have both AC cleaning
-            if (service.id === Service.AcCleaningBomba) services[Service.AcCleaningOzon].selected = false;
-            if (service.id === Service.AcCleaningOzon) services[Service.AcCleaningBomba].selected = false;
+            if (service.id === Service.AcCleaningBomba) this.setServiceSelection(selectedServices, Service.AcCleaningOzon, false);
+            if (service.id === Service.AcCleaningOzon) this.setServiceSelection(selectedServices, Service.AcCleaningBomba, false);
 
-            return { services };
+            return { selectedServices };
         });
     };
 
     handleServiceSelectionComplete = () => {
         this.setState(state => ({
             activeStep: 1,
-            servicesStepLabel: state.services
-                .filter(service => service.selected)
-                .map(service => service.name)
+            servicesStepLabel: state.selectedServices
+                .map(s => getServiceName(this.props.configuration, s))
                 .join(', '),
         }));
     };
@@ -470,7 +475,7 @@ class Reserve extends TrackedComponent {
             userId: this.state.userId,
             vehiclePlateNumber: this.state.vehiclePlateNumber,
             location: this.state.locationKnown ? `${this.state.garage}/${this.state.floor}/${this.state.seat}` : null,
-            services: this.state.services.filter(s => s.selected).map(s => s.id),
+            services: this.state.selectedServices,
             private: this.state.private,
             startDate: this.state.selectedDate,
             comment: this.state.comment,
@@ -536,25 +541,26 @@ class Reserve extends TrackedComponent {
         );
     };
 
-    getServiceListComponent = (services, classes) => {
+    getServiceListComponent = (services, selectedServices, classes) => {
         const jsx = [];
         const serviceGroups = Object.groupBy(services, ({ group }) => group);
-        console.log(serviceGroups);
 
         for (const serviceGroup in serviceGroups) {
-            jsx.push(<div><Typography variant="caption">{serviceGroup}</Typography></div>)
-            jsx.push(serviceGroups[serviceGroup].map(service => (
-                <span key={service.id}>
-                    <Chip
-                        key={service.id}
-                        label={service.name}
-                        onClick={this.handleServiceChipClick(service)}
-                        className={service.selected ? classes.selectedChip : classes.chip}
-                        id={`reserve-${service.name}-service-chip`}
-                    />
-                </span>
-            )));
-            jsx.push(<br />);
+            if (serviceGroups.hasOwnProperty(serviceGroup)) {
+                jsx.push(<div><Typography variant="caption">{serviceGroup}</Typography></div>)
+                jsx.push(serviceGroups[serviceGroup].map(service => (
+                    <span key={service.id}>
+                        <Chip
+                            key={service.id}
+                            label={service.name}
+                            onClick={this.handleServiceChipClick(service)}
+                            className={selectedServices.includes(service.id) ? classes.selectedChip : classes.chip}
+                            id={`reserve-${service.name}-service-chip`}
+                        />
+                    </span>
+                )));
+                jsx.push(<br />);
+            }
         }
 
         return jsx;
@@ -564,6 +570,7 @@ class Reserve extends TrackedComponent {
         const { classes, user, configuration } = this.props;
         const {
             activeStep,
+            selectedServices,
             servicesStepLabel,
             dateStepLabel,
             timeStepLabel,
@@ -630,7 +637,7 @@ class Reserve extends TrackedComponent {
                         ) : (
                             <Grid container spacing={24}>
                                 <Grid item xs={12} md={6}>
-                                    {this.getServiceListComponent(configuration.services, classes)}
+                                    {this.getServiceListComponent(configuration.services, selectedServices, classes)}
                                     <div className={classes.actionsContainer}>
                                         <div>
                                             <Button disabled className={classes.button}>
@@ -641,7 +648,7 @@ class Reserve extends TrackedComponent {
                                                 color="primary"
                                                 onClick={this.handleServiceSelectionComplete}
                                                 className={classes.button}
-                                                disabled={this.state.services.filter(service => service.selected === true).length <= 0}
+                                                disabled={selectedServices.length <= 0}
                                                 id="reserve-services-next-button"
                                             >
                                                 Next
@@ -704,7 +711,7 @@ class Reserve extends TrackedComponent {
                 <Step>
                     <StepLabel>{timeStepLabel}</StepLabel>
                     <StepContent>
-                        <Alert variant="outlined" severity="info">
+                        <Alert variant="outlined" severity="info" className={classes.infoAlert}>
                             Drop the car key before your slot starts to ensure timely completion.
                             Ending times are indicative. For special requests, use the comment field.
                         </Alert>
