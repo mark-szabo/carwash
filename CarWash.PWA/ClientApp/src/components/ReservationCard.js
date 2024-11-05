@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+﻿import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import apiFetch from '../Auth';
 import { Link } from 'react-router-dom';
@@ -68,11 +68,12 @@ const styles = theme => ({
     formControl: {
         marginRight: theme.spacing(1),
         marginBottom: theme.spacing(1),
+        marginTop: theme.spacing(2),
         [theme.breakpoints.down('md')]: {
             width: '100%',
         },
         [theme.breakpoints.up('md')]: {
-            width: 75,
+            width: 105,
         },
     },
 });
@@ -344,14 +345,13 @@ class ReservationCard extends Component {
                                     id: 'garage',
                                 }}
                             >
-                                <MenuItem value="M">M</MenuItem>
-                                <MenuItem value="S1">S1</MenuItem>
-                                <MenuItem value="GS">GS</MenuItem>
-                                <MenuItem value="HX">HX</MenuItem>
+                                {configuration.garages.map(g => (
+                                    <MenuItem value={g.building}>{g.building}</MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
                         {garage &&
-                            Garages[garage] && (
+                            configuration.garages.some(g => g.building === garage) && (
                             <FormControl className={classes.formControl} error={validationErrors.floor}>
                                 <InputLabel htmlFor="floor">Floor</InputLabel>
                                 <Select
@@ -363,7 +363,7 @@ class ReservationCard extends Component {
                                         id: 'floor',
                                     }}
                                 >
-                                    {Garages[garage].map(item => (
+                                    {configuration.garages.find(g => g.building === garage).floors.map(item => (
                                         <MenuItem value={item} key={item}>
                                             {item}
                                         </MenuItem>
