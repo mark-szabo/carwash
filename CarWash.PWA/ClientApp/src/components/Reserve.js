@@ -306,7 +306,7 @@ class Reserve extends TrackedComponent {
         // remove if found in array
         if ((i >= 0) && !shouldContain) {
             services.splice(i, 1);
-        }  else if ((i < 0) && shouldContain) {
+        } else if ((i < 0) && shouldContain) {
             services.push(selectedServiceId);
         }
 
@@ -547,7 +547,7 @@ class Reserve extends TrackedComponent {
 
         for (const serviceGroup in serviceGroups) {
             if (serviceGroups.hasOwnProperty(serviceGroup)) {
-                jsx.push(<div><Typography variant="caption">{serviceGroup}</Typography></div>)
+                jsx.push(<div><Typography variant="caption">{serviceGroup}</Typography></div>);
                 jsx.push(serviceGroups[serviceGroup].map(service => (
                     <span key={service.id}>
                         <Chip
@@ -564,7 +564,7 @@ class Reserve extends TrackedComponent {
         }
 
         return jsx;
-    }
+    };
 
     render() {
         const { classes, user, configuration } = this.props;

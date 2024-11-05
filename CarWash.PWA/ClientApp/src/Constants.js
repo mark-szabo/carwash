@@ -82,5 +82,5 @@ export function getAdminStateName(state) {
 }
 
 export function getServiceName(configuration, serviceId) {
-    return configuration.services.find(s => s.id == serviceId)?.name;
+    return configuration.services.find(s => s.id === serviceId)?.name;
 }

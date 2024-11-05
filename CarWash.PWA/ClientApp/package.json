@@ -38,6 +38,7 @@
         "adal-angular": "^1.0.17",
         "ajv": "^8.17.1",
         "downloadjs": "^1.4.7",
+        "eslint-plugin-jsx": "^0.1.0",
         "moment": "^2.30.1",
         "prop-types": "^15.7.2",
         "react": "^17.0.2",

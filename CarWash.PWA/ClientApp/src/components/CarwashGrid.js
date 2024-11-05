@@ -45,7 +45,17 @@ class CarwashGrid extends Component {
     }
 
     render() {
-        const { classes, configuration, backlog, backlogLoading, updateBacklogItem, removeBacklogItem, invokeBacklogHub, openSnackbar, snackbarOpen } = this.props;
+        const {
+            classes,
+            configuration,
+            backlog,
+            backlogLoading,
+            updateBacklogItem,
+            removeBacklogItem,
+            invokeBacklogHub,
+            openSnackbar,
+            snackbarOpen,
+        } = this.props;
 
         if (backlogLoading) {
             return <Spinner />;

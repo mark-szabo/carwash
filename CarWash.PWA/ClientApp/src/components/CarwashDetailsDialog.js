@@ -297,7 +297,11 @@ class CarwashDetailsDialog extends React.Component {
         reservation.state = State.CarKeyLeftAndLocationConfirmed;
         this.props.updateReservation(reservation);
 
-        apiFetch(`api/reservations/${this.props.reservation.id}/state/${reservation.state}`, { method: 'POST' }, true).then(
+        apiFetch(
+            `api/reservations/${this.props.reservation.id}/state/${reservation.state}`,
+            { method: 'POST' },
+            true
+        ).then(
             () => {
                 this.props.openSnackbar('Wash canceled.');
 
@@ -318,7 +322,11 @@ class CarwashDetailsDialog extends React.Component {
         reservation.state = State.WashInProgress;
         this.props.updateReservation(reservation);
 
-        apiFetch(`api/reservations/${this.props.reservation.id}/state/${reservation.state}`, { method: 'POST' }, true).then(
+        apiFetch(
+            `api/reservations/${this.props.reservation.id}/state/${reservation.state}`,
+            { method: 'POST' },
+            true
+        ).then(
             () => {
                 this.props.openSnackbar('Wash in progress.');
 
@@ -451,11 +459,17 @@ class CarwashDetailsDialog extends React.Component {
         }
 
         // cannot have both AC cleaning
-        if (service === Service.AcCleaningBomba && reservation.services.filter(s => s === Service.AcCleaningOzon).length > 0) {
+        if (
+            service === Service.AcCleaningBomba &&
+            reservation.services.filter(s => s === Service.AcCleaningOzon).length > 0
+        ) {
             const serviceToRemove = reservation.services.indexOf(Service.AcCleaningOzon);
             if (serviceToRemove !== -1) reservation.services.splice(serviceToRemove, 1);
         }
-        if (service === Service.AcCleaningOzon && reservation.services.filter(s => s === Service.AcCleaningBomba).length > 0) {
+        if (
+            service === Service.AcCleaningOzon &&
+            reservation.services.filter(s => s === Service.AcCleaningBomba).length > 0
+        ) {
             const serviceToRemove = reservation.services.indexOf(Service.AcCleaningBomba);
             if (serviceToRemove !== -1) reservation.services.splice(serviceToRemove, 1);
         }
@@ -612,8 +626,8 @@ class CarwashDetailsDialog extends React.Component {
                         </div>
                         <Typography variant="h3">{reservation.vehiclePlateNumber}</Typography>
                         <Typography color="textSecondary" component="span" style={{ margin: '8px 0' }}>
-                            {getAdminStateName(reservation.state)} • {formatDate(reservation)} • {reservation.user.firstName} {reservation.user.lastName} •{' '}
-                            {reservation.user.company}
+                            {getAdminStateName(reservation.state)} • {formatDate(reservation)} •{' '}
+                            {reservation.user.firstName} {reservation.user.lastName} • {reservation.user.company}
                         </Typography>
                         {!editLocation ? (
                             <Typography variant="subtitle1" gutterBottom>
@@ -641,8 +655,7 @@ class CarwashDetailsDialog extends React.Component {
                                         <MenuItem value="HX">HX</MenuItem>
                                     </Select>
                                 </FormControl>
-                                {garage &&
-                                    Garages[garage] && (
+                                {garage && Garages[garage] && (
                                     <FormControl className={classes.formControl} error={validationErrors.floor}>
                                         <InputLabel htmlFor="floor">Floor</InputLabel>
                                         <Select
@@ -721,7 +734,11 @@ class CarwashDetailsDialog extends React.Component {
                         {!editServices ? (
                             <React.Fragment>
                                 {reservation.services.map(serviceId => (
-                                    <Chip label={getServiceName(configuration, serviceId)} className={classes.chip} key={serviceId} />
+                                    <Chip
+                                        label={getServiceName(configuration, serviceId)}
+                                        className={classes.chip}
+                                        key={serviceId}
+                                    />
                                 ))}
                                 <IconButton onClick={this.handleEditServices} aria-label="Add service" size="large">
                                     <EditIcon />
@@ -730,7 +747,12 @@ class CarwashDetailsDialog extends React.Component {
                         ) : (
                             <React.Fragment>
                                 {reservation.services.map(serviceId => (
-                                    <Chip label={getServiceName(configuration, serviceId)} className={classes.chip} key={serviceId} onDelete={this.handleRemoveService(serviceId)} />
+                                    <Chip
+                                        label={getServiceName(configuration, serviceId)}
+                                        className={classes.chip}
+                                        key={serviceId}
+                                        onDelete={this.handleRemoveService(serviceId)}
+                                    />
                                 ))}
                                 {this.getUnselectedServices(reservation.services).map(serviceId => (
                                     <Chip
@@ -771,7 +793,12 @@ class CarwashDetailsDialog extends React.Component {
                         <Button onClick={this.handleCancelDialogClose} color="primary">
                             Don't cancel
                         </Button>
-                        <Button onClick={this.handleCancelConfirmed} color="primary" className={classes.dangerButton} autoFocus>
+                        <Button
+                            onClick={this.handleCancelConfirmed}
+                            color="primary"
+                            className={classes.dangerButton}
+                            autoFocus
+                        >
                             Cancel
                         </Button>
                     </DialogActions>
@@ -794,9 +821,9 @@ CarwashDetailsDialog.propTypes = {
     openSnackbar: PropTypes.func.isRequired,
 };
 
-const withMediaQuery = (...args) => (Component) => (props) => { // eslint-disable-line react/display-name
+const withMediaQuery = (...args) => Component => props => { // eslint-disable-line react/display-name
     const mediaQuery = useMediaQuery(...args);
     return <Component fullScreen={mediaQuery} {...props} />;
 };
 
-export default withStyles(styles)(withMediaQuery((theme) => theme.breakpoints.down('sm'))(CarwashDetailsDialog));
+export default withStyles(styles)(withMediaQuery(theme => theme.breakpoints.down('sm'))(CarwashDetailsDialog));

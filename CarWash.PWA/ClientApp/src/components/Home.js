@@ -7,7 +7,16 @@ export default class Home extends TrackedComponent {
     displayName = 'Home';
 
     render() {
-        const { reservations, configuration, reservationsLoading, removeReservation, updateReservation, invokeBacklogHub, openSnackbar, lastSettings } = this.props;
+        const {
+            reservations,
+            configuration,
+            reservationsLoading,
+            removeReservation,
+            updateReservation,
+            invokeBacklogHub,
+            openSnackbar,
+            lastSettings,
+        } = this.props;
 
         return (
             <ReservationGrid
