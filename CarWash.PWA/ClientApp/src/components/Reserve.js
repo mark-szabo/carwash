@@ -546,8 +546,8 @@ class Reserve extends TrackedComponent {
         const serviceGroups = Object.groupBy(services, ({ group }) => group);
 
         for (const serviceGroup in serviceGroups) {
-            if (serviceGroups.hasOwnProperty(serviceGroup)) {
-                jsx.push(<div><Typography variant="caption">{serviceGroup}</Typography></div>);
+            if (serviceGroups && typeof serviceGroups === 'object' && Object.hasOwn(serviceGroups, serviceGroup)) {
+                jsx.push(<div key={serviceGroup}><Typography variant="caption">{serviceGroup}</Typography></div>);
                 jsx.push(serviceGroups[serviceGroup].map(service => (
                     <span key={service.id}>
                         <Chip
