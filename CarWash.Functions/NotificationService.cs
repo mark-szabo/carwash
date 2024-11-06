@@ -21,9 +21,9 @@ namespace CarWash.Functions
 
         public static async Task SendPushReminder(Reservation reservation, IPushDbContext context, Notification notification)
         {
-            var vapidSubject = Environment.GetEnvironmentVariable("VapidSubject", EnvironmentVariableTarget.Process);
-            var vapidPublicKey = Environment.GetEnvironmentVariable("VapidPublicKey", EnvironmentVariableTarget.Process);
-            var vapidPrivateKey = Environment.GetEnvironmentVariable("VapidPrivateKey", EnvironmentVariableTarget.Process);
+            var vapidSubject = Environment.GetEnvironmentVariable("Vapid:Subject", EnvironmentVariableTarget.Process);
+            var vapidPublicKey = Environment.GetEnvironmentVariable("Vapid:PublicKey", EnvironmentVariableTarget.Process);
+            var vapidPrivateKey = Environment.GetEnvironmentVariable("Vapid:PrivateKey", EnvironmentVariableTarget.Process);
 
             var pushService = new PushService(context, vapidSubject, vapidPublicKey, vapidPrivateKey, new Microsoft.ApplicationInsights.TelemetryClient());
 
@@ -36,7 +36,8 @@ namespace CarWash.Functions
 
         public static async Task SendBotReminderMessage(Reservation reservation, string queueName)
         {
-            var connectionString = Environment.GetEnvironmentVariable("ServiceBus", EnvironmentVariableTarget.Process);
+            var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings:ServiceBus", EnvironmentVariableTarget.Process) ?? 
+                throw new Exception($"Failed to send bot message: ServiceBus connection string is not provided.");
 
             // since ServiceBusClient implements IAsyncDisposable we create it with "await using"
             await using var client = new ServiceBusClient(connectionString);
