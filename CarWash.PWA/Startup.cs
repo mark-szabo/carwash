@@ -126,9 +126,11 @@ namespace CarWash.PWA
                             // Get EF context
                             var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
 
-                            var company = (await dbContext.Company.SingleOrDefaultAsync(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))) ?? throw new SecurityTokenInvalidIssuerException("Tenant ('tenantid') cannot be found in auth token.");
+                            var company = (await dbContext.Company.SingleOrDefaultAsync(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))) ?? 
+                                throw new SecurityTokenInvalidIssuerException("Tenant ('tenantid') cannot be found in auth token.");
                             var email = context.Principal.FindFirstValue(ClaimTypes.Upn)?.ToLower();
-                            if (email == null && company.Name == Company.Carwash) email = context.Principal.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.ToLower().Replace("live.com#","");
+                            if (email == null && company.Name == Company.Carwash) email = context.Principal.FindFirstValue(ClaimTypes.Email)?.ToLower() ??
+                                context.Principal.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.ToLower().Replace("live.com#","");
                             if (email == null) throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
 
                             var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
@@ -320,7 +322,7 @@ namespace CarWash.PWA
                 context.Response.Headers.Append("X-XSS-Protection", new[] { "1; mode=block; report=https://markszabo.report-uri.com/r/d/xss/enforce" });
                 context.Response.Headers.Append("X-Content-Type-Options", new[] { "nosniff" });
                 context.Response.Headers.Append("Referrer-Policy", new[] { "strict-origin-when-cross-origin" });
-                context.Response.Headers.Append("Permissions-Policy", new[] { "accelerometer=(); camera=(); geolocation=(); gyroscope=(); magnetometer=(); microphone=(); payment=(); usb=()" });
+                context.Response.Headers.Append("Permissions-Policy", new[] { "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" });
                 context.Response.Headers.Append("Content-Security-Policy", new[] { ContentSecurityPolicy });
                 context.Response.Headers.Remove(HeaderNames.Server);
                 context.Response.Headers.Remove("X-Powered-By");
@@ -333,7 +335,7 @@ namespace CarWash.PWA
             {
                 OnPrepareResponse = ctx =>
                 {
-                    const int cacheExpirationInSeconds = 60 * 60 * 24 * 30; //one month
+                    const int cacheExpirationInSeconds = 60 * 60 * 24; // one day
                     ctx.Context.Response.Headers[HeaderNames.CacheControl] =
                         "public,max-age=" + cacheExpirationInSeconds;
                 }

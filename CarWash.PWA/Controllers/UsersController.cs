@@ -36,7 +36,8 @@ namespace CarWash.PWA.Controllers
             _emailService = emailService;
 
             var email = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Upn)?.ToLower() ??
-                        httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Email)?.ToLower();
+                        httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Email)?.ToLower() ??
+                        httpContextAccessor.HttpContext.User.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.ToLower().Replace("live.com#", "");
 
             // Check if request is coming from an authorized service application.
             var serviceAppId = httpContextAccessor.HttpContext.User.FindFirstValue("appid");

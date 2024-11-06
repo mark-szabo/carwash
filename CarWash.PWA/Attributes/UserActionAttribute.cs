@@ -18,7 +18,8 @@ namespace CarWash.PWA.Attributes
         public void OnResourceExecuting(ResourceExecutingContext context)
         {
             var email = context.HttpContext.User.FindFirstValue(ClaimTypes.Upn)?.ToLower() ??
-                        context.HttpContext.User.FindFirstValue(ClaimTypes.Email)?.ToLower();
+                        context.HttpContext.User.FindFirstValue(ClaimTypes.Email)?.ToLower() ??
+                        context.HttpContext.User.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.ToLower().Replace("live.com#", "");
 
             if (email == null)
             {
