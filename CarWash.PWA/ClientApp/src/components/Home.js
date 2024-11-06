@@ -7,11 +7,21 @@ export default class Home extends TrackedComponent {
     displayName = 'Home';
 
     render() {
-        const { reservations, reservationsLoading, removeReservation, updateReservation, invokeBacklogHub, openSnackbar, lastSettings } = this.props;
+        const {
+            reservations,
+            configuration,
+            reservationsLoading,
+            removeReservation,
+            updateReservation,
+            invokeBacklogHub,
+            openSnackbar,
+            lastSettings,
+        } = this.props;
 
         return (
             <ReservationGrid
                 reservations={reservations}
+                configuration={configuration}
                 reservationsLoading={reservationsLoading}
                 removeReservation={removeReservation}
                 updateReservation={updateReservation}
@@ -25,6 +35,7 @@ export default class Home extends TrackedComponent {
 
 Home.propTypes = {
     reservations: PropTypes.arrayOf(PropTypes.object).isRequired, // eslint-disable-line react/forbid-prop-types
+    configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     reservationsLoading: PropTypes.bool.isRequired,
     removeReservation: PropTypes.func.isRequired,
     updateReservation: PropTypes.func.isRequired,

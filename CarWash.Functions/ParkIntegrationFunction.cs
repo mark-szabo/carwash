@@ -20,8 +20,8 @@ namespace CarWash.Functions
     {
         private static readonly HttpClient _client = new HttpClient();
         private static readonly FunctionsDbContext _context = new FunctionsDbContext();
-        private static readonly string _parkApiEmail = Environment.GetEnvironmentVariable("ParkApiEmail", EnvironmentVariableTarget.Process);
-        private static readonly string _parkApiPassword = Environment.GetEnvironmentVariable("ParkApiPassword", EnvironmentVariableTarget.Process);
+        private static readonly string _parkApiEmail = Environment.GetEnvironmentVariable("ParkApi:Email", EnvironmentVariableTarget.Process);
+        private static readonly string _parkApiPassword = Environment.GetEnvironmentVariable("ParkApi:Password", EnvironmentVariableTarget.Process);
 
         /// <summary>
         /// Service Bus queue name for the chat bot's vehicle-arrived notification.

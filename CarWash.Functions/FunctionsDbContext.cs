@@ -10,8 +10,8 @@ namespace CarWash.Functions
     {
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            var connectionString = Environment.GetEnvironmentVariable("Database", EnvironmentVariableTarget.Process);
-            if (string.IsNullOrEmpty(connectionString)) throw new Exception("Application setting 'SqlDatabase' was not found. Add it on the Azure portal!");
+            var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings:SqlDatabase", EnvironmentVariableTarget.Process);
+            if (string.IsNullOrEmpty(connectionString)) throw new Exception("Application setting 'ConnectionStrings:SqlDatabase' was not found. Add it on the Azure portal!");
             optionsBuilder.UseSqlServer(connectionString);
             var isDevelopment = Environment.GetEnvironmentVariable("Environment", EnvironmentVariableTarget.Process) == "Development";
             if (isDevelopment) optionsBuilder.UseLoggerFactory(new LoggerFactory(new[] { new DebugLoggerProvider() }));

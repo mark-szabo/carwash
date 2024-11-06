@@ -34,6 +34,7 @@ using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Rewrite;
+using System.Text.Json;
 
 namespace CarWash.PWA
 {
@@ -115,11 +116,7 @@ namespace CarWash.PWA
                             {
                                 if (config.AzureAd.AuthorizedApplications.Contains(serviceAppId))
                                 {
-                                    context.Principal.AddIdentity(new ClaimsIdentity(
-                                        new List<Claim>
-                                        {
-                                        new Claim("appId", serviceAppId)
-                                        }));
+                                    context.Principal.AddIdentity(new ClaimsIdentity([new("appId", serviceAppId)]));
 
                                     return;
                                 }
@@ -129,9 +126,11 @@ namespace CarWash.PWA
                             // Get EF context
                             var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
 
-                            var company = (await dbContext.Company.SingleOrDefaultAsync(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))) ?? throw new SecurityTokenInvalidIssuerException("Tenant ('tenantid') cannot be found in auth token.");
+                            var company = (await dbContext.Company.SingleOrDefaultAsync(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))) ?? 
+                                throw new SecurityTokenInvalidIssuerException("Tenant ('tenantid') cannot be found in auth token.");
                             var email = context.Principal.FindFirstValue(ClaimTypes.Upn)?.ToLower();
-                            if (email == null && company.Name == Company.Carwash) email = context.Principal.FindFirstValue(ClaimTypes.Email)?.ToLower();
+                            if (email == null && company.Name == Company.Carwash) email = context.Principal.FindFirstValue(ClaimTypes.Email)?.ToLower() ??
+                                context.Principal.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.ToLower().Replace("live.com#","");
                             if (email == null) throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
 
                             var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
@@ -140,7 +139,7 @@ namespace CarWash.PWA
                             {
                                 user = new User
                                 {
-                                    FirstName = context.Principal.FindFirstValue(ClaimTypes.GivenName) ?? throw new Exception("First name ('givenname') cannot be found in auth token."),
+                                    FirstName = context.Principal.FindFirstValue(ClaimTypes.GivenName) ?? "User", // throw new Exception("First name ('givenname') cannot be found in auth token."),
                                     LastName = context.Principal.FindFirstValue(ClaimTypes.Surname),
                                     Email = email,
                                     Company = company.Name,
@@ -291,7 +290,10 @@ namespace CarWash.PWA
 
             services.AddHealthChecks();
 
-            services.AddControllers().AddNewtonsoftJson();
+            services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -311,11 +313,6 @@ namespace CarWash.PWA
 
             app.UseHttpsRedirection();
 
-            // Apex to www. redirection (Azure CDN is not working on apex).
-            var rewriteOptions = new RewriteOptions()
-                .AddRedirectToWwwPermanent();
-            app.UseRewriter(rewriteOptions);
-
             app.UseAuthentication();
 
             app.Use(async (context, next) =>
@@ -325,7 +322,7 @@ namespace CarWash.PWA
                 context.Response.Headers.Append("X-XSS-Protection", new[] { "1; mode=block; report=https://markszabo.report-uri.com/r/d/xss/enforce" });
                 context.Response.Headers.Append("X-Content-Type-Options", new[] { "nosniff" });
                 context.Response.Headers.Append("Referrer-Policy", new[] { "strict-origin-when-cross-origin" });
-                context.Response.Headers.Append("Feature-Policy", new[] { "accelerometer 'none'; camera 'none'; geolocation 'self'; gyroscope 'none'; magnetometer 'none'; microphone 'none'; payment 'none'; usb 'none'" });
+                context.Response.Headers.Append("Permissions-Policy", new[] { "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" });
                 context.Response.Headers.Append("Content-Security-Policy", new[] { ContentSecurityPolicy });
                 context.Response.Headers.Remove(HeaderNames.Server);
                 context.Response.Headers.Remove("X-Powered-By");
@@ -338,7 +335,7 @@ namespace CarWash.PWA
             {
                 OnPrepareResponse = ctx =>
                 {
-                    const int cacheExpirationInSeconds = 60 * 60 * 24 * 30; //one month
+                    const int cacheExpirationInSeconds = 60 * 60 * 24; // one day
                     ctx.Context.Response.Headers[HeaderNames.CacheControl] =
                         "public,max-age=" + cacheExpirationInSeconds;
                 }
@@ -351,7 +348,7 @@ namespace CarWash.PWA
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHealthChecks("/healthcheck");
+                endpoints.MapHealthChecks("/api/healthcheck");
                 endpoints.MapHub<BacklogHub>("/hub/backlog");
                 endpoints.MapControllerRoute("default", "{controller}/{action=Index}/{id?}");
             });

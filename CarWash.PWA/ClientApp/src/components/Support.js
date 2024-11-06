@@ -39,8 +39,8 @@ class Support extends TrackedComponent {
                             +36 70 701 5803
                         </a>{' '}
                         or{' '}
-                        <a href="tel:+36303594870" className={classes.link}>
-                            +36 30 359 4870
+                        <a href="tel:+36704506612" className={classes.link}>
+                            +36 70 450 6612
                         </a>
                         ) or email us (
                         <a href="mailto:mimosonk@gmail.com" className={classes.link}>
@@ -55,8 +55,8 @@ class Support extends TrackedComponent {
                     </Typography>
                     <Typography component="p">
                         If you experience any problem with the app, please contact support on{' '}
-                        <a href="mailto:carwashapp@qubyte.tech" className={classes.link}>
-                            carwashapp@qubyte.tech
+                        <a href="mailto:support@mimosonk.hu" className={classes.link}>
+                            support@mimosonk.hu
                         </a>
                         !
                     </Typography>

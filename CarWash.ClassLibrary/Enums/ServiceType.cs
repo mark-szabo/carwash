@@ -25,57 +25,13 @@ namespace CarWash.ClassLibrary.Enums
         TireCare = 10,
         LeatherCare = 11,
         PlasticCare = 12,
-        PreWash = 13
+        PreWash = 13,
+        PetHairRemoval = 14,
+        BikeRack = 15,
+        RoofBox = 16,
+        ChildSeat = 17
     }
 #pragma warning restore CS1591, SA1602
-
-    /// <summary>
-    /// Extension class for ServiceType.
-    /// </summary>
-    public static class ServiceExtensions
-    {
-        /// <summary>
-        /// Converts the ServiceType enum to a display-friendly string.
-        /// </summary>
-        /// <param name="serviceType">The service type to convert.</param>
-        /// <returns>A display-friendly string.</returns>
-        public static string ToFriendlyString(this ServiceType serviceType)
-        {
-            switch (serviceType)
-            {
-                case Exterior:
-                    return "exterior";
-                case Interior:
-                    return "interior";
-                case Carpet:
-                    return "carpet";
-                case SpotCleaning:
-                    return "spot cleaning";
-                case VignetteRemoval:
-                    return "vignette removal";
-                case Polishing:
-                    return "polishing";
-                case AcCleaningOzon:
-                    return "AC cleaning 'ozon'";
-                case AcCleaningBomba:
-                    return "AC cleaning 'bomba'";
-                case BugRemoval:
-                    return "bug removal";
-                case WheelCleaning:
-                    return "wheel cleaning";
-                case TireCare:
-                    return "tire care";
-                case LeatherCare:
-                    return "leather care";
-                case PlasticCare:
-                    return "plastic care";
-                case PreWash:
-                    return "prewash";
-                default:
-                    return "no info";
-            }
-        }
-    }
 
     /// <summary>
     /// Services the users can choose from.
@@ -85,26 +41,29 @@ namespace CarWash.ClassLibrary.Enums
         /// <summary>
         /// Services the users can choose from.
         /// </summary>
-        public static readonly List<Service> Types = new List<Service>
-        {
+        public static readonly List<Service> Types =
+        [
             new Service {
                 Type = Exterior,
                 Name = "exterior",
+                Group = "Basics",
                 TimeInMinutes = 12,
-                Price = 3712,
-                PriceMpv = 4641,
+                Price = 6311,
+                PriceMpv = 7889,
                 Hidden = false
             },
             new Service {
                 Type = Interior,
                 Name = "interior",
+                Group = "Basics",
                 TimeInMinutes = 12,
-                Price = 2124,
-                PriceMpv = 3180,
+                Price = 3610,
+                PriceMpv = 5406,
                 Hidden = false},
             new Service {
                 Type = Carpet,
                 Name = "carpet",
+                Group = "Basics",
                 Description = "whole carpet cleaning, including all the seats",
                 TimeInMinutes = 24,
                 Price = -1,
@@ -114,103 +73,154 @@ namespace CarWash.ClassLibrary.Enums
             new Service {
                 Type = SpotCleaning,
                 Name = "spot cleaning",
+                Group = "Extras",
                 Description = "partial cleaning of the carpet, only where it is needed (eg. when something is spilled in the car)",
                 TimeInMinutes = 0,
-                Price = 4474,
-                PriceMpv = 4474,
+                Price = 7606,
+                PriceMpv = 7606,
                 Hidden = false
             },
             new Service {
                 Type = VignetteRemoval,
                 Name = "vignette removal",
+                Group = "Extras",
                 Description = "eg. highway vignettes on the windscreen",
                 TimeInMinutes = 0,
-                Price = 593,
-                PriceMpv = 593,
+                Price = 1008,
+                PriceMpv = 1008,
                 Hidden = false
             },
             new Service {
                 Type = Polishing,
                 Name = "polishing",
+                Group = "Extras",
                 Description = "for small scratches",
                 TimeInMinutes = 0,
-                Price = 5693,
-                PriceMpv = 5693,
+                Price = 9679,
+                PriceMpv = 9679,
                 Hidden = false
             },
             new Service {
                 Type = AcCleaningOzon,
                 Name = "AC cleaning 'ozon'",
+                Group = "AC",
                 Description = "disinfects molecules with ozone",
                 TimeInMinutes = 0,
-                Price = 10166,
-                PriceMpv = 10166,
+                Price = 10091,
+                PriceMpv = 10091,
                 Hidden = false
             },
             new Service {
                 Type = AcCleaningBomba,
                 Name = "AC cleaning 'bomba'",
+                Group = "AC",
                 Description = "blowing chemical spray in the AC system",
                 TimeInMinutes = 0,
-                Price = 8131,
-                PriceMpv = 8131,
+                Price = 13822,
+                PriceMpv = 13822,
                 Hidden = false
             },
             new Service {
                 Type = BugRemoval,
                 Name = "bug removal",
+                Group = "Extras",
                 Description = "we'll add this if it's needed",
                 TimeInMinutes = 0,
-                Price = 1018,
-                PriceMpv = 1018,
-                Hidden = true
+                Price = 1732,
+                PriceMpv = 1732,
+                Hidden = false
             },
             new Service {
                 Type = WheelCleaning,
                 Name = "wheel cleaning",
+                Group = "Extras",
                 Description = "we'll add this if it's needed",
                 TimeInMinutes = 0,
-                Price = 1219,
-                PriceMpv = 1219,
-                Hidden = true
+                Price = 2073,
+                PriceMpv = 2073,
+                Hidden = false
             },
             new Service {
                 Type = TireCare,
                 Name = "tire care",
+                Group = "Extras",
                 Description = "we'll add this if it's needed",
                 TimeInMinutes = 0,
-                Price = 1018,
-                PriceMpv = 1018,
-                Hidden = true
+                Price = 1732,
+                PriceMpv = 1732,
+                Hidden = false
             },
             new Service {
                 Type = LeatherCare,
                 Name = "leather care",
+                Group = "Extras",
                 Description = "we'll add this if it's needed",
                 TimeInMinutes = 0,
-                Price = 10166,
-                PriceMpv = 10166,
-                Hidden = true
+                Price = 17283,
+                PriceMpv = 17283,
+                Hidden = false
             },
             new Service {
                 Type = PlasticCare,
                 Name = "plastic care",
+                Group = "Extras",
                 Description = "we'll add this if it's needed",
                 TimeInMinutes = 0,
                 Price = 9149,
                 PriceMpv = 9149,
-                Hidden = true
+                Hidden = false
             },
             new Service {
                 Type = PreWash,
                 Name = "prewash",
+                Group = "Extras",
                 Description = "we'll add this if it's needed",
                 TimeInMinutes = 0,
-                Price = 1018,
-                PriceMpv = 1018,
-                Hidden = true
+                Price = 1732,
+                PriceMpv = 1732,
+                Hidden = false
+            },
+            new Service {
+                Type = PetHairRemoval,
+                Name = "pet hair removal",
+                Group = "Extras",
+                Description = "we'll add this if it's needed",
+                TimeInMinutes = 0,
+                Price = 5080,
+                PriceMpv = 5080,
+                Hidden = false
+            },
+            new Service {
+                Type = BikeRack,
+                Name = "bike rack",
+                Group = "Extras",
+                Description = "we'll add this if it's needed",
+                TimeInMinutes = 0,
+                Price = 2332,
+                PriceMpv = 2332,
+                Hidden = false
+            },
+            new Service {
+                Type = RoofBox,
+                Name = "roof box",
+                Group = "Extras",
+                Description = "we'll add this if it's needed",
+                TimeInMinutes = 0,
+                Price = 6801,
+                PriceMpv = 6801,
+                Hidden = false
+            },
+            new Service {
+                Type = ChildSeat,
+                Name = "child seat",
+                Group = "Extras",
+                Description = "we'll add this if it's needed",
+                TimeInMinutes = 0,
+                Price = 8744,
+                PriceMpv = 8744,
+                Hidden = false
             }
-        };
+        ];
     }
 
     /// <summary>
@@ -228,6 +238,11 @@ namespace CarWash.ClassLibrary.Enums
         /// Gets or sets the name of the service.
         /// </summary>
         public string Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the group name of the service.
+        /// </summary>
+        public string Group { get; set; }
 
         /// <summary>
         /// Gets or sets the description of the service.

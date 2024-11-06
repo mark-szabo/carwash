@@ -68,11 +68,12 @@ const styles = theme => ({
     formControl: {
         marginRight: theme.spacing(1),
         marginBottom: theme.spacing(1),
+        marginTop: theme.spacing(2),
         [theme.breakpoints.down('md')]: {
             width: '100%',
         },
         [theme.breakpoints.up('md')]: {
-            width: 75,
+            width: 105,
         },
     },
 });
@@ -244,7 +245,7 @@ class ReservationCard extends Component {
 
     render() {
         const { garage, floor, seat, validationErrors } = this.state;
-        const { classes, reservation, admin, style } = this.props;
+        const { classes, reservation, configuration, admin, style } = this.props;
         return (
             <ErrorBoundary
                 fallback={
@@ -295,8 +296,8 @@ class ReservationCard extends Component {
                             <Comments commentOutgoing={reservation.comment} commentIncoming={reservation.carwashComment} commentIncomingName="CarWash" />
                             <Divider className={classes.divider} />
                             <Typography variant="subtitle1">Selected services</Typography>
-                            {reservation.services.map(service => (
-                                <Chip label={getServiceName(service)} className={classes.chip} key={service} />
+                            {reservation.services.map(serviceId => (
+                                <Chip label={getServiceName(configuration, serviceId)} className={classes.chip} key={serviceId} />
                             ))}
                         </CardContent>
                         {this.getButtons(reservation, classes, this.handleCancelDialogOpen)}
@@ -344,14 +345,13 @@ class ReservationCard extends Component {
                                     id: 'garage',
                                 }}
                             >
-                                <MenuItem value="M">M</MenuItem>
-                                <MenuItem value="S1">S1</MenuItem>
-                                <MenuItem value="GS">GS</MenuItem>
-                                <MenuItem value="HX">HX</MenuItem>
+                                {configuration.garages.map(g => (
+                                    <MenuItem value={g.building}>{g.building}</MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
                         {garage &&
-                            Garages[garage] && (
+                            configuration.garages.some(g => g.building === garage) && (
                             <FormControl className={classes.formControl} error={validationErrors.floor}>
                                 <InputLabel htmlFor="floor">Floor</InputLabel>
                                 <Select
@@ -363,7 +363,7 @@ class ReservationCard extends Component {
                                         id: 'floor',
                                     }}
                                 >
-                                    {Garages[garage].map(item => (
+                                    {configuration.garages.find(g => g.building === garage).floors.map(item => (
                                         <MenuItem value={item} key={item}>
                                             {item}
                                         </MenuItem>
@@ -399,6 +399,7 @@ class ReservationCard extends Component {
 ReservationCard.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     reservation: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+    configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     updateReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func.isRequired,
     invokeBacklogHub: PropTypes.func.isRequired,

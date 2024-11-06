@@ -59,7 +59,7 @@ class ErrorBoundary extends React.Component {
                         <Typography variant="h6" gutterBottom className={classes.errorText}>
                             An error has occured
                         </Typography>
-                        <Typography className={classes.errorText}>We have logged the issue and are working on it. Give it a try and reload he app!</Typography>
+                        <Typography className={classes.errorText}>We have logged the issue and are working on it. Give it a try and reload the app!</Typography>
                     </div>
                 </div>
             );

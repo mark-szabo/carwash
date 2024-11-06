@@ -129,6 +129,7 @@ class ReservationGrid extends React.PureComponent {
             <CellMeasurer cache={this._cache} index={index} key={key} parent={parent}>
                 <ReservationCard
                     reservation={reservations[index]}
+                    configuration={this.props.configuration}
                     removeReservation={removeReservation}
                     updateReservation={updateReservation}
                     invokeBacklogHub={invokeBacklogHub}
@@ -195,7 +196,8 @@ class ReservationGrid extends React.PureComponent {
 
 ReservationGrid.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
-    reservations: PropTypes.arrayOf(PropTypes.object).isRequired,
+    reservations: PropTypes.arrayOf(PropTypes.object).isRequired, // eslint-disable-line react/forbid-prop-types
+    configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     reservationsLoading: PropTypes.bool.isRequired,
     removeReservation: PropTypes.func.isRequired,
     updateReservation: PropTypes.func.isRequired,

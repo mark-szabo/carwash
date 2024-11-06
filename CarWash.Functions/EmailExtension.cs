@@ -20,7 +20,7 @@ namespace CarWash.Functions
             if (email == null) return;
 
             // Load connection string from appsettings
-            var connectionString = Environment.GetEnvironmentVariable("StorageAccount", EnvironmentVariableTarget.Process);
+            var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings:StorageAccount", EnvironmentVariableTarget.Process);
 
             // Parse the connection string and return a reference to the storage account.
             var storage = new QueueServiceClient(connectionString);

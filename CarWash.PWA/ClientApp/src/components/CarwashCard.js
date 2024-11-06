@@ -124,7 +124,7 @@ class CarwashCard extends Component {
     };
 
     render() {
-        const { classes, reservation } = this.props;
+        const { classes, reservation, configuration } = this.props;
         const { focused, detailsDialogOpen } = this.state;
 
         return (
@@ -178,8 +178,8 @@ class CarwashCard extends Component {
                                 />
                                 <Divider className={classes.divider} />
                                 <Typography variant="subtitle1">Selected services</Typography>
-                                {reservation.services.map(service => (
-                                    <Chip label={getServiceName(service)} className={classes.chip} key={service} />
+                                {reservation.services.map(serviceId => (
+                                    <Chip label={getServiceName(configuration, serviceId)} className={classes.chip} key={serviceId} />
                                 ))}
                             </CardContent>
                         </Card>
@@ -187,6 +187,7 @@ class CarwashCard extends Component {
                 </Collapse>
                 <CarwashDetailsDialog
                     reservation={reservation}
+                    configuration={configuration}
                     open={detailsDialogOpen}
                     handleClose={this.handleDetailsDialogClose}
                     updateReservation={this.props.updateReservation}
@@ -219,6 +220,7 @@ class CarwashCard extends Component {
 CarwashCard.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     reservation: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+    configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     updateReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func.isRequired,
     invokeBacklogHub: PropTypes.func.isRequired,

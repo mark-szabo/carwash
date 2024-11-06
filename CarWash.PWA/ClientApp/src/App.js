@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { Route, Switch } from 'react-router';
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import { ReactPlugin } from '@microsoft/applicationinsights-react-js';
@@ -39,6 +40,9 @@ const lightTheme = createTheme(adaptV4Theme({
             light: '#b5ffff',
             main: '#80d8ff',
             dark: '#49a7cc',
+        },
+        background: {
+            default: '#fafafa',
         },
     },
     typography: {
@@ -427,7 +431,7 @@ export default class App extends Component {
                 keys[10] === 'Enter'
             ) {
                 this.openSnackbar(
-                    'Nice catch! Shoot me a message - I owe you a bier!',
+                    'Nice catch! Shoot me a message - let\'s have a coffee!',
                     <Button href="https://www.linkedin.com/in/mark-szabo/" color="secondary" size="small">
                         Contact
                     </Button>
@@ -437,6 +441,8 @@ export default class App extends Component {
     };
 
     render() {
+        const { configuration } = this.props;
+
         const {
             user,
             reservations,
@@ -466,6 +472,7 @@ export default class App extends Component {
                                         <ErrorBoundary>
                                             <Home
                                                 reservations={reservations}
+                                                configuration={configuration}
                                                 reservationsLoading={reservationsLoading}
                                                 removeReservation={this.removeReservation}
                                                 updateReservation={this.updateReservation}
@@ -487,6 +494,7 @@ export default class App extends Component {
                                                 <Reserve
                                                     user={user}
                                                     reservations={reservations}
+                                                    configuration={configuration}
                                                     addReservation={this.addReservation}
                                                     invokeBacklogHub={this.invokeBacklogHub}
                                                     lastSettings={lastSettings}
@@ -510,6 +518,7 @@ export default class App extends Component {
                                                 <Reserve
                                                     user={user}
                                                     reservations={reservations}
+                                                    configuration={configuration}
                                                     addReservation={this.addReservation}
                                                     removeReservation={this.removeReservation}
                                                     invokeBacklogHub={this.invokeBacklogHub}
@@ -543,6 +552,7 @@ export default class App extends Component {
                                         <ErrorBoundary>
                                             <Admin
                                                 reservations={companyReservations}
+                                                configuration={configuration}
                                                 reservationsLoading={companyReservationsLoading}
                                                 removeReservation={this.removeReservationFromCompanyReservations}
                                                 updateReservation={this.updateCompanyReservation}
@@ -562,6 +572,7 @@ export default class App extends Component {
                                     render={props => (
                                         <ErrorBoundary>
                                             <CarwashAdmin
+                                                configuration={configuration}
                                                 backlog={backlog}
                                                 backlogLoading={backlogLoading}
                                                 backlogUpdateFound={backlogUpdateFound}
@@ -642,6 +653,10 @@ export default class App extends Component {
         );
     }
 }
+
+App.propTypes = {
+    configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+};
 
 /**
 <!-- Messenger Chat Plugin Code -->
