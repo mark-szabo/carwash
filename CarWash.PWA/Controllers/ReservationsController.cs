@@ -1083,6 +1083,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
         [HttpGet, Route("obfuscated")]
+        [Obsolete("Use GetReservationCapacity instead.")]
         public IEnumerable<ObfuscatedReservationViewModel> GetObfuscatedReservations(int daysAhead = 365)
         {
             return _context.Reservation
@@ -1110,27 +1111,24 @@ namespace CarWash.PWA.Controllers
         [HttpGet, Route("notavailabledates")]
         public async Task<NotAvailableDatesAndTimesViewModel> GetNotAvailableDatesAndTimes(int daysAhead = 365)
         {
-            if (_user.IsCarwashAdmin) return new NotAvailableDatesAndTimesViewModel { Dates = new List<DateTime>(), Times = new List<DateTime>() };
+            if (_user.IsCarwashAdmin) return new NotAvailableDatesAndTimesViewModel { Dates = [], Times = [] };
 
             #region Get not available dates
+            var notAvailableDates = new List<DateTime>();
+            var dailyCapacity = _configuration.Slots.Sum(s => s.Capacity);
             var userCompanyLimit = (await _context.Company.SingleAsync(c => c.Name == _user.Company)).DailyLimit;
 
-            // Must be separated to force client evaluation because of this EF issue:
-            // https://github.com/aspnet/EntityFrameworkCore/issues/11453
-            // Current milestone to be fixed is EF 3.0.0
-            var queryResult = await _context.Reservation
+            notAvailableDates.AddRange(await _context.Reservation
                 .Where(r => r.EndDate >= DateTime.Now && r.StartDate <= DateTime.Now.AddDays(daysAhead))
-                .Where(r => r.User.Company == _user.Company)
                 .GroupBy(r => r.StartDate.Date)
                 .Select(g => new
                 {
                     Date = g.Key,
                     TimeSum = g.Sum(r => r.TimeRequirement)
                 })
-                .Where(d => d.TimeSum >= userCompanyLimit * _configuration.Reservation.TimeUnit)
-                .ToListAsync();
-
-            var notAvailableDates = queryResult.Select(d => d.Date).ToList();
+                .Where(d => d.TimeSum >= dailyCapacity * _configuration.Reservation.TimeUnit)
+                .Select(d => d.Date)
+                .ToListAsync());
 
             if (!notAvailableDates.Contains(DateTime.Today))
             {
@@ -1138,7 +1136,24 @@ namespace CarWash.PWA.Controllers
                     .Where(r => r.StartDate >= DateTime.Now && r.StartDate.Date == DateTime.Today)
                     .SumAsync(r => r.TimeRequirement);
 
-                if (toBeDoneTodayTime >= GetRemainingSlotCapacityToday() * _configuration.Reservation.TimeUnit) notAvailableDates.Add(DateTime.Today);
+                if (toBeDoneTodayTime >= GetRemainingSlotCapacityToday() * _configuration.Reservation.TimeUnit) notAvailableDates.Add(DateTime.Today.Date);
+            }
+
+            // If the company has set up limits.
+            if (userCompanyLimit > 0)
+            {
+                notAvailableDates.AddRange(await _context.Reservation
+                    .Where(r => r.EndDate >= DateTime.Now && r.StartDate <= DateTime.Now.AddDays(daysAhead))
+                    .Where(r => r.User.Company == _user.Company)
+                    .GroupBy(r => r.StartDate.Date)
+                    .Select(g => new
+                    {
+                        Date = g.Key,
+                        TimeSum = g.Sum(r => r.TimeRequirement)
+                    })
+                    .Where(d => d.TimeSum >= userCompanyLimit * _configuration.Reservation.TimeUnit)
+                    .Select(d => d.Date)
+                    .ToListAsync());
             }
             #endregion
 
@@ -1212,7 +1227,7 @@ namespace CarWash.PWA.Controllers
             }
             #endregion
 
-            return new NotAvailableDatesAndTimesViewModel { Dates = notAvailableDates, Times = notAvailableTimes };
+            return new NotAvailableDatesAndTimesViewModel { Dates = notAvailableDates.Distinct(), Times = notAvailableTimes };
         }
 
         // GET: api/reservations/lastsettings
