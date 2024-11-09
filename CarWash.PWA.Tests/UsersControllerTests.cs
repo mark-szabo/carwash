@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -224,7 +225,7 @@ namespace CarWash.PWA.Tests
             var emailServiceStub = new Mock<IEmailService>();
             var controller = new UsersController(dbContext, httpContextAccessorStub.Object, emailServiceStub.Object);
 
-            var result = await controller.PutSettings("calendarintegration", value);
+            var result = await controller.PutSettings("calendarintegration", JsonSerializer.SerializeToElement(value));
             john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
 
             Assert.IsType<NoContentResult>(result);
@@ -244,7 +245,7 @@ namespace CarWash.PWA.Tests
             var emailServiceStub = new Mock<IEmailService>();
             var controller = new UsersController(dbContext, httpContextAccessorStub.Object, emailServiceStub.Object);
 
-            var result = await controller.PutSettings("notificationchannel", (long)value);
+            var result = await controller.PutSettings("notificationchannel", JsonSerializer.SerializeToElement((long)value));
             john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
 
             Assert.IsType<NoContentResult>(result);
@@ -256,7 +257,7 @@ namespace CarWash.PWA.Tests
         {
             var controller = CreateDefaultController(JOHN_EMAIL);
 
-            var result = await controller.PutSettings("fakekey", "fakevalue");
+            var result = await controller.PutSettings("fakekey", JsonSerializer.SerializeToElement("fakevalue"));
 
             Assert.IsType<BadRequestObjectResult>(result);
         }
@@ -266,7 +267,7 @@ namespace CarWash.PWA.Tests
         {
             var controller = CreateDefaultController(JOHN_EMAIL);
 
-            var result = await controller.PutSettings("notificationchannel", null);
+            var result = await controller.PutSettings("notificationchannel", JsonSerializer.SerializeToElement(""));
 
             Assert.IsType<BadRequestObjectResult>(result);
         }
@@ -277,7 +278,7 @@ namespace CarWash.PWA.Tests
             var controller = CreateDefaultController(JOHN_EMAIL);
             const long NOT_EXISTENT_NOTIFICATION_CHANNEL = 24;
 
-            var result = await controller.PutSettings("notificationchannel", NOT_EXISTENT_NOTIFICATION_CHANNEL);
+            var result = await controller.PutSettings("notificationchannel", JsonSerializer.SerializeToElement(NOT_EXISTENT_NOTIFICATION_CHANNEL));
 
             //Assert.IsType<BadRequestObjectResult>(result);
         }
