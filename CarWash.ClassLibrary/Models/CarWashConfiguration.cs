@@ -188,6 +188,16 @@ namespace CarWash.ClassLibrary.Models
         public class ConnectionStringsConfiguration
         {
             /// <summary>
+            /// Base URL of the application.
+            /// </summary>
+            /// <remarks>
+            /// Location: Application Settings
+            /// Key: ConnectionStrings:BaseUrl
+            /// Default value: 2
+            /// </remarks>
+            public string BaseUrl { get; set; }
+
+            /// <summary>
             /// Azure Service Bus connection string.
             /// </summary>
             /// <remarks>
