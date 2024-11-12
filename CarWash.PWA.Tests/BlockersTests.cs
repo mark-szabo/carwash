@@ -1,4 +1,5 @@
-﻿using CarWash.ClassLibrary.Enums;
+﻿using CarWash.ClassLibrary;
+using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Controllers;
@@ -318,7 +319,7 @@ namespace CarWash.PWA.Tests
                 State = State.SubmittedNotActual,
                 StartDate = new DateTime(2019, 11, 05, 11, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(2019, 11, 05, 14, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 Private = false,
             });
             await dbContext.SaveChangesAsync();

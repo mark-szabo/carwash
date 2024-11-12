@@ -13,6 +13,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using CarWash.PWA.Attributes;
+using CarWash.ClassLibrary;
 
 namespace CarWash.PWA.Controllers
 {
@@ -151,7 +152,7 @@ namespace CarWash.PWA.Controllers
             #endregion
 
             // Time requirement calculation
-            dbReservation.TimeRequirement = dbReservation.Services.Contains(ServiceType.Carpet) ?
+            dbReservation.TimeRequirement = dbReservation.Services.Contains(Constants.ServiceType.Carpet) ?
                 _configuration.Reservation.CarpetCleaningMultiplier * _configuration.Reservation.TimeUnit :
                 _configuration.Reservation.TimeUnit;
 
@@ -277,7 +278,7 @@ namespace CarWash.PWA.Controllers
             #endregion
 
             // Time requirement calculation
-            reservation.TimeRequirement = reservation.Services.Contains(ServiceType.Carpet) ?
+            reservation.TimeRequirement = reservation.Services.Contains(Constants.ServiceType.Carpet) ?
                 _configuration.Reservation.CarpetCleaningMultiplier * _configuration.Reservation.TimeUnit :
                 _configuration.Reservation.TimeUnit;
 
@@ -997,7 +998,7 @@ namespace CarWash.PWA.Controllers
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         [UserAction]
         [HttpPost("{id}/services")]
-        public async Task<IActionResult> UpdateServices([FromRoute] string id, [FromBody] List<ServiceType> services)
+        public async Task<IActionResult> UpdateServices([FromRoute] string id, [FromBody] List<int> services)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 
@@ -1694,7 +1695,7 @@ namespace CarWash.PWA.Controllers
         public string VehiclePlateNumber { get; set; }
         public string Location { get; set; }
         public State State { get; set; }
-        public List<ServiceType> Services { get; set; }
+        public List<int> Services { get; set; }
         public bool Private { get; set; }
         public bool Mpv { get; set; }
         public DateTime StartDate { get; set; }
@@ -1711,7 +1712,7 @@ namespace CarWash.PWA.Controllers
         public string VehiclePlateNumber { get; set; }
         public string Location { get; set; }
         public State State { get; set; }
-        public List<ServiceType> Services { get; set; }
+        public List<int> Services { get; set; }
         public bool? Private { get; set; }
         public bool? Mpv { get; set; }
         public DateTime StartDate { get; set; }
@@ -1723,7 +1724,7 @@ namespace CarWash.PWA.Controllers
     public class ObfuscatedReservationViewModel
     {
         public string Company { get; set; }
-        public List<ServiceType> Services { get; set; }
+        public List<int> Services { get; set; }
         public int? TimeRequirement { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
@@ -1739,7 +1740,7 @@ namespace CarWash.PWA.Controllers
     {
         public string VehiclePlateNumber { get; set; }
         public string Location { get; set; }
-        public List<ServiceType> Services { get; set; }
+        public List<int> Services { get; set; }
     }
 
     public class ReservationPercentageViewModel

@@ -1,3 +1,4 @@
+using CarWash.ClassLibrary;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
@@ -23,6 +24,8 @@ namespace CarWash.PWA.Tests
         private const string JOHNNY_EMAIL = "johnny.doe@test.com";
         private const string ADMIN_EMAIL = "admin@test.com";
         private const string CARWASH_ADMIN_EMAIL = "carwash@test.com";
+        private const int PREWASH = 13;
+        private const int WHEEL_CLEANING = 9;
         private static readonly int YEAR = DateTime.Today.AddMonths(1).Year;
         private static readonly int MONTH = DateTime.Today.AddMonths(1).Month;
 
@@ -125,7 +128,7 @@ namespace CarWash.PWA.Tests
             {
                 VehiclePlateNumber = value,
                 StartDate = new DateTime(YEAR, MONTH, 05, 08, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Interior },
                 Private = false,
             };
             var controller = CreateControllerStub(dbContext);
@@ -149,7 +152,7 @@ namespace CarWash.PWA.Tests
             {
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(YEAR, MONTH, 05, 08, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Interior },
                 Private = false,
             };
             var controller = CreateControllerStub(dbContext);
@@ -171,7 +174,7 @@ namespace CarWash.PWA.Tests
                 UserId = admin.Id,
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(YEAR, MONTH, 05, 08, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Interior },
                 Private = false,
             };
             var controller = CreateControllerStub(dbContext);
@@ -192,7 +195,7 @@ namespace CarWash.PWA.Tests
                 UserId = john.Id,
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(YEAR, MONTH, 05, 08, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Interior },
                 Private = false,
             };
             var controller = CreateControllerStub(dbContext, ADMIN_EMAIL);
@@ -234,7 +237,7 @@ namespace CarWash.PWA.Tests
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(YEAR, MONTH, 05, 08, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 06, 11, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Interior },
                 Private = false,
             };
             var controller = CreateControllerStub(dbContext);
@@ -254,7 +257,7 @@ namespace CarWash.PWA.Tests
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(YEAR, MONTH, 05, 14, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 05, 11, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Interior },
                 Private = false,
             };
             var controller = CreateControllerStub(dbContext);
@@ -273,7 +276,7 @@ namespace CarWash.PWA.Tests
             {
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(2018, 12, 05, 14, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Interior },
                 Private = false,
             };
             var controller = CreateControllerStub(dbContext);
@@ -293,7 +296,7 @@ namespace CarWash.PWA.Tests
             {
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(2018, 12, 05, 14, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Interior },
                 Private = false,
             };
             var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
@@ -316,7 +319,7 @@ namespace CarWash.PWA.Tests
             {
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(YEAR, MONTH, 05, 09, 29, 29, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Interior },
                 Private = false,
             };
             var controller = CreateControllerStub(dbContext);
@@ -336,7 +339,7 @@ namespace CarWash.PWA.Tests
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(YEAR, MONTH, 05, 09, 29, 29, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 05, 12, 29, 29, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Interior },
                 Private = false,
             };
             var controller = CreateControllerStub(dbContext);
@@ -359,7 +362,7 @@ namespace CarWash.PWA.Tests
                 State = State.SubmittedNotActual,
                 StartDate = new DateTime(YEAR, MONTH, 05, 11, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 05, 14, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 Private = false,
             });
             await dbContext.SaveChangesAsync();
@@ -368,7 +371,7 @@ namespace CarWash.PWA.Tests
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(YEAR, MONTH, 12, 11, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 12, 14, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Interior },
                 Private = false,
             };
             var controller = CreateControllerStub(dbContext);
@@ -391,7 +394,7 @@ namespace CarWash.PWA.Tests
                 State = State.SubmittedNotActual,
                 StartDate = new DateTime(YEAR, MONTH, 05, 11, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 05, 14, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 Private = false,
             });
             await dbContext.Reservation.AddAsync(new Reservation
@@ -401,7 +404,7 @@ namespace CarWash.PWA.Tests
                 State = State.SubmittedNotActual,
                 StartDate = new DateTime(YEAR, MONTH, 06, 11, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 06, 14, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 Private = false,
             });
             await dbContext.SaveChangesAsync();
@@ -410,7 +413,7 @@ namespace CarWash.PWA.Tests
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(YEAR, MONTH, 12, 11, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 12, 14, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Interior },
                 Private = false,
             };
             var controller = CreateControllerStub(dbContext, ADMIN_EMAIL);
@@ -439,7 +442,7 @@ namespace CarWash.PWA.Tests
             {
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(YEAR, MONTH, 05, 08, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Interior },
                 Private = false,
             };
             var controller = CreateControllerStub(dbContext);
@@ -465,7 +468,7 @@ namespace CarWash.PWA.Tests
             {
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(YEAR, MONTH, 05, 08, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Interior },
                 Private = false,
             };
             var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
@@ -492,7 +495,7 @@ namespace CarWash.PWA.Tests
                 State = State.SubmittedNotActual,
                 StartDate = new DateTime(YEAR, MONTH, 04, 11, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 04, 14, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 TimeRequirement = 12,
                 Private = false,
             });
@@ -502,7 +505,7 @@ namespace CarWash.PWA.Tests
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(YEAR, MONTH, 04, 14, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 04, 17, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Interior },
                 Private = false,
             };
             var controller = CreateControllerStub(dbContext);
@@ -522,7 +525,7 @@ namespace CarWash.PWA.Tests
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(YEAR, MONTH, 04, 08, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 04, 11, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Interior },
+                Services = new List<int > { Constants.ServiceType.Interior },
                 Private = false,
             };
             var controller = CreateControllerStub(dbContext);
@@ -542,7 +545,7 @@ namespace CarWash.PWA.Tests
             {
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(YEAR, MONTH, 05, 08, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Interior },
                 Location = LOCATION,
                 Private = false,
             };
@@ -566,7 +569,7 @@ namespace CarWash.PWA.Tests
             {
                 VehiclePlateNumber = "TEST01",
                 StartDate = new DateTime(YEAR, MONTH, 05, 08, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Interior },
                 Private = false,
             };
             var controller = CreateControllerStub(dbContext);
@@ -855,7 +858,7 @@ namespace CarWash.PWA.Tests
                 State = State.SubmittedNotActual,
                 StartDate = new DateTime(YEAR, MONTH, 04, 11, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 04, 14, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 TimeRequirement = 12,
                 Private = false,
             });
@@ -1167,7 +1170,7 @@ namespace CarWash.PWA.Tests
                 State = State.SubmittedNotActual,
                 StartDate = new DateTime(YEAR, MONTH, 05, 11, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 05, 14, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int > { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 Private = false,
             });
             await dbContext.SaveChangesAsync();
@@ -1202,7 +1205,7 @@ namespace CarWash.PWA.Tests
                 State = State.ReminderSentWaitingForKey,
                 StartDate = new DateTime(today.Year, today.Month, today.Day, 11, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(today.Year, today.Month, today.Day, 14, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 Private = false,
             });
             await dbContext.SaveChangesAsync();
@@ -1237,7 +1240,7 @@ namespace CarWash.PWA.Tests
                 State = State.SubmittedNotActual,
                 StartDate = new DateTime(today.Year, today.Month, today.Day, 11, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(today.Year, today.Month, today.Day, 14, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 Private = false,
             });
             await dbContext.SaveChangesAsync();
@@ -1272,7 +1275,7 @@ namespace CarWash.PWA.Tests
                 State = State.SubmittedNotActual,
                 StartDate = new DateTime(YEAR, MONTH, 01, 11, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 01, 14, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 Private = false,
             });
             await dbContext.SaveChangesAsync();
@@ -1308,7 +1311,7 @@ namespace CarWash.PWA.Tests
                 State = State.SubmittedNotActual,
                 StartDate = new DateTime(YEAR, MONTH, 01, 11, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 01, 14, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 Private = false,
             });
             await dbContext.SaveChangesAsync();
@@ -1341,7 +1344,7 @@ namespace CarWash.PWA.Tests
                 State = State.SubmittedNotActual,
                 StartDate = new DateTime(YEAR, MONTH, 01, 11, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 01, 14, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int > { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 Private = false,
             });
             await dbContext.SaveChangesAsync();
@@ -1828,7 +1831,7 @@ namespace CarWash.PWA.Tests
             var dbContext = CreateInMemoryDbContext();
             var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.DropoffAndLocationConfirmed);
             var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
-            var SERVICES = new List<ServiceType> { ServiceType.Exterior, ServiceType.PreWash, ServiceType.WheelCleaning };
+            var SERVICES = new List<int> { Constants.ServiceType.Exterior, PREWASH, WHEEL_CLEANING };
 
             var result = await controller.UpdateServices(reservation.Id, SERVICES);
 
@@ -1843,7 +1846,7 @@ namespace CarWash.PWA.Tests
             var dbContext = CreateInMemoryDbContext();
             var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.DropoffAndLocationConfirmed);
             var controller = CreateControllerStub(dbContext);
-            var SERVICES = new List<ServiceType> { ServiceType.Exterior, ServiceType.PreWash, ServiceType.WheelCleaning };
+            var SERVICES = new List<int> { Constants.ServiceType.Exterior, PREWASH, WHEEL_CLEANING };
 
             var result = await controller.UpdateServices(reservation.Id, SERVICES);
 
@@ -1855,7 +1858,7 @@ namespace CarWash.PWA.Tests
         {
             var dbContext = CreateInMemoryDbContext();
             var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
-            var SERVICES = new List<ServiceType> { ServiceType.Exterior, ServiceType.PreWash, ServiceType.WheelCleaning };
+            var SERVICES = new List<int> { Constants.ServiceType.Exterior, PREWASH, WHEEL_CLEANING };
 
             var result = await controller.UpdateServices(null, SERVICES);
 
@@ -1880,7 +1883,7 @@ namespace CarWash.PWA.Tests
             var dbContext = CreateInMemoryDbContext();
             var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.DropoffAndLocationConfirmed);
             var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
-            var SERVICES = new List<ServiceType> { ServiceType.Exterior, ServiceType.PreWash, ServiceType.WheelCleaning };
+            var SERVICES = new List<int> { Constants.ServiceType.Exterior, PREWASH, WHEEL_CLEANING };
 
             var result = await controller.UpdateServices("invalid id", SERVICES);
 
@@ -2012,7 +2015,7 @@ namespace CarWash.PWA.Tests
             Assert.IsType<LastSettingsViewModel>(ok.Value);
             Assert.Equal("TEST00", lastSettings.VehiclePlateNumber);
             Assert.Equal("M/-1/11", lastSettings.Location);
-            Assert.Equal(new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior }, lastSettings.Services);
+            Assert.Equal(new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior }, lastSettings.Services);
         }
 
         [Fact]
@@ -2136,7 +2139,7 @@ namespace CarWash.PWA.Tests
                 State = State.Done,
                 StartDate = new DateTime(YEAR, MONTH, 06, 08, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 06, 11, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 TimeRequirement = 12,
                 Private = false,
                 Location = "M/-1/11",
@@ -2148,7 +2151,7 @@ namespace CarWash.PWA.Tests
                 State = State.ReminderSentWaitingForKey,
                 StartDate = new DateTime(YEAR, MONTH, 27, 11, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 27, 14, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior },
+                Services = new List<int> { Constants.ServiceType.Exterior },
                 TimeRequirement = 12,
                 Private = false,
             });
@@ -2159,7 +2162,7 @@ namespace CarWash.PWA.Tests
                 State = State.DropoffAndLocationConfirmed,
                 StartDate = new DateTime(YEAR, MONTH, 07, 08, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 07, 11, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 TimeRequirement = 12,
                 Private = false,
             });
@@ -2170,7 +2173,7 @@ namespace CarWash.PWA.Tests
                 State = State.WashInProgress,
                 StartDate = new DateTime(YEAR, MONTH, 08, 08, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 08, 11, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 TimeRequirement = 12,
                 Private = false,
             });
@@ -2181,7 +2184,7 @@ namespace CarWash.PWA.Tests
                 State = State.WashInProgress,
                 StartDate = new DateTime(YEAR, MONTH, 09, 08, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 09, 11, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 TimeRequirement = 12,
                 Private = true,
             });
@@ -2192,7 +2195,7 @@ namespace CarWash.PWA.Tests
                 State = State.NotYetPaid,
                 StartDate = new DateTime(YEAR, MONTH, 10, 08, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 10, 11, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 TimeRequirement = 12,
                 Private = true,
             });
@@ -2203,7 +2206,7 @@ namespace CarWash.PWA.Tests
                 State = State.SubmittedNotActual,
                 StartDate = new DateTime(YEAR, MONTH, 04, 08, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 04, 11, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 TimeRequirement = 12,
                 Private = false,
             });
@@ -2214,7 +2217,7 @@ namespace CarWash.PWA.Tests
                 State = State.SubmittedNotActual,
                 StartDate = new DateTime(YEAR, MONTH, 03, 08, 00, 00, DateTimeKind.Local),
                 EndDate = new DateTime(YEAR, MONTH, 03, 11, 00, 00, DateTimeKind.Local),
-                Services = new List<ServiceType> { ServiceType.Exterior, ServiceType.Interior },
+                Services = new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior },
                 TimeRequirement = 12,
                 Private = false,
             });
@@ -2252,7 +2255,50 @@ namespace CarWash.PWA.Tests
                 UserConcurrentReservationLimit = 2,
                 MinutesToAllowReserveInPast = 120,
                 HoursAfterCompanyLimitIsNotChecked = 11
-            }
+            },
+            Services =
+            [
+                new() {
+                    Id = 0,
+                    Name = "exterior",
+                    Group = "Basics",
+                    TimeInMinutes = 12,
+                    Price = 6311,
+                    PriceMpv = 7889,
+                },
+                new() {
+                    Id = 1,
+                    Name = "interior",
+                    Group = "Basics",
+                    TimeInMinutes = 12,
+                    Price = 3610,
+                    PriceMpv = 5406,
+                },
+                new() {
+                    Id = 2,
+                    Name = "carpet",
+                    Group = "Basics",
+                    TimeInMinutes = 24,
+                    Price = -1,
+                    PriceMpv = -1,
+                },
+                new() {
+                    Id = 9,
+                    Name = "wheel cleaning",
+                    Group = "Extras",
+                    TimeInMinutes = 0,
+                    Price = 2073,
+                    PriceMpv = 2073,
+                },
+                new() {
+                    Id = 13,
+                    Name = "prewash",
+                    Group = "Extras",
+                    TimeInMinutes = 0,
+                    Price = 1732,
+                    PriceMpv = 1732,
+                },
+            ],
         };
 
         private static ReservationsController CreateControllerStub(ApplicationDbContext dbContext, string email = JOHN_EMAIL)

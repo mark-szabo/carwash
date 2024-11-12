@@ -53,12 +53,12 @@ namespace CarWash.ClassLibrary.Models
         /// Gets or sets the reservation services.
         /// </summary>
         /// <value>
-        /// List of <see cref="ServiceType"/>s deserialized from <see cref="ServicesJson"/>.
+        /// List of service ids deserialized from <see cref="ServicesJson"/>.
         /// </value>
         [NotMapped]
-        public List<ServiceType> Services
+        public List<int> Services
         {
-            get => ServicesJson == null ? null : JsonConvert.DeserializeObject<List<ServiceType>>(ServicesJson);
+            get => ServicesJson == null ? null : JsonConvert.DeserializeObject<List<int>>(ServicesJson);
             set => ServicesJson = JsonConvert.SerializeObject(value);
         }
 
@@ -66,7 +66,7 @@ namespace CarWash.ClassLibrary.Models
         /// Gets or sets the reservation services serialized in JSON.
         /// </summary>
         /// <value>
-        /// List of <see cref="ServiceType"/>s serialized in JSON.
+        /// List of service ids serialized in JSON.
         /// </value>
         public string ServicesJson { get; set; }
 
@@ -137,7 +137,7 @@ namespace CarWash.ClassLibrary.Models
 
             foreach (var service in Services)
             {
-                var serviceCosts = configuration.Services.SingleOrDefault(s => s.Type == service) 
+                var serviceCosts = configuration.Services.SingleOrDefault(s => s.Id == service) 
                     ?? throw new Exception("Invalid service. No price found.");
 
                 sum += Mpv ? serviceCosts.PriceMpv : serviceCosts.Price;
