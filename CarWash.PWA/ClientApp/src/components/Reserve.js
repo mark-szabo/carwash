@@ -94,7 +94,7 @@ const styles = theme => ({
         marginRight: theme.spacing(1),
     },
     formControl: {
-        margin: theme.spacing(1),
+        margin: `${theme.spacing(2)} ${theme.spacing(1)}`,
         [theme.breakpoints.down('md')]: {
             width: '100%',
         },
@@ -635,7 +635,7 @@ class Reserve extends TrackedComponent {
                         {loadingReservation ? (
                             <Spinner />
                         ) : (
-                            <Grid container spacing={24}>
+                            <Grid container spacing={2}>
                                 <Grid item xs={12} md={6}>
                                     {this.getServiceListComponent(configuration.services, selectedServices, classes)}
                                     <div className={classes.actionsContainer}>
@@ -836,14 +836,12 @@ class Reserve extends TrackedComponent {
                                                     id: 'garage',
                                                 }}
                                             >
-                                                <MenuItem value="M">M</MenuItem>
-                                                <MenuItem value="S1">S1</MenuItem>
-                                                <MenuItem value="GS">GS</MenuItem>
-                                                <MenuItem value="HX">HX</MenuItem>
+                                                {configuration.garages.map(g => (
+                                                    <MenuItem value={g.building} key={g.building}>{g.building}</MenuItem>
+                                                ))}                                                
                                             </Select>
                                         </FormControl>
-                                        {garage &&
-                                            Garages[garage] && (
+                                        {garage && configuration.garages.some(g => g.building === garage) && (
                                             <FormControl className={classes.formControl} error={validationErrors.floor}>
                                                 <InputLabel htmlFor="floor">Floor</InputLabel>
                                                 <Select
@@ -855,10 +853,8 @@ class Reserve extends TrackedComponent {
                                                         id: 'floor',
                                                     }}
                                                 >
-                                                    {Garages[garage].map(item => (
-                                                        <MenuItem value={item} key={item}>
-                                                            {item}
-                                                        </MenuItem>
+                                                    {configuration.garages.find(g => g.building === garage).floors.map(f => (
+                                                        <MenuItem value={f} key={f}>{f}</MenuItem>
                                                     ))}
                                                 </Select>
                                             </FormControl>
