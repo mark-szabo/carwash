@@ -1421,7 +1421,7 @@ namespace CarWash.PWA.Controllers
 
                     worksheet.Cells[i, 11].Value = reservation.CarwashComment;
 
-                    worksheet.Cells[i, 12].Value = reservation.Price;
+                    worksheet.Cells[i, 12].Value = reservation.GetPrice(_configuration);
 
                     i++;
                 }

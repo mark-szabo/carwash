@@ -19,8 +19,8 @@ namespace CarWash.PWA
                 .ConfigureAppConfiguration((context, builder) =>
                 {
                     var config = builder.Build();
-                    var keyVaultBaseUri = new Uri(config.GetValue<string>("KeyVault:BaseUrl"));
 
+                    var keyVaultBaseUri = new Uri(config.GetValue<string>("KeyVault:BaseUrl"));
                     builder.AddAzureKeyVault(keyVaultBaseUri, new DefaultAzureCredential());
                 })
                 .ConfigureKestrel(c => c.AddServerHeader = false)

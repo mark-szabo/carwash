@@ -33,8 +33,8 @@ using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using Microsoft.AspNetCore.Rewrite;
 using System.Text.Json;
+using CarWash.ClassLibrary.Enums;
 
 namespace CarWash.PWA
 {
@@ -51,6 +51,11 @@ namespace CarWash.PWA
                     "upgrade-insecure-requests; " +
                     "report-uri https://markszabo.report-uri.com/r/d/csp/enforce";
 
+        private static readonly JsonSerializerOptions jsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -61,7 +66,11 @@ namespace CarWash.PWA
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var config = Configuration.Get<CarWashConfiguration>();
+            var config = Configuration.Get<CarWashConfiguration>();            
+            if (config.Services.Count == 0)
+            {
+                config.Services = JsonSerializer.Deserialize<List<Service>>(Configuration.GetValue<string>("Services"), jsonOptions);
+            }
 
             // Add application services
             services.AddSingleton(Configuration);
@@ -126,11 +135,11 @@ namespace CarWash.PWA
                             // Get EF context
                             var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
 
-                            var company = (await dbContext.Company.SingleOrDefaultAsync(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))) ?? 
+                            var company = (await dbContext.Company.SingleOrDefaultAsync(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))) ??
                                 throw new SecurityTokenInvalidIssuerException("Tenant ('tenantid') cannot be found in auth token.");
                             var email = context.Principal.FindFirstValue(ClaimTypes.Upn)?.ToLower();
                             if (email == null && company.Name == Company.Carwash) email = context.Principal.FindFirstValue(ClaimTypes.Email)?.ToLower() ??
-                                context.Principal.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.ToLower().Replace("live.com#","");
+                                context.Principal.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.ToLower().Replace("live.com#", "");
                             if (email == null) throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
 
                             var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);

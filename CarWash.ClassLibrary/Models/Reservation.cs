@@ -131,23 +131,19 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Gets reservation's costs.
         /// </summary>
-        [NotMapped]
-        public int Price
+        public int GetPrice(CarWashConfiguration configuration)
         {
-            get
+            var sum = 0;
+
+            foreach (var service in Services)
             {
-                var sum = 0;
+                var serviceCosts = configuration.Services.SingleOrDefault(s => s.Type == service) 
+                    ?? throw new Exception("Invalid service. No price found.");
 
-                foreach (var service in Services)
-                {
-                    var serviceCosts = ServiceTypes.Types.SingleOrDefault(s => s.Type == service);
-                    if (serviceCosts == null) throw new Exception("Invalid service. No price found.");
-
-                    sum += Mpv ? serviceCosts.PriceMpv : serviceCosts.Price;
-                }
-
-                return sum;
+                sum += Mpv ? serviceCosts.PriceMpv : serviceCosts.Price;
             }
+
+            return sum;
         }
     }
 }
