@@ -181,7 +181,7 @@ namespace CarWash.PWA.Controllers
             if (newStartDate != oldStartDate)
             {
                 // Check if there is enough time on that day
-                if (!IsEnoughTimeOnDate(dbReservation.StartDate, dbReservation.TimeRequirement))
+                if (!await IsEnoughTimeOnDateAsync(dbReservation.StartDate, dbReservation.TimeRequirement))
                     return BadRequest("Company limit has been met for this day or there is not enough time at all.");
 
                 // Check if there is enough time in that slot
@@ -308,7 +308,7 @@ namespace CarWash.PWA.Controllers
                 return BadRequest("This time is blocked.");
 
             // Check if there is enough time on that day
-            if (!IsEnoughTimeOnDate(reservation.StartDate, reservation.TimeRequirement))
+            if (!await IsEnoughTimeOnDateAsync(reservation.StartDate, reservation.TimeRequirement))
                 return BadRequest("Company limit has been met for this day or there is not enough time at all.");
 
             // Check if there is enough time in that slot
@@ -1582,7 +1582,7 @@ namespace CarWash.PWA.Controllers
         /// <param name="date">Date of reservation</param>
         /// <param name="timeRequirement">time requirement of the reservation in minutes</param>
         /// <returns>true if there is enough time left or user is carwash admin</returns>
-        private bool IsEnoughTimeOnDate(DateTime date, int timeRequirement)
+        private async Task<bool> IsEnoughTimeOnDateAsync(DateTime date, int timeRequirement)
         {
             if (_user.IsCarwashAdmin) return true;
 
