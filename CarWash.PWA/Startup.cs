@@ -105,15 +105,15 @@ namespace CarWash.PWA
                     options.Authority = config.AzureAd.Instance;
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidateIssuer = false,
-                        /*IssuerValidator = (issuer, token, tvp) =>
+                        ValidateIssuer = true,
+                        IssuerValidator = (issuer, token, tvp) =>
                         {
                             issuer = issuer.Substring(24, 36); // Get the tenant id out of the issuer string (eg. https://sts.windows.net/72f988bf-86f1-41af-91ab-2d7cd011db47/)
                             if (config.Companies.Select(i => i.TenantId).Contains(issuer))
                                 return issuer;
                             else
                                 throw new SecurityTokenInvalidIssuerException("Invalid issuer");
-                        },*/
+                        },
                     };
                     options.Events = new JwtBearerEvents
                     {
@@ -135,8 +135,7 @@ namespace CarWash.PWA
                             // Get EF context
                             var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
 
-                            var company = (await dbContext.Company.SingleOrDefaultAsync(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))) ??
-                                throw new SecurityTokenInvalidIssuerException("Tenant ('tenantid') cannot be found in auth token.");
+                            var company = config.Companies.SingleOrDefault(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))?.Name ?? throw new Exception("Tenant ('tenantid') cannot be found in auth token.");
                             var email = context.Principal.FindFirstValue(ClaimTypes.Upn)?.ToLower();
                             if (email == null && company.Name == Company.Carwash) email = context.Principal.FindFirstValue(ClaimTypes.Email)?.ToLower() ??
                                 context.Principal.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.ToLower().Replace("live.com#", "");
@@ -151,8 +150,8 @@ namespace CarWash.PWA
                                     FirstName = context.Principal.FindFirstValue(ClaimTypes.GivenName) ?? "User", // throw new Exception("First name ('givenname') cannot be found in auth token."),
                                     LastName = context.Principal.FindFirstValue(ClaimTypes.Surname),
                                     Email = email,
-                                    Company = company.Name,
-                                    IsCarwashAdmin = company.Name == Company.Carwash
+                                    Company = company,
+                                    IsCarwashAdmin = company == Company.Carwash
                                 };
 
                                 await dbContext.Users.AddAsync(user);

@@ -1,19 +1,25 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using CarWash.ClassLibrary.Models;
-using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
+using CarWash.ClassLibrary.Enums;
 
 namespace CarWash.PWA.Controllers
 {
     /// <summary>
     /// .well-known API
     /// </summary>
-    /// <inheritdoc />
     [Produces("application/json")]
     [Route("api/.well-known")]
     [ApiController]
-    public class WellKnownController(CarWashConfiguration configuration, ApplicationDbContext context) : ControllerBase
+    public class WellKnownController : ControllerBase
     {
+        private readonly CarWashConfiguration _configuration;
+
+        /// <inheritdoc />
+        public WellKnownController(CarWashConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         // GET: api/.well-known/configuration
         /// <summary>
         /// Get CarWash Configuration
@@ -21,15 +27,15 @@ namespace CarWash.PWA.Controllers
         /// <returns>CarWash Configuration</returns>
         /// <response code="200">OK</response>
         [HttpGet, Route("configuration")]
-        public async Task<ActionResult<WellKnown>> GetConfigurationAsync()
+        public ActionResult<WellKnown> GetConfiguration()
         {
             var wellKnown = new WellKnown
             {
-                Slots = configuration.Slots,
-                Companies = await context.Company.ToListAsync(),
-                Garages = configuration.Garages,
-                Services = configuration.Services,
-                ReservationSettings = configuration.Reservation,
+                Slots = _configuration.Slots,
+                Companies = _configuration.Companies,
+                Garages = _configuration.Garages,
+                ReservationSettings = _configuration.Reservation,
+                Services = _configuration.Services,
             };
 
             return Ok(wellKnown);

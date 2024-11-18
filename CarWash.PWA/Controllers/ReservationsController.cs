@@ -181,7 +181,7 @@ namespace CarWash.PWA.Controllers
             if (newStartDate != oldStartDate)
             {
                 // Check if there is enough time on that day
-                if (!await IsEnoughTimeOnDateAsync(dbReservation.StartDate, dbReservation.TimeRequirement))
+                if (!IsEnoughTimeOnDate(dbReservation.StartDate, dbReservation.TimeRequirement))
                     return BadRequest("Company limit has been met for this day or there is not enough time at all.");
 
                 // Check if there is enough time in that slot
@@ -308,7 +308,7 @@ namespace CarWash.PWA.Controllers
                 return BadRequest("This time is blocked.");
 
             // Check if there is enough time on that day
-            if (!await IsEnoughTimeOnDateAsync(reservation.StartDate, reservation.TimeRequirement))
+            if (!IsEnoughTimeOnDate(reservation.StartDate, reservation.TimeRequirement))
                 return BadRequest("Company limit has been met for this day or there is not enough time at all.");
 
             // Check if there is enough time in that slot
@@ -1117,7 +1117,7 @@ namespace CarWash.PWA.Controllers
             #region Get not available dates
             var notAvailableDates = new List<DateTime>();
             var dailyCapacity = _configuration.Slots.Sum(s => s.Capacity);
-            var userCompanyLimit = (await _context.Company.SingleAsync(c => c.Name == _user.Company)).DailyLimit;
+            var userCompanyLimit = _configuration.Companies.Find(c => c.Name == _user.Company).DailyLimit;
 
             notAvailableDates.AddRange(await _context.Reservation
                 .Where(r => r.EndDate >= DateTime.Now && r.StartDate <= DateTime.Now.AddDays(daysAhead))
@@ -1582,18 +1582,18 @@ namespace CarWash.PWA.Controllers
         /// <param name="date">Date of reservation</param>
         /// <param name="timeRequirement">time requirement of the reservation in minutes</param>
         /// <returns>true if there is enough time left or user is carwash admin</returns>
-        private async Task<bool> IsEnoughTimeOnDateAsync(DateTime date, int timeRequirement)
+        private bool IsEnoughTimeOnDate(DateTime date, int timeRequirement)
         {
             if (_user.IsCarwashAdmin) return true;
 
-            var userCompanyLimit = (await _context.Company.SingleAsync(c => c.Name == _user.Company)).DailyLimit;
+            var userCompanyLimit = _configuration.Companies.Find(c => c.Name == _user.Company).DailyLimit;
 
             // Do not validate against company limit after {HoursAfterCompanyLimitIsNotChecked} for today
             // or if company limit is 0 (meaning unlimited)
             if ((date.Date == DateTime.Today && DateTime.Now.Hour >= _configuration.Reservation.HoursAfterCompanyLimitIsNotChecked)
                 || userCompanyLimit == 0)
             {
-                var allCompanyLimit = await _context.Company.SumAsync(c => c.DailyLimit);
+                var allCompanyLimit = _configuration.Companies.Sum(c => c.DailyLimit);
 
                 var reservedTimeOnDate = await _context.Reservation
                     .Where(r => r.StartDate.Date == date.Date)

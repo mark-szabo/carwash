@@ -1,4 +1,4 @@
-﻿using CarWash.ClassLibrary.Enums;
+using CarWash.ClassLibrary.Enums;
 using System.Collections.Generic;
 
 namespace CarWash.ClassLibrary.Models
@@ -42,29 +42,29 @@ namespace CarWash.ClassLibrary.Models
         /// </example>
         public List<Slot> Slots { get; set; } = new List<Slot>();
 
-        ///// <summary>
-        ///// List of companies whose users can use the CarWash app.
-        ///// </summary>
-        ///// <remarks>
-        ///// You MUST include the CarWash as a company!
-        ///// Location: Database
-        ///// Key: Companies
-        ///// </remarks>
-        ///// <example>
-        ///// [
-        /////   {
-        /////     "Name": "carwash",
-        /////     "TenantId": "86cf3673-fa54-46ac-8a6c-164633955f8e",
-        /////     "DailyLimit": 0
-        /////   },
-        /////   {
-        /////     "Name": "contoso",
-        /////     "TenantId": "d31a1195-d2ed-4a04-820c-3e1e455e380b",
-        /////     "DailyLimit": 15
-        /////   }
-        ///// ]
-        ///// </example>
-        //public List<Company> Companies { get; set; } = new List<Company>();
+        /// <summary>
+        /// List of companies whose users can use the CarWash app.
+        /// </summary>
+        /// <remarks>
+        /// You MUST include the CarWash as a company!
+        /// Location: Database
+        /// Key: Companies
+        /// </remarks>
+        /// <example>
+        /// [
+        ///   {
+        ///     "Name": "carwash",
+        ///     "TenantId": "86cf3673-fa54-46ac-8a6c-164633955f8e",
+        ///     "DailyLimit": 0
+        ///   },
+        ///   {
+        ///     "Name": "contoso",
+        ///     "TenantId": "d31a1195-d2ed-4a04-820c-3e1e455e380b",
+        ///     "DailyLimit": 15
+        ///   }
+        /// ]
+        /// </example>
+        public List<Company> Companies { get; set; } = new List<Company>();
 
         /// <summary>
         /// List of parking garages where cars are allowed to be left.

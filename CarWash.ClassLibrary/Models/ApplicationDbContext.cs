@@ -8,12 +8,13 @@ namespace CarWash.ClassLibrary.Models
     /// <summary>
     /// Database context.
     /// </summary>
-    /// <remarks>
-    /// Initializes a new instance of the <see cref="ApplicationDbContext"/> class.
-    /// </remarks>
-    /// <param name="options">DB context options.</param>
-    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<User>(options), IPushDbContext
+    public class ApplicationDbContext : IdentityDbContext<User>, IPushDbContext
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ApplicationDbContext"/> class.
+        /// </summary>
+        /// <param name="options">DB context options.</param>
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
         /// <summary>
         /// Reservation table of the database.
@@ -29,12 +30,7 @@ namespace CarWash.ClassLibrary.Models
         /// Blocker table of the database.
         /// </summary>
         public DbSet<Blocker> Blocker { get; set; }
-
-        /// <summary>
-        /// Company table of the database.
-        /// </summary>
-        public DbSet<Company> Company { get; set; }
-
+        
         /// <inheritdoc />
         /// <remarks>
         /// WORKAROUND:
@@ -81,14 +77,6 @@ namespace CarWash.ClassLibrary.Models
 
             builder.Entity<PushSubscription>()
                 .HasIndex(s => s.Id)
-                .IsUnique();
-
-            builder.Entity<Company>()
-                .HasIndex(c => c.TenantId)
-                .IsUnique();
-
-            builder.Entity<Company>()
-                .HasIndex(c => c.Name)
                 .IsUnique();
         }
 
