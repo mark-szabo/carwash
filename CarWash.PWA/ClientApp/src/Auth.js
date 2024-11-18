@@ -2,9 +2,9 @@
 import * as download from 'downloadjs';
 
 const adalConfig = {
-    clientId: '212c82d9-446d-48f5-8f95-88ebe2e78dbd',
+    clientId: '6e291d40-2613-4a74-9af5-790eb496a828',
     endpoints: {
-        api: '212c82d9-446d-48f5-8f95-88ebe2e78dbd',
+        api: '6e291d40-2613-4a74-9af5-790eb496a828',
     },
     cacheLocation: 'localStorage',
     extraQueryParameter: '',
