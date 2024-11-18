@@ -838,7 +838,7 @@ class Reserve extends TrackedComponent {
                                             >
                                                 {configuration.garages.map(g => (
                                                     <MenuItem value={g.building} key={g.building}>{g.building}</MenuItem>
-                                                ))}                                                
+                                                ))}
                                             </Select>
                                         </FormControl>
                                         {garage && configuration.garages.some(g => g.building === garage) && (
