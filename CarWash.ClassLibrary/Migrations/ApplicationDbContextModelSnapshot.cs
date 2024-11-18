@@ -17,7 +17,7 @@ namespace CarWash.ClassLibrary.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.10")
+                .HasAnnotation("ProductVersion", "7.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -47,39 +47,6 @@ namespace CarWash.ClassLibrary.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Blocker");
-                });
-
-            modelBuilder.Entity("CarWash.ClassLibrary.Models.Company", b =>
-                {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("DailyLimit")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("TenantId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("nvarchar(36)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.HasIndex("TenantId")
-                        .IsUnique();
-
-                    b.ToTable("Company");
                 });
 
             modelBuilder.Entity("CarWash.ClassLibrary.Models.PushSubscription", b =>
