@@ -548,7 +548,9 @@ class Reserve extends TrackedComponent {
         for (const serviceGroup in serviceGroups) {
             if (serviceGroups && typeof serviceGroups === 'object' && Object.hasOwn(serviceGroups, serviceGroup)) {
                 jsx.push(<div key={serviceGroup}><Typography variant="caption">{serviceGroup}</Typography></div>);
-                jsx.push(serviceGroups[serviceGroup].map(service => (
+                jsx.push(serviceGroups[serviceGroup]
+                    .filter(s => s.hidden === false)
+                    .map(service => (
                     <span key={service.id}>
                         <Chip
                             key={service.id}
@@ -723,27 +725,15 @@ class Reserve extends TrackedComponent {
                                 value={`${timeSelected && selectedDate.hour()}`}
                                 onChange={this.handleTimeSelectionComplete}
                             >
-                                <FormControlLabel
-                                    value="8"
-                                    control={<Radio />}
-                                    label={`8:00 AM - 11:00 AM ${this.getSlotReservationPercentage(0)}`}
-                                    disabled={disabledSlots[0]}
-                                    id="reserve-slot-0"
-                                />
-                                <FormControlLabel
-                                    value="11"
-                                    control={<Radio />}
-                                    label={`11:00 AM - 2:00 PM ${this.getSlotReservationPercentage(1)}`}
-                                    disabled={disabledSlots[1]}
-                                    id="reserve-slot-1"
-                                />
-                                <FormControlLabel
-                                    value="14"
-                                    control={<Radio />}
-                                    label={`2:00 PM - 5:00 PM ${this.getSlotReservationPercentage(2)}`}
-                                    disabled={disabledSlots[2]}
-                                    id="reserve-slot-2"
-                                />
+                                {configuration.slots.map(slot => (
+                                    <FormControlLabel
+                                        value={slot.startTime}
+                                        control={<Radio />}
+                                        label={`${slot.startTime}:00 - ${slot.endTime}:00 ${this.getSlotReservationPercentage(0)}`}
+                                        disabled={disabledSlots[0]}
+                                        id={`reserve-slot-${slot.startTime}`}
+                                    />
+                                ))}
                             </RadioGroup>
                         </FormControl>
                         <div className={classes.actionsContainer}>
