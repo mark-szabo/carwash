@@ -551,16 +551,16 @@ class Reserve extends TrackedComponent {
                 jsx.push(serviceGroups[serviceGroup]
                     .filter(s => s.hidden === false)
                     .map(service => (
-                    <span key={service.id}>
-                        <Chip
-                            key={service.id}
-                            label={service.name}
-                            onClick={this.handleServiceChipClick(service)}
-                            className={selectedServices.includes(service.id) ? classes.selectedChip : classes.chip}
-                            id={`reserve-${service.name}-service-chip`}
-                        />
-                    </span>
-                )));
+                        <span key={service.id}>
+                            <Chip
+                                key={service.id}
+                                label={service.name}
+                                onClick={this.handleServiceChipClick(service)}
+                                className={selectedServices.includes(service.id) ? classes.selectedChip : classes.chip}
+                                id={`reserve-${service.name}-service-chip`}
+                            />
+                        </span>
+                    )));
                 jsx.push(<br />);
             }
         }
