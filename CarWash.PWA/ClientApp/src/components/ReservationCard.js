@@ -346,12 +346,11 @@ class ReservationCard extends Component {
                                 }}
                             >
                                 {configuration.garages.map(g => (
-                                    <MenuItem value={g.building}>{g.building}</MenuItem>
+                                    <MenuItem key={g.building} value={g.building}>{g.building}</MenuItem>
                                 ))}
                             </Select>
                         </FormControl>
-                        {garage &&
-                            configuration.garages.some(g => g.building === garage) && (
+                        {garage && configuration.garages.some(g => g.building === garage) && (
                             <FormControl className={classes.formControl} error={validationErrors.floor}>
                                 <InputLabel htmlFor="floor">Floor</InputLabel>
                                 <Select
@@ -363,10 +362,8 @@ class ReservationCard extends Component {
                                         id: 'floor',
                                     }}
                                 >
-                                    {configuration.garages.find(g => g.building === garage).floors.map(item => (
-                                        <MenuItem value={item} key={item}>
-                                            {item}
-                                        </MenuItem>
+                                    {configuration.garages.find(g => g.building === garage).floors.map(f => (
+                                        <MenuItem value={f} key={f}>{f}</MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>

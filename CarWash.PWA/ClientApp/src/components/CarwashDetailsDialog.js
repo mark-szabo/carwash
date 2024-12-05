@@ -101,14 +101,17 @@ const styles = theme => ({
         },
     },
     formControl: {
-        marginRight: theme.spacing(1),
-        marginBottom: theme.spacing(1),
+        margin: `${theme.spacing(2)} ${theme.spacing(1)} 0 0`,
         [theme.breakpoints.down('md')]: {
             width: '100%',
         },
         [theme.breakpoints.up('md')]: {
-            maxWidth: 60,
+            minWidth: 100,
+            maxWidth: 200,
         },
+    },
+    saveButton: {
+        margin: `${theme.spacing(2)} 0`,
     },
     dangerButton: {
         color: red[300],
@@ -629,6 +632,7 @@ class CarwashDetailsDialog extends React.Component {
                             {getAdminStateName(reservation.state)} • {formatDate(reservation)} •{' '}
                             {reservation.user.firstName} {reservation.user.lastName} • {reservation.user.company}
                         </Typography>
+                        <br/>
                         {!editLocation ? (
                             <Typography variant="subtitle1" gutterBottom>
                                 {reservation.location ? formatLocation(reservation.location) : 'Location not set'}
@@ -649,13 +653,12 @@ class CarwashDetailsDialog extends React.Component {
                                             id: 'garage',
                                         }}
                                     >
-                                        <MenuItem value="M">M</MenuItem>
-                                        <MenuItem value="S1">S1</MenuItem>
-                                        <MenuItem value="GS">GS</MenuItem>
-                                        <MenuItem value="HX">HX</MenuItem>
+                                        {configuration.garages.map(g => (
+                                            <MenuItem value={g.building} key={g.building}>{g.building}</MenuItem>
+                                        ))}
                                     </Select>
                                 </FormControl>
-                                {garage && Garages[garage] && (
+                                {garage && configuration.garages.some(g => g.building === garage) && (
                                     <FormControl className={classes.formControl} error={validationErrors.floor}>
                                         <InputLabel htmlFor="floor">Floor</InputLabel>
                                         <Select
@@ -667,10 +670,8 @@ class CarwashDetailsDialog extends React.Component {
                                                 id: 'floor',
                                             }}
                                         >
-                                            {Garages[garage].map(item => (
-                                                <MenuItem value={item} key={item}>
-                                                    {item}
-                                                </MenuItem>
+                                            {configuration.garages.find(g => g.building === garage).floors.map(f => (
+                                                <MenuItem value={f} key={f}>{f}</MenuItem>
                                             ))}
                                         </Select>
                                     </FormControl>
@@ -689,6 +690,7 @@ class CarwashDetailsDialog extends React.Component {
                                             onClick={this.handleUpdateLocation}
                                             aria-label="Save location"
                                             size="large"
+                                            className={classes.saveButton}
                                         >
                                             <SaveIcon />
                                         </IconButton>

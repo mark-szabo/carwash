@@ -72,7 +72,7 @@ class ReservationGrid extends React.PureComponent {
     }
 
     componentDidUpdate() {
-        if (!this._cellPositioner) return;
+        if (!this._cellPositioner || !this._masonry) return;
 
         this.resetCellPositioner();
         this._masonry.recomputeCellPositions();

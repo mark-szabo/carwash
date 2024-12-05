@@ -170,6 +170,12 @@ class CarwashCard extends Component {
                                 <Typography gutterBottom>
                                     {reservation.user.firstName} {reservation.user.lastName}
                                 </Typography>
+                                <Typography variant="caption" color="textSecondary" gutterBottom style={{ marginTop: '8px' }}>
+                                    Company
+                                </Typography>
+                                <Typography gutterBottom>
+                                    {reservation.user.company}
+                                </Typography>
                                 <Comments
                                     commentOutgoing={reservation.carwashComment}
                                     commentIncoming={reservation.comment}

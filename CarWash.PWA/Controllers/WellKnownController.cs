@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using CarWash.ClassLibrary.Models;
-using CarWash.ClassLibrary.Enums;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 
@@ -29,7 +28,7 @@ namespace CarWash.PWA.Controllers
                 Slots = configuration.Slots,
                 Companies = await context.Company.ToListAsync(),
                 Garages = configuration.Garages,
-                Services = ServiceTypes.Types,
+                Services = configuration.Services,
                 ReservationSettings = configuration.Reservation,
             };
 

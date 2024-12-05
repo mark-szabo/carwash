@@ -96,7 +96,7 @@ namespace CarWash.ClassLibrary.Services
         /// </summary>
         /// <param name="reservation">Reservation object to convert from</param>
         /// <returns>Converted Event object</returns>
-        private static Event GetCalendarEventFromReservation(Reservation reservation)
+        private Event GetCalendarEventFromReservation(Reservation reservation)
         {
             if (reservation.User == null) throw new Exception("User is not loaded for reservation!");
 
@@ -109,7 +109,7 @@ namespace CarWash.ClassLibrary.Services
                 EndTime = reservation.EndDate.ToString(),
                 Location = reservation.Location,
                 Body =
-                    "Please don't forget to leave the key at the reception and <a href=\"https://carwashu.azurewebsites.net\">confirm drop-off & vehicle location by clicking here</a>!"
+                    $"Please don't forget to leave the key at the reception and <a href=\"{_configuration.ConnectionStrings.BaseUrl}\">confirm drop-off & vehicle location by clicking here</a>!"
             };
         }
     }

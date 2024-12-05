@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using CarWash.ClassLibrary.Enums;
+using System.Collections.Generic;
 
 namespace CarWash.ClassLibrary.Models
 {
@@ -85,6 +86,39 @@ namespace CarWash.ClassLibrary.Models
         /// ]
         /// </example>
         public List<Garage> Garages { get; set; } = new List<Garage>();
+
+        /// <summary>
+        /// List of services provided by the CarWash.
+        /// </summary>
+        /// <remarks>
+        /// Location: Application Settings
+        /// Key: Services
+        /// </remarks>
+        /// <example>
+        /// [
+        ///   {
+        ///     "id": 0,
+        ///     "name": "exterior",
+        ///     "group": "Basics",
+        ///     "description": null,
+        ///     "timeInMinutes": 12,
+        ///     "price": 6311,
+        ///     "priceMpv": 7889,
+        ///     "hidden": false
+        ///   },
+        ///   {
+        ///     "id": 1,
+        ///     "name": "interior",
+        ///     "group": "Basics",
+        ///     "description": null,
+        ///     "timeInMinutes": 12,
+        ///     "price": 3610,
+        ///     "priceMpv": 5406,
+        ///     "hidden": false
+        ///   }
+        /// ]
+        /// </example>
+        public List<Service> Services { get; set; } = new List<Service>();
 
         /// <summary>
         /// CarWash app settings referring to reservations.
@@ -187,6 +221,16 @@ namespace CarWash.ClassLibrary.Models
         /// </remarks>
         public class ConnectionStringsConfiguration
         {
+            /// <summary>
+            /// Base URL of the application.
+            /// </summary>
+            /// <remarks>
+            /// Location: Application Settings
+            /// Key: ConnectionStrings:BaseUrl
+            /// Default value: 2
+            /// </remarks>
+            public string BaseUrl { get; set; }
+
             /// <summary>
             /// Azure Service Bus connection string.
             /// </summary>

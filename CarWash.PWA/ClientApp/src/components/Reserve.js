@@ -94,7 +94,7 @@ const styles = theme => ({
         marginRight: theme.spacing(1),
     },
     formControl: {
-        margin: theme.spacing(1),
+        margin: `${theme.spacing(2)} ${theme.spacing(1)}`,
         [theme.breakpoints.down('md')]: {
             width: '100%',
         },
@@ -548,7 +548,9 @@ class Reserve extends TrackedComponent {
         for (const serviceGroup in serviceGroups) {
             if (serviceGroups && typeof serviceGroups === 'object' && Object.hasOwn(serviceGroups, serviceGroup)) {
                 jsx.push(<div key={serviceGroup}><Typography variant="caption">{serviceGroup}</Typography></div>);
-                jsx.push(serviceGroups[serviceGroup].map(service => (
+                jsx.push(serviceGroups[serviceGroup]
+                    .filter(s => s.hidden === false)
+                    .map(service => (
                     <span key={service.id}>
                         <Chip
                             key={service.id}
@@ -635,7 +637,7 @@ class Reserve extends TrackedComponent {
                         {loadingReservation ? (
                             <Spinner />
                         ) : (
-                            <Grid container spacing={24}>
+                            <Grid container spacing={2}>
                                 <Grid item xs={12} md={6}>
                                     {this.getServiceListComponent(configuration.services, selectedServices, classes)}
                                     <div className={classes.actionsContainer}>
@@ -723,27 +725,15 @@ class Reserve extends TrackedComponent {
                                 value={`${timeSelected && selectedDate.hour()}`}
                                 onChange={this.handleTimeSelectionComplete}
                             >
-                                <FormControlLabel
-                                    value="8"
-                                    control={<Radio />}
-                                    label={`8:00 AM - 11:00 AM ${this.getSlotReservationPercentage(0)}`}
-                                    disabled={disabledSlots[0]}
-                                    id="reserve-slot-0"
-                                />
-                                <FormControlLabel
-                                    value="11"
-                                    control={<Radio />}
-                                    label={`11:00 AM - 2:00 PM ${this.getSlotReservationPercentage(1)}`}
-                                    disabled={disabledSlots[1]}
-                                    id="reserve-slot-1"
-                                />
-                                <FormControlLabel
-                                    value="14"
-                                    control={<Radio />}
-                                    label={`2:00 PM - 5:00 PM ${this.getSlotReservationPercentage(2)}`}
-                                    disabled={disabledSlots[2]}
-                                    id="reserve-slot-2"
-                                />
+                                {configuration.slots.map(slot => (
+                                    <FormControlLabel
+                                        value={slot.startTime}
+                                        control={<Radio />}
+                                        label={`${slot.startTime}:00 - ${slot.endTime}:00 ${this.getSlotReservationPercentage(0)}`}
+                                        disabled={disabledSlots[0]}
+                                        id={`reserve-slot-${slot.startTime}`}
+                                    />
+                                ))}
                             </RadioGroup>
                         </FormControl>
                         <div className={classes.actionsContainer}>
@@ -836,14 +826,12 @@ class Reserve extends TrackedComponent {
                                                     id: 'garage',
                                                 }}
                                             >
-                                                <MenuItem value="M">M</MenuItem>
-                                                <MenuItem value="S1">S1</MenuItem>
-                                                <MenuItem value="GS">GS</MenuItem>
-                                                <MenuItem value="HX">HX</MenuItem>
+                                                {configuration.garages.map(g => (
+                                                    <MenuItem value={g.building} key={g.building}>{g.building}</MenuItem>
+                                                ))}
                                             </Select>
                                         </FormControl>
-                                        {garage &&
-                                            Garages[garage] && (
+                                        {garage && configuration.garages.some(g => g.building === garage) && (
                                             <FormControl className={classes.formControl} error={validationErrors.floor}>
                                                 <InputLabel htmlFor="floor">Floor</InputLabel>
                                                 <Select
@@ -855,10 +843,8 @@ class Reserve extends TrackedComponent {
                                                         id: 'floor',
                                                     }}
                                                 >
-                                                    {Garages[garage].map(item => (
-                                                        <MenuItem value={item} key={item}>
-                                                            {item}
-                                                        </MenuItem>
+                                                    {configuration.garages.find(g => g.building === garage).floors.map(f => (
+                                                        <MenuItem value={f} key={f}>{f}</MenuItem>
                                                     ))}
                                                 </Select>
                                             </FormControl>
