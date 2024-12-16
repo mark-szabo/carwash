@@ -568,6 +568,26 @@ class Reserve extends TrackedComponent {
         return jsx;
     };
 
+    getSlotsComponent = (slots, disabledSlots) => {
+        const jsx = [];
+        let i = 0;
+
+        for (const slot of slots) {
+            jsx.push(
+                <FormControlLabel
+                    value={slot.startTime}
+                    control={<Radio />}
+                    label={`${slot.startTime}:00 - ${slot.endTime}:00 ${this.getSlotReservationPercentage(i)}`}
+                    disabled={disabledSlots[i]}
+                    id={`reserve-slot-${i}`}
+                />
+            );
+            i++;
+        }
+
+        return jsx;
+    };
+
     render() {
         const { classes, user, configuration } = this.props;
         const {
@@ -725,15 +745,7 @@ class Reserve extends TrackedComponent {
                                 value={`${timeSelected && selectedDate.hour()}`}
                                 onChange={this.handleTimeSelectionComplete}
                             >
-                                {configuration.slots.map(slot => (
-                                    <FormControlLabel
-                                        value={slot.startTime}
-                                        control={<Radio />}
-                                        label={`${slot.startTime}:00 - ${slot.endTime}:00 ${this.getSlotReservationPercentage(0)}`}
-                                        disabled={disabledSlots[0]}
-                                        id={`reserve-slot-${slot.startTime}`}
-                                    />
-                                ))}
+                                {this.getSlotsComponent(configuration.slots, disabledSlots)}
                             </RadioGroup>
                         </FormControl>
                         <div className={classes.actionsContainer}>
