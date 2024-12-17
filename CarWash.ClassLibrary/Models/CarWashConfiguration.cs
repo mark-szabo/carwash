@@ -151,6 +151,16 @@ namespace CarWash.ClassLibrary.Models
         public CalendarServiceConfiguration CalendarService { get; set; } = new CalendarServiceConfiguration();
 
         /// <summary>
+        /// Generated build number during CI/CD.
+        /// </summary>
+        public string BuildNumber { get; set; } = "";
+
+        /// <summary>
+        /// Application version number.
+        /// </summary>
+        public string Version { get; set; } = "";
+
+        /// <summary>
         /// CarWash app settings referring to reservations.
         /// </summary>
         /// <remarks>

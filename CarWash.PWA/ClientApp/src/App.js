@@ -461,7 +461,7 @@ export default class App extends Component {
                 <ThemeProvider theme={theme}>
                     <CssBaseline enableColorScheme />
                     <ErrorBoundary>
-                        <Layout user={user}>
+                        <Layout user={user} configuration={configuration}>
                             <Switch>
                                 <Route
                                     exact

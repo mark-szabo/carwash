@@ -16,7 +16,7 @@ workbox.core.setCacheNameDetails({
 // Don't forget to increase the revision number of index.html (aka. '/')
 // as it is needed to include the newly genereted js and css files.
 // Error would be thrown: Refused to execute script from '...' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled.
-const build = '2.2.1';
+const build = '2.3.10';
 console.log(`Build: ${build}`);
 workbox.precaching.precacheAndRoute([
     { url: '/', revision: build.replace(/\./g, '') },
@@ -32,6 +32,15 @@ workbox.precaching.precacheAndRoute([
 ]);
 
 const bgSyncPlugin = new workbox.backgroundSync.Plugin('bgSyncQueue');
+
+// [NETWORK FIRST] Cache index.html from 'GET /'
+workbox.routing.registerRoute(
+    ({ url }) => url.pathname === '/',
+    workbox.strategies.networkFirst({
+        cacheName: 'html-cache',
+        plugins: [bgSyncPlugin],
+    })
+);
 
 // [NETWORK FIRST] Cache reservation list from 'GET /api/reservations'
 workbox.routing.registerRoute(
@@ -171,7 +180,7 @@ self.addEventListener('notificationclick', event => {
             .then(clientList => {
                 for (let i = 0; i < clientList.length; i++) {
                     const client = clientList[i];
-                    if (client.url === 'https://carwashu.azurewebsites.net/' && 'focus' in client) return client.focus();
+                    if (client.url === 'https://mimosonk.hu/' && 'focus' in client) return client.focus();
                 }
                 if (clients.openWindow) return clients.openWindow('/');
                 return null;

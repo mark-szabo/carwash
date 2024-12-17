@@ -1,6 +1,6 @@
 {
     "name": "carwash_pwa",
-    "version": "2.3.0",
+    "version": "2.3.10",
     "private": true,
     "description": "This app is intended to help employees working in Graphisoft park (Budapest, Hungary) reserve car washing services.",
     "repository": {
