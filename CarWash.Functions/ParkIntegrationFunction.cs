@@ -16,7 +16,7 @@ using Microsoft.Azure.Functions.Worker;
 
 namespace CarWash.Functions
 {
-    public static class ParkIntegrationFunction
+    public class ParkIntegrationFunction(ILogger<ParkIntegrationFunction> log)
     {
         private static readonly HttpClient _client = new HttpClient();
         private static readonly FunctionsDbContext _context = new FunctionsDbContext();
@@ -35,9 +35,8 @@ namespace CarWash.Functions
         /// Debug every 15 seconds: "0,15,30,45 * * * * *"
         /// </summary>
         /// <param name="timer"></param>
-        /// <param name="log"></param>
         [Function("ParkIntegrationFunction")]
-        public static async Task RunAsync([TimerTrigger("0 * 6-15 * * 1-5")]TimerInfo timer, ILogger log)
+        public async Task RunAsync([TimerTrigger("0 * 6-15 * * 1-5")] TimerInfo timer)
         {
             log.LogInformation($"Park integration function executed at: {DateTime.Now}");
             var watch = Stopwatch.StartNew();

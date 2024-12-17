@@ -11,7 +11,7 @@ using Microsoft.Azure.Functions.Worker;
 
 namespace CarWash.Functions
 {
-    public static class ReminderFunction
+    public class ReminderFunction(ILogger<ReminderFunction> log)
     {
         private static readonly FunctionsDbContext _context = new FunctionsDbContext();
 
@@ -32,9 +32,8 @@ namespace CarWash.Functions
         /// Debug every 15 seconds: "0,15,30,45 * * * * *"
         /// </summary>
         /// <param name="timer"></param>
-        /// <param name="log"></param>
         [Function("ReminderFunction")]
-        public static async Task Run([TimerTrigger("*/10 * * * *")]TimerInfo timer, ILogger log)
+        public async Task Run([TimerTrigger("*/10 * * * *")] TimerInfo timer)
         {
             log.LogInformation($"Reminder function executed at: {DateTime.Now}");
             var watch = Stopwatch.StartNew();
