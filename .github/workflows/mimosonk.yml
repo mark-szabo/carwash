@@ -1,53 +1,53 @@
 name: Build and deploy to PROD
 on:
-  push:
-    branches:
-    - main
+    push:
+        branches:
+            - main
 env:
-  AZURE_WEBAPP_NAME: mimosonk
-  AZURE_WEBAPP_PACKAGE_PATH: CarWash.PWA\publish
-  CONFIGURATION: Release
-  DOTNET_CORE_VERSION: 8.0.x
-  WORKING_DIRECTORY: CarWash.PWA
+    AZURE_WEBAPP_NAME: mimosonk
+    AZURE_WEBAPP_PACKAGE_PATH: CarWash.PWA\publish
+    CONFIGURATION: Release
+    DOTNET_CORE_VERSION: 8.0.x
+    WORKING_DIRECTORY: CarWash.PWA
 jobs:
-  build:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
-    - name: Read version number from package.json
-      id: build_number
-      run: echo "BUILD_NUMBER=$(cat ${{ env.WORKING_DIRECTORY }}/ClientApp/package.json | jq '.version')" >> $GITHUB_ENV
-    - name: Create .env file with build number
-      run: echo "REACT_APP_BUILD_NUMBER=${{ steps.build_number.outputs.BUILD_NUMBER }}" > ${{ env.WORKING_DIRECTORY }}/.env
-    - name: Restore
-      run: dotnet restore "${{ env.WORKING_DIRECTORY }}"
-    - name: Build
-      run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
-    - name: Test
-      run: dotnet test "${{ env.WORKING_DIRECTORY }}" --no-build
-    - name: Publish
-      run: dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
-    - name: Publish Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: webapp
-        path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-  deploy:
-    runs-on: windows-latest
-    needs: build
-    steps:
-    - name: Download artifact from build job
-      uses: actions/download-artifact@v3
-      with:
-        name: webapp
-        path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-    - name: Deploy to Azure WebApp
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        publish-profile: ${{ secrets.mimosonk_E838 }}
-        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+    build:
+        runs-on: windows-latest
+        steps:
+            - uses: actions/checkout@v4
+            - name: Setup .NET SDK
+              uses: actions/setup-dotnet@v3
+              with:
+                  dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+            - name: Read version number from package.json
+              id: build_number
+              run: echo "BUILD_NUMBER=$(cat ${{ env.WORKING_DIRECTORY }}/ClientApp/package.json | jq '.version')" >> $GITHUB_ENV
+            - name: Create .env file with build number
+              run: echo "REACT_APP_BUILD_NUMBER=${{ steps.build_number.outputs.BUILD_NUMBER }}" > ${{ env.WORKING_DIRECTORY }}/.env
+            - name: Restore
+              run: dotnet restore "${{ env.WORKING_DIRECTORY }}"
+            - name: Build
+              run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
+            - name: Test
+              run: dotnet test "${{ env.WORKING_DIRECTORY }}" --no-build
+            - name: Publish
+              run: dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
+            - name: Publish Artifacts
+              uses: actions/upload-artifact@v3
+              with:
+                  name: webapp
+                  path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+    deploy:
+        runs-on: windows-latest
+        needs: build
+        steps:
+            - name: Download artifact from build job
+              uses: actions/download-artifact@v3
+              with:
+                  name: webapp
+                  path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+            - name: Deploy to Azure WebApp
+              uses: azure/webapps-deploy@v2
+              with:
+                  app-name: ${{ env.AZURE_WEBAPP_NAME }}
+                  publish-profile: ${{ secrets.mimosonk_E838 }}
+                  package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
