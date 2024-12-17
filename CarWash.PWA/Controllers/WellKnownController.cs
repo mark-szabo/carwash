@@ -30,6 +30,8 @@ namespace CarWash.PWA.Controllers
                 Garages = configuration.Garages,
                 Services = configuration.Services,
                 ReservationSettings = configuration.Reservation,
+                BuildNumber = configuration.BuildNumber,
+                Version = configuration.Version
             };
 
             return Ok(wellKnown);

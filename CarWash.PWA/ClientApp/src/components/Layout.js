@@ -165,7 +165,7 @@ class Layout extends React.Component {
     }
 
     render() {
-        const { classes, theme, user } = this.props;
+        const { classes, theme, configuration, user } = this.props;
         const refresh = this.getRefreshFunc();
 
         const drawer = (
@@ -179,7 +179,7 @@ class Layout extends React.Component {
                 <List className={classes.menuList}>{drawerItems(this.handleDrawerClose, user)}</List>
                 <Divider />
                 <List className={classes.menuList}>{otherDrawerItems(this.handleDrawerClose)}</List>
-                <div className={classes.footer}>
+                <div className={classes.footer}> 
                     <a href="https://go.microsoft.com/fwlink/?LinkID=206977" className={classes.link}>
                         Terms of use
                     </a>
@@ -188,6 +188,9 @@ class Layout extends React.Component {
                         Privacy & cookies policy
                     </a>
                     <br />
+                    <span className={classes.madeWithLove}>
+                        Version: {process.env.REACT_APP_BUILD_NUMBER} {process.env.REACT_APP_BUILD_NUMBER !== configuration.buildNumber && (<>- Update available!</>)}
+                    </span>
                     <span className={classes.madeWithLove}>
                         Made with <FavoriteIcon className={classes.loveIcon} /> by friends at Microsoft
                     </span>
@@ -255,6 +258,7 @@ Layout.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     theme: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     location: PropTypes.object, // eslint-disable-line react/forbid-prop-types
+    configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     user: PropTypes.object, // eslint-disable-line react/forbid-prop-types
 };
 

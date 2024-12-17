@@ -35,5 +35,15 @@ namespace CarWash.ClassLibrary.Models
         /// CarWash app settings referring to reservations.
         /// </summary>
         public CarWashConfiguration.ReservationSettings ReservationSettings { get; set; } = new CarWashConfiguration.ReservationSettings();
+
+        /// <summary>
+        /// Build number.
+        /// </summary>
+        public string BuildNumber { get; set; }
+
+        /// <summary>
+        /// Application version number.
+        /// </summary>
+        public string Version { get; set; }
     }
 }
