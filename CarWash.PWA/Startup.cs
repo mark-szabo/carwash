@@ -34,7 +34,6 @@ using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using System.Text.Json;
-using CarWash.ClassLibrary.Enums;
 
 namespace CarWash.PWA
 {
