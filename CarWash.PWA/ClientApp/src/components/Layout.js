@@ -179,7 +179,7 @@ class Layout extends React.Component {
                 <List className={classes.menuList}>{drawerItems(this.handleDrawerClose, user)}</List>
                 <Divider />
                 <List className={classes.menuList}>{otherDrawerItems(this.handleDrawerClose)}</List>
-                <div className={classes.footer}> 
+                <div className={classes.footer}>
                     <a href="https://go.microsoft.com/fwlink/?LinkID=206977" className={classes.link}>
                         Terms of use
                     </a>
@@ -189,7 +189,8 @@ class Layout extends React.Component {
                     </a>
                     <br />
                     <span className={classes.madeWithLove}>
-                        Version: {process.env.REACT_APP_BUILD_NUMBER} {process.env.REACT_APP_BUILD_NUMBER !== configuration.buildNumber && (<>- Update available!</>)}
+                        Version: {process.env.REACT_APP_BUILD_NUMBER}
+                        {process.env.REACT_APP_BUILD_NUMBER !== configuration.buildNumber && (<> - Update available!</>)}
                     </span>
                     <span className={classes.madeWithLove}>
                         Made with <FavoriteIcon className={classes.loveIcon} /> by friends at Microsoft
