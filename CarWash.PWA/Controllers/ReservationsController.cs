@@ -1593,13 +1593,13 @@ namespace CarWash.PWA.Controllers
             if ((date.Date == DateTime.Today && DateTime.Now.Hour >= _configuration.Reservation.HoursAfterCompanyLimitIsNotChecked)
                 || userCompanyLimit == 0)
             {
-                var allCompanyLimit = await _context.Company.SumAsync(c => c.DailyLimit);
+                var allSlotCapacity = _configuration.Slots.Sum(s => s.Capacity);
 
                 var reservedTimeOnDate = await _context.Reservation
                     .Where(r => r.StartDate.Date == date.Date)
                     .SumAsync(r => r.TimeRequirement);
 
-                if (reservedTimeOnDate + timeRequirement > allCompanyLimit * _configuration.Reservation.TimeUnit) return false;
+                if (reservedTimeOnDate + timeRequirement > allSlotCapacity * _configuration.Reservation.TimeUnit) return false;
             }
             else
             {
