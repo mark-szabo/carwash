@@ -28,12 +28,12 @@ namespace CarWash.Functions
 
         /// <summary>
         /// Checks for reservations where a reminder should be sent to drop-off the key and confirm vehicle location
-        /// This function will get triggered/executed every 10 minutes: "*/10 * * * *"
+        /// This function will get triggered/executed every 10 minutes: "0 */10 * * * *"
         /// Debug every 15 seconds: "0,15,30,45 * * * * *"
         /// </summary>
         /// <param name="timer"></param>
         [Function("ReminderFunction")]
-        public async Task Run([TimerTrigger("*/10 * * * *")] TimerInfo timer)
+        public async Task Run([TimerTrigger("0 */10 * * * *")] TimerInfo timer)
         {
             log.LogInformation($"Reminder function executed at: {DateTime.Now}");
             var watch = Stopwatch.StartNew();
