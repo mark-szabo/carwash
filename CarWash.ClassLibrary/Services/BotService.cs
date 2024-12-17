@@ -79,6 +79,12 @@ namespace CarWash.ClassLibrary.Services
         {
             try
             {
+                if (_configuration.ConnectionStrings.ServiceBus == null)
+                {
+                    // ServiceBus is not configured, do nothing
+                    return;
+                }
+
                 // since ServiceBusClient implements IAsyncDisposable we create it with "await using"
                 await using var client = new ServiceBusClient(_configuration.ConnectionStrings.ServiceBus);
 
