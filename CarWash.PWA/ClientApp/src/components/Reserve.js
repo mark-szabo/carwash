@@ -774,6 +774,10 @@ class Reserve extends TrackedComponent {
                             <Spinner />
                         ) : (
                             <div>
+                                <Alert variant="outlined" severity="warning" className={classes.infoAlert}>
+                                    Failure to specify a private reservation will result in the associated company being billed.
+                                    Users will be charged for overhead accounting costs incurred to correct errors.
+                                </Alert>
                                 <div>
                                     <FormGroup className={classes.checkbox}>
                                         <FormControlLabel
