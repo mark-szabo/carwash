@@ -912,9 +912,9 @@ namespace CarWash.PWA.Controllers
             switch (reservation.User.NotificationChannel)
             {
                 case NotificationChannel.Disabled:
+                    break;
                 case NotificationChannel.NotSet:
                 case NotificationChannel.Email:
-                    break;
                 case NotificationChannel.Push:
                     var notification = new Notification
                     {
