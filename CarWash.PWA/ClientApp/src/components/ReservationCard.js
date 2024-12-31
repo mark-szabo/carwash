@@ -100,23 +100,20 @@ function ReservationCard(props) {
     const [dropoffDialogOpen, setDropoffDialogOpen] = useState(props.dropoffDialogOpen);
     const [garage, setGarage] = useState('');
     const [floor, setFloor] = useState('');
-    const [seat, setSeat] = useState('');
+    const [spot, setSpot] = useState('');
     const [validationErrors, setValidationErrors] = useState({ garage: false, floor: false });
     const history = useHistory();
 
     useEffect(() => {
-        let garage = props.lastSettings.garage;
-        let floor = '';
-        let seat = '';
+        if (reservation.location) {
+            const [g, f, s] = reservation.location.split('/');
+            setGarage(g || '');
+            setFloor(f || '');
+            setSpot(s || '');
+        }
+    }, [props.lastSettings.garage, reservation.location]);
 
-        if (props.reservation.location) [garage, floor, seat] = props.reservation.location.split('/');
-
-        setGarage(garage || '');
-        setFloor(floor || '');
-        setSeat(seat || '');
-    }, [props.lastSettings.garage, props.reservation.location]);
-
-    const getButtons = (reservation, classes) => {
+    const getButtons = () => {
         switch (reservation.state) {
             case 0:
             case 1:
@@ -172,17 +169,17 @@ function ReservationCard(props) {
     const handleCancelConfirmed = () => {
         setCancelDialogOpen(false);
 
-        apiFetch(`api/reservations/${props.reservation.id}`, {
+        apiFetch(`api/reservations/${reservation.id}`, {
             method: 'DELETE',
         }).then(
             () => {
                 props.openSnackbar('Reservation successfully canceled.');
 
                 // Remove deleted reservation from reservations
-                props.removeReservation(props.reservation.id);
+                props.removeReservation(reservation.id);
 
                 // Broadcast using SignalR
-                props.invokeBacklogHub(BacklogHubMethods.ReservationDeleted, props.reservation.id);
+                props.invokeBacklogHub(BacklogHubMethods.ReservationDeleted, reservation.id);
             },
             error => {
                 props.openSnackbar(error);
@@ -199,18 +196,17 @@ function ReservationCard(props) {
     };
 
     const handleDropoffConfirmed = () => {
-        const validationErrors = {
+        const errors = {
             garage: garage === '',
             floor: floor === '',
         };
 
-        if (validationErrors.vehiclePlateNumber || validationErrors.garage || validationErrors.floor) {
-            setValidationErrors(validationErrors);
+        if (errors.garage || errors.floor) {
+            setValidationErrors(errors);
             return;
         }
 
-        const reservation = props.reservation;
-        reservation.location = `${garage}/${floor}/${seat}`;
+        reservation.location = `${garage}/${floor}/${spot}`;
         const oldState = reservation.state;
         reservation.state = State.CarKeyLeftAndLocationConfirmed;
 
@@ -220,9 +216,9 @@ function ReservationCard(props) {
 
         props.updateReservation(reservation);
 
-        apiFetch(`api/reservations/${props.reservation.id}/confirmdropoff`, {
+        apiFetch(`api/reservations/${reservation.id}/confirmdropoff`, {
             method: 'POST',
-            body: JSON.stringify(props.reservation.location),
+            body: JSON.stringify(reservation.location),
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -231,7 +227,7 @@ function ReservationCard(props) {
                 props.openSnackbar('Drop-off and location confirmed.');
 
                 // Broadcast using SignalR
-                props.invokeBacklogHub(BacklogHubMethods.ReservationDropoffConfirmed, props.reservation.id);
+                props.invokeBacklogHub(BacklogHubMethods.ReservationDropoffConfirmed, reservation.id);
             },
             error => {
                 reservation.state = oldState;
@@ -249,8 +245,8 @@ function ReservationCard(props) {
         setFloor(event.target.value);
     };
 
-    const handleSeatChange = event => {
-        setSeat(event.target.value);
+    const handleSpotChange = event => {
+        setSpot(event.target.value);
     };
 
     return (
@@ -280,34 +276,32 @@ function ReservationCard(props) {
                         title={getStateName(reservation.state)}
                         subheader={formatDate2(reservation)}
                     />
-                    {reservation.state === State.ReminderSentWaitingForKey &&
-                        moment(reservation.startDate) > moment() && (
-                            <CardContent className={classes.cardWarning}>
-                                <Alert
-                                    variant="filled"
-                                    severity="info"
-                                    className={classes.cardWarningAlert}
-                                    icon={<InfoOutlinedIcon className={classes.cardWarningAlertIcon} />}
-                                >
-                                    Drop off the key before {moment(reservation.startDate).format('h:mm A')}
-                                    or we cannot guarantee completion by {moment(reservation.endDate).format('h:mm A')}.
-                                </Alert>
-                            </CardContent>
-                        )}
-                    {reservation.state === State.ReminderSentWaitingForKey &&
-                        moment(reservation.startDate) < moment() && (
-                            <CardContent className={classes.cardWarning}>
-                                <Alert
-                                    variant="filled"
-                                    severity="error"
-                                    className={classes.cardErrorAlert}
-                                    icon={<ErrorOutlineOutlinedIcon className={classes.cardWarningAlertIcon} />}
-                                >
-                                    Key was not dropped off before {moment(reservation.startDate).format('h:mm A')}.
-                                    Completion by {moment(reservation.endDate).format('h:mm A')} is not guaranteed.
-                                </Alert>
-                            </CardContent>
-                        )}
+                    {reservation.state === State.ReminderSentWaitingForKey && moment(reservation.startDate) > moment() && (
+                        <CardContent className={classes.cardWarning}>
+                            <Alert
+                                variant="filled"
+                                severity="info"
+                                className={classes.cardWarningAlert}
+                                icon={<InfoOutlinedIcon className={classes.cardWarningAlertIcon} />}
+                            >
+                                Drop off the key before {moment(reservation.startDate).format('h:mm A')}
+                                or we cannot guarantee completion by {moment(reservation.endDate).format('h:mm A')}.
+                            </Alert>
+                        </CardContent>
+                    )}
+                    {reservation.state === State.ReminderSentWaitingForKey && moment(reservation.startDate) < moment() && (
+                        <CardContent className={classes.cardWarning}>
+                            <Alert
+                                variant="filled"
+                                severity="error"
+                                className={classes.cardErrorAlert}
+                                icon={<ErrorOutlineOutlinedIcon className={classes.cardWarningAlertIcon} />}
+                            >
+                                Key was not dropped off before {moment(reservation.startDate).format('h:mm A')}.
+                                Completion by {moment(reservation.endDate).format('h:mm A')} is not guaranteed.
+                            </Alert>
+                        </CardContent>
+                    )}
                     <CardContent>
                         <Typography variant="caption" color="textSecondary" gutterBottom>
                             Vehicle plate number
@@ -434,12 +428,12 @@ function ReservationCard(props) {
                     )}
                     {floor && (
                         <TextField
-                            id="seat"
+                            id="spot"
                             label="Spot (optional)"
-                            value={seat}
+                            value={spot}
                             className={classes.textField}
                             margin="normal"
-                            onChange={handleSeatChange}
+                            onChange={handleSpotChange}
                         />
                     )}
                 </DialogContent>
