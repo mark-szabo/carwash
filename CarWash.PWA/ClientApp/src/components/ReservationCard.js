@@ -1,4 +1,4 @@
-﻿import React, { Component } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import apiFetch from '../Auth';
 import { Link } from 'react-router-dom';
@@ -94,54 +94,46 @@ const styles = theme => ({
     },
 });
 
-class ReservationCard extends Component {
-    displayName = 'ReservationCard';
+function ReservationCard(props) {
+    const { classes, reservation, configuration, admin, style } = props;
+    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+    const [dropoffDialogOpen, setDropoffDialogOpen] = useState(false);
+    const [garage, setGarage] = useState('');
+    const [floor, setFloor] = useState('');
+    const [seat, setSeat] = useState('');
+    const [validationErrors, setValidationErrors] = useState({ garage: false, floor: false });
 
-    state = {
-        cancelDialogOpen: false,
-        dropoffDialogOpen: false,
-        garage: '',
-        floor: '',
-        seat: '',
-        validationErrors: {
-            garage: false,
-            floor: false,
-        },
-    };
+    useEffect(() => {
+        let garage = props.lastSettings.garage;
+        let floor = '';
+        let seat = '';
 
-    componentDidMount() {
-        let garage;
-        let floor;
-        let seat;
+        if (props.reservation.location) [garage, floor, seat] = props.reservation.location.split('/');
 
-        garage = this.props.lastSettings.garage;
-        if (this.props.reservation.location) [garage, floor, seat] = this.props.reservation.location.split('/');
+        setGarage(garage || '');
+        setFloor(floor || '');
+        setSeat(seat || '');
+    }, [props.lastSettings.garage, props.reservation.location]);
 
-        garage = garage || '';
-        floor = floor || '';
-        seat = seat || '';
-
-        this.setState({
-            garage,
-            floor,
-            seat,
-        });
-    }
-
-    getButtons = (reservation, classes) => {
+    const getButtons = (reservation, classes) => {
         switch (reservation.state) {
             case 0:
             case 1:
                 if (moment(reservation.startDate).isSame(moment(), 'day')) {
                     return (
                         <CardActions className={classes.cardActions}>
-                            <Button size="small" color="primary" variant="outlined" onClick={this.handleDropoffDialogOpen}>
+                            <Button size="small" color="primary" variant="outlined" onClick={handleDropoffDialogOpen}>
                                 Confirm key drop-off
                             </Button>
                             <Button component={Link} to={`/reserve/${reservation.id}`} size="small" color="primary">
                                 Edit
                             </Button>
-                            <Button size="small" color="secondary" className={classes.dangerButton} onClick={this.handleCancelDialogOpen}>
+                            <Button
+                                size="small"
+                                color="secondary"
+                                className={classes.dangerButton}
+                                onClick={handleCancelDialogOpen}
+                            >
                                 Cancel
                             </Button>
                         </CardActions>
@@ -153,7 +145,12 @@ class ReservationCard extends Component {
                         <Button component={Link} to={`/reserve/${reservation.id}`} size="small" color="primary">
                             Edit
                         </Button>
-                        <Button size="small" color="secondary" className={classes.dangerButton} onClick={this.handleCancelDialogOpen}>
+                        <Button
+                            size="small"
+                            color="secondary"
+                            className={classes.dangerButton}
+                            onClick={handleCancelDialogOpen}
+                        >
                             Cancel
                         </Button>
                     </CardActions>
@@ -163,130 +160,125 @@ class ReservationCard extends Component {
         }
     };
 
-    handleCancelDialogOpen = () => {
-        this.setState({ cancelDialogOpen: true });
+    const handleCancelDialogOpen = () => {
+        setCancelDialogOpen(true);
     };
 
-    handleCancelDialogClose = () => {
-        this.setState({ cancelDialogOpen: false });
+    const handleCancelDialogClose = () => {
+        setCancelDialogOpen(false);
     };
 
-    handleCancelConfirmed = () => {
-        this.setState({ cancelDialogOpen: false });
+    const handleCancelConfirmed = () => {
+        setCancelDialogOpen(false);
 
-        apiFetch(`api/reservations/${this.props.reservation.id}`, {
+        apiFetch(`api/reservations/${props.reservation.id}`, {
             method: 'DELETE',
         }).then(
             () => {
-                this.props.openSnackbar('Reservation successfully canceled.');
+                props.openSnackbar('Reservation successfully canceled.');
 
                 // Remove deleted reservation from reservations
-                this.props.removeReservation(this.props.reservation.id);
+                props.removeReservation(props.reservation.id);
 
                 // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationDeleted, this.props.reservation.id);
+                props.invokeBacklogHub(BacklogHubMethods.ReservationDeleted, props.reservation.id);
             },
             error => {
-                this.props.openSnackbar(error);
+                props.openSnackbar(error);
             }
         );
     };
 
-    handleDropoffDialogOpen = () => {
-        this.setState({ dropoffDialogOpen: true });
+    const handleDropoffDialogOpen = () => {
+        setDropoffDialogOpen(true);
     };
 
-    handleDropoffDialogClose = () => {
-        this.setState({ dropoffDialogOpen: false });
+    const handleDropoffDialogClose = () => {
+        setDropoffDialogOpen(false);
     };
 
-    handleDropoffConfirmed = () => {
+    const handleDropoffConfirmed = () => {
         const validationErrors = {
-            garage: this.state.garage === '',
-            floor: this.state.floor === '',
+            garage: garage === '',
+            floor: floor === '',
         };
 
         if (validationErrors.vehiclePlateNumber || validationErrors.garage || validationErrors.floor) {
-            this.setState({ validationErrors });
+            setValidationErrors(validationErrors);
             return;
         }
 
-        const reservation = this.props.reservation;
-        reservation.location = `${this.state.garage}/${this.state.floor}/${this.state.seat}`;
+        const reservation = props.reservation;
+        reservation.location = `${garage}/${floor}/${seat}`;
         const oldState = reservation.state;
         reservation.state = State.CarKeyLeftAndLocationConfirmed;
 
-        this.setState({ dropoffDialogOpen: false });
+        setDropoffDialogOpen(false);
 
-        this.props.updateReservation(reservation);
+        props.updateReservation(reservation);
 
-        apiFetch(`api/reservations/${this.props.reservation.id}/confirmdropoff`, {
+        apiFetch(`api/reservations/${props.reservation.id}/confirmdropoff`, {
             method: 'POST',
-            body: JSON.stringify(this.props.reservation.location),
+            body: JSON.stringify(props.reservation.location),
             headers: {
                 'Content-Type': 'application/json',
             },
         }).then(
             () => {
-                this.props.openSnackbar('Drop-off and location confirmed.');
+                props.openSnackbar('Drop-off and location confirmed.');
 
                 // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationDropoffConfirmed, this.props.reservation.id);
+                props.invokeBacklogHub(BacklogHubMethods.ReservationDropoffConfirmed, props.reservation.id);
             },
             error => {
                 reservation.state = oldState;
-                this.props.updateReservation(reservation);
-                this.props.openSnackbar(error);
+                props.updateReservation(reservation);
+                props.openSnackbar(error);
             }
         );
     };
 
-    handleGarageChange = event => {
-        this.setState({
-            garage: event.target.value,
-        });
+    const handleGarageChange = event => {
+        setGarage(event.target.value);
     };
 
-    handleFloorChange = event => {
-        this.setState({
-            floor: event.target.value,
-        });
+    const handleFloorChange = event => {
+        setFloor(event.target.value);
     };
 
-    handleSeatChange = event => {
-        this.setState({
-            seat: event.target.value,
-        });
+    const handleSeatChange = event => {
+        setSeat(event.target.value);
     };
 
-    render() {
-        const { garage, floor, seat, validationErrors } = this.state;
-        const { classes, reservation, configuration, admin, style } = this.props;
-        return (
-            <ErrorBoundary
-                fallback={
-                    <Card className={classes.card} style={style}>
-                        <CardContent>
-                            <Typography>Failed to load card.</Typography>
-                        </CardContent>
-                    </Card>
-                }
-            >
-                <Grow in>
-                    <Card className={classes.card} style={style}>
-                        <CardMedia className={classes.media} image={`/images/state${reservation.state}.png`} />
-                        <CardHeader
-                            action={
-                                reservation.private ? (
-                                    <Tooltip disableTouchListener title="Private (car is not company-owned)">
-                                        <LockIcon alt="Private (car is not company-owned)" style={{ margin: '8px 16px 0 0' }} />
-                                    </Tooltip>
-                                ) : null
-                            }
-                            title={getStateName(reservation.state)}
-                            subheader={formatDate2(reservation)}
-                        />
-                        {reservation.state === State.ReminderSentWaitingForKey && moment(reservation.startDate) > moment() && (
+    return (
+        <ErrorBoundary
+            fallback={
+                <Card className={classes.card} style={style}>
+                    <CardContent>
+                        <Typography>Failed to load card.</Typography>
+                    </CardContent>
+                </Card>
+            }
+        >
+            <Grow in>
+                <Card className={classes.card} style={style}>
+                    <CardMedia className={classes.media} image={`/images/state${reservation.state}.png`} />
+                    <CardHeader
+                        action={
+                            reservation.private ? (
+                                <Tooltip disableTouchListener title="Private (car is not company-owned)">
+                                    <LockIcon
+                                        alt="Private (car is not company-owned)"
+                                        style={{ margin: '8px 16px 0 0' }}
+                                    />
+                                </Tooltip>
+                            ) : null
+                        }
+                        title={getStateName(reservation.state)}
+                        subheader={formatDate2(reservation)}
+                    />
+                    {reservation.state === State.ReminderSentWaitingForKey &&
+                        moment(reservation.startDate) > moment() && (
                             <CardContent className={classes.cardWarning}>
                                 <Alert
                                     variant="filled"
@@ -299,7 +291,8 @@ class ReservationCard extends Component {
                                 </Alert>
                             </CardContent>
                         )}
-                        {reservation.state === State.ReminderSentWaitingForKey && moment(reservation.startDate) < moment() && (
+                    {reservation.state === State.ReminderSentWaitingForKey &&
+                        moment(reservation.startDate) < moment() && (
                             <CardContent className={classes.cardWarning}>
                                 <Alert
                                     variant="filled"
@@ -312,127 +305,152 @@ class ReservationCard extends Component {
                                 </Alert>
                             </CardContent>
                         )}
-                        <CardContent>
-                            <Typography variant="caption" color="textSecondary" gutterBottom>
-                                Vehicle plate number
-                            </Typography>
-                            <Typography gutterBottom>{reservation.vehiclePlateNumber}</Typography>
-                            {reservation.location && (
-                                <React.Fragment>
-                                    <Typography variant="caption" color="textSecondary" gutterBottom style={{ marginTop: 8 }}>
-                                        Location
-                                    </Typography>
-                                    <Typography gutterBottom>{formatLocation(reservation.location)}</Typography>
-                                </React.Fragment>
-                            )}
-                            {admin && (
-                                <React.Fragment>
-                                    <Typography variant="caption" color="textSecondary" gutterBottom style={{ marginTop: 8 }}>
-                                        Name
-                                    </Typography>
-                                    <Typography gutterBottom>
-                                        {reservation.user.firstName} {reservation.user.lastName}
-                                    </Typography>
-                                </React.Fragment>
-                            )}
-                            <Comments commentOutgoing={reservation.comment} commentIncoming={reservation.carwashComment} commentIncomingName="CarWash" />
-                            <Divider className={classes.divider} />
-                            <Typography variant="subtitle1">Selected services</Typography>
-                            {reservation.services.map(serviceId => (
-                                <Chip label={getServiceName(configuration, serviceId)} className={classes.chip} key={serviceId} />
-                            ))}
-                        </CardContent>
-                        {this.getButtons(reservation, classes, this.handleCancelDialogOpen)}
-                    </Card>
-                </Grow>
-                <Dialog
-                    open={this.state.cancelDialogOpen}
-                    onClose={this.handleCancelDialogClose}
-                    aria-labelledby="cancel-dialog-title"
-                    aria-describedby="cancel-dialog-title"
-                >
-                    <DialogTitle id="cancel-dialog-title">Cancel this reservation?</DialogTitle>
-                    <DialogActions>
-                        <Button onClick={this.handleCancelDialogClose} color="primary" id="reservationcard-dontcancel-button">
-                            Don't cancel
-                        </Button>
-                        <Button
-                            onClick={this.handleCancelConfirmed}
-                            color="primary"
-                            className={classes.dangerButton}
-                            autoFocus
-                            id="reservationcard-cancel-button"
+                    <CardContent>
+                        <Typography variant="caption" color="textSecondary" gutterBottom>
+                            Vehicle plate number
+                        </Typography>
+                        <Typography gutterBottom>{reservation.vehiclePlateNumber}</Typography>
+                        {reservation.location && (
+                            <React.Fragment>
+                                <Typography
+                                    variant="caption"
+                                    color="textSecondary"
+                                    gutterBottom
+                                    style={{ marginTop: 8 }}
+                                >
+                                    Location
+                                </Typography>
+                                <Typography gutterBottom>{formatLocation(reservation.location)}</Typography>
+                            </React.Fragment>
+                        )}
+                        {admin && (
+                            <React.Fragment>
+                                <Typography
+                                    variant="caption"
+                                    color="textSecondary"
+                                    gutterBottom
+                                    style={{ marginTop: 8 }}
+                                >
+                                    Name
+                                </Typography>
+                                <Typography gutterBottom>
+                                    {reservation.user.firstName} {reservation.user.lastName}
+                                </Typography>
+                            </React.Fragment>
+                        )}
+                        <Comments
+                            commentOutgoing={reservation.comment}
+                            commentIncoming={reservation.carwashComment}
+                            commentIncomingName="CarWash"
+                        />
+                        <Divider className={classes.divider} />
+                        <Typography variant="subtitle1">Selected services</Typography>
+                        {reservation.services.map(serviceId => (
+                            <Chip
+                                label={getServiceName(configuration, serviceId)}
+                                className={classes.chip}
+                                key={serviceId}
+                            />
+                        ))}
+                    </CardContent>
+                    {getButtons(reservation, classes)}
+                </Card>
+            </Grow>
+            <Dialog
+                open={cancelDialogOpen}
+                onClose={handleCancelDialogClose}
+                aria-labelledby="cancel-dialog-title"
+                aria-describedby="cancel-dialog-title"
+            >
+                <DialogTitle id="cancel-dialog-title">Cancel this reservation?</DialogTitle>
+                <DialogActions>
+                    <Button onClick={handleCancelDialogClose} color="primary" id="reservationcard-dontcancel-button">
+                        Don't cancel
+                    </Button>
+                    <Button
+                        onClick={handleCancelConfirmed}
+                        color="primary"
+                        className={classes.dangerButton}
+                        autoFocus
+                        id="reservationcard-cancel-button"
+                    >
+                        Cancel
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog
+                open={dropoffDialogOpen}
+                onClose={handleDropoffDialogClose}
+                aria-labelledby="dropoff-dialog-title"
+                aria-describedby="dropoff-dialog-title"
+            >
+                <DialogTitle id="dropoff-dialog-title">Confirm drop-off and location</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Please drop-off the key at the reception and confirm vehicle location!
+                    </DialogContentText>
+                    <FormControl className={classes.formControl} error={validationErrors.garage}>
+                        <InputLabel htmlFor="garage">Building</InputLabel>
+                        <Select
+                            required
+                            value={garage}
+                            onChange={handleGarageChange}
+                            inputProps={{
+                                name: 'garage',
+                                id: 'garage',
+                            }}
                         >
-                            Cancel
-                        </Button>
-                    </DialogActions>
-                </Dialog>
-                <Dialog
-                    open={this.state.dropoffDialogOpen}
-                    onClose={this.handleDropoffDialogClose}
-                    aria-labelledby="dropoff-dialog-title"
-                    aria-describedby="dropoff-dialog-title"
-                >
-                    <DialogTitle id="dropoff-dialog-title">Confirm drop-off and location</DialogTitle>
-                    <DialogContent>
-                        <DialogContentText>Please drop-off the key at the reception and confirm vehicle location!</DialogContentText>
-                        <FormControl className={classes.formControl} error={validationErrors.garage}>
-                            <InputLabel htmlFor="garage">Building</InputLabel>
+                            {configuration.garages.map(g => (
+                                <MenuItem key={g.building} value={g.building}>
+                                    {g.building}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    {garage && configuration.garages.some(g => g.building === garage) && (
+                        <FormControl className={classes.formControl} error={validationErrors.floor}>
+                            <InputLabel htmlFor="floor">Floor</InputLabel>
                             <Select
                                 required
-                                value={garage}
-                                onChange={this.handleGarageChange}
+                                value={floor}
+                                onChange={handleFloorChange}
                                 inputProps={{
-                                    name: 'garage',
-                                    id: 'garage',
+                                    name: 'floor',
+                                    id: 'floor',
                                 }}
                             >
-                                {configuration.garages.map(g => (
-                                    <MenuItem key={g.building} value={g.building}>{g.building}</MenuItem>
-                                ))}
+                                {configuration.garages
+                                    .find(g => g.building === garage)
+                                    .floors.map(f => (
+                                        <MenuItem value={f} key={f}>
+                                            {f}
+                                        </MenuItem>
+                                    ))}
                             </Select>
                         </FormControl>
-                        {garage && configuration.garages.some(g => g.building === garage) && (
-                            <FormControl className={classes.formControl} error={validationErrors.floor}>
-                                <InputLabel htmlFor="floor">Floor</InputLabel>
-                                <Select
-                                    required
-                                    value={floor}
-                                    onChange={this.handleFloorChange}
-                                    inputProps={{
-                                        name: 'floor',
-                                        id: 'floor',
-                                    }}
-                                >
-                                    {configuration.garages.find(g => g.building === garage).floors.map(f => (
-                                        <MenuItem value={f} key={f}>{f}</MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        )}
-                        {floor && (
-                            <TextField
-                                id="seat"
-                                label="Spot (optional)"
-                                value={seat}
-                                className={classes.textField}
-                                margin="normal"
-                                onChange={this.handleSeatChange}
-                            />
-                        )}
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={this.handleDropoffDialogClose} color="primary">
-                            Cancel
-                        </Button>
-                        <Button onClick={this.handleDropoffConfirmed} color="primary" autoFocus>
-                            Confirm
-                        </Button>
-                    </DialogActions>
-                </Dialog>
-            </ErrorBoundary>
-        );
-    }
+                    )}
+                    {floor && (
+                        <TextField
+                            id="seat"
+                            label="Spot (optional)"
+                            value={seat}
+                            className={classes.textField}
+                            margin="normal"
+                            onChange={handleSeatChange}
+                        />
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleDropoffDialogClose} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleDropoffConfirmed} color="primary" autoFocus>
+                        Confirm
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </ErrorBoundary>
+    );
 }
 
 ReservationCard.propTypes = {
