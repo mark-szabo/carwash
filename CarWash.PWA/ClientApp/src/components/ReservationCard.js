@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import apiFetch from '../Auth';
 import { Link } from 'react-router-dom';
 import { withStyles } from '@mui/styles';
+import Alert from '@mui/material/Alert';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
@@ -12,6 +13,8 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Grow from '@mui/material/Grow';
 import LockIcon from '@mui/icons-material/Lock';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import Dialog from '@mui/material/Dialog';
@@ -50,6 +53,19 @@ const styles = theme => ({
         display: 'flex',
         flexDirection: 'column',
         minHeight: 400,
+    },
+    cardWarning: {
+        padding: 0,
+    },
+    cardWarningAlert: {
+        borderRadius: 0,
+        backgroundColor: theme.palette.primary.main,
+    },
+    cardErrorAlert: {
+        borderRadius: 0,
+    },
+    cardWarningAlertIcon: {
+        height: 'auto',
     },
     cardActions: {
         padding: '8px 12px 12px 12px',
@@ -270,6 +286,32 @@ class ReservationCard extends Component {
                             title={getStateName(reservation.state)}
                             subheader={formatDate2(reservation)}
                         />
+                        {reservation.state === State.ReminderSentWaitingForKey && moment(reservation.startDate) > moment() && (
+                            <CardContent className={classes.cardWarning}>
+                                <Alert
+                                    variant="filled"
+                                    severity="info"
+                                    className={classes.cardWarningAlert}
+                                    icon={<InfoOutlinedIcon className={classes.cardWarningAlertIcon} />}
+                                >
+                                    Drop off the key before {moment(reservation.startDate).format('h:mm A')}
+                                    or we cannot guarantee completion by {moment(reservation.endDate).format('h:mm A')}.
+                                </Alert>
+                            </CardContent>
+                        )}
+                        {reservation.state === State.ReminderSentWaitingForKey && moment(reservation.startDate) < moment() && (
+                            <CardContent className={classes.cardWarning}>
+                                <Alert
+                                    variant="filled"
+                                    severity="error"
+                                    className={classes.cardErrorAlert}
+                                    icon={<ErrorOutlineOutlinedIcon className={classes.cardWarningAlertIcon} />}
+                                >
+                                    Key was not dropped off before {moment(reservation.startDate).format('h:mm A')}.
+                                    Completion by {moment(reservation.endDate).format('h:mm A')} is not guaranteed.
+                                </Alert>
+                            </CardContent>
+                        )}
                         <CardContent>
                             <Typography variant="caption" color="textSecondary" gutterBottom>
                                 Vehicle plate number
