@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import apiFetch from '../Auth';
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import { withStyles } from '@mui/styles';
 import Alert from '@mui/material/Alert';
 import Card from '@mui/material/Card';
@@ -97,11 +97,12 @@ const styles = theme => ({
 function ReservationCard(props) {
     const { classes, reservation, configuration, admin, style } = props;
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-    const [dropoffDialogOpen, setDropoffDialogOpen] = useState(false);
+    const [dropoffDialogOpen, setDropoffDialogOpen] = useState(props.dropoffDialogOpen);
     const [garage, setGarage] = useState('');
     const [floor, setFloor] = useState('');
     const [seat, setSeat] = useState('');
     const [validationErrors, setValidationErrors] = useState({ garage: false, floor: false });
+    const history = useHistory();
 
     useEffect(() => {
         let garage = props.lastSettings.garage;
@@ -214,6 +215,8 @@ function ReservationCard(props) {
         reservation.state = State.CarKeyLeftAndLocationConfirmed;
 
         setDropoffDialogOpen(false);
+
+        history.replace('/');
 
         props.updateReservation(reservation);
 
@@ -462,6 +465,7 @@ ReservationCard.propTypes = {
     invokeBacklogHub: PropTypes.func.isRequired,
     lastSettings: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
+    dropoffDialogOpen: PropTypes.bool.isRequired,
     admin: PropTypes.bool,
 };
 
