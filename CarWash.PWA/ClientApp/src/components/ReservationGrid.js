@@ -121,6 +121,9 @@ class ReservationGrid extends React.PureComponent {
 
     cellRenderer = ({ index, key, parent, style }) => {
         const reservations = this.reorderReservations(this.props.reservations);
+        const waitingForKey = reservations.filter(r => r.state === State.ReminderSentWaitingForKey);
+        const reservationIdToOpenDropoffDialog = this.props.dropoffDeepLink && waitingForKey.length > 0 ? waitingForKey[0].id : null;
+
         const { removeReservation, updateReservation, invokeBacklogHub, openSnackbar, lastSettings, admin } = this.props;
 
         if (!reservations[index]) return null;
@@ -136,6 +139,7 @@ class ReservationGrid extends React.PureComponent {
                     lastSettings={lastSettings}
                     openSnackbar={openSnackbar}
                     admin={admin}
+                    dropoffDialogOpen={reservations[index].id === reservationIdToOpenDropoffDialog}
                     style={{
                         ...style,
                         width: CARD_WIDTH,
@@ -205,6 +209,7 @@ ReservationGrid.propTypes = {
     lastSettings: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
     admin: PropTypes.bool,
+    dropoffDeepLink: PropTypes.bool,
 };
 
 export default withStyles(styles)(ReservationGrid);

@@ -1,6 +1,9 @@
 {
   /* See all the pre-defined configs here: https://www.npmjs.com/package/eslint-config-defaults */
-  "extends": "defaults/configurations/airbnb/es6",
+  "extends": [
+    "defaults/configurations/airbnb/es6",
+    "prettier"
+  ],
   "parser": "@babel/eslint-parser",
   "parserOptions": {
     "requireConfigFile": false

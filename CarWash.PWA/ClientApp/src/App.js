@@ -479,6 +479,7 @@ export default class App extends Component {
                                                 invokeBacklogHub={this.invokeBacklogHub}
                                                 lastSettings={lastSettings}
                                                 openSnackbar={this.openSnackbar}
+                                                dropoffDeepLink={props.location.hash === '#dropoffkey'}
                                                 {...props}
                                             />
                                         </ErrorBoundary>

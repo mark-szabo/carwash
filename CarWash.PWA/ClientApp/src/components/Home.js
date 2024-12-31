@@ -16,6 +16,7 @@ export default class Home extends TrackedComponent {
             invokeBacklogHub,
             openSnackbar,
             lastSettings,
+            dropoffDeepLink,
         } = this.props;
 
         return (
@@ -28,6 +29,7 @@ export default class Home extends TrackedComponent {
                 invokeBacklogHub={invokeBacklogHub}
                 lastSettings={lastSettings}
                 openSnackbar={openSnackbar}
+                dropoffDeepLink={dropoffDeepLink}
             />
         );
     }
@@ -42,4 +44,5 @@ Home.propTypes = {
     invokeBacklogHub: PropTypes.func.isRequired,
     lastSettings: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
+    dropoffDeepLink: PropTypes.bool,
 };

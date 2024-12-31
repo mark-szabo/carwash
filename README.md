@@ -1,6 +1,6 @@
 # CarWash app
 
-[![License](https://img.shields.io/:license-mit-blue.svg)](http://microsoft.mit-license.org) [![Build Status](https://dev.azure.com/mark-szabo/carwash/_apis/build/status/CarWash%20CI?branchName=master)](https://dev.azure.com/mark-szabo/carwash/_build/latest?definitionId=2?branchName=master) ![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/mark-szabo/carwash/2)
+[![License](https://img.shields.io/:license-mit-blue.svg)](http://microsoft.mit-license.org) [![CodeQL Advanced](https://github.com/mark-szabo/carwash/actions/workflows/codeql.yml/badge.svg)](https://github.com/mark-szabo/carwash/actions/workflows/codeql.yml) [![PROD](https://github.com/mark-szabo/carwash/actions/workflows/mimosonk.yml/badge.svg)](https://github.com/mark-szabo/carwash/actions/workflows/mimosonk.yml) [![Functions](https://github.com/mark-szabo/carwash/actions/workflows/main_func-carwash-mimosonk-prod.yml/badge.svg)](https://github.com/mark-szabo/carwash/actions/workflows/main_func-carwash-mimosonk-prod.yml)
 
 The CarWash app is a demo app running in production, demonstrating Microsoft Hungary's digital transformation and the benefits of using Azure platform services.
 
@@ -10,7 +10,7 @@ The CarWash app is a demo app running in production, demonstrating Microsoft Hun
 
 - Cross-platform PWA
 - Cross-company (multi-tenant)
-- Company SSO (Azure AD)
+- Company SSO (Microsoft Entra ID)
 - Reminders using either push notification or email
 - Calendar integration using meeting requests
 - Reservation management for company admins
@@ -53,4 +53,4 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 ## Copyright
 
-Copyright (c) 2018-19 Microsoft. All rights reserved.
+Copyright (c) 2018-25 EU Motorsport Service Kft. All rights reserved.
