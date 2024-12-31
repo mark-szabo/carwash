@@ -5,6 +5,7 @@
         }
     ],
     "settings": {
-        "jira-plugin.workingProject": ""
+        "jira-plugin.workingProject": "",
+        "debug.internalConsoleOptions": "neverOpen"
     }
 }
