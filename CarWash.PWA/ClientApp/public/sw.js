@@ -1,4 +1,4 @@
-﻿importScripts('https://storage.googleapis.com/workbox-cdn/releases/3.4.1/workbox-sw.js');
+﻿importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.3.0/workbox-sw.js');
 
 if (workbox) {
     console.log('Yay! Workbox is loaded 🎉');
@@ -6,9 +6,15 @@ if (workbox) {
     console.log("Boo! Workbox didn't load 😬");
 }
 
+const { NetworkFirst, StaleWhileRevalidate, CacheFirst } = workbox.strategies;
+const { BackgroundSyncPlugin } = workbox.backgroundSync;
+const { ExpirationPlugin } = workbox.expiration;
+const { CacheableResponsePlugin } = workbox.cacheableResponse;
+const { BroadcastUpdatePlugin } = workbox.broadcastUpdate;
+
 workbox.core.setCacheNameDetails({
     prefix: 'carwash',
-    suffix: 'v2',
+    suffix: 'v3',
     precache: 'precache',
     runtime: 'runtime',
 });
@@ -16,10 +22,11 @@ workbox.core.setCacheNameDetails({
 // Don't forget to increase the revision number of index.html (aka. '/')
 // as it is needed to include the newly genereted js and css files.
 // Error would be thrown: Refused to execute script from '...' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled.
-const build = '2.3.12';
-console.log(`Build: ${build}`);
+const VERSION = '2.4.0';
+console.log(`Build: ${VERSION}`);
+workbox.precaching.cleanupOutdatedCaches();
 workbox.precaching.precacheAndRoute([
-    { url: '/', revision: build.replace(/\./g, '') },
+    { url: '/', revision: VERSION.replace(/\./g, '') },
     { url: 'manifest.json', revision: '2' },
     { url: 'images/favicon-32x32.png', revision: '2' },
     { url: 'images/favicon-16x16.png', revision: '2' },
@@ -31,70 +38,41 @@ workbox.precaching.precacheAndRoute([
     { url: 'images/state5.png', revision: '2' },
 ]);
 
-const bgSyncPlugin = new workbox.backgroundSync.Plugin('bgSyncQueue');
+const bgSyncPlugin = new BackgroundSyncPlugin('bgSyncQueue');
 
-// [NETWORK FIRST] Cache index.html from 'GET /'
-workbox.routing.registerRoute(
-    ({ url }) => url.pathname === '/',
-    workbox.strategies.networkFirst({
-        cacheName: 'html-cache',
-        plugins: [bgSyncPlugin],
-    })
-);
+const apiStrategy = new NetworkFirst({
+    cacheName: 'api-cache',
+    plugins: [bgSyncPlugin],
+});
 
 // [NETWORK FIRST] Cache reservation list from 'GET /api/reservations'
-workbox.routing.registerRoute(
-    ({ url }) => url.pathname === '/api/reservations',
-    workbox.strategies.networkFirst({
-        cacheName: 'api-cache',
-        plugins: [bgSyncPlugin],
-    })
-);
+workbox.routing.registerRoute(({ url }) => url.pathname === '/api/reservations', apiStrategy);
 
 // [NETWORK FIRST] Cache company reservation list from 'GET /api/reservations/company'
-workbox.routing.registerRoute(
-    ({ url }) => url.pathname === '/api/reservations/company',
-    workbox.strategies.networkFirst({
-        cacheName: 'api-cache',
-        plugins: [bgSyncPlugin],
-    })
-);
+workbox.routing.registerRoute(({ url }) => url.pathname === '/api/reservations/company', apiStrategy);
 
 // [NETWORK FIRST] Cache backlog from 'GET /api/reservations/backlog'
-workbox.routing.registerRoute(
-    ({ url }) => url.pathname === '/api/reservations/backlog',
-    workbox.strategies.networkFirst({
-        cacheName: 'api-cache',
-        plugins: [bgSyncPlugin],
-    })
-);
+workbox.routing.registerRoute(({ url }) => url.pathname === '/api/reservations/backlog', apiStrategy);
 
-// [STALE WHILE REVALIDATE] Cache current user from 'GET /api/users/me'
-workbox.routing.registerRoute(
-    ({ url }) => url.pathname === '/api/users/me',
-    workbox.strategies.staleWhileRevalidate({
-        cacheName: 'api-cache',
-    })
-);
+// [NETWORK FIRST] Cache current user from 'GET /api/users/me'
+workbox.routing.registerRoute(({ url }) => url.pathname === '/api/users/me', apiStrategy);
 
-// [STALE WHILE REVALIDATE] Cache last reservation settings from 'GET /api/reservations/lastsettings'
-workbox.routing.registerRoute(
-    ({ url }) => url.pathname === '/api/reservations/lastsettings',
-    workbox.strategies.staleWhileRevalidate({
-        cacheName: 'api-cache',
-    })
-);
+// [NETWORK FIRST] Cache last reservation settings from 'GET /api/reservations/lastsettings'
+workbox.routing.registerRoute(({ url }) => url.pathname === '/api/reservations/lastsettings', apiStrategy);
+
+// [NETWORK FIRST] Cache configuration from 'GET /api/.well-known/configuration'
+workbox.routing.registerRoute(({ url }) => url.pathname === '/api/.well-known/configuration', apiStrategy);
 
 // [CACHE FIRST] Cache Google Fonts
 workbox.routing.registerRoute(
     new RegExp('https://fonts.(?:googleapis|gstatic).com/(.*)'),
-    workbox.strategies.cacheFirst({
+    new CacheFirst({
         cacheName: 'fonts-cache',
         plugins: [
-            new workbox.expiration.Plugin({
+            new ExpirationPlugin({
                 maxEntries: 30,
             }),
-            new workbox.cacheableResponse.Plugin({
+            new CacheableResponsePlugin({
                 statuses: [0, 200],
             }),
         ],
@@ -103,15 +81,15 @@ workbox.routing.registerRoute(
 
 // [CACHE FIRST] Cache Application Insights script
 workbox.routing.registerRoute(
-    /https:\/\/(.*).msecnd.net\/(.*)/,
-    workbox.strategies.cacheFirst({
+    /https:\/\/(.*).(?:msecnd.net|monitor.azure.com)\/(.*)/,
+    new CacheFirst({
         cacheName: 'static-cache',
         plugins: [
-            new workbox.expiration.Plugin({
+            new ExpirationPlugin({
                 maxEntries: 30,
                 maxAgeSeconds: 24 * 60 * 60, // 1 Day
             }),
-            new workbox.cacheableResponse.Plugin({
+            new CacheableResponsePlugin({
                 statuses: [0, 200],
             }),
         ],
@@ -121,7 +99,7 @@ workbox.routing.registerRoute(
 // [STALE WHILE REVALIDATE] Cache CSS and JS files
 workbox.routing.registerRoute(
     /\.(?:js|css)$/,
-    workbox.strategies.staleWhileRevalidate({
+    new StaleWhileRevalidate({
         cacheName: 'static-cache',
     })
 );
@@ -129,19 +107,22 @@ workbox.routing.registerRoute(
 // [CACHE FIRST] Cache image files
 workbox.routing.registerRoute(
     /.*\.(?:png|jpg|jpeg|svg|gif)/,
-    workbox.strategies.cacheFirst({
+    new CacheFirst({
         cacheName: 'image-cache',
         plugins: [
-            new workbox.expiration.Plugin({
+            new ExpirationPlugin({
                 maxEntries: 60,
                 maxAgeSeconds: 30 * 24 * 60 * 60, // 30 Days
+            }),
+            new CacheableResponsePlugin({
+                statuses: [0, 200],
             }),
         ],
     })
 );
 
-workbox.skipWaiting();
-workbox.clientsClaim();
+// self.skipWaiting();
+workbox.core.clientsClaim();
 
 // Respond to a server push with a user notification
 self.addEventListener('push', event => {
@@ -186,4 +167,13 @@ self.addEventListener('notificationclick', event => {
                 return null;
             })
     );
+});
+
+self.addEventListener('message', event => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+    if (event.data.type === 'GET_VERSION') {
+        event.ports[0].postMessage(VERSION);
+    }
 });
