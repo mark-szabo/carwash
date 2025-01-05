@@ -81,7 +81,7 @@ workbox.routing.registerRoute(
 
 // [CACHE FIRST] Cache Application Insights script
 workbox.routing.registerRoute(
-    /https:\/\/(.*).(?:msecnd.net|monitor.azure.com)\/(.*)/,
+    /https:\/\/(.*).(?:msecnd.net|monitor\.azure\.com)\/(.*)/,
     new CacheFirst({
         cacheName: 'static-cache',
         plugins: [
