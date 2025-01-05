@@ -1,0 +1,30 @@
+name: Build and Test on PR
+on:
+    pull_request:
+        branches:
+            - main
+env:
+    AZURE_WEBAPP_PACKAGE_PATH: CarWash.PWA\publish
+    CONFIGURATION: Release
+    DOTNET_CORE_VERSION: 8.0.x
+    WORKING_DIRECTORY_PWA: CarWash.PWA
+    WORKING_DIRECTORY_FUNCTIONS: CarWash.Functions
+jobs:
+    build:
+        runs-on: windows-latest
+        steps:
+            - uses: actions/checkout@v4
+            - name: Setup .NET SDK
+              uses: actions/setup-dotnet@v3
+              with:
+                  dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+            - name: Restore PWA
+              run: dotnet restore "${{ env.WORKING_DIRECTORY_PWA }}"
+            - name: Restore Functions
+              run: dotnet restore "${{ env.WORKING_DIRECTORY_FUNCTIONS }}"
+            - name: Build PWA
+              run: dotnet build "${{ env.WORKING_DIRECTORY_PWA }}" --configuration ${{ env.CONFIGURATION }} --no-restore
+            - name: Build Functions
+              run: dotnet build "${{ env.WORKING_DIRECTORY_FUNCTIONS }}" --configuration ${{ env.CONFIGURATION }} --no-restore
+            - name: Test PWA
+              run: dotnet test "CarWash.PWA.Tests" --collect:"XPlat Code Coverage"
