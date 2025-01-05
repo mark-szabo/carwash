@@ -435,7 +435,7 @@ namespace CarWash.PWA.Tests
             await dbContext.Blocker.AddAsync(new Blocker
             {
                 StartDate = new DateTime(YEAR, MONTH, 01, 00, 00, 00, DateTimeKind.Local),
-                EndDate = new DateTime(YEAR, MONTH, 30, 23, 59, 59, DateTimeKind.Local),
+                EndDate = new DateTime(YEAR, MONTH, 28, 23, 59, 59, DateTimeKind.Local),
             });
             await dbContext.SaveChangesAsync();
             var newReservation = new Reservation
@@ -460,7 +460,7 @@ namespace CarWash.PWA.Tests
             await dbContext.Blocker.AddAsync(new Blocker
             {
                 StartDate = new DateTime(YEAR, MONTH, 01, 00, 00, 00, DateTimeKind.Local),
-                EndDate = new DateTime(YEAR, MONTH, 30, 23, 59, 59, DateTimeKind.Local),
+                EndDate = new DateTime(YEAR, MONTH, 28, 23, 59, 59, DateTimeKind.Local),
             });
             await dbContext.SaveChangesAsync();
             var carWashAdmin = await dbContext.Users.SingleAsync(u => u.Email == CARWASH_ADMIN_EMAIL);
@@ -806,7 +806,7 @@ namespace CarWash.PWA.Tests
             await dbContext.Blocker.AddAsync(new Blocker
             {
                 StartDate = new DateTime(YEAR, MONTH, 01, 00, 00, 00, DateTimeKind.Local),
-                EndDate = new DateTime(YEAR, MONTH, 30, 23, 59, 59, DateTimeKind.Local),
+                EndDate = new DateTime(YEAR, MONTH, 28, 23, 59, 59, DateTimeKind.Local),
             });
             await dbContext.SaveChangesAsync();
             var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
@@ -827,7 +827,7 @@ namespace CarWash.PWA.Tests
             await dbContext.Blocker.AddAsync(new Blocker
             {
                 StartDate = new DateTime(YEAR, MONTH, 01, 00, 00, 00, DateTimeKind.Local),
-                EndDate = new DateTime(YEAR, MONTH, 30, 23, 59, 59, DateTimeKind.Local),
+                EndDate = new DateTime(YEAR, MONTH, 28, 23, 59, 59, DateTimeKind.Local),
             });
             await dbContext.SaveChangesAsync();
             var carWashAdmin = await dbContext.Users.SingleAsync(u => u.Email == CARWASH_ADMIN_EMAIL);
