@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Route, Switch } from 'react-router';
+import { Workbox } from 'workbox-window';
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import { ReactPlugin } from '@microsoft/applicationinsights-react-js';
 import { createBrowserHistory } from 'history';
@@ -29,52 +30,56 @@ import ErrorBoundary from './components/ErrorBoundary';
 import NotFound from './components/NotFound';
 
 // A theme with custom primary and secondary color.
-const lightTheme = createTheme(adaptV4Theme({
-    palette: {
-        primary: {
-            light: '#b5ffff',
-            main: '#80d8ff',
-            dark: '#49a7cc',
+const lightTheme = createTheme(
+    adaptV4Theme({
+        palette: {
+            primary: {
+                light: '#b5ffff',
+                main: '#80d8ff',
+                dark: '#49a7cc',
+            },
+            secondary: {
+                light: '#b5ffff',
+                main: '#80d8ff',
+                dark: '#49a7cc',
+            },
+            background: {
+                default: '#fafafa',
+            },
         },
-        secondary: {
-            light: '#b5ffff',
-            main: '#80d8ff',
-            dark: '#49a7cc',
+        typography: {
+            fontFamily: ['"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'].join(','),
+            useNextVariants: true,
         },
-        background: {
-            default: '#fafafa',
-        },
-    },
-    typography: {
-        fontFamily: ['"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'].join(','),
-        useNextVariants: true,
-    },
-}));
+    })
+);
 
 // DARK MODE
-const darkTheme = createTheme(adaptV4Theme({
-    palette: {
-        mode: 'dark',
-        primary: {
-            light: '#b5ffff',
-            main: '#80d8ff',
-            dark: '#49a7cc',
+const darkTheme = createTheme(
+    adaptV4Theme({
+        palette: {
+            mode: 'dark',
+            primary: {
+                light: '#b5ffff',
+                main: '#80d8ff',
+                dark: '#49a7cc',
+            },
+            secondary: {
+                light: '#b5ffff',
+                main: '#80d8ff',
+                dark: '#49a7cc',
+            },
+            background: {
+                default: '#1d1d1d',
+                paper: '#323232',
+            },
         },
-        secondary: {
-            light: '#b5ffff',
-            main: '#80d8ff',
-            dark: '#49a7cc',
+        typography: {
+            fontFamily: ['"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'].join(','),
+            useNextVariants: true,
         },
-        background: {
-            default: '#1d1d1d',
-            paper: '#323232',
-        },
-    },
-    typography: {
-        fontFamily: ['"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'].join(','),
-        useNextVariants: true,
-    },
-}));
+    })
+);
 
 function getSafeString(obj) {
     return JSON.stringify(obj)
@@ -90,6 +95,7 @@ export default class App extends Component {
     displayName = App.name;
 
     state = {
+        version: '',
         user: {},
         reservations: [],
         reservationsLoading: true,
@@ -150,9 +156,8 @@ export default class App extends Component {
             }
         );
 
-        if ('Notification' in window && Notification.permission === 'granted') {
-            registerPush();
-        }
+        // Register service worker
+        this.registerServiceWorker();
 
         this.loadLastSettings();
 
@@ -160,7 +165,7 @@ export default class App extends Component {
         const reactPlugin = new ReactPlugin();
         const appInsights = new ApplicationInsights({
             config: {
-                instrumentationKey: 'd1ce1965-2171-4a11-9438-66114b31f88f',
+                instrumentationKey: 'db8cb41a-462d-47f3-8d08-d4f7d5c5a0c7',
                 extensions: [reactPlugin],
                 extensionConfig: {
                     [reactPlugin.identifier]: { history: browserHistory },
@@ -173,6 +178,74 @@ export default class App extends Component {
     }
 
     backlogHubConnection;
+
+    registerServiceWorker = async () => {
+        if ('serviceWorker' in navigator) {
+            const wb = new Workbox('/sw.js');
+
+            wb.addEventListener('activated', event => {
+                // `event.isUpdate` will be true if another version of the service
+                // worker was controlling the page when this version was registered.
+                if (event.isUpdate) {
+                    this.openSnackbar('Application was successfully updated.');
+                } else {
+                    this.openSnackbar('Application is cached for offline use.');
+                }
+            });
+
+            // Add an event listener to detect when the registered
+            // service worker has installed but is waiting to activate.
+            wb.addEventListener('waiting', event => {
+                // Reload the page as soon as the previously waiting
+                // service worker has taken control.
+                wb.addEventListener('controlling', () => {
+                    window.location.reload();
+                });
+
+                // When `event.wasWaitingBeforeRegister` is true, a previously
+                // updated service worker is still waiting.
+                if (event.wasWaitingBeforeRegister) {
+                    this.openSnackbar(
+                        'Update now! A new version is available.',
+                        <Button color="secondary" size="small" onClick={() => wb.messageSkipWaiting()}>
+                            Reload
+                        </Button>
+                    );
+                } else {
+                    this.openSnackbar(
+                        'A new version is available.',
+                        <Button color="secondary" size="small" onClick={() => wb.messageSkipWaiting()}>
+                            Reload
+                        </Button>
+                    );
+                }
+            });
+
+            wb.addEventListener('message', event => {
+                if (event.data.type === 'CACHE_UPDATED') {
+                    console.log(`A newer version of ${event.data.payload.updatedURL} is available!`);
+                }
+            });
+
+            wb.register();
+
+            const version = await wb.messageSW({ type: 'GET_VERSION' });
+            this.setState({
+                version,
+            });
+
+            // Register push notifications
+            if ('Notification' in window && Notification.permission === 'granted') {
+                registerPush();
+            }
+        } else {
+            // Internet Explorer 6-11
+            const isIE = /* @cc_on!@*/ false || !!document.documentMode;
+            const surpassIEBlock = window.location.href.search('surpassieblock') !== -1;
+
+            if (isIE && !surpassIEBlock) window.location = '/ieblock.html';
+        }
+    };
 
     openSnackbar = (message, action) => {
         this.setState({
@@ -431,7 +504,7 @@ export default class App extends Component {
                 keys[10] === 'Enter'
             ) {
                 this.openSnackbar(
-                    'Nice catch! Shoot me a message - let\'s have a coffee!',
+                    "Nice catch! Shoot me a message - let's have a coffee!",
                     <Button href="https://www.linkedin.com/in/mark-szabo/" color="secondary" size="small">
                         Contact
                     </Button>
@@ -444,6 +517,7 @@ export default class App extends Component {
         const { configuration } = this.props;
 
         const {
+            version,
             user,
             reservations,
             reservationsLoading,
@@ -461,7 +535,7 @@ export default class App extends Component {
                 <ThemeProvider theme={theme}>
                     <CssBaseline enableColorScheme />
                     <ErrorBoundary>
-                        <Layout user={user} configuration={configuration}>
+                        <Layout user={user} configuration={configuration} version={version}>
                             <Switch>
                                 <Route
                                     exact
@@ -540,7 +614,12 @@ export default class App extends Component {
                                     navbarName="Settings"
                                     render={props => (
                                         <ErrorBoundary>
-                                            <Settings user={user} updateUser={this.updateUser} openSnackbar={this.openSnackbar} {...props} />
+                                            <Settings
+                                                user={user}
+                                                updateUser={this.updateUser}
+                                                openSnackbar={this.openSnackbar}
+                                                {...props}
+                                            />
                                         </ErrorBoundary>
                                     )}
                                 />
@@ -593,7 +672,12 @@ export default class App extends Component {
                                     navbarName="Blockers"
                                     render={props => (
                                         <ErrorBoundary>
-                                            <Blockers user={user} snackbarOpen={this.state.snackbarOpen} openSnackbar={this.openSnackbar} {...props} />
+                                            <Blockers
+                                                user={user}
+                                                snackbarOpen={this.state.snackbarOpen}
+                                                openSnackbar={this.openSnackbar}
+                                                {...props}
+                                            />
                                         </ErrorBoundary>
                                     )}
                                 />

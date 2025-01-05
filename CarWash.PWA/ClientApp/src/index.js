@@ -3,7 +3,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
-import registerServiceWorker from './registerServiceWorker';
 import { runWithAdal } from './Auth';
 
 if (!window.location.host.startsWith('www') && !window.location.host.startsWith('localhost')) {
@@ -33,5 +32,3 @@ runWithAdal(configuration, () => {
         rootElement
     );
 });
-
-registerServiceWorker();
