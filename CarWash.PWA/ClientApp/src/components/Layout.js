@@ -165,7 +165,7 @@ class Layout extends React.Component {
     }
 
     render() {
-        const { classes, theme, configuration, user } = this.props;
+        const { classes, theme, configuration, user, version } = this.props;
         const refresh = this.getRefreshFunc();
 
         const drawer = (
@@ -189,8 +189,21 @@ class Layout extends React.Component {
                     </a>
                     <br />
                     <span className={classes.madeWithLove}>
-                        Version: {process.env.REACT_APP_BUILD_NUMBER}
-                        {process.env.REACT_APP_BUILD_NUMBER !== configuration.buildNumber && (<> - Update available!</>)}
+                        Version: {version}
+                        {version !== configuration.version && (
+                            <>
+                                {' - '}
+                                <a
+                                    href="#"
+                                    onClick={() => {
+                                        window.location.reload();
+                                    }}
+                                    className={classes.link}
+                                >
+                                    Update available!
+                                </a>
+                            </>
+                        )}
                     </span>
                     <span className={classes.madeWithLove}>
                         Made with <FavoriteIcon className={classes.loveIcon} /> by friends at Microsoft
@@ -261,6 +274,7 @@ Layout.propTypes = {
     location: PropTypes.object, // eslint-disable-line react/forbid-prop-types
     configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     user: PropTypes.object, // eslint-disable-line react/forbid-prop-types
+    version: PropTypes.string.isRequired,
 };
 
 export default withStyles(styles, { withTheme: true })(Layout);

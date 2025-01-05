@@ -71,7 +71,7 @@ namespace CarWash.PWA
                 config.Services = JsonSerializer.Deserialize<List<Service>>(Configuration.GetValue<string>("Services"), jsonOptions);
             }
             config.BuildNumber = Configuration.GetValue<string>("BUILD_NUMBER");
-            config.Version = Configuration.GetValue<string>("BUILD_NUMBER");
+            config.Version = Configuration.GetValue<string>("VERSION");
 
             // Add application services
             services.AddSingleton(Configuration);
