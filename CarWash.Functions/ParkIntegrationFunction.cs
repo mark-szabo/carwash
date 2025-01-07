@@ -18,10 +18,10 @@ namespace CarWash.Functions
 {
     public class ParkIntegrationFunction(ILogger<ParkIntegrationFunction> log)
     {
-        private static readonly HttpClient _client = new HttpClient();
-        private static readonly FunctionsDbContext _context = new FunctionsDbContext();
-        private static readonly string _parkApiEmail = Environment.GetEnvironmentVariable("ParkApi:Email", EnvironmentVariableTarget.Process);
-        private static readonly string _parkApiPassword = Environment.GetEnvironmentVariable("ParkApi:Password", EnvironmentVariableTarget.Process);
+        private static readonly HttpClient _client = new();
+        private static readonly FunctionsDbContext _context = new();
+        private static readonly string _parkApiEmail = Environment.GetEnvironmentVariable("ParkApi:Email", EnvironmentVariableTarget.Process) ?? throw new ArgumentNullException("Missing environment variable 'ParkApi:Email'.");
+        private static readonly string _parkApiPassword = Environment.GetEnvironmentVariable("ParkApi:Password", EnvironmentVariableTarget.Process) ?? throw new ArgumentNullException("Missing environment variable 'ParkApi:Password'.");
 
         /// <summary>
         /// Service Bus queue name for the chat bot's vehicle-arrived notification.
@@ -46,7 +46,7 @@ namespace CarWash.Functions
 
             var licensePlates = parkingSessions
                 .Where(s => s.start > DateTime.UtcNow.AddMinutes(-5))
-                .Select(s => s.vehicle.normalized_licence_plate.ToUpper())
+                .Select(s => s.vehicle?.normalized_licence_plate?.ToUpper())
                 .ToList();
 
             log.LogMetric("VehicleArrived", parkingSessions.Count(s => s.start > DateTime.UtcNow.AddMinutes(-1)));
@@ -91,9 +91,9 @@ namespace CarWash.Functions
                     Subject = "Welcome in the office! Don't forget to drop off your key!",
                     Body = $@"Welcome {reservation.User.FirstName}, 
 I just noticed that you've arrived! 👀 
-Don't forget to leave the key at the reception and <a href='https://carwashu.azurewebsites.net'>confirm drop-off & vehicle location by clicking here</a>!
+Don't forget to leave the key at the reception and <a href='https://www.mimosonk.hu/#dropoffkey'>confirm drop-off & vehicle location by clicking here</a>!
 
-If don't want to get email reminders in the future, you can <a href='https://carwashu.azurewebsites.net/settings'>disable it in the settings</a>."
+If don't want to get email reminders in the future, you can <a href='https://www.mimosonk.hu/settings'>disable it in the settings</a>."
                 };
 
                 switch (reservation.User.NotificationChannel)
@@ -204,7 +204,12 @@ If don't want to get email reminders in the future, you can <a href='https://car
 
                 response.EnsureSuccessStatusCode();
 
-                return JsonConvert.DeserializeObject<List<ParkingSession>>(responseContent);
+                if (responseContent == null) throw new Exception("Response content is null.");
+
+                var parkingSessions = JsonConvert.DeserializeObject<List<ParkingSession>>(responseContent);
+                if (parkingSessions == null) throw new Exception("Deserialized parking sessions are null.");
+
+                return parkingSessions;
             }
             catch (Exception e)
             {
@@ -214,56 +219,56 @@ If don't want to get email reminders in the future, you can <a href='https://car
 
         private class ParkingSession
         {
-            public string url { get; set; }
-            public string uuid { get; set; }
-            public Vehicle vehicle { get; set; }
-            public Payment payment { get; set; }
-            public float price { get; set; }
-            public object with_pass { get; set; }
-            public string start_image_color { get; set; }
-            public string start_image_infra { get; set; }
-            public bool is_free { get; set; }
-            public bool is_voided { get; set; }
-            public DateTime start { get; set; }
-            public string tenant { get; set; }
-            public Segment[] segments { get; set; }
-            public bool is_vehicle_editable { get; set; }
-            public bool is_started_offline { get; set; }
-            public string session_type { get; set; }
+            public string? url { get; set; }
+            public string? uuid { get; set; }
+            public Vehicle? vehicle { get; set; }
+            public Payment? payment { get; set; }
+            public float? price { get; set; }
+            public object? with_pass { get; set; }
+            public string? start_image_color { get; set; }
+            public string? start_image_infra { get; set; }
+            public bool? is_free { get; set; }
+            public bool? is_voided { get; set; }
+            public DateTime? start { get; set; }
+            public string? tenant { get; set; }
+            public Segment[]? segments { get; set; }
+            public bool? is_vehicle_editable { get; set; }
+            public bool? is_started_offline { get; set; }
+            public string? session_type { get; set; }
         }
 
         private class Vehicle
         {
-            public string url { get; set; }
-            public string licence_plate { get; set; }
-            public string normalized_licence_plate { get; set; }
+            public string? url { get; set; }
+            public string? licence_plate { get; set; }
+            public string? normalized_licence_plate { get; set; }
         }
 
         private class Payment
         {
-            public float amount { get; set; }
-            public string currency { get; set; }
-            public object invoice_type { get; set; }
+            public float? amount { get; set; }
+            public string? currency { get; set; }
+            public object? invoice_type { get; set; }
         }
 
         private class Segment
         {
-            public Zone zone { get; set; }
-            public string pass_contract { get; set; }
-            public float price { get; set; }
-            public DateTime start { get; set; }
+            public Zone? zone { get; set; }
+            public string? pass_contract { get; set; }
+            public float? price { get; set; }
+            public DateTime? start { get; set; }
             public DateTime? end { get; set; }
-            public string start_image_color { get; set; }
-            public string start_image_infra { get; set; }
-            public string end_image_color { get; set; }
-            public string end_image_infra { get; set; }
+            public string? start_image_color { get; set; }
+            public string? start_image_infra { get; set; }
+            public string? end_image_color { get; set; }
+            public string? end_image_infra { get; set; }
         }
 
         private class Zone
         {
-            public string url { get; set; }
-            public string name { get; set; }
-            public string color_code { get; set; }
+            public string? url { get; set; }
+            public string? name { get; set; }
+            public string? color_code { get; set; }
         }
     }
 }
