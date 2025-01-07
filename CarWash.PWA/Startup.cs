@@ -130,7 +130,13 @@ namespace CarWash.PWA
 
                                     return;
                                 }
-                                throw new Exception($"Application ({serviceAppId}) is not authorized.");
+
+                                Debug.WriteLine($"Application ({serviceAppId}) is not authorized.");
+                                context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                                context.Response.ContentType = "application/json";
+                                context.Response.Headers.Append("WWW-Authenticate", "Bearer error=\"invalid_token\", error_description=\"The access token is not authorized\"");
+
+                                return;
                             }
 
                             // Get EF context
