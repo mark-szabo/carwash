@@ -130,7 +130,13 @@ namespace CarWash.PWA
 
                                     return;
                                 }
-                                throw new Exception($"Application ({serviceAppId}) is not authorized.");
+
+                                Debug.WriteLine($"Application ({serviceAppId}) is not authorized.");
+                                context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                                context.Response.ContentType = "application/json";
+                                context.Response.Headers.Append("WWW-Authenticate", "Bearer error=\"invalid_token\", error_description=\"The access token is not authorized\"");
+
+                                return;
                             }
 
                             // Get EF context
@@ -366,16 +372,19 @@ namespace CarWash.PWA
             // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();
 
-            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
-            // specifying the Swagger JSON endpoint.
-            app.UseSwaggerUI(c =>
+            if (env.IsDevelopment())
             {
-                c.SwaggerEndpoint("/swagger/v2/swagger.json", "CarWash API");
-                c.EnableDeepLinking();
-                c.DocumentTitle = "CarWash API";
-                c.OAuth2RedirectUrl("https://localhost:44340/swagger/index.html");
-                c.OAuthClientId(config.AzureAd.ClientId);
-            });
+                // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
+                // specifying the Swagger JSON endpoint.
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v2/swagger.json", "CarWash API");
+                    c.EnableDeepLinking();
+                    c.DocumentTitle = "CarWash API";
+                    c.OAuth2RedirectUrl("https://localhost:44340/swagger/index.html");
+                    c.OAuthClientId(config.AzureAd.ClientId);
+                });
+            }
 
             app.UseSpa(spa =>
             {

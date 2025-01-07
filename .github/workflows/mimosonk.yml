@@ -6,6 +6,11 @@ on:
 env:
     AZURE_WEBAPP_NAME: mimosonk
     AZURE_WEBAPP_PACKAGE_PATH: CarWash.PWA\publish
+    AZURE_RESOURCE_GROUP: rg-carwash-mimosonk-prod
+    AZURE_APPCONFIG_NAME: appcs-carwash-mimosonk-prod
+    AZURE_APPCONFIG_ENDPOINT: https://appcs-carwash-mimosonk-prod.azconfig.io
+    AZURE_CDN_PROFILE_NAME: cdnp-carwash-mimosonk-prod
+    AZURE_CDN_ENDPOINT: cdne-carwash-mimosonk-prod
     CONFIGURATION: Release
     DOTNET_CORE_VERSION: 8.0.x
     WORKING_DIRECTORY: CarWash.PWA
@@ -20,9 +25,9 @@ jobs:
                   dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
             - name: Read version number from package.json
               id: build_number
-              run: echo "BUILD_NUMBER=$(cat ${{ env.WORKING_DIRECTORY }}/ClientApp/package.json | jq '.version')" >> $GITHUB_ENV
+              run: echo "VERSION=$(cat ${{ env.WORKING_DIRECTORY }}/ClientApp/package.json | jq '.version')" >> $GITHUB_ENV
             - name: Create .env file with build number
-              run: echo "REACT_APP_BUILD_NUMBER=${{ steps.build_number.outputs.BUILD_NUMBER }}" > ${{ env.WORKING_DIRECTORY }}/.env
+              run: echo "REACT_APP_BUILD_NUMBER=${{ steps.build_number.outputs.VERSION }}" > ${{ env.WORKING_DIRECTORY }}/.env
             - name: Restore
               run: dotnet restore "${{ env.WORKING_DIRECTORY }}"
             - name: Build
@@ -57,3 +62,24 @@ jobs:
                   app-name: ${{ env.AZURE_WEBAPP_NAME }}
                   publish-profile: ${{ secrets.mimosonk_E838 }}
                   package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+            - name: Azure service principal login
+              uses: azure/login@v1
+              with:
+                  creds: ${{ secrets.AZURE_CREDENTIALS }}
+            - name: Update app configuration VERSION
+              run: az appconfig kv set \
+                  --name ${{ env.AZURE_APPCONFIG_NAME }} \
+                  --auth-mode login \
+                  --endpoint ${{ env.AZURE_APPCONFIG_ENDPOINT }} \
+                  --key VERSION \
+                  --value ${{ steps.build_number.outputs.VERSION }} \
+                  --yes
+            - name: Purge Azure CDN endpoint
+              run: az cdn endpoint purge \
+                  --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+                  --profile-name ${{ env.AZURE_CDN_PROFILE_NAME }} \
+                  --name ${{ env.AZURE_CDN_ENDPOINT }} \
+                  --content-paths '/' '/sw.js' '/api/.well-known/configuration'
+                  --no-wait
+            - name: Azure service principal logout
+              run: az logout

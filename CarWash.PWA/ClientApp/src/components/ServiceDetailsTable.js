@@ -82,7 +82,8 @@ const styles = theme => {
         cell: {
             padding: '16px 24px 16px 24px',
             borderBottom: 'none',
-            borderTop: theme.palette.mode === 'dark' ? '1px solid rgba(81, 81, 81, 1)' : '1px solid rgba(224, 224, 224, 1)',
+            borderTop:
+                theme.palette.mode === 'dark' ? '1px solid rgba(81, 81, 81, 1)' : '1px solid rgba(224, 224, 224, 1)',
         },
         titleCell: {
             padding: '16px 24px 8px 24px',
@@ -126,7 +127,7 @@ class ServiceDetailsTable extends React.Component {
         this.setState(state => ({ expanded: !state.expanded }));
     };
 
-    getTable = (configuration) => (
+    getTable = configuration => (
         <Table className={this.props.classes.table}>
             <TableHead>
                 <TableRow>
@@ -165,7 +166,7 @@ class ServiceDetailsTable extends React.Component {
                 <TableRow className={this.props.classes.row}>
                     <TableCell colSpan="3" className={this.props.classes.contactUs}>
                         Prices are for reference and may vary by company according to individual agreements.
-                        <br/>
+                        <br />
                         Call us (
                         <a href="tel:+36704506612" className={this.props.classes.link}>
                             +36 70 701 5803
@@ -218,7 +219,7 @@ class ServiceDetailsTable extends React.Component {
                         <ExpandMoreIcon />
                     </IconButton>
                     <div className={classNames(classes.titleText, { [classes.expanded]: expanded })}>
-                        <Typography variant="subtitle1">Service details</Typography>
+                        <Typography variant="subtitle1">Service pricing details</Typography>
                     </div>
                 </ButtonBase>
 

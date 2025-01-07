@@ -260,21 +260,66 @@ namespace CarWash.PWA.Controllers
             {
                 reservation.EndDate = CalculateEndTime(reservation.StartDate, reservation.EndDate);
             }
-            catch (ArgumentOutOfRangeException)
+            catch (ArgumentOutOfRangeException e)
             {
+                _telemetryClient.TrackException(e, new Dictionary<string, string>
+                    {
+                        { "CreatedById", reservation.CreatedById },
+                        { "StartDate", reservation.StartDate.ToString() }
+                    });
+
                 return BadRequest("Reservation can be made to slots only.");
             }
 
             if (dropoffConfirmed)
             {
-                if (reservation.Location == null) return BadRequest("Location must be set if drop-off pre-confirmed.");
+                if (reservation.Location == null)
+                {
+                    _telemetryClient.TrackTrace(
+                        "BadRequest: Location must be set if drop-off pre-confirmed.",
+                        Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
+                        new Dictionary<string, string>
+                        {
+                            { "UserId", reservation.UserId },
+                            { "Location", reservation.Location }
+                        });
+
+                    return BadRequest("Location must be set if drop-off pre-confirmed.");
+                }
                 reservation.State = State.DropoffAndLocationConfirmed;
             }
             #endregion
 
             #region Input validation
-            if (reservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin)) return Forbid();
-            if (reservation.Services == null || reservation.Services.Count == 0) return BadRequest("No service chosen.");
+            if (reservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin))
+            {
+                _telemetryClient.TrackTrace(
+                    "Forbid: User cannot reserve in the name of others unless admin.",
+                    Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
+                    new Dictionary<string, string>
+                    {
+                        { "UserId", reservation.UserId },
+                        { "IsAdmin", _user.IsAdmin.ToString() },
+                        { "IsCarwashAdmin", _user.IsCarwashAdmin.ToString() },
+                        { "CreatedById", reservation.CreatedById }
+                    });
+
+                return Forbid();
+            }
+
+            if (reservation.Services == null || reservation.Services.Count == 0)
+            {
+                _telemetryClient.TrackTrace(
+                    "BadRequest: No service chosen.",
+                    Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
+                    new Dictionary<string, string>
+                    {
+                        { "UserId", reservation.UserId },
+                        { "Services", reservation.ServicesJson }
+                    });
+
+                return BadRequest("No service chosen.");
+            }
             #endregion
 
             // Time requirement calculation
@@ -333,8 +378,19 @@ namespace CarWash.PWA.Controllers
                 var user = await _context.Users.FindAsync(reservation.UserId);
                 if (user.CalendarIntegration)
                 {
-                    reservation.User = user;
-                    reservation.OutlookEventId = await _calendarService.CreateEventAsync(reservation);
+                    var timer = DateTime.Now;
+                    try
+                    {
+                        reservation.User = user;
+                        reservation.OutlookEventId = await _calendarService.CreateEventAsync(reservation);
+                        _telemetryClient.TrackDependency("CalendarService", "CreateEvent", new { ReservationId = reservation.Id, UserId = user.Id }.ToString(), timer, DateTime.Now - timer, success: true);
+
+                    }
+                    catch (Exception e)
+                    {
+                        _telemetryClient.TrackDependency("CalendarService", "CreateEvent", new { ReservationId = reservation.Id, UserId = user.Id }.ToString(), timer, DateTime.Now - timer, success: false);
+                        _telemetryClient.TrackException(e);
+                    }
                 }
             }
 
@@ -1514,11 +1570,23 @@ namespace CarWash.PWA.Controllers
         /// <param name="startTime">start date and time</param>
         /// <param name="endTime">end date and time</param>
         /// <returns>true if start and end times are on the same day</returns>
-        private static bool IsStartAndEndTimeOnSameDay(DateTime startTime, DateTime? endTime)
+        private bool IsStartAndEndTimeOnSameDay(DateTime startTime, DateTime? endTime)
         {
             if (endTime == null) throw new ArgumentNullException(nameof(endTime));
 
-            return startTime.Date == ((DateTime)endTime).Date;
+            if (startTime.Date == ((DateTime)endTime).Date) return true;
+
+            _telemetryClient.TrackTrace(
+                "BadRequest: Reservation time range should be located entirely on the same day.",
+                Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
+                new Dictionary<string, string>
+                {
+                    { "UserId", _user.Id },
+                    { "StartDate", startTime.ToString() },
+                    { "EndDate", endTime.ToString() }
+                });
+
+            return false;
         }
 
         /// <summary>
@@ -1527,11 +1595,23 @@ namespace CarWash.PWA.Controllers
         /// <param name="startTime">start date and time</param>
         /// <param name="endTime">end date and time</param>
         /// <returns>true if end time is later than start time</returns>
-        private static bool IsEndTimeLaterThanStartTime(DateTime startTime, DateTime? endTime)
+        private bool IsEndTimeLaterThanStartTime(DateTime startTime, DateTime? endTime)
         {
             if (endTime == null) throw new ArgumentNullException(nameof(endTime));
 
-            return startTime < endTime;
+            if (startTime < endTime) return true;
+
+            _telemetryClient.TrackTrace(
+                "BadRequest: Reservation end time should be later than the start time.",
+                Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
+                new Dictionary<string, string>
+                {
+                    { "UserId", _user.Id },
+                    { "StartDate", startTime.ToString() },
+                    { "EndDate", endTime.ToString() }
+                });
+
+            return false;
         }
 
         /// <summary>
@@ -1547,7 +1627,22 @@ namespace CarWash.PWA.Controllers
             if (endTime == null) throw new ArgumentNullException(nameof(endTime));
             var earliestTimeAllowed = DateTime.Now.AddMinutes(_configuration.Reservation.MinutesToAllowReserveInPast * -1);
 
-            return startTime < earliestTimeAllowed || endTime < earliestTimeAllowed;
+            if (startTime < earliestTimeAllowed || endTime < earliestTimeAllowed)
+            {
+                _telemetryClient.TrackTrace(
+                    "BadRequest: Reservation time range should be located entirely after the earliest allowed time.",
+                    Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
+                    new Dictionary<string, string>
+                    {
+                        { "UserId", _user.Id },
+                        { "StartDate", startTime.ToString() },
+                        { "EndDate", endTime.ToString() },
+                        { "EarliestTimeAllowed", earliestTimeAllowed.ToString() }
+                    });
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -1560,7 +1655,19 @@ namespace CarWash.PWA.Controllers
         {
             if (endTime == null) throw new ArgumentNullException(nameof(endTime));
 
-            return _configuration.Slots.Any(s => s.StartTime == startTime.Hour && s.EndTime == ((DateTime)endTime).Hour);
+            if (_configuration.Slots.Any(s => s.StartTime == startTime.Hour && s.EndTime == ((DateTime)endTime).Hour)) return true;
+
+            _telemetryClient.TrackTrace(
+                "BadRequest: Reservation time range should fit into a slot.",
+                Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
+                new Dictionary<string, string>
+                {
+                    { "UserId", _user.Id },
+                    { "StartDate", startTime.ToString() },
+                    { "EndDate", endTime.ToString() }
+                });
+
+            return false;
         }
 
         /// <summary>
@@ -1573,7 +1680,22 @@ namespace CarWash.PWA.Controllers
 
             var activeReservationCount = await _context.Reservation.Where(r => r.UserId == _user.Id && r.State != State.Done).CountAsync();
 
-            return activeReservationCount >= _configuration.Reservation.UserConcurrentReservationLimit;
+            if (activeReservationCount >= _configuration.Reservation.UserConcurrentReservationLimit)
+            {
+                _telemetryClient.TrackTrace(
+                    "BadRequest: User has met the active concurrent reservation limit.",
+                    Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
+                    new Dictionary<string, string>
+                    {
+                        { "UserId", _user.Id },
+                        { "ActiveReservationCount", activeReservationCount.ToString() },
+                        { "UserConcurrentReservationLimit", _configuration.Reservation.UserConcurrentReservationLimit.ToString() }
+                    });
+
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -1599,16 +1721,45 @@ namespace CarWash.PWA.Controllers
                     .Where(r => r.StartDate.Date == date.Date)
                     .SumAsync(r => r.TimeRequirement);
 
-                if (reservedTimeOnDate + timeRequirement > allSlotCapacity * _configuration.Reservation.TimeUnit) return false;
+                if (reservedTimeOnDate + timeRequirement > allSlotCapacity * _configuration.Reservation.TimeUnit)
+                {
+                    _telemetryClient.TrackTrace(
+                        "BadRequest: There is not enough time on this day at all.",
+                        Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
+                        new Dictionary<string, string>
+                        {
+                            { "UserId", _user.Id },
+                            { "StartDate", date.ToString() },
+                            { "ReservedTimeOnDate", reservedTimeOnDate.ToString() },
+                            { "TimeRequirement", timeRequirement.ToString() },
+                            { "AllSlotCapacity", allSlotCapacity.ToString() },
+                        });
+
+                    return false;
+                }
             }
             else
             {
-
                 var reservedTimeOnDate = await _context.Reservation
                     .Where(r => r.StartDate.Date == date.Date && r.User.Company == _user.Company)
                     .SumAsync(r => r.TimeRequirement);
 
-                if (reservedTimeOnDate + timeRequirement > userCompanyLimit * _configuration.Reservation.TimeUnit) return false;
+                if (reservedTimeOnDate + timeRequirement > userCompanyLimit * _configuration.Reservation.TimeUnit)
+                {
+                    _telemetryClient.TrackTrace(
+                        "BadRequest: Company limit has been reached.",
+                        Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
+                        new Dictionary<string, string>
+                        {
+                            { "UserId", _user.Id },
+                            { "StartDate", date.ToString() },
+                            { "ReservedTimeOnDate", reservedTimeOnDate.ToString() },
+                            { "TimeRequirement", timeRequirement.ToString() },
+                            { "UserCompanyLimit", userCompanyLimit.ToString() },
+                        });
+
+                    return false;
+                }
             }
 
             if (date.Date == DateTime.Today)
@@ -1617,7 +1768,23 @@ namespace CarWash.PWA.Controllers
                     .Where(r => r.StartDate >= DateTime.Now && r.StartDate.Date == DateTime.Today)
                     .SumAsync(r => r.TimeRequirement);
 
-                if (toBeDoneTodayTime + timeRequirement > GetRemainingSlotCapacityToday() * _configuration.Reservation.TimeUnit) return false;
+                var remainingSlotCapacityToday = GetRemainingSlotCapacityToday();
+                if (toBeDoneTodayTime + timeRequirement > remainingSlotCapacityToday * _configuration.Reservation.TimeUnit)
+                {
+                    _telemetryClient.TrackTrace(
+                        "BadRequest: Company limit has been reached.",
+                        Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
+                        new Dictionary<string, string>
+                        {
+                            { "UserId", _user.Id },
+                            { "StartDate", date.ToString() },
+                            { "ToBeDoneTodayTime", toBeDoneTodayTime.ToString() },
+                            { "TimeRequirement", timeRequirement.ToString() },
+                            { "RemainingSlotCapacityToday", remainingSlotCapacityToday.ToString() },
+                        });
+
+                    return false;
+                }
             }
 
             return true;
@@ -1637,8 +1804,22 @@ namespace CarWash.PWA.Controllers
                 .Where(r => r.StartDate == dateTime)
                 .SumAsync(r => r.TimeRequirement);
 
-            return reservedTimeInSlot + timeRequirement <=
-                   _configuration.Slots.Find(s => s.StartTime == dateTime.Hour)?.Capacity * _configuration.Reservation.TimeUnit;
+            var slotCapacity = _configuration.Slots.Find(s => s.StartTime == dateTime.Hour)?.Capacity;
+            if (reservedTimeInSlot + timeRequirement <= slotCapacity * _configuration.Reservation.TimeUnit) return true;
+
+            _telemetryClient.TrackTrace(
+                "BadRequest: There is not enough time in that slot.",
+                Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
+                new Dictionary<string, string>
+                {
+                    { "UserId", _user.Id },
+                    { "StartDate", dateTime.ToString() },
+                    { "reservedTimeInSlot", reservedTimeInSlot.ToString() },
+                    { "TimeRequirement", timeRequirement.ToString() },
+                    { "slotCapacity", slotCapacity.ToString() },
+                });
+
+            return false;
         }
 
         /// <summary>
@@ -1651,7 +1832,22 @@ namespace CarWash.PWA.Controllers
         {
             if (_user.IsCarwashAdmin) return false;
 
-            return await _context.Blocker.AnyAsync(b => b.StartDate < startTime && b.EndDate > endTime);
+            if (await _context.Blocker.AnyAsync(b => b.StartDate < startTime && b.EndDate > endTime))
+            {
+                _telemetryClient.TrackTrace(
+                    "BadRequest: Cannot reserve for blocked slots.",
+                    Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
+                    new Dictionary<string, string>
+                    {
+                        { "UserId", _user.Id },
+                        { "StartDate", startTime.ToString() },
+                        { "EndDate", endTime.ToString() }
+                    });
+
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
