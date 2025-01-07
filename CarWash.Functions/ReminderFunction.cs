@@ -70,9 +70,9 @@ namespace CarWash.Functions
                     To = reservation.User.Email,
                     Subject = "CarWash reminder",
                     Body = $@"Hi {reservation.User.FirstName}, 
-It's time to leave the key at the reception and <a href='https://carwashu.azurewebsites.net'>confirm drop-off & vehicle location by clicking here</a>!
+It's time to leave the key at the reception and <a href='https://www.mimosonk.hu/#dropoffkey'>confirm drop-off & vehicle location by clicking here</a>!
 
-If don't want to get email reminders in the future, you can <a href='https://carwashu.azurewebsites.net/settings'>disable it in the settings</a>."
+If don't want to get email reminders in the future, you can <a href='https://www.mimosonk.hu/settings'>disable it in the settings</a>."
                 };
 
                 switch (reservation.User.NotificationChannel)
@@ -94,10 +94,10 @@ If don't want to get email reminders in the future, you can <a href='https://car
                                 Body = "It's time to leave the key at the reception and confirm vehicle location!",
                                 Tag = NotificationTag.Reminder,
                                 RequireInteraction = true,
-                                Actions = new List<NotificationAction>
-                                {
-                                    new NotificationAction { Action = "confirm-dropoff", Title = "Confirm drop-off" }
-                                }
+                                Actions =
+                                [
+                                    new() { Action = "confirm-dropoff", Title = "Confirm drop-off" }
+                                ]
                             };
                             await NotificationService.SendPushReminder(reservation, _context, notification);
                             log.LogInformation($"Push notification was sent to the user ({reservation.User.Id}) about the reservation with id: {reservation.Id}. ({watch.ElapsedMilliseconds}ms)");
@@ -111,11 +111,11 @@ If don't want to get email reminders in the future, you can <a href='https://car
 
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new ArgumentOutOfRangeException(nameof(NotificationChannel));
                 }
 
                 // Send message to ServiceBus which is monitored by the bot, who will ping the user
-                await NotificationService.SendBotReminderMessage(reservation, BotReminderQueueName);
+                await NotificationService.SendBotReminderMessage(reservation, BotReminderQueueName, log);
                 log.LogInformation($"Bot reminder was sent to the user ({reservation.User.Id}) about the reservation with id: {reservation.Id}. ({watch.ElapsedMilliseconds}ms)");
             }
 

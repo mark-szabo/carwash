@@ -3,6 +3,7 @@ using CarWash.ClassLibrary.Extensions;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Models.ServiceBus;
 using CarWash.ClassLibrary.Services;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
@@ -34,10 +35,14 @@ namespace CarWash.Functions
             }
         }
 
-        public static async Task SendBotReminderMessage(Reservation reservation, string queueName)
+        public static async Task SendBotReminderMessage(Reservation reservation, string queueName, ILogger? log = null)
         {
-            var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings:ServiceBus", EnvironmentVariableTarget.Process) ?? 
-                throw new Exception($"Failed to send bot message: ServiceBus connection string is not provided.");
+            var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings:ServiceBus", EnvironmentVariableTarget.Process);
+
+            if (connectionString == null)
+            {
+                log?.LogWarning("Skipped sending bot message: ServiceBus connection string is not provided.");
+            }
 
             // since ServiceBusClient implements IAsyncDisposable we create it with "await using"
             await using var client = new ServiceBusClient(connectionString);
