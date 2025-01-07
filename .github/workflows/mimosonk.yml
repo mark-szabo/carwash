@@ -17,6 +17,8 @@ env:
 jobs:
     build:
         runs-on: windows-latest
+        outputs:
+            build_number: ${{ steps.build_number.outputs.VERSION }}
         steps:
             - uses: actions/checkout@v4
             - name: Setup .NET SDK
@@ -73,7 +75,7 @@ jobs:
                   --auth-mode login
                   --endpoint ${{ env.AZURE_APPCONFIG_ENDPOINT }}
                   --key VERSION
-                  --value ${{ steps.build_number.outputs.VERSION }}
+                  --value ${{ needs.build.outputs.build_number }}
                   --yes
             - name: Purge Azure CDN endpoint
               run: |

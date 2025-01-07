@@ -4,6 +4,7 @@
 
 bin
 obj
+output
 AppPackages
 project.lock.json
 .vs
@@ -23,6 +24,9 @@ CarWash\.PWA\.Windows/_pkginfo\.txt
 
 TestResults/
 CarWash.PWA/Properties/serviceDependencies.mimosonk.json
+CarWash.Functions/Properties/serviceDependencies.func-carwash-mimosonk-prod - Zip Deploy.json
+CarWash.Functions/Properties/ServiceDependencies/func-carwash-mimosonk-prod - Zip Deploy/appInsights1.arm.json
+CarWash.Functions/Properties/ServiceDependencies/func-carwash-mimosonk-prod - Zip Deploy/storage1.arm.json
 
 # Azure Functions artifacts
 bin
@@ -34,3 +38,4 @@ local.settings.json
 __blobstorage__
 __queuestorage__
 __azurite_db*__.json
+
