@@ -37,7 +37,7 @@ using System.Text.Json;
 
 namespace CarWash.PWA
 {
-    public class Startup
+    public class Startup(IConfiguration configuration, IWebHostEnvironment currentEnvironment)
     {
         private const string ContentSecurityPolicy = @"default-src 'self'; " +
                     "script-src 'self' 'unsafe-inline' 'unsafe-eval' *.msecnd.net storage.googleapis.com; " +
@@ -55,26 +55,19 @@ namespace CarWash.PWA
             PropertyNameCaseInsensitive = true
         };
 
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
-
-        public IConfiguration Configuration { get; }
-
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var config = Configuration.Get<CarWashConfiguration>();            
+            var config = configuration.Get<CarWashConfiguration>();
             if (config.Services.Count == 0)
             {
-                config.Services = JsonSerializer.Deserialize<List<Service>>(Configuration.GetValue<string>("Services"), jsonOptions);
+                config.Services = JsonSerializer.Deserialize<List<Service>>(configuration.GetValue<string>("Services"), jsonOptions);
             }
-            config.BuildNumber = Configuration.GetValue<string>("BUILD_NUMBER");
-            config.Version = Configuration.GetValue<string>("VERSION");
+            config.BuildNumber = configuration.GetValue<string>("BUILD_NUMBER");
+            config.Version = configuration.GetValue<string>("VERSION");
 
             // Add application services
-            services.AddSingleton(Configuration);
+            services.AddSingleton(configuration);
             services.AddSingleton(config);
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<IUsersController, UsersController>();
@@ -84,12 +77,12 @@ namespace CarWash.PWA
             services.AddScoped<IBotService, BotService>();
 
             // Add framework services
-            services.AddApplicationInsightsTelemetry(Configuration);
+            services.AddApplicationInsightsTelemetry(configuration);
             services.AddApplicationInsightsTelemetryProcessor<SignalrTelemetryFilter>();
             // services.AddApplicationInsightsTelemetryProcessor<ForbiddenTelemetryFilter>();
 
             // Configure SnapshotCollector from application settings
-            services.Configure<SnapshotCollectorConfiguration>(Configuration.GetSection(nameof(SnapshotCollectorConfiguration)));
+            services.Configure<SnapshotCollectorConfiguration>(configuration.GetSection(nameof(SnapshotCollectorConfiguration)));
 
             // Add SnapshotCollector telemetry processor.
             services.AddSingleton<ITelemetryProcessorFactory>(sp => new SnapshotCollectorTelemetryProcessorFactory(sp));
@@ -243,66 +236,69 @@ namespace CarWash.PWA
             // Configure SignalR
             services.AddSignalR();
 
-            // Swagger API Documentation generator
-            services.AddSwaggerGen(c =>
+            if (currentEnvironment.IsDevelopment())
             {
-                c.SwaggerDoc("v2", new OpenApiInfo { Title = "CarWash API", Version = "v2" });
-
-                var authority = $"{config.AzureAd.Instance}oauth2/v2.0";
-                c.AddSecurityDefinition("OAuth2", new OpenApiSecurityScheme
+                // Swagger API Documentation generator
+                services.AddSwaggerGen(c =>
                 {
-                    Description = "OAuth2 SSO authentication.",
-                    Type = SecuritySchemeType.OAuth2,
-                    Flows = new OpenApiOAuthFlows
+                    c.SwaggerDoc("v2", new OpenApiInfo { Title = "CarWash API", Version = "v2" });
+
+                    var authority = $"{config.AzureAd.Instance}oauth2/v2.0";
+                    c.AddSecurityDefinition("OAuth2", new OpenApiSecurityScheme
                     {
-                        Implicit = new OpenApiOAuthFlow
+                        Description = "OAuth2 SSO authentication.",
+                        Type = SecuritySchemeType.OAuth2,
+                        Flows = new OpenApiOAuthFlows
                         {
-                            AuthorizationUrl = new Uri(authority + "/authorize"),
-                            TokenUrl = new Uri(authority + "/connect/token"),
-                            Scopes = new Dictionary<string, string>
+                            Implicit = new OpenApiOAuthFlow
                             {
-                                { "openid","User offline" },
+                                AuthorizationUrl = new Uri(authority + "/authorize"),
+                                TokenUrl = new Uri(authority + "/connect/token"),
+                                Scopes = new Dictionary<string, string>
+                                {
+                                    { "openid","User offline" },
+                                }
                             }
                         }
-                    }
-                });
+                    });
 
-                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-                    Name = "Authorization",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.ApiKey,
-                    Scheme = "Bearer"
-                });
-
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
+                    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                     {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            },
-                            Scheme = "oauth2",
-                            Name = "Bearer",
-                            In = ParameterLocation.Header
-                        },
-                        new List<string>()
-                    }
-                });
+                        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                        Name = "Authorization",
+                        In = ParameterLocation.Header,
+                        Type = SecuritySchemeType.ApiKey,
+                        Scheme = "Bearer"
+                    });
 
-                // Set the comments path for the Swagger JSON and UI.
-                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-                try
-                {
-                    c.IncludeXmlComments(xmlPath);
-                }
-                catch (FileNotFoundException) { }
-            });
+                    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                    {
+                        {
+                            new OpenApiSecurityScheme
+                            {
+                                Reference = new OpenApiReference
+                                {
+                                    Type = ReferenceType.SecurityScheme,
+                                    Id = "Bearer"
+                                },
+                                Scheme = "oauth2",
+                                Name = "Bearer",
+                                In = ParameterLocation.Header
+                            },
+                            new List<string>()
+                        }
+                    });
+
+                    // Set the comments path for the Swagger JSON and UI.
+                    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                    try
+                    {
+                        c.IncludeXmlComments(xmlPath);
+                    }
+                    catch (FileNotFoundException) { }
+                });
+            }
 
             services.AddHealthChecks();
 
@@ -315,7 +311,7 @@ namespace CarWash.PWA
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider serviceProvider)
         {
-            var config = Configuration.Get<CarWashConfiguration>();
+            var config = configuration.Get<CarWashConfiguration>();
 
             if (env.IsDevelopment())
             {
@@ -369,11 +365,11 @@ namespace CarWash.PWA
                 endpoints.MapControllerRoute("default", "{controller}/{action=Index}/{id?}");
             });
 
-            // Enable middleware to serve generated Swagger as a JSON endpoint.
-            app.UseSwagger();
-
             if (env.IsDevelopment())
             {
+                // Enable middleware to serve generated Swagger as a JSON endpoint.
+                app.UseSwagger();
+
                 // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
                 // specifying the Swagger JSON endpoint.
                 app.UseSwaggerUI(c =>

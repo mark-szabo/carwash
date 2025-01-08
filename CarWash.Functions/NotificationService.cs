@@ -42,6 +42,8 @@ namespace CarWash.Functions
             if (connectionString == null)
             {
                 log?.LogWarning("Skipped sending bot message: ServiceBus connection string is not provided.");
+
+                return;
             }
 
             // since ServiceBusClient implements IAsyncDisposable we create it with "await using"
