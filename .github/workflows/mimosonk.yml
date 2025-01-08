@@ -27,7 +27,7 @@ jobs:
                   dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
             - name: Read version number from package.json
               id: build_number
-              run: echo "VERSION=$(cat ${{ env.WORKING_DIRECTORY }}/ClientApp/package.json | jq '.version')" >> $GITHUB_ENV
+              run: echo "VERSION=$(cat ${{ env.WORKING_DIRECTORY }}/ClientApp/package.json | jq '.version')" >> "$GITHUB_OUTPUT"
             - name: Create .env file with build number
               run: echo "REACT_APP_BUILD_NUMBER=${{ steps.build_number.outputs.VERSION }}" > ${{ env.WORKING_DIRECTORY }}/.env
             - name: Restore
