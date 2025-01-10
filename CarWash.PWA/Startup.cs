@@ -34,6 +34,7 @@ using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using System.Text.Json;
+using Microsoft.Data.SqlClient;
 
 namespace CarWash.PWA
 {
@@ -161,8 +162,8 @@ namespace CarWash.PWA
                                 {
                                     await dbContext.SaveChangesAsync();
                                 }
-                                catch (DbUpdateException)
-                                {
+                                catch (Exception ex) when (ex is DbUpdateException || ex is SqlException)
+                                {                                    
                                     user = dbContext.Users.SingleOrDefault(u => u.Email == email);
 
                                     if (user != null)
