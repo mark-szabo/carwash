@@ -5,6 +5,7 @@ import { Redirect } from 'react-router';
 import apiFetch from '../Auth';
 import { withStyles } from '@mui/styles';
 import Alert from '@mui/material/Alert';
+import Autocomplete from '@mui/material/Autocomplete';
 import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
@@ -450,9 +451,9 @@ class Reserve extends TrackedComponent {
         });
     };
 
-    handleUserChange = event => {
+    handleUserChange = (event, newInputValue) => {
         this.setState({
-            userId: event.target.value,
+            userId: newInputValue,
         });
     };
 
@@ -788,22 +789,29 @@ class Reserve extends TrackedComponent {
                                 </div>
                                 {(user.isAdmin || user.isCarwashAdmin) && (
                                     <FormControl className={classes.formControl}>
-                                        <InputLabel htmlFor="user">User</InputLabel>
-                                        <Select
+                                        <Autocomplete
                                             required
                                             value={userId}
                                             onChange={this.handleUserChange}
-                                            inputProps={{
-                                                name: 'user',
-                                                id: 'user',
+                                            disablePortal
+                                            selectOnFocus
+                                            clearOnBlur
+                                            handleHomeEndKeys
+                                            id="user"
+                                            options={Object.keys(users)}
+                                            getOptionLabel={(option) => users[option]}
+                                            renderOption={(props, option) => {
+                                              const { key, ...optionProps } = props;
+                                              return (
+                                                <li key={option} {...optionProps}>
+                                                  {users[option]}
+                                                </li>
+                                              );
                                             }}
-                                        >
-                                            {Object.keys(users).map(id => (
-                                                <MenuItem value={id} key={id}>
-                                                    {users[id]}
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
+                                            renderInput={(params) => (
+                                              <TextField {...params} label="User" />
+                                            )}
+                                        />
                                     </FormControl>
                                 )}
                                 <div>
