@@ -55,11 +55,16 @@ class CarwashGrid extends Component {
             invokeBacklogHub,
             openSnackbar,
             snackbarOpen,
+            searchTerm,
         } = this.props;
 
         if (backlogLoading) {
             return <Spinner />;
         }
+
+        const filteredBacklog = backlog.filter(r =>
+            r.vehiclePlateNumber.toUpperCase().includes(searchTerm.toUpperCase())
+        );
 
         const yesterdayMidnight = moment()
             .hours(0)
@@ -76,22 +81,22 @@ class CarwashGrid extends Component {
             .seconds(0)
             .add(2, 'days');
 
-        const earlier = backlog.filter(r => moment(r.startDate).isBefore(yesterdayMidnight));
-        const done = backlog.filter(
+        const earlier = filteredBacklog.filter(r => moment(r.startDate).isBefore(yesterdayMidnight));
+        const done = filteredBacklog.filter(
             r =>
                 (r.state === State.Done || r.state === State.NotYetPaid) &&
                 moment(r.startDate).isAfter(yesterdayMidnight) &&
                 moment(r.startDate).isBefore(todayMidnight)
         );
-        const today = backlog.filter(
+        const today = filteredBacklog.filter(
             r =>
                 r.state !== State.Done &&
                 r.state !== State.NotYetPaid &&
                 moment(r.startDate).isAfter(yesterdayMidnight) &&
                 moment(r.startDate).isBefore(todayMidnight)
         );
-        const tomorrow = backlog.filter(r => moment(r.startDate).isAfter(todayMidnight) && moment(r.startDate).isBefore(tomorrowMidnight));
-        const later = backlog.filter(r => moment(r.startDate).isAfter(tomorrowMidnight));
+        const tomorrow = filteredBacklog.filter(r => moment(r.startDate).isAfter(todayMidnight) && moment(r.startDate).isBefore(tomorrowMidnight));
+        const later = filteredBacklog.filter(r => moment(r.startDate).isAfter(tomorrowMidnight));
 
         return (
             <Grid container direction="row" justifyContent="flex-start" alignItems="flex-start" spacing={1} className={classes.grid}>
@@ -191,6 +196,7 @@ CarwashGrid.propTypes = {
     invokeBacklogHub: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
+    searchTerm: PropTypes.string.isRequired,
 };
 
 export default withStyles(styles)(CarwashGrid);

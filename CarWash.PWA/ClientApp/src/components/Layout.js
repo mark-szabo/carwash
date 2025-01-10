@@ -13,6 +13,8 @@ import Divider from '@mui/material/Divider';
 import MenuIcon from '@mui/icons-material/Menu';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import InputBase from '@mui/material/InputBase';
+import SearchIcon from '@mui/icons-material/Search';
 import { drawerItems, otherDrawerItems } from './DrawerItems';
 
 const drawerWidth = 240;
@@ -165,8 +167,9 @@ class Layout extends React.Component {
     }
 
     render() {
-        const { classes, theme, configuration, user, version } = this.props;
+        const { classes, theme, configuration, user, version, searchTerm, handleSearchChange } = this.props;
         const refresh = this.getRefreshFunc();
+        const isCarwashAdmin = window.location.pathname.includes('/carwashadmin');
 
         const drawer = (
             <div className={classes.drawer}>
@@ -227,6 +230,19 @@ class Layout extends React.Component {
                         <Typography variant="h6" noWrap className={classes.flex}>
                             {this.getNavbarName()}
                         </Typography>
+                        {isCarwashAdmin && (
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <InputBase
+                                    placeholder="Search…"
+                                    onChange={handleSearchChange}
+                                    value={searchTerm}
+                                    style={{ color: 'inherit', marginRight: '16px' }}
+                                />
+                                <IconButton aria-label="search" size="large">
+                                    <SearchIcon />
+                                </IconButton>
+                            </div>
+                        )}
                         {refresh && (
                             <IconButton aria-label="refresh" onClick={refresh} size="large">
                                 <RefreshIcon />
@@ -262,7 +278,7 @@ class Layout extends React.Component {
                     </Drawer>
                 </Hidden>
                 <div className={classes.toolbar} />
-                <main className={classes.content}>{this.props.children}</main>
+                <main className={classes.content}>{React.cloneElement(this.props.children, { searchTerm })}</main>
             </div>
         );
     }
@@ -275,6 +291,8 @@ Layout.propTypes = {
     configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     user: PropTypes.object, // eslint-disable-line react/forbid-prop-types
     version: PropTypes.string.isRequired,
+    searchTerm: PropTypes.string.isRequired,
+    handleSearchChange: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles, { withTheme: true })(Layout);

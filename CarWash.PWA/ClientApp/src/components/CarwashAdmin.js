@@ -7,7 +7,17 @@ export default class CarwashAdmin extends TrackedComponent {
     displayName = 'CarwashAdmin';
 
     render() {
-        const { configuration, backlog, backlogLoading, updateBacklogItem, removeBacklogItem, invokeBacklogHub, openSnackbar, snackbarOpen } = this.props;
+        const {
+            configuration,
+            backlog,
+            backlogLoading,
+            updateBacklogItem,
+            removeBacklogItem,
+            invokeBacklogHub,
+            openSnackbar,
+            snackbarOpen,
+            searchTerm,
+        } = this.props;
 
         return (
             <CarwashGrid
@@ -19,6 +29,7 @@ export default class CarwashAdmin extends TrackedComponent {
                 invokeBacklogHub={invokeBacklogHub}
                 snackbarOpen={snackbarOpen}
                 openSnackbar={openSnackbar}
+                searchTerm={searchTerm}
             />
         );
     }
@@ -33,4 +44,5 @@ CarwashAdmin.propTypes = {
     invokeBacklogHub: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
+    searchTerm: PropTypes.string.isRequired,
 };
