@@ -71,20 +71,20 @@ jobs:
                   creds: ${{ secrets.AZURE_CREDENTIALS }}
             - name: Update app configuration VERSION
               run: |
-                  az appconfig kv set
-                  --name ${{ env.AZURE_APPCONFIG_NAME }}
-                  --auth-mode login
-                  --endpoint ${{ env.AZURE_APPCONFIG_ENDPOINT }}
-                  --key VERSION
-                  --value ${{ needs.build.outputs.build_number }}
+                  az appconfig kv set \
+                  --name ${{ env.AZURE_APPCONFIG_NAME }} \
+                  --auth-mode login \
+                  --endpoint ${{ env.AZURE_APPCONFIG_ENDPOINT }} \
+                  --key VERSION \
+                  --value ${{ needs.build.outputs.build_number }} \
                   --yes
             - name: Purge Azure CDN endpoint
               run: |
-                  az cdn endpoint purge
-                  --resource-group ${{ env.AZURE_RESOURCE_GROUP }}
-                  --profile-name ${{ env.AZURE_CDN_PROFILE_NAME }}
-                  --name ${{ env.AZURE_CDN_ENDPOINT }}
-                  --content-paths '/' '/sw.js' '/api/.well-known/configuration'
+                  az cdn endpoint purge \
+                  --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+                  --profile-name ${{ env.AZURE_CDN_PROFILE_NAME }} \
+                  --name ${{ env.AZURE_CDN_ENDPOINT }} \
+                  --content-paths '/' '/sw.js' '/api/.well-known/configuration' \
                   --no-wait
             - name: Azure service principal logout
               run: az logout
