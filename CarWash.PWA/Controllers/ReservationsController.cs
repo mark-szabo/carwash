@@ -1284,7 +1284,7 @@ namespace CarWash.PWA.Controllers
             }
             #endregion
 
-            return new NotAvailableDatesAndTimesViewModel { Dates = notAvailableDates.Distinct(), Times = notAvailableTimes };
+            return new NotAvailableDatesAndTimesViewModel { Dates = notAvailableDates.Distinct().Select(DateOnly.FromDateTime), Times = notAvailableTimes };
         }
 
         // GET: api/reservations/lastsettings
@@ -1928,7 +1928,7 @@ namespace CarWash.PWA.Controllers
 
     public class NotAvailableDatesAndTimesViewModel
     {
-        public IEnumerable<DateTime> Dates { get; set; }
+        public IEnumerable<DateOnly> Dates { get; set; }
         public IEnumerable<DateTime> Times { get; set; }
     }
 
