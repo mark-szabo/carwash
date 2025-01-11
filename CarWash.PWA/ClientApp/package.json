@@ -26,7 +26,6 @@
     ],
     "coyright": "Copyright (c) 2018 Microsoft",
     "dependencies": {
-        "@appannie/react-infinite-calendar": "^3.6.8",
         "@emotion/react": "^11.13.0",
         "@emotion/styled": "^11.13.0",
         "@microsoft/applicationinsights-react-js": "^17.3.0",
@@ -35,6 +34,7 @@
         "@mui/icons-material": "^5.16.7",
         "@mui/material": "^5.16.7",
         "@mui/styles": "^5.16.7",
+        "@mui/x-date-pickers": "^7.23.6",
         "adal-angular": "^1.0.17",
         "ajv": "^8.17.1",
         "downloadjs": "^1.4.7",

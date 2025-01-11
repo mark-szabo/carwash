@@ -23,14 +23,15 @@ import TextField from '@mui/material/TextField';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
-import InfiniteCalendar from '@appannie/react-infinite-calendar';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
+import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import WarningIcon from '@mui/icons-material/Warning';
 import Grid from '@mui/material/Grid';
 import * as moment from 'moment';
 import { Garages, Service, NotificationChannel, BacklogHubMethods, getServiceName } from '../Constants';
-import '@appannie/react-infinite-calendar/styles.css';
 import './Reserve.css';
 import ServiceDetailsTable from './ServiceDetailsTable';
 import Spinner from './Spinner';
@@ -72,6 +73,7 @@ const styles = theme => ({
     },
     calendar: {
         maxWidth: '400px',
+        margin: 0,
     },
     radioGroup: {
         margin: `${theme.spacing(1)} 0`,
@@ -142,7 +144,7 @@ class Reserve extends TrackedComponent {
                 garage: false,
                 floor: false,
             },
-            selectedDate: moment(),
+            selectedDate: null,
             vehiclePlateNumber: '',
             garage: '',
             floor: '',
@@ -345,7 +347,7 @@ class Reserve extends TrackedComponent {
         }));
     };
 
-    handleDateSelectionComplete = date => {
+    handleDateSelectionComplete = (date) => {
         if (!date) return;
         const selectedDate = moment(date);
 
@@ -616,7 +618,15 @@ class Reserve extends TrackedComponent {
             timeSelected,
         } = this.state;
         const today = moment();
-        const isDateToday = selectedDate.isSame(today, 'day');
+        const yearFromToday = moment().add(1, 'year');
+        const isDateToday = selectedDate?.isSame(today, 'day');
+        
+        const shouldDisableDate = (date) => {
+            const dayOfWeek = date.day();
+            if (dayOfWeek === 0 || dayOfWeek === 6) return true;
+
+            return notAvailableDates.some(d => date.isSame(d, 'day'));
+        };
 
         if (this.state.reservationCompleteRedirect) {
             return <Redirect to="/" />;
@@ -689,29 +699,19 @@ class Reserve extends TrackedComponent {
                 <Step>
                     <StepLabel>{dateStepLabel}</StepLabel>
                     <StepContent>
-                        {loading ? (
-                            <Spinner />
-                        ) : (
-                            <InfiniteCalendar
-                                onSelect={date => this.handleDateSelectionComplete(date)}
-                                selected={selectedDate}
-                                min={today.toDate()}
-                                minDate={today.toDate()}
-                                max={today.add(365, 'days').toDate()}
-                                locale={{ weekStartsOn: 1 }}
-                                disabledDays={[0, 6, 7]}
-                                disabledDates={notAvailableDates}
-                                displayOptions={{ showHeader: false, showTodayHelper: false }}
-                                width={'100%'}
-                                height={350}
+                        <LocalizationProvider dateAdapter={AdapterMoment}>
+                            <DateCalendar
+                                onChange={date => this.handleDateSelectionComplete(date)}
+                                value={selectedDate}
+                                referenceDate={today}
+                                loading={loading}
+                                shouldDisableDate={shouldDisableDate}
+                                disablePast
+                                maxDate={yearFromToday}
+                                views={['day']}
                                 className={classes.calendar}
-                                theme={{
-                                    selectionColor: '#80d8ff',
-                                    weekdayColor: '#80d8ff',
-                                }}
-                                id="reserve-calendar"
                             />
-                        )}
+                        </LocalizationProvider>
                         <div className={classes.actionsContainer}>
                             <div>
                                 <Button onClick={this.handleBack} className={classes.button}>
@@ -801,15 +801,15 @@ class Reserve extends TrackedComponent {
                                             options={Object.keys(users)}
                                             getOptionLabel={(option) => users[option]}
                                             renderOption={(props, option) => {
-                                              const { key, ...optionProps } = props;
-                                              return (
-                                                <li key={option} {...optionProps}>
-                                                  {users[option]}
-                                                </li>
-                                              );
+                                                const { key, ...optionProps } = props;
+                                                return (
+                                                    <li key={option} {...optionProps}>
+                                                        {users[option]}
+                                                    </li>
+                                                );
                                             }}
                                             renderInput={(params) => (
-                                              <TextField {...params} label="User" />
+                                                <TextField {...params} label="User" />
                                             )}
                                         />
                                     </FormControl>
