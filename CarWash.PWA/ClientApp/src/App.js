@@ -110,6 +110,7 @@ export default class App extends Component {
         snackbarAction: null,
         notificationDialogOpen: false,
         theme: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? darkTheme : lightTheme,
+        searchTerm: '',
     };
 
     componentDidMount() {
@@ -513,6 +514,10 @@ export default class App extends Component {
         });
     };
 
+    handleSearchChange = (event) => {
+        this.setState({ searchTerm: event.target.value });
+    };
+
     render() {
         const { configuration } = this.props;
 
@@ -528,6 +533,7 @@ export default class App extends Component {
             backlogUpdateFound,
             lastSettings,
             theme,
+            searchTerm,
         } = this.state;
 
         return (
@@ -535,7 +541,13 @@ export default class App extends Component {
                 <ThemeProvider theme={theme}>
                     <CssBaseline enableColorScheme />
                     <ErrorBoundary>
-                        <Layout user={user} configuration={configuration} version={version}>
+                        <Layout
+                            user={user}
+                            configuration={configuration}
+                            version={version}
+                            searchTerm={searchTerm}
+                            handleSearchChange={this.handleSearchChange}
+                        >
                             <Switch>
                                 <Route
                                     exact
@@ -661,6 +673,7 @@ export default class App extends Component {
                                                 invokeBacklogHub={this.invokeBacklogHub}
                                                 snackbarOpen={this.state.snackbarOpen}
                                                 openSnackbar={this.openSnackbar}
+                                                searchTerm={searchTerm}
                                                 {...props}
                                             />
                                         </ErrorBoundary>

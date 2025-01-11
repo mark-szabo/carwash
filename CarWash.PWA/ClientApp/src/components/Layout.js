@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { withStyles } from '@mui/styles';
+import { styled, alpha } from '@mui/material/styles';
 import Drawer from '@mui/material/Drawer';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -13,6 +14,8 @@ import Divider from '@mui/material/Divider';
 import MenuIcon from '@mui/icons-material/Menu';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import InputBase from '@mui/material/InputBase';
+import SearchIcon from '@mui/icons-material/Search';
 import { drawerItems, otherDrawerItems } from './DrawerItems';
 
 const drawerWidth = 240;
@@ -103,6 +106,49 @@ const styles = theme => ({
     },
 });
 
+const Search = styled('div')(({ theme }) => ({
+    position: 'relative',
+    borderRadius: theme.shape.borderRadius,
+    backgroundColor: alpha(theme.palette.common.white, 0.15),
+    '&:hover': {
+        backgroundColor: alpha(theme.palette.common.white, 0.25),
+    },
+    marginLeft: 0,
+    marginRight: theme.spacing(1),
+    width: '100%',
+    [theme.breakpoints.up('sm')]: {
+        marginLeft: theme.spacing(1),
+        width: 'auto',
+    },
+}));
+
+const SearchIconWrapper = styled('div')(({ theme }) => ({
+    padding: theme.spacing(0, 2),
+    height: '100%',
+    position: 'absolute',
+    pointerEvents: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+}));
+
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+    color: 'inherit',
+    width: '100%',
+    '& .MuiInputBase-input': {
+        padding: theme.spacing(1, 1, 1, 0),
+        // vertical padding + font size from searchIcon
+        paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+        transition: theme.transitions.create('width'),
+        [theme.breakpoints.up('sm')]: {
+            width: '12ch',
+            '&:focus': {
+                width: '20ch',
+            },
+        },
+    },
+}));
+
 class Layout extends React.Component {
     displayName = 'Layout';
 
@@ -165,8 +211,9 @@ class Layout extends React.Component {
     }
 
     render() {
-        const { classes, theme, configuration, user, version } = this.props;
+        const { classes, theme, configuration, user, version, searchTerm, handleSearchChange } = this.props;
         const refresh = this.getRefreshFunc();
+        const isCarwashAdmin = window.location.pathname.includes('/carwashadmin');
 
         const drawer = (
             <div className={classes.drawer}>
@@ -227,6 +274,19 @@ class Layout extends React.Component {
                         <Typography variant="h6" noWrap className={classes.flex}>
                             {this.getNavbarName()}
                         </Typography>
+                        {isCarwashAdmin && (
+                            <Search>
+                                <SearchIconWrapper>
+                                    <SearchIcon />
+                                </SearchIconWrapper>
+                                <StyledInputBase
+                                    placeholder="Search…"
+                                    onChange={handleSearchChange}
+                                    value={searchTerm}
+                                    inputProps={{ 'aria-label': 'search' }}
+                                />
+                            </Search>
+                        )}
                         {refresh && (
                             <IconButton aria-label="refresh" onClick={refresh} size="large">
                                 <RefreshIcon />
@@ -262,7 +322,7 @@ class Layout extends React.Component {
                     </Drawer>
                 </Hidden>
                 <div className={classes.toolbar} />
-                <main className={classes.content}>{this.props.children}</main>
+                <main className={classes.content}>{React.cloneElement(this.props.children, { searchTerm })}</main>
             </div>
         );
     }
@@ -275,6 +335,8 @@ Layout.propTypes = {
     configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     user: PropTypes.object, // eslint-disable-line react/forbid-prop-types
     version: PropTypes.string.isRequired,
+    searchTerm: PropTypes.string.isRequired,
+    handleSearchChange: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles, { withTheme: true })(Layout);
