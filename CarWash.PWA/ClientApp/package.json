@@ -37,6 +37,7 @@
         "@mui/x-date-pickers": "^7.23.6",
         "adal-angular": "^1.0.17",
         "ajv": "^8.17.1",
+        "classnames": "^2.5.1",
         "downloadjs": "^1.4.7",
         "eslint-plugin-jsx": "^0.1.0",
         "moment": "^2.30.1",
