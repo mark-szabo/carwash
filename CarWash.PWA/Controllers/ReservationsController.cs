@@ -121,7 +121,7 @@ namespace CarWash.PWA.Controllers
             dbReservation.Private = reservation.Private;
             var oldStartDate = dbReservation.StartDate;
             var newStartDate = reservation.StartDate.ToLocalTime();
-            dbReservation.StartDate = newStartDate;
+            dbReservation.StartDate = newStartDate.Date + new TimeSpan(newStartDate.Hour, minutes: 0, seconds: 0);
             if (reservation.EndDate != null) dbReservation.EndDate = ((DateTime)reservation.EndDate).ToLocalTime();
             else dbReservation.EndDate = null;
             dbReservation.Comment = reservation.Comment;
@@ -255,6 +255,7 @@ namespace CarWash.PWA.Controllers
             reservation.CreatedById = _user.Id;
             reservation.CreatedOn = DateTime.Now;
             reservation.StartDate = reservation.StartDate.ToLocalTime();
+            reservation.StartDate = reservation.StartDate.Date + new TimeSpan(reservation.StartDate.Hour, minutes: 0, seconds: 0);
 
             try
             {
