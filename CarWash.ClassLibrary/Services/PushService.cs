@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using WebPush;
 using PushSubscription = CarWash.ClassLibrary.Models.PushSubscription;
+using Microsoft.Data.SqlClient;
 
 namespace CarWash.ClassLibrary.Services
 {
@@ -71,7 +72,19 @@ namespace CarWash.ClassLibrary.Services
             if (await _context.PushSubscription.AnyAsync(s => s.P256Dh == subscription.P256Dh)) return;
 
             await _context.PushSubscription.AddAsync(subscription);
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex) when (ex is DbUpdateException || ex is SqlException)
+            {
+                if (await _context.PushSubscription.AnyAsync(s => s.P256Dh == subscription.P256Dh))
+                {
+                    Debug.WriteLine("Push Subscription already exists. Most likely the exception was thrown by the concurrently firing requests.");
+                }
+                else throw;
+            }
         }
 
         /// <inheritdoc />
