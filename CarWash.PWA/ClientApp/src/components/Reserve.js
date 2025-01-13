@@ -383,6 +383,9 @@ class Reserve extends TrackedComponent {
         const time = event.target.value;
         const dateTime = moment(this.state.selectedDate);
         dateTime.hours(time);
+        dateTime.minutes(0);
+        dateTime.seconds(0);
+        dateTime.milliseconds(0);
         this.setState({
             activeStep: 3,
             selectedDate: dateTime,

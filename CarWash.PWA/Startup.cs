@@ -41,7 +41,7 @@ namespace CarWash.PWA
     public class Startup(IConfiguration configuration, IWebHostEnvironment currentEnvironment)
     {
         private const string ContentSecurityPolicy = @"default-src 'self'; " +
-                    "script-src 'self' 'unsafe-inline' 'unsafe-eval' *.msecnd.net storage.googleapis.com; " +
+                    "script-src 'self' 'unsafe-inline' 'unsafe-eval' *.msecnd.net storage.googleapis.com static.cloudflareinsights.com; " +
                     "style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com; " +
                     "img-src 'self' data:; " +
                     "connect-src https: wss: 'self' fonts.googleapis.com fonts.gstatic.com; " +

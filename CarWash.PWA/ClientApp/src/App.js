@@ -173,6 +173,17 @@ export default class App extends Component {
                 },
             },
         });
+
+        appInsights.addTelemetryInitializer(envelope => {
+            if (
+                envelope.baseType === 'RemoteDependencyData' &&
+                /POST .*\/hub\/backlog.*/.test(envelope.data.baseData.name)
+            ) {
+                return false;
+            }
+            return true;
+        });
+
         appInsights.loadAppInsights();
 
         this.keyboardListener();
@@ -514,7 +525,7 @@ export default class App extends Component {
         });
     };
 
-    handleSearchChange = (event) => {
+    handleSearchChange = event => {
         this.setState({ searchTerm: event.target.value });
     };
 
