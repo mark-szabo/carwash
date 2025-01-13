@@ -34,8 +34,8 @@ jobs:
             - name: Restore
               run: dotnet restore "${{ env.WORKING_DIRECTORY }}"
             - name: Build
-              env:
-                  VERSION: ${{ steps.build_number.outputs.VERSION }}
+              #env:
+              #    VERSION: ${{ steps.build_number.outputs.VERSION }}
               run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
             - name: Test
               run: dotnet test "CarWash.PWA.Tests" --collect:"XPlat Code Coverage"
