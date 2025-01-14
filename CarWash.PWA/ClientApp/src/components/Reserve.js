@@ -373,12 +373,6 @@ class Reserve extends TrackedComponent {
         );
     };
 
-    getSlotReservationPercentage = slot => {
-        if (!this.state.reservationPercentageDataArrived) return '';
-        if (!this.state.reservationPercentage[slot]) return '(unknown free slots)';
-        return `(~${this.state.reservationPercentage[slot].freeCapacity} free slots)`;
-    };
-
     handleTimeSelectionComplete = event => {
         const time = event.target.value;
         const dateTime = moment(this.state.selectedDate);
@@ -579,12 +573,21 @@ class Reserve extends TrackedComponent {
         let i = 0;
 
         for (const slot of slots) {
+            let freeSlots = 0;
+            let freeSlotsText = '';
+            if (!this.state.reservationPercentageDataArrived) {}
+            else if (!this.state.reservationPercentage[slot]) freeSlotsText = '(unknown free slots)';
+            else {
+                freeSlots = this.state.reservationPercentage[slot].freeCapacity; 
+                freeSlotsText = `(~${freeSlots} free slots)`;
+            }
+
             jsx.push(
                 <FormControlLabel
                     value={slot.startTime}
                     control={<Radio />}
-                    label={`${slot.startTime}:00 - ${slot.endTime}:00 ${this.getSlotReservationPercentage(i)}`}
-                    disabled={disabledSlots[i]}
+                    label={`${slot.startTime}:00 - ${slot.endTime}:00 ${freeSlotsText}`}
+                    disabled={disabledSlots[i] && freeSlots === 0}
                     id={`reserve-slot-${i}`}
                 />
             );
