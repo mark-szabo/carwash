@@ -59,6 +59,8 @@ namespace CarWash.PWA
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddAzureAppConfiguration();
+
             var config = configuration.Get<CarWashConfiguration>();
             if (config.Services.Count == 0)
             {
@@ -312,6 +314,7 @@ namespace CarWash.PWA
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider serviceProvider)
         {
+            app.UseAzureAppConfiguration();
             var config = configuration.Get<CarWashConfiguration>();
 
             if (env.IsDevelopment())

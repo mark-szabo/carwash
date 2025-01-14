@@ -33,6 +33,7 @@
 		</PackageReference>
 		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
 		<PackageReference Include="Microsoft.ApplicationInsights.SnapshotCollector" Version="1.4.6" />
+		<PackageReference Include="Microsoft.Azure.AppConfiguration.AspNetCore" Version="8.0.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
@@ -44,7 +45,7 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.Graph" Version="5.68.0" />
-		<PackageReference Include="Microsoft.Identity.Client" Version="4.66.2" />
+		<PackageReference Include="Microsoft.Identity.Client" Version="4.67.1" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
 		<PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="7.2.0" />
 		<PackageReference Include="System.Formats.Asn1" Version="9.0.0" />
