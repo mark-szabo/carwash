@@ -576,9 +576,9 @@ class Reserve extends TrackedComponent {
             let freeSlots = 0;
             let freeSlotsText = '';
             if (!this.state.reservationPercentageDataArrived) {}
-            else if (!this.state.reservationPercentage[slot]) freeSlotsText = '(unknown free slots)';
+            else if (!this.state.reservationPercentage[i]) freeSlotsText = '(unknown free slots)';
             else {
-                freeSlots = this.state.reservationPercentage[slot].freeCapacity; 
+                freeSlots = this.state.reservationPercentage[i].freeCapacity; 
                 freeSlotsText = `(~${freeSlots} free slots)`;
             }
 
