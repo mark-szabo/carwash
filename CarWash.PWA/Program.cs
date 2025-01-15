@@ -30,8 +30,13 @@ namespace CarWash.PWA
                         options.Connect(new Uri(endpoint), new DefaultAzureCredential())
                             // Configure to reload configuration if the registered sentinel key is modified
                             .ConfigureRefresh(refreshOptions =>
-                                refreshOptions.Register("TestApp:Settings:Sentinel", refreshAll: true)
+                                refreshOptions.Register("VERSION", refreshAll: true)
                                               .SetRefreshInterval(TimeSpan.FromMinutes(5)));
+
+                        options.ConfigureKeyVault(kv =>
+                        {
+                            kv.SetCredential(new DefaultAzureCredential());
+                        });
                     });
                 })
                 .ConfigureKestrel(c => c.AddServerHeader = false)
