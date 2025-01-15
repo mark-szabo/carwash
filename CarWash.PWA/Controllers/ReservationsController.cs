@@ -1473,7 +1473,7 @@ namespace CarWash.PWA.Controllers
 
                     worksheet.Cells[i, 8].Value = reservation.Private;
 
-                    worksheet.Cells[i, 9].Value = string.Join(", ", reservation.Services);
+                    worksheet.Cells[i, 9].Value = reservation.GetServiceNames(_configuration);
 
                     worksheet.Cells[i, 10].Value = reservation.Comment;
 
@@ -1500,7 +1500,8 @@ namespace CarWash.PWA.Controllers
                 worksheet.Column(6).AutoFit();
                 worksheet.Column(7).AutoFit();
                 worksheet.Column(8).AutoFit();
-                worksheet.Column(9).AutoFit(); //don't do it for comment fields
+                // worksheet.Column(9).AutoFit(); //services
+                // don't do it for comment fields
                 worksheet.Column(12).AutoFit();
 
                 // Pivot table

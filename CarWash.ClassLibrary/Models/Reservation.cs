@@ -131,13 +131,15 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Gets reservation's costs.
         /// </summary>
+        /// <param name="configuration">The car wash configuration containing service prices.</param>
+        /// <returns>The total price of the reservation based on selected services and vehicle type.</returns>
         public int GetPrice(CarWashConfiguration configuration)
         {
             var sum = 0;
 
             foreach (var service in Services)
             {
-                var serviceCosts = configuration.Services.SingleOrDefault(s => s.Id == service) 
+                var serviceCosts = configuration.Services.SingleOrDefault(s => s.Id == service)
                     ?? throw new Exception("Invalid service. No price found.");
 
                 sum += Mpv ? serviceCosts.PriceMpv : serviceCosts.Price;
@@ -145,5 +147,19 @@ namespace CarWash.ClassLibrary.Models
 
             return sum;
         }
+
+        /// <summary>
+        /// Gets the concatenated names of the services.
+        /// </summary>
+        /// <param name="configuration">The car wash configuration.</param>
+        /// <returns>A string of service names separated by commas and spaces.</returns>
+        public string GetServiceNames(CarWashConfiguration configuration)
+        {
+            var serviceNames = Services
+                .Select(serviceId => configuration.Services.SingleOrDefault(s => s.Id == serviceId)?.Name)
+                .Where(name => !string.IsNullOrEmpty(name));
+
+            return string.Join(", ", serviceNames);
+        }        
     }
 }
