@@ -2,6 +2,7 @@
 using CarWash.ClassLibrary.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 
 namespace CarWash.PWA.Controllers
 {
@@ -12,7 +13,7 @@ namespace CarWash.PWA.Controllers
     [Produces("application/json")]
     [Route("api/.well-known")]
     [ApiController]
-    public class WellKnownController(CarWashConfiguration configuration, ApplicationDbContext context) : ControllerBase
+    public class WellKnownController(IOptionsMonitor<CarWashConfiguration> configuration, ApplicationDbContext context) : ControllerBase
     {
         // GET: api/.well-known/configuration
         /// <summary>
@@ -25,13 +26,13 @@ namespace CarWash.PWA.Controllers
         {
             var wellKnown = new WellKnown
             {
-                Slots = configuration.Slots,
+                Slots = configuration.CurrentValue.Slots,
                 Companies = await context.Company.ToListAsync(),
-                Garages = configuration.Garages,
-                Services = configuration.Services,
-                ReservationSettings = configuration.Reservation,
-                BuildNumber = configuration.BuildNumber,
-                Version = configuration.Version
+                Garages = configuration.CurrentValue.Garages,
+                Services = configuration.CurrentValue.Services,
+                ReservationSettings = configuration.CurrentValue.Reservation,
+                BuildNumber = configuration.CurrentValue.BuildNumber,
+                Version = configuration.CurrentValue.Version
             };
 
             return Ok(wellKnown);

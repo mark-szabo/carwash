@@ -5,23 +5,14 @@ using System;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 
 namespace CarWash.ClassLibrary.Services
 {
     /// <inheritdoc />
-    public class CalendarService : ICalendarService
+    public class CalendarService(IOptionsMonitor<CarWashConfiguration> configuration, TelemetryClient telemetryClient, HttpClient httpClient = null) : ICalendarService
     {
-        private readonly CarWashConfiguration _configuration;
-        private readonly TelemetryClient _telemetryClient;
-        private readonly HttpClient _client;
-
-        /// <inheritdoc />
-        public CalendarService(CarWashConfiguration configuration, TelemetryClient telemetryClient, HttpClient httpClient = null)
-        {
-            _configuration = configuration;
-            _telemetryClient = telemetryClient;
-            _client = httpClient ?? new HttpClient();
-        }
+        private readonly HttpClient _client = httpClient ?? new HttpClient();
 
         /// <inheritdoc />
         public async Task<string> CreateEventAsync(Reservation reservation)
@@ -34,7 +25,7 @@ namespace CarWash.ClassLibrary.Services
             }
             catch (Exception e)
             {
-                _telemetryClient.TrackException(e);
+                telemetryClient.TrackException(e);
 
                 return null;
             }
@@ -53,7 +44,7 @@ namespace CarWash.ClassLibrary.Services
             }
             catch (Exception e)
             {
-                _telemetryClient.TrackException(e);
+                telemetryClient.TrackException(e);
 
                 return null;
             }
@@ -73,7 +64,7 @@ namespace CarWash.ClassLibrary.Services
             }
             catch (Exception e)
             {
-                _telemetryClient.TrackException(e);
+                telemetryClient.TrackException(e);
             }
         }
 
@@ -85,7 +76,7 @@ namespace CarWash.ClassLibrary.Services
         private async Task<string> CallLogicApp(Event calendarEvent)
         {
             var content = new StringContent(JsonConvert.SerializeObject(calendarEvent), Encoding.UTF8, "application/json");
-            var response = await _client.PostAsync(_configuration.CalendarService.LogicAppUrl, content);
+            var response = await _client.PostAsync(configuration.CurrentValue.CalendarService.LogicAppUrl, content);
             response.EnsureSuccessStatusCode();
 
             return await response.Content.ReadAsStringAsync();
@@ -109,7 +100,7 @@ namespace CarWash.ClassLibrary.Services
                 EndTime = reservation.EndDate.ToString(),
                 Location = reservation.Location,
                 Body =
-                    $"Please don't forget to leave the key at the reception and <a href=\"{_configuration.ConnectionStrings.BaseUrl}\">confirm drop-off & vehicle location by clicking here</a>!"
+                    $"Please don't forget to leave the key at the reception and <a href=\"{configuration.CurrentValue.ConnectionStrings.BaseUrl}\">confirm drop-off & vehicle location by clicking here</a>!"
             };
         }
     }

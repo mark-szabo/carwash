@@ -61,17 +61,18 @@ namespace CarWash.PWA
         {
             services.AddAzureAppConfiguration();
 
-            var config = configuration.Get<CarWashConfiguration>();
-            if (config.Services.Count == 0)
+            services.Configure<CarWashConfiguration>(configuration);
+            services.PostConfigure<CarWashConfiguration>(config =>
             {
-                config.Services = JsonSerializer.Deserialize<List<Service>>(configuration.GetValue<string>("Services"), jsonOptions);
-            }
-            config.BuildNumber = configuration.GetValue<string>("BUILD_NUMBER");
-            config.Version = configuration.GetValue<string>("VERSION");
+                if (config.Services.Count == 0)
+                {
+                    config.Services = JsonSerializer.Deserialize<List<Service>>(configuration.GetValue<string>("Services"), jsonOptions);
+                }
+
+                config.BuildNumber = configuration.GetValue<string>("BUILD_NUMBER");
+            });
 
             // Add application services
-            services.AddSingleton(configuration);
-            services.AddSingleton(config);
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<IUsersController, UsersController>();
             services.AddScoped<IEmailService, EmailService>();
@@ -90,7 +91,7 @@ namespace CarWash.PWA
             // Add SnapshotCollector telemetry processor.
             services.AddSingleton<ITelemetryProcessorFactory>(sp => new SnapshotCollectorTelemetryProcessorFactory(sp));
 
-            services.AddDbContextPool<ApplicationDbContext>(options => options.UseSqlServer(config.ConnectionStrings.SqlDatabase));
+            services.AddDbContextPool<ApplicationDbContext>(options => options.UseSqlServer(configuration.GetConnectionString("SqlDatabase"), o => o.EnableRetryOnFailure()));
 
             services.AddAuthentication(options =>
                 {
@@ -98,8 +99,8 @@ namespace CarWash.PWA
                 })
                 .AddJwtBearer(options =>
                 {
-                    options.Audience = config.AzureAd.ClientId;
-                    options.Authority = config.AzureAd.Instance;
+                    options.Audience = configuration["AzureAd:ClientId"];
+                    options.Authority = configuration["AzureAd:Instance"];
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = false,
@@ -118,9 +119,9 @@ namespace CarWash.PWA
                         {
                             // Check if request is coming from an authorized service application.
                             var serviceAppId = context.Principal.FindFirstValue("appid");
-                            if (serviceAppId != null && serviceAppId != config.AzureAd.ClientId)
+                            if (serviceAppId != null && serviceAppId != configuration["AzureAd:ClientId"])
                             {
-                                if (config.AzureAd.AuthorizedApplications.Contains(serviceAppId))
+                                if (configuration["AzureAd:AuthorizedApplications"].Contains(serviceAppId))
                                 {
                                     context.Principal.AddIdentity(new ClaimsIdentity([new("appId", serviceAppId)]));
 
@@ -165,7 +166,7 @@ namespace CarWash.PWA
                                     await dbContext.SaveChangesAsync();
                                 }
                                 catch (Exception ex) when (ex is DbUpdateException || ex is SqlException)
-                                {                                    
+                                {
                                     user = dbContext.Users.SingleOrDefault(u => u.Email == email);
 
                                     if (user != null)
@@ -246,7 +247,7 @@ namespace CarWash.PWA
                 {
                     c.SwaggerDoc("v2", new OpenApiInfo { Title = "CarWash API", Version = "v2" });
 
-                    var authority = $"{config.AzureAd.Instance}oauth2/v2.0";
+                    var authority = $"{configuration["AzureAd:Instance"]}oauth2/v2.0";
                     c.AddSecurityDefinition("OAuth2", new OpenApiSecurityScheme
                     {
                         Description = "OAuth2 SSO authentication.",
