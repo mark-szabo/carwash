@@ -8,6 +8,7 @@ using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -2241,22 +2242,25 @@ namespace CarWash.PWA.Tests
             return dbContext;
         }
 
-        private static CarWashConfiguration CreateConfigurationStub() => new CarWashConfiguration
+        private static IOptionsMonitor<CarWashConfiguration> CreateConfigurationStub()
         {
-            Slots = new List<Slot>
+            var configurationStub = new Mock<IOptionsMonitor<CarWashConfiguration>>();
+            configurationStub.Setup(s => s.CurrentValue).Returns(() =>  new CarWashConfiguration
+            {
+                Slots = new List<Slot>
             {
                 new Slot {StartTime = 8, EndTime = 11, Capacity = 1},
                 new Slot {StartTime = 11, EndTime = 14, Capacity = 1},
                 new Slot {StartTime = 14, EndTime = 17, Capacity = 1}
             },
-            Reservation = new CarWashConfiguration.ReservationSettings
-            {
-                TimeUnit = 12,
-                UserConcurrentReservationLimit = 2,
-                MinutesToAllowReserveInPast = 120,
-                HoursAfterCompanyLimitIsNotChecked = 11
-            },
-            Services =
+                Reservation = new CarWashConfiguration.ReservationSettings
+                {
+                    TimeUnit = 12,
+                    UserConcurrentReservationLimit = 2,
+                    MinutesToAllowReserveInPast = 120,
+                    HoursAfterCompanyLimitIsNotChecked = 11
+                },
+                Services =
             [
                 new() {
                     Id = 0,
@@ -2299,7 +2303,10 @@ namespace CarWash.PWA.Tests
                     PriceMpv = 1732,
                 },
             ],
-        };
+            });
+
+            return configurationStub.Object;
+        }
 
         private static ReservationsController CreateControllerStub(ApplicationDbContext dbContext, string email = JOHN_EMAIL)
         {

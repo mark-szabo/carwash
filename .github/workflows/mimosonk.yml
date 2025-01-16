@@ -75,7 +75,6 @@ jobs:
               run: |
                   az appconfig kv set `
                   --name ${{ env.AZURE_APPCONFIG_NAME }} `
-                  --auth-mode login `
                   --endpoint ${{ env.AZURE_APPCONFIG_ENDPOINT }} `
                   --key VERSION `
                   --value ${{ needs.build.outputs.build_number }} `

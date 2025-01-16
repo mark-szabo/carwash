@@ -3,6 +3,7 @@ using CarWash.ClassLibrary.Services;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.Extensions.Options;
 using Moq;
 using Moq.Protected;
 using System;
@@ -52,7 +53,7 @@ namespace CarWash.PWA.Tests
             // ASSERT
             Assert.Equal(OUTLOOK_EVENT_ID, outlookEventId);
 
-            var expectedUri = new Uri(configurationStub.CalendarService.LogicAppUrl);
+            var expectedUri = new Uri(configurationStub.CurrentValue.CalendarService.LogicAppUrl);
 
             httpMessageHandlerMock.Protected().Verify(
                "SendAsync",
@@ -102,7 +103,7 @@ namespace CarWash.PWA.Tests
             // ASSERT
             Assert.Equal(OUTLOOK_EVENT_ID, outlookEventId);
 
-            var expectedUri = new Uri(configurationStub.CalendarService.LogicAppUrl);
+            var expectedUri = new Uri(configurationStub.CurrentValue.CalendarService.LogicAppUrl);
 
             httpMessageHandlerMock.Protected().Verify(
                "SendAsync",
@@ -150,7 +151,7 @@ namespace CarWash.PWA.Tests
             await calendarService.DeleteEventAsync(reservationStub);
 
             // ASSERT
-            var expectedUri = new Uri(configurationStub.CalendarService.LogicAppUrl);
+            var expectedUri = new Uri(configurationStub.CurrentValue.CalendarService.LogicAppUrl);
 
             httpMessageHandlerMock.Protected().Verify(
                "SendAsync",
@@ -175,13 +176,19 @@ namespace CarWash.PWA.Tests
             Location = "M/-3/170",
         };
 
-        private CarWashConfiguration CreateConfigurationStub() => new CarWashConfiguration
+        private IOptionsMonitor<CarWashConfiguration> CreateConfigurationStub()
         {
-            CalendarService = new CarWashConfiguration.CalendarServiceConfiguration
+            var configurationStub = new Mock<IOptionsMonitor<CarWashConfiguration>>();
+            configurationStub.Setup(s => s.CurrentValue).Returns(() => new CarWashConfiguration
             {
-                LogicAppUrl = "https://test.com/",
-            }
-        };
+                CalendarService = new CarWashConfiguration.CalendarServiceConfiguration
+                {
+                    LogicAppUrl = "https://test.com/",
+                }
+            });
+
+            return configurationStub.Object;
+        }
 
         private static TelemetryClient CreateTelemetryClientStub()
         {

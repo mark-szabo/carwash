@@ -3,23 +3,16 @@ using CarWash.ClassLibrary.Extensions;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Models.ServiceBus;
 using Microsoft.ApplicationInsights;
+using Microsoft.Extensions.Options;
 using System;
 using System.Threading.Tasks;
 
 namespace CarWash.ClassLibrary.Services
 {
     /// <inheritdoc />
-    public class BotService : IBotService
+    /// <inheritdoc />
+    public class BotService(IOptionsMonitor<CarWashConfiguration> configuration, TelemetryClient telemetryClient) : IBotService
     {
-        private readonly CarWashConfiguration _configuration;
-        private readonly TelemetryClient _telemetryClient;
-
-        /// <inheritdoc />
-        public BotService(CarWashConfiguration configuration, TelemetryClient telemetryClient)
-        {
-            _configuration = configuration;
-            _telemetryClient = telemetryClient;
-        }
 
         /// <inheritdoc />
         public Task SendDropoffReminderMessageAsync(Reservation reservation)
@@ -30,7 +23,7 @@ namespace CarWash.ClassLibrary.Services
                 ReservationId = reservation.Id,
             };
 
-            return SendMessage(_configuration.ServiceBusQueues.BotDropoffReminderQueue, message);
+            return SendMessage(configuration.CurrentValue.ServiceBusQueues.BotDropoffReminderQueue, message);
         }
 
         /// <inheritdoc />
@@ -42,7 +35,7 @@ namespace CarWash.ClassLibrary.Services
                 ReservationId = reservation.Id,
             };
 
-            return SendMessage(_configuration.ServiceBusQueues.BotWashStartedQueue, message);
+            return SendMessage(configuration.CurrentValue.ServiceBusQueues.BotWashStartedQueue, message);
         }
 
         /// <inheritdoc />
@@ -54,7 +47,7 @@ namespace CarWash.ClassLibrary.Services
                 ReservationId = reservation.Id,
             };
 
-            return SendMessage(_configuration.ServiceBusQueues.BotWashCompletedQueue, message);
+            return SendMessage(configuration.CurrentValue.ServiceBusQueues.BotWashCompletedQueue, message);
         }
 
         /// <inheritdoc />
@@ -66,7 +59,7 @@ namespace CarWash.ClassLibrary.Services
                 ReservationId = reservation.Id,
             };
 
-            return SendMessage(_configuration.ServiceBusQueues.BotCarWashCommentLeftQueue, message);
+            return SendMessage(configuration.CurrentValue.ServiceBusQueues.BotCarWashCommentLeftQueue, message);
         }
 
         /// <summary>
@@ -79,14 +72,14 @@ namespace CarWash.ClassLibrary.Services
         {
             try
             {
-                if (_configuration.ConnectionStrings.ServiceBus == null)
+                if (configuration.CurrentValue.ConnectionStrings.ServiceBus == null)
                 {
                     // ServiceBus is not configured, do nothing
                     return;
                 }
 
                 // since ServiceBusClient implements IAsyncDisposable we create it with "await using"
-                await using var client = new ServiceBusClient(_configuration.ConnectionStrings.ServiceBus);
+                await using var client = new ServiceBusClient(configuration.CurrentValue.ConnectionStrings.ServiceBus);
 
                 // create the sender
                 var sender = client.CreateSender(queueName);
@@ -98,7 +91,7 @@ namespace CarWash.ClassLibrary.Services
             }
             catch (Exception e)
             {
-                _telemetryClient.TrackException(e);
+                telemetryClient.TrackException(e);
             }
         }
     }
