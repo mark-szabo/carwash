@@ -16,6 +16,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import InputBase from '@mui/material/InputBase';
 import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import { drawerItems, otherDrawerItems } from './DrawerItems';
 
 const drawerWidth = 240;
@@ -132,6 +133,18 @@ const SearchIconWrapper = styled('div')(({ theme }) => ({
     justifyContent: 'center',
 }));
 
+const ClearIconWrapper = styled('div')(({ theme }) => ({
+    padding: theme.spacing(0, 2),
+    height: '100%',
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+}));
+
 const StyledInputBase = styled(InputBase)(({ theme }) => ({
     color: 'inherit',
     width: '100%',
@@ -162,6 +175,10 @@ class Layout extends React.Component {
 
     handleDrawerClose = () => {
         this.setState({ mobileOpen: false });
+    };
+
+    handleClearSearch = () => {
+        this.props.handleSearchChange({ target: { value: '' } });
     };
 
     getNavbarName() {
@@ -285,6 +302,11 @@ class Layout extends React.Component {
                                     value={searchTerm}
                                     inputProps={{ 'aria-label': 'search' }}
                                 />
+                                {searchTerm && (
+                                    <ClearIconWrapper onClick={this.handleClearSearch}>
+                                        <ClearIcon />
+                                    </ClearIconWrapper>
+                                )}
                             </Search>
                         )}
                         {refresh && (

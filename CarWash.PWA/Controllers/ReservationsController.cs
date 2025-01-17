@@ -60,7 +60,6 @@ namespace CarWash.PWA.Controllers
         [HttpGet]
         public IEnumerable<ReservationViewModel> GetReservations()
         {
-            var v = _configuration.CurrentValue.Version;
             return _context.Reservation
                 .Where(r => r.UserId == _user.Id)
                 .OrderByDescending(r => r.StartDate)

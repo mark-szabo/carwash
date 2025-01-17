@@ -28,3 +28,5 @@ jobs:
               run: dotnet build "${{ env.WORKING_DIRECTORY_FUNCTIONS }}" --configuration ${{ env.CONFIGURATION }} --no-restore
             - name: Test PWA
               run: dotnet test "CarWash.PWA.Tests" --collect:"XPlat Code Coverage"
+            - name: Publish
+              run: dotnet publish "${{ env.WORKING_DIRECTORY_PWA }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
