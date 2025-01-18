@@ -517,7 +517,7 @@ namespace CarWash.PWA.Controllers
 
             var reservations = await _context.Reservation
                 .Include(r => r.User)
-                .Where(r => r.StartDate.Date >= DateTime.Today || r.State != State.Done)
+                .Where(r => r.StartDate.Date >= DateTime.Today.AddDays(-3) || r.State != State.Done)
                 .OrderBy(r => r.StartDate)
                 .Select(reservation => new AdminReservationViewModel
                 {
