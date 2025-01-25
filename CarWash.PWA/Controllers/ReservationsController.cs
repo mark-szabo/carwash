@@ -125,7 +125,7 @@ namespace CarWash.PWA.Controllers
             dbReservation.StartDate = newStartDate.Date + new TimeSpan(newStartDate.Hour, minutes: 0, seconds: 0);
             if (reservation.EndDate != null) dbReservation.EndDate = ((DateTime)reservation.EndDate).ToLocalTime();
             else dbReservation.EndDate = null;
-            dbReservation.Comment = reservation.Comment;
+            dbReservation.Comments = reservation.Comments;
 
             try
             {
@@ -252,7 +252,6 @@ namespace CarWash.PWA.Controllers
             reservation.State = State.SubmittedNotActual;
             reservation.Mpv = false;
             reservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty).Replace(" ", string.Empty);
-            reservation.CarwashComment = null;
             reservation.CreatedById = _user.Id;
             reservation.CreatedOn = DateTime.Now;
             reservation.StartDate = reservation.StartDate.ToLocalTime();
@@ -484,8 +483,7 @@ namespace CarWash.PWA.Controllers
                     Mpv = reservation.Mpv,
                     StartDate = reservation.StartDate,
                     EndDate = (DateTime)reservation.EndDate,
-                    Comment = reservation.Comment,
-                    CarwashComment = reservation.CarwashComment,
+                    Comments = reservation.Comments,
                     User = new UserViewModel
                     {
                         Id = reservation.User.Id,
@@ -531,8 +529,7 @@ namespace CarWash.PWA.Controllers
                     Mpv = reservation.Mpv,
                     StartDate = reservation.StartDate,
                     EndDate = (DateTime)reservation.EndDate,
-                    Comment = reservation.Comment,
-                    CarwashComment = reservation.CarwashComment,
+                    Comments = reservation.Comments,
                     User = new UserViewModel
                     {
                         Id = reservation.User.Id,
@@ -948,8 +945,9 @@ namespace CarWash.PWA.Controllers
 
             if (reservation == null) return NotFound();
 
-            if (reservation.CarwashComment != null) reservation.CarwashComment += "\n";
-            reservation.CarwashComment += comment;
+            //TODO
+            //if (reservation.CarwashComment != null) reservation.CarwashComment += "\n";
+            //reservation.CarwashComment += comment;
 
             try
             {
@@ -977,7 +975,8 @@ namespace CarWash.PWA.Controllers
                     var notification = new Notification
                     {
                         Title = "CarWash has left a comment on your reservation.",
-                        Body = reservation.CarwashComment,
+                        //TODO
+                        //Body = reservation.CarwashComment,
                         Tag = NotificationTag.Comment
                     };
                     try
@@ -1476,9 +1475,7 @@ namespace CarWash.PWA.Controllers
 
                     worksheet.Cells[i, 9].Value = reservation.GetServiceNames(_configuration.CurrentValue);
 
-                    worksheet.Cells[i, 10].Value = reservation.Comment;
-
-                    worksheet.Cells[i, 11].Value = reservation.CarwashComment;
+                    worksheet.Cells[i, 10].Value = reservation.CommentsJson;
 
                     worksheet.Cells[i, 12].Value = reservation.GetPrice(_configuration.CurrentValue);
 
@@ -1885,8 +1882,7 @@ namespace CarWash.PWA.Controllers
             Mpv = reservation.Mpv;
             StartDate = reservation.StartDate;
             if (reservation.EndDate != null) EndDate = (DateTime)reservation.EndDate;
-            Comment = reservation.Comment;
-            CarwashComment = reservation.CarwashComment;
+            Comments = reservation.Comments;
         }
 
         public string Id { get; set; }
@@ -1899,8 +1895,7 @@ namespace CarWash.PWA.Controllers
         public bool Mpv { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-        public string Comment { get; set; }
-        public string CarwashComment { get; set; }
+        public List<Comment> Comments { get; set; }
     }
 
     public class AdminReservationViewModel
@@ -1916,8 +1911,7 @@ namespace CarWash.PWA.Controllers
         public bool? Mpv { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-        public string Comment { get; set; }
-        public string CarwashComment { get; set; }
+        public List<Comment> Comments { get; set; }
     }
 
     public class ObfuscatedReservationViewModel
