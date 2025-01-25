@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Azure.Storage.Queues;
 using CarWash.ClassLibrary.Models;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace CarWash.Functions
 {
@@ -32,7 +32,7 @@ namespace CarWash.Functions
             await queue.CreateIfNotExistsAsync();
 
             // Create a message and add it to the queue.
-            var message = JsonConvert.SerializeObject(email);
+            var message = JsonSerializer.Serialize(email);
             await queue.SendMessageAsync(message);
         }
     }

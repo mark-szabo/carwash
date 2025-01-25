@@ -357,7 +357,25 @@ namespace CarWash.PWA
                         "public,max-age=" + cacheExpirationInSeconds;
                 }
             });
-            app.UseSpaStaticFiles();
+
+            app.UseSpaStaticFiles(new StaticFileOptions
+            {
+                OnPrepareResponse = context =>
+                {
+                    if (!context.File.Exists && Path.HasExtension(context.Context.Request.Path.Value))
+                    {
+                        context.Context.Response.StatusCode = 404;
+                        if (context.Context.Request.Path.Value.Contains(".js"))
+                        {
+                            context.Context.Response.ContentType = "application/js";
+                        }
+                        else if (context.Context.Request.Path.Value.Contains(".css"))
+                        {
+                            context.Context.Response.ContentType = "text/css";
+                        }
+                    }
+                }
+            });
 
             app.UseRouting();
 

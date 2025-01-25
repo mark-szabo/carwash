@@ -5,13 +5,13 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Extensions;
 using CarWash.ClassLibrary.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Microsoft.Azure.Functions.Worker;
 
 namespace CarWash.Functions
@@ -206,7 +206,7 @@ If don't want to get email reminders in the future, you can <a href='https://www
 
                 if (responseContent == null) throw new Exception("Response content is null.");
 
-                var parkingSessions = JsonConvert.DeserializeObject<List<ParkingSession>>(responseContent);
+                var parkingSessions = JsonSerializer.Deserialize<List<ParkingSession>>(responseContent);
                 if (parkingSessions == null) throw new Exception("Deserialized parking sessions are null.");
 
                 return parkingSessions;

@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json;
 
 namespace CarWash.ClassLibrary.Extensions
 {
@@ -14,7 +14,7 @@ namespace CarWash.ClassLibrary.Extensions
         /// <returns>A JSON string representation of the object.</returns>
         public static string ToJson(this object o)
         {
-            return JsonConvert.SerializeObject(o);
+            return JsonSerializer.Serialize(o);
         }
     }
 }

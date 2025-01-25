@@ -1,5 +1,5 @@
 ﻿using CarWash.ClassLibrary.Enums;
-using Newtonsoft.Json;
+using System.Text.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -58,8 +58,8 @@ namespace CarWash.ClassLibrary.Models
         [NotMapped]
         public List<int> Services
         {
-            get => ServicesJson == null ? null : JsonConvert.DeserializeObject<List<int>>(ServicesJson);
-            set => ServicesJson = JsonConvert.SerializeObject(value);
+            get => ServicesJson == null ? null : JsonSerializer.Deserialize<List<int>>(ServicesJson);
+            set => ServicesJson = JsonSerializer.Serialize(value);
         }
 
         /// <summary>
@@ -129,6 +129,27 @@ namespace CarWash.ClassLibrary.Models
         public string OutlookEventId { get; set; }
 
         /// <summary>
+        /// Gets or sets the reservation comments.
+        /// </summary>
+        /// <value>
+        /// List of comments deserialized from <see cref="CommentsJson"/>.
+        /// </value>
+        [NotMapped]
+        public List<Comment> Comments
+        {
+            get => CommentsJson == null ? null : JsonSerializer.Deserialize<List<Comment>>(CommentsJson);
+            set => CommentsJson = JsonSerializer.Serialize(value);
+        }
+
+        /// <summary>
+        /// Gets or sets the reservation comments serialized in JSON.
+        /// </summary>
+        /// <value>
+        /// List of comments serialized in JSON.
+        /// </value>
+        public string CommentsJson { get; set; }
+
+        /// <summary>
         /// Gets reservation's costs.
         /// </summary>
         /// <param name="configuration">The car wash configuration containing service prices.</param>
@@ -160,6 +181,6 @@ namespace CarWash.ClassLibrary.Models
                 .Where(name => !string.IsNullOrEmpty(name));
 
             return string.Join(", ", serviceNames);
-        }        
+        }
     }
 }
