@@ -14,7 +14,7 @@ namespace CarWash.ClassLibrary.Extensions
         /// <returns>A JSON string representation of the object.</returns>
         public static string ToJson(this object o)
         {
-            return JsonSerializer.Serialize(o);
+            return JsonSerializer.Serialize(o, Constants.DefaultJsonSerializerOptions);
         }
     }
 }

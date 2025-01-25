@@ -76,7 +76,7 @@ namespace CarWash.ClassLibrary.Services
         /// <returns>response body</returns>
         private async Task<string> CallLogicApp(Event calendarEvent)
         {
-            var content = new StringContent(JsonSerializer.Serialize(calendarEvent), Encoding.UTF8, "application/json");
+            var content = new StringContent(JsonSerializer.Serialize(calendarEvent, Constants.DefaultJsonSerializerOptions), Encoding.UTF8, "application/json");
             var response = await _client.PostAsync(configuration.CurrentValue.CalendarService.LogicAppUrl, content);
             response.EnsureSuccessStatusCode();
 

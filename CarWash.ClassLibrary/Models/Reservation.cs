@@ -58,8 +58,8 @@ namespace CarWash.ClassLibrary.Models
         [NotMapped]
         public List<int> Services
         {
-            get => ServicesJson == null ? null : JsonSerializer.Deserialize<List<int>>(ServicesJson);
-            set => ServicesJson = JsonSerializer.Serialize(value);
+            get => ServicesJson == null ? null : JsonSerializer.Deserialize<List<int>>(ServicesJson, Constants.DefaultJsonSerializerOptions);
+            set => ServicesJson = JsonSerializer.Serialize(value, Constants.DefaultJsonSerializerOptions);
         }
 
         /// <summary>
@@ -103,16 +103,6 @@ namespace CarWash.ClassLibrary.Models
         public DateTime? EndDate { get; set; }
 
         /// <summary>
-        /// Gets or sets the reservation comment.
-        /// </summary>
-        public string Comment { get; set; }
-
-        /// <summary>
-        /// Gets or sets the comment from the carwash.
-        /// </summary>
-        public string CarwashComment { get; set; }
-
-        /// <summary>
         /// Gets or sets the user id of the reservation creator.
         /// </summary>
         public string CreatedById { get; set; }
@@ -137,8 +127,8 @@ namespace CarWash.ClassLibrary.Models
         [NotMapped]
         public List<Comment> Comments
         {
-            get => CommentsJson == null ? null : JsonSerializer.Deserialize<List<Comment>>(CommentsJson);
-            set => CommentsJson = JsonSerializer.Serialize(value);
+            get => CommentsJson == null ? null : JsonSerializer.Deserialize<List<Comment>>(CommentsJson, Constants.DefaultJsonSerializerOptions);
+            set => CommentsJson = JsonSerializer.Serialize(value, Constants.DefaultJsonSerializerOptions);
         }
 
         /// <summary>

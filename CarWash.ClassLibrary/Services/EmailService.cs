@@ -24,7 +24,7 @@ namespace CarWash.ClassLibrary.Services
             await queue.CreateIfNotExistsAsync();
 
             // Create a message and add it to the queue.
-            var message = JsonSerializer.Serialize(email);
+            var message = JsonSerializer.Serialize(email, Constants.DefaultJsonSerializerOptions);
             await queue.SendMessageAsync(message, visibilityTimeout: delay);
         }
     }

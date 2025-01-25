@@ -13,6 +13,7 @@ using CarWash.ClassLibrary.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Azure.Functions.Worker;
+using CarWash.ClassLibrary;
 
 namespace CarWash.Functions
 {
@@ -206,7 +207,7 @@ If don't want to get email reminders in the future, you can <a href='https://www
 
                 if (responseContent == null) throw new Exception("Response content is null.");
 
-                var parkingSessions = JsonSerializer.Deserialize<List<ParkingSession>>(responseContent);
+                var parkingSessions = JsonSerializer.Deserialize<List<ParkingSession>>(responseContent, Constants.DefaultJsonSerializerOptions);
                 if (parkingSessions == null) throw new Exception("Deserialized parking sessions are null.");
 
                 return parkingSessions;

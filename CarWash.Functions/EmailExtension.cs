@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Azure.Storage.Queues;
 using CarWash.ClassLibrary.Models;
 using System.Text.Json;
+using CarWash.ClassLibrary;
 
 namespace CarWash.Functions
 {
@@ -32,7 +33,7 @@ namespace CarWash.Functions
             await queue.CreateIfNotExistsAsync();
 
             // Create a message and add it to the queue.
-            var message = JsonSerializer.Serialize(email);
+            var message = JsonSerializer.Serialize(email, Constants.DefaultJsonSerializerOptions);
             await queue.SendMessageAsync(message);
         }
     }

@@ -35,6 +35,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using System.Text.Json;
 using Microsoft.Data.SqlClient;
+using CarWash.ClassLibrary;
 
 namespace CarWash.PWA
 {
@@ -51,11 +52,6 @@ namespace CarWash.PWA
                     "upgrade-insecure-requests; " +
                     "report-uri https://markszabo.report-uri.com/r/d/csp/enforce";
 
-        private static readonly JsonSerializerOptions jsonOptions = new()
-        {
-            PropertyNameCaseInsensitive = true
-        };
-
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
@@ -66,7 +62,7 @@ namespace CarWash.PWA
             {
                 if (config.Services.Count == 0)
                 {
-                    config.Services = JsonSerializer.Deserialize<List<Service>>(configuration.GetValue<string>("Services"), jsonOptions);
+                    config.Services = JsonSerializer.Deserialize<List<Service>>(configuration.GetValue<string>("Services"), Constants.DefaultJsonSerializerOptions);
                 }
 
                 config.BuildNumber = configuration.GetValue<string>("BUILD_NUMBER");
@@ -309,6 +305,7 @@ namespace CarWash.PWA
             services.AddControllers().AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
             });
         }
 
