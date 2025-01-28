@@ -321,9 +321,17 @@ class Reserve extends TrackedComponent {
             const selectedServices = [...state.selectedServices];
             this.toggleServiceSelection(selectedServices, service.id);
 
+            // if exterior, must include prewash and wheel cleaning too
+            if (service.id === Service.Exterior && selectedServices.includes(service.id)) {
+                this.setServiceSelection(selectedServices, Service.Prewash, true);
+                this.setServiceSelection(selectedServices, Service.WheelCleaning, true);
+            }
+
             // if carpet, must include exterior and interior too
             if (service.id === Service.Carpet && selectedServices.includes(service.id)) {
                 this.setServiceSelection(selectedServices, Service.Exterior, true);
+                this.setServiceSelection(selectedServices, Service.Prewash, true);
+                this.setServiceSelection(selectedServices, Service.WheelCleaning, true);
                 this.setServiceSelection(selectedServices, Service.Interior, true);
             }
             if ((service.id === Service.Exterior || service.id === Service.Interior) && !selectedServices.includes(service.id)) {

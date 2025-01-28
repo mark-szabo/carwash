@@ -17,6 +17,8 @@ export const Service = Object.freeze({
     Carpet: 2,
     AcCleaningOzon: 6,
     AcCleaningBomba: 7,
+    Prewash: 13,
+    WheelCleaning: 9,
 });
 
 export const NotificationChannel = Object.freeze({
