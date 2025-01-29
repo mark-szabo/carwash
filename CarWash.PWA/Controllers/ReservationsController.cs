@@ -87,7 +87,7 @@ namespace CarWash.PWA.Controllers
 
             if (reservation == null) return NotFound();
 
-            if (reservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin)) return Forbid();
+            if (reservation.UserId != _user.Id && !((_user.IsAdmin && reservation.User.Company == _user.Company) || _user.IsCarwashAdmin)) return Forbid();
 
             return Ok(new ReservationViewModel(reservation));
         }
@@ -143,11 +143,17 @@ namespace CarWash.PWA.Controllers
             }
 
             #region Input validation
-            if (dbReservation.UserId != _user.Id && !_user.IsAdmin && !_user.IsCarwashAdmin) return Forbid();
-            if (reservation.UserId != _user.Id && reservation.UserId != null)
+            if (reservation.UserId != _user.Id)
             {
-                if (_user.IsAdmin || _user.IsCarwashAdmin) dbReservation.UserId = reservation.UserId;
-                else return BadRequest("Cannot modify user of registration. You need to re-create it.");
+                if (!_user.IsAdmin && !_user.IsCarwashAdmin) return Forbid();
+
+                if (reservation.UserId != null)
+                {
+                    var reservationUser = _context.Users.Find(reservation.UserId);
+                    if (_user.IsAdmin && reservationUser.Company != _user.Company) return Forbid();
+
+                    dbReservation.UserId = reservation.UserId;
+                }
             }
             if (reservation.Services == null || reservation.Services.Count == 0) return BadRequest("No service chosen.");
             #endregion
@@ -292,7 +298,9 @@ namespace CarWash.PWA.Controllers
             #endregion
 
             #region Input validation
-            if (reservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin))
+            if (reservation.UserId != _user.Id)
+            {
+                if (!_user.IsAdmin && !_user.IsCarwashAdmin)
             {
                 _telemetryClient.TrackTrace(
                     "Forbid: User cannot reserve in the name of others unless admin.",
@@ -306,6 +314,26 @@ namespace CarWash.PWA.Controllers
                     });
 
                 return Forbid();
+                }
+
+                if (reservation.UserId != null)
+                {
+                    var reservationUser = _context.Users.Find(reservation.UserId);
+                    if (_user.IsAdmin && reservationUser.Company != _user.Company)
+                    {
+                        _telemetryClient.TrackTrace(
+                            "Forbid: Admin cannot reserve in the name of compnaies' users.",
+                            Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
+                            new Dictionary<string, string>
+                            {
+                                { "UserId", reservation.UserId },
+                                { "IsAdmin", _user.IsAdmin.ToString() },
+                                { "IsCarwashAdmin", _user.IsCarwashAdmin.ToString() },
+                                { "CreatedById", reservation.CreatedById }
+                            });
+                        return Forbid();
+                    }
+                }
             }
 
             if (reservation.Services == null || reservation.Services.Count == 0)

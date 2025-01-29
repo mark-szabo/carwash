@@ -669,7 +669,7 @@ namespace CarWash.PWA.Tests
             var result = await controller.PutReservation(reservation.Id, reservation);
 
             Assert.IsType<ActionResult<ReservationViewModel>>(result);
-            Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.IsType<ForbidResult>(result.Result);
         }
 
         [Fact]
