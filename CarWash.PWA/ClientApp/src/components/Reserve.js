@@ -128,6 +128,7 @@ const styles = theme => ({
 
 class Reserve extends TrackedComponent {
     displayName = 'Reserve';
+    isUpdate = false;
 
     constructor(props) {
         super(props);
@@ -170,6 +171,7 @@ class Reserve extends TrackedComponent {
         super.componentDidMount();
 
         if (this.props.match.params.id) {
+            this.isUpdate = true;
             this.setState({
                 loadingReservation: true,
             });
@@ -914,27 +916,29 @@ class Reserve extends TrackedComponent {
                                                     />
                                                 </FormGroup>
                                                 {dropoffPreConfirmed && (
-                                                    <Typography color="textSecondary" component="span" style={{ margin: '8px 0 0 8px' }}>
-                                                        <WarningIcon style={{ verticalAlign: 'middle' }} /> You won't be able to modify your reservation after
+                                                    <Alert variant="outlined" severity="warning" className={classes.infoAlert}>
+                                                        You won't be able to modify your reservation after
                                                         you click Reserve!
-                                                    </Typography>
+                                                    </Alert>
                                                 )}
                                             </>
                                         )}
                                     </>
                                 )}
-                                <div>
-                                    <TextField
-                                        id="reserve-comment"
-                                        label="Comment"
-                                        multiline
-                                        maxRows="4"
-                                        value={comment}
-                                        onChange={this.handleCommentChange}
-                                        className={classes.textField}
-                                        margin="normal"
-                                    />
-                                </div>
+                                {!this.isUpdate && (
+                                    <div>
+                                        <TextField
+                                            id="reserve-comment"
+                                            label="Comment"
+                                            multiline
+                                            maxRows="4"
+                                            value={comment}
+                                            onChange={this.handleCommentChange}
+                                            className={classes.textField}
+                                            margin="normal"
+                                        />
+                                    </div>
+                                )}
                                 <div className={classes.actionsContainer}>
                                     <div>
                                         <Button onClick={this.handleBack} className={classes.button}>
@@ -947,7 +951,7 @@ class Reserve extends TrackedComponent {
                                             className={classes.button}
                                             id="reserve-submit-button"
                                         >
-                                            {!this.props.match.params.id ? 'Reserve' : 'Update'}
+                                            {!this.isUpdate ? 'Reserve' : 'Update'}
                                         </Button>
                                     </div>
                                 </div>
