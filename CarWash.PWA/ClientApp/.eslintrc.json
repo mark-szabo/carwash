@@ -2,11 +2,18 @@
   /* See all the pre-defined configs here: https://www.npmjs.com/package/eslint-config-defaults */
   "extends": [
     "defaults/configurations/airbnb/es6",
-    "prettier"
+    "prettier",
+    "eslint:recommended",
+    "plugin:react/recommended"
   ],
   "parser": "@babel/eslint-parser",
   "parserOptions": {
-    "requireConfigFile": false
+    "requireConfigFile": false,
+    "ecmaVersion": 2020,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
   },
   "plugins": ["react", "import", "jsx"],
   "env": {
