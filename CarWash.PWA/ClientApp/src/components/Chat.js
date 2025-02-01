@@ -11,7 +11,7 @@ import IconButton from '@mui/material/IconButton';
 import SendIcon from '@mui/icons-material/Send';
 import ChatMessage from './ChatMessage';
 
-export default function Comments(props) {
+export default function Chat(props) {
     const { reservation, carWashChat } = props;
     const [commentTextfield, setCommentTextfield] = useState('');
     const userRole = carWashChat ? 'carwash' : 'user';
@@ -111,7 +111,7 @@ export default function Comments(props) {
     );
 }
 
-Comments.propTypes = {
+Chat.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     reservation: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     carWashChat: PropTypes.bool,
