@@ -128,7 +128,7 @@ namespace CarWash.ClassLibrary.Models
         public List<Comment> Comments
         {
             get => CommentsJson == null ? [] : JsonSerializer.Deserialize<List<Comment>>(CommentsJson, Constants.DefaultJsonSerializerOptions);
-            set => CommentsJson = JsonSerializer.Serialize(value, Constants.DefaultJsonSerializerOptions);
+            private set => CommentsJson = JsonSerializer.Serialize(value, Constants.DefaultJsonSerializerOptions);
         }
 
         /// <summary>
@@ -171,6 +171,17 @@ namespace CarWash.ClassLibrary.Models
                 .Where(name => !string.IsNullOrEmpty(name));
 
             return string.Join(", ", serviceNames);
+        }
+
+        /// <summary>
+        /// Adds a comment to the reservation.
+        /// </summary>
+        /// <param name="comment">The comment to add.</param>
+        public void AddComment(Comment comment)
+        {
+            var comments = Comments ?? [];
+            comments.Add(comment);
+            Comments = comments;
         }
     }
 }

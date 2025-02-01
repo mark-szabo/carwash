@@ -125,8 +125,7 @@ namespace CarWash.PWA.Controllers
             dbReservation.StartDate = newStartDate.Date + new TimeSpan(newStartDate.Hour, minutes: 0, seconds: 0);
             if (reservation.EndDate != null) dbReservation.EndDate = ((DateTime)reservation.EndDate).ToLocalTime();
             else dbReservation.EndDate = null;
-            // TODO
-            //dbReservation.Comments.Add();
+            // Comments cannot be modified when reservation is updated.
 
             try
             {
@@ -1061,10 +1060,10 @@ namespace CarWash.PWA.Controllers
                 if (_user.IsAdmin && reservation.User.Company != _user.Company) return Forbid();
             }
 
-            reservation.Comments.Add(new Comment
+            reservation.AddComment(new Comment
             {
                 UserId = _user.Id,
-                Role = _user.IsCarwashAdmin ? CommentRole.Carwash : CommentRole.User,
+                Role = reservation.UserId != _user.Id && _user.IsCarwashAdmin ? CommentRole.Carwash : CommentRole.User,
                 Timestamp = DateTime.Now,
                 Message = comment
             });
