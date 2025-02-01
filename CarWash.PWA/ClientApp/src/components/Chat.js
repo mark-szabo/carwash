@@ -12,7 +12,7 @@ import SendIcon from '@mui/icons-material/Send';
 import ChatMessage from './ChatMessage';
 
 export default function Chat(props) {
-    const { reservation, carWashChat } = props;
+    const { reservation, carWashChat, hideInput } = props;
     const [commentTextfield, setCommentTextfield] = useState('');
     const userRole = carWashChat ? 'carwash' : 'user';
 
@@ -59,12 +59,12 @@ export default function Chat(props) {
     };
 
     const handleCommentKeyPress = event => {
-        if (event.key === 'Enter') this.handleAddComment();
+        if (event.key === 'Enter') handleAddComment();
     };
 
     return (
         <div>
-            <Divider sx={{ margin: '24px 0 12px 0' }} />
+            {!(hideInput && reservation.comments.length === 0) && <Divider sx={{ margin: '24px 0 12px 0' }} />}
             {reservation.comments.map((comment, index) => (
                 <ChatMessage
                     key={index}
@@ -73,48 +73,50 @@ export default function Chat(props) {
                     name={comment.role === 'user' ? (reservation.user?.firstName ?? 'You') : 'CarWash'}
                 />
             ))}
-            {reservation.comments.length === 0 && (
+            {reservation.comments.length === 0 && userRole === 'user' && (
                 <ChatMessage
                     message="Feel free to leave a message or ask a question below – even after we've started washing your car."
                     name="CarWash"
                 />
             )}
-            <FormControl variant="outlined" sx={{ width: '100%', marginTop: '24px' }}>
-                <InputLabel htmlFor="comment">Message</InputLabel>
-                <OutlinedInput
-                    id="comment"
-                    type="text"
-                    label="Mesaage"
-                    value={commentTextfield}
-                    onChange={event => setCommentTextfield(event.target.value)}
-                    onKeyPress={handleCommentKeyPress}
-                    endAdornment={
-                        <InputAdornment position="end">
-                            {commentTextfield && (
-                                <IconButton
-                                    aria-label="Save comment"
-                                    onClick={handleAddComment}
-                                    onMouseDown={event => {
-                                        event.preventDefault();
-                                    }}
-                                    size="large"
-                                >
-                                    <SendIcon />
-                                </IconButton>
-                            )}
-                        </InputAdornment>
-                    }
-                    sx={{ borderRadius: '28px' }}
-                />
-            </FormControl>
+            {!hideInput && (
+                <FormControl variant="outlined" sx={{ width: '100%', marginTop: '24px' }}>
+                    <InputLabel htmlFor="comment">Message</InputLabel>
+                    <OutlinedInput
+                        id="comment"
+                        type="text"
+                        label="Mesaage"
+                        value={commentTextfield}
+                        onChange={event => setCommentTextfield(event.target.value)}
+                        onKeyUp={handleCommentKeyPress}
+                        endAdornment={
+                            <InputAdornment position="end">
+                                {commentTextfield && (
+                                    <IconButton
+                                        aria-label="Save comment"
+                                        onClick={handleAddComment}
+                                        onMouseDown={event => {
+                                            event.preventDefault();
+                                        }}
+                                        size="large"
+                                    >
+                                        <SendIcon />
+                                    </IconButton>
+                                )}
+                            </InputAdornment>
+                        }
+                        sx={{ borderRadius: '28px' }}
+                    />
+                </FormControl>
+            )}
         </div>
     );
 }
 
 Chat.propTypes = {
-    classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     reservation: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     carWashChat: PropTypes.bool,
+    hideInput: PropTypes.bool,
     updateReservation: PropTypes.func.isRequired,
     openSnackbar: PropTypes.func.isRequired,
     invokeBacklogHub: PropTypes.func.isRequired,
