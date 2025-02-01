@@ -214,8 +214,16 @@ class Reserve extends TrackedComponent {
                 }
             );
         } else {
+            const lastSelectedServices = this.props.lastSettings.services || [];
+                      
+            // if exterior, should include prewash and wheel cleaning too
+            if (lastSelectedServices.includes(Service.Exterior)) {
+                this.setServiceSelection(lastSelectedServices, Service.Prewash, true);
+                this.setServiceSelection(lastSelectedServices, Service.WheelCleaning, true);
+            }
+
             this.setState({
-                selectedServices: this.props.lastSettings.services || [],
+                selectedServices: lastSelectedServices,
                 vehiclePlateNumber: this.props.lastSettings.vehiclePlateNumber || '',
                 garage: this.props.lastSettings.garage || '',
             });
@@ -323,7 +331,7 @@ class Reserve extends TrackedComponent {
             const selectedServices = [...state.selectedServices];
             this.toggleServiceSelection(selectedServices, service.id);
 
-            // if exterior, must include prewash and wheel cleaning too
+            // if exterior, should include prewash and wheel cleaning too
             if (service.id === Service.Exterior && selectedServices.includes(service.id)) {
                 this.setServiceSelection(selectedServices, Service.Prewash, true);
                 this.setServiceSelection(selectedServices, Service.WheelCleaning, true);
