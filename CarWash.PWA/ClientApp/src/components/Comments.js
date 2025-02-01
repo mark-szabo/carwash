@@ -1,48 +1,121 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { withStyles } from '@mui/styles';
 import Divider from '@mui/material/Divider';
-import CommentOutgoing from './CommentOutgoing';
-import CommentIncoming from './CommentIncoming';
+import apiFetch from '../Auth';
+import { BacklogHubMethods } from '../Constants';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import InputLabel from '@mui/material/InputLabel';
+import InputAdornment from '@mui/material/InputAdornment';
+import FormControl from '@mui/material/FormControl';
+import IconButton from '@mui/material/IconButton';
+import SendIcon from '@mui/icons-material/Send';
+import ChatMessage from './ChatMessage';
 
-const styles = {
-    divider: {
-        margin: '24px 0',
-    },
-};
+export default function Comments(props) {
+    const { reservation, carWashChat } = props;
+    const [commentTextfield, setCommentTextfield] = useState('');
+    const userRole = carWashChat ? 'carwash' : 'user';
 
-class Comments extends Component {
-    displayName = 'Comments';
+    const handleAddComment = async () => {
+        // Saving the old comments state in case of an error
+        const oldComments = reservation.comments;
 
-    render() {
-        const { classes, commentOutgoing, commentIncoming, commentIncomingName, incomingFirst } = this.props;
+        // Update the frontend reservation state with the new comment
+        reservation.comments.push({
+            message: commentTextfield,
+            role: userRole,
+            // timestamp: new Date().toISOString(),
+            timestamp: new Date().toString(),
+        });
+        props.updateReservation(reservation);
 
-        if (!commentOutgoing && !commentIncoming) return null;
-        if (incomingFirst) {
-            return (
-                <div>
-                    <Divider className={classes.divider} />
-                    <CommentIncoming comment={commentIncoming} name={commentIncomingName} />
-                    <CommentOutgoing comment={commentOutgoing} />
-                </div>
+        const messageToBeSent = commentTextfield;
+        setCommentTextfield('');
+
+        try {
+            await apiFetch(
+                `api/reservations/${props.reservation.id}/comment`,
+                {
+                    method: 'POST',
+                    body: JSON.stringify(messageToBeSent),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                },
+                true
             );
+            props.openSnackbar('Comment saved.');
+
+            // Broadcast using SignalR
+            props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, props.reservation.id);
+        } catch (error) {
+            reservation.comments = oldComments;
+            props.updateReservation(reservation);
+
+            setCommentTextfield(messageToBeSent);
+
+            props.openSnackbar(error);
         }
-        return (
-            <div>
-                <Divider className={classes.divider} />
-                <CommentOutgoing comment={commentOutgoing} />
-                <CommentIncoming comment={commentIncoming} name={commentIncomingName} />
-            </div>
-        );
-    }
+    };
+
+    const handleCommentKeyPress = event => {
+        if (event.key === 'Enter') this.handleAddComment();
+    };
+
+    return (
+        <div>
+            <Divider sx={{ margin: '24px 0 12px 0' }} />
+            {reservation.comments.map((comment, index) => (
+                <ChatMessage
+                    key={index}
+                    message={comment.message}
+                    isSent={comment.role === userRole}
+                    name={comment.role === 'user' ? (reservation.user?.firstName ?? 'You') : 'CarWash'}
+                />
+            ))}
+            {reservation.comments.length === 0 && (
+                <ChatMessage
+                    message="Feel free to leave a message or ask a question below – even after we've started washing your car."
+                    name="CarWash"
+                />
+            )}
+            <FormControl variant="outlined" sx={{ width: '100%', marginTop: '24px' }}>
+                <InputLabel htmlFor="comment">Message</InputLabel>
+                <OutlinedInput
+                    id="comment"
+                    type="text"
+                    label="Mesaage"
+                    value={commentTextfield}
+                    onChange={event => setCommentTextfield(event.target.value)}
+                    onKeyPress={handleCommentKeyPress}
+                    endAdornment={
+                        <InputAdornment position="end">
+                            {commentTextfield && (
+                                <IconButton
+                                    aria-label="Save comment"
+                                    onClick={handleAddComment}
+                                    onMouseDown={event => {
+                                        event.preventDefault();
+                                    }}
+                                    size="large"
+                                >
+                                    <SendIcon />
+                                </IconButton>
+                            )}
+                        </InputAdornment>
+                    }
+                    sx={{ borderRadius: '28px' }}
+                />
+            </FormControl>
+        </div>
+    );
 }
 
 Comments.propTypes = {
     classes: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
-    commentOutgoing: PropTypes.string,
-    commentIncoming: PropTypes.string,
-    commentIncomingName: PropTypes.string,
-    incomingFirst: PropTypes.bool,
+    reservation: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+    carWashChat: PropTypes.bool,
+    updateReservation: PropTypes.func.isRequired,
+    openSnackbar: PropTypes.func.isRequired,
+    invokeBacklogHub: PropTypes.func.isRequired,
 };
-
-export default withStyles(styles)(Comments);
