@@ -26,6 +26,7 @@ TestResults/
 CarWash.PWA/Properties/serviceDependencies.mimosonk.json
 CarWash.Functions/Properties/serviceDependencies.func-carwash-mimosonk-prod - Zip Deploy.json
 CarWash.Functions/Properties/ServiceDependencies/func-carwash-mimosonk-prod - Zip Deploy/
+profile.arm.json
 
 # Azure Functions artifacts
 bin

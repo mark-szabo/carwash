@@ -20,7 +20,7 @@ import CarwashCardHeader from './CarwashCardHeader';
 import CarwashDetailsDialog from './CarwashDetailsDialog';
 import { getAdminStateName, getServiceName, BacklogHubMethods } from '../Constants';
 import { formatLocation, formatDate } from '../Helpers';
-import Comments from './Comments';
+import Chat from './Chat';
 import ErrorBoundary from './ErrorBoundary';
 
 const styles = theme => ({
@@ -163,29 +163,45 @@ class CarwashCard extends Component {
                                 <Typography variant="caption" color="textSecondary" gutterBottom>
                                     Location
                                 </Typography>
-                                <Typography gutterBottom>{reservation.location ? formatLocation(reservation.location) : 'Not set'}</Typography>
-                                <Typography variant="caption" color="textSecondary" gutterBottom style={{ marginTop: '8px' }}>
+                                <Typography gutterBottom>
+                                    {reservation.location ? formatLocation(reservation.location) : 'Not set'}
+                                </Typography>
+                                <Typography
+                                    variant="caption"
+                                    color="textSecondary"
+                                    gutterBottom
+                                    style={{ marginTop: '8px' }}
+                                >
                                     Name
                                 </Typography>
                                 <Typography gutterBottom>
                                     {reservation.user.firstName} {reservation.user.lastName}
                                 </Typography>
-                                <Typography variant="caption" color="textSecondary" gutterBottom style={{ marginTop: '8px' }}>
+                                <Typography
+                                    variant="caption"
+                                    color="textSecondary"
+                                    gutterBottom
+                                    style={{ marginTop: '8px' }}
+                                >
                                     Company
                                 </Typography>
-                                <Typography gutterBottom>
-                                    {reservation.user.company}
-                                </Typography>
-                                <Comments
-                                    commentOutgoing={reservation.carwashComment}
-                                    commentIncoming={reservation.comment}
-                                    commentIncomingName={reservation.user.firstName}
-                                    incomingFirst
+                                <Typography gutterBottom>{reservation.user.company}</Typography>
+                                <Chat
+                                    carWashChat
+                                    hideInput
+                                    reservation={reservation}
+                                    updateReservation={this.props.updateReservation}
+                                    openSnackbar={this.props.openSnackbar}
+                                    invokeBacklogHub={this.props.invokeBacklogHub}
                                 />
                                 <Divider className={classes.divider} />
                                 <Typography variant="subtitle1">Selected services</Typography>
                                 {reservation.services.map(serviceId => (
-                                    <Chip label={getServiceName(configuration, serviceId)} className={classes.chip} key={serviceId} />
+                                    <Chip
+                                        label={getServiceName(configuration, serviceId)}
+                                        className={classes.chip}
+                                        key={serviceId}
+                                    />
                                 ))}
                             </CardContent>
                         </Card>
@@ -213,7 +229,12 @@ class CarwashCard extends Component {
                         <Button onClick={this.handleCancelDialogClose} color="primary">
                             Don't cancel
                         </Button>
-                        <Button onClick={this.handleCancelConfirmed} color="primary" className={classes.dangerButton} autoFocus>
+                        <Button
+                            onClick={this.handleCancelConfirmed}
+                            color="primary"
+                            className={classes.dangerButton}
+                            autoFocus
+                        >
                             Cancel
                         </Button>
                     </DialogActions>

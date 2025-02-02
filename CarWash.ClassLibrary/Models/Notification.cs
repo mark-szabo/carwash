@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace CarWash.ClassLibrary.Models
 {
@@ -27,61 +27,61 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Gets or sets the title of the notification.
         /// </summary>
-        [JsonProperty("title")]
+        [JsonPropertyName("title")]
         public string Title { get; set; } = "CarWash";
 
         /// <summary>
         /// Gets or sets the language of the notification. Defaults to "en".
         /// </summary>
-        [JsonProperty("lang")]
+        [JsonPropertyName("lang")]
         public string Lang { get; set; } = "en";
 
         /// <summary>
         /// Gets or sets the text (body) of the notification.
         /// </summary>
-        [JsonProperty("body")]
+        [JsonPropertyName("body")]
         public string Body { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="NotificationTag"/> of the notification.
         /// </summary>
-        [JsonProperty("tag")]
+        [JsonPropertyName("tag")]
         public string Tag { get; set; }
 
         /// <summary>
         /// Gets or sets the url of an image to be displayed in the notification.
         /// </summary>
-        [JsonProperty("image")]
+        [JsonPropertyName("image")]
         public string Image { get; set; }
 
         /// <summary>
         /// Gets or sets the url of an icon to be displayed in the notification.
         /// </summary>
-        [JsonProperty("icon")]
+        [JsonPropertyName("icon")]
         public string Icon { get; set; }
 
         /// <summary>
         /// Gets or sets the url of a badge icon to be displayed in the notification.
         /// </summary>
-        [JsonProperty("badge")]
+        [JsonPropertyName("badge")]
         public string Badge { get; set; }
 
         /// <summary>
         /// Gets or sets the timestamp of the notification. Defaults to <see cref="DateTime.Now"/>.
         /// </summary>
-        [JsonProperty("timestamp")]
+        [JsonPropertyName("timestamp")]
         public DateTime Timestamp { get; set; } = DateTime.Now;
 
         /// <summary>
         /// Gets or sets a value indicating whether the notification requires interaction. Defaults to false.
         /// </summary>
-        [JsonProperty("requireInteraction")]
+        [JsonPropertyName("requireInteraction")]
         public bool RequireInteraction { get; set; } = false;
 
         /// <summary>
         /// Gets or sets a list of <see cref="NotificationAction"/>s to be displayed in the notification.
         /// </summary>
-        [JsonProperty("actions")]
+        [JsonPropertyName("actions")]
         public List<NotificationAction> Actions { get; set; } = new List<NotificationAction>();
     }
 
@@ -94,13 +94,13 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Gets or sets the tag of the action.
         /// </summary>
-        [JsonProperty("action")]
+        [JsonPropertyName("action")]
         public string Action { get; set; }
 
         /// <summary>
         /// Gets or sets the title (button text) of the action.
         /// </summary>
-        [JsonProperty("title")]
+        [JsonPropertyName("title")]
         public string Title { get; set; }
     }
 
@@ -113,7 +113,7 @@ namespace CarWash.ClassLibrary.Models
         /// The notification is a reminder to drop-off the keys.
         /// </summary>
         public const string Reminder = "carwash_reminder";
-               
+
         /// <summary>
         /// The notification is an FYI that the car is ready.
         /// </summary>

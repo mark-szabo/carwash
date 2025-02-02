@@ -87,7 +87,7 @@ namespace CarWash.PWA.Controllers
 
             if (reservation == null) return NotFound();
 
-            if (reservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin)) return Forbid();
+            if (reservation.UserId != _user.Id && !((_user.IsAdmin && reservation.User.Company == _user.Company) || _user.IsCarwashAdmin)) return Forbid();
 
             return Ok(new ReservationViewModel(reservation));
         }
@@ -125,7 +125,7 @@ namespace CarWash.PWA.Controllers
             dbReservation.StartDate = newStartDate.Date + new TimeSpan(newStartDate.Hour, minutes: 0, seconds: 0);
             if (reservation.EndDate != null) dbReservation.EndDate = ((DateTime)reservation.EndDate).ToLocalTime();
             else dbReservation.EndDate = null;
-            dbReservation.Comment = reservation.Comment;
+            // Comments cannot be modified when reservation is updated.
 
             try
             {
@@ -143,11 +143,17 @@ namespace CarWash.PWA.Controllers
             }
 
             #region Input validation
-            if (dbReservation.UserId != _user.Id && !_user.IsAdmin && !_user.IsCarwashAdmin) return Forbid();
-            if (reservation.UserId != _user.Id && reservation.UserId != null)
+            if (reservation.UserId != _user.Id)
             {
-                if (_user.IsAdmin || _user.IsCarwashAdmin) dbReservation.UserId = reservation.UserId;
-                else return BadRequest("Cannot modify user of registration. You need to re-create it.");
+                if (!_user.IsAdmin && !_user.IsCarwashAdmin) return Forbid();
+
+                if (reservation.UserId != null)
+                {
+                    var reservationUser = _context.Users.Find(reservation.UserId);
+                    if (_user.IsAdmin && reservationUser.Company != _user.Company) return Forbid();
+
+                    dbReservation.UserId = reservation.UserId;
+                }
             }
             if (reservation.Services == null || reservation.Services.Count == 0) return BadRequest("No service chosen.");
             #endregion
@@ -252,11 +258,29 @@ namespace CarWash.PWA.Controllers
             reservation.State = State.SubmittedNotActual;
             reservation.Mpv = false;
             reservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty).Replace(" ", string.Empty);
-            reservation.CarwashComment = null;
             reservation.CreatedById = _user.Id;
             reservation.CreatedOn = DateTime.Now;
             reservation.StartDate = reservation.StartDate.ToLocalTime();
             reservation.StartDate = reservation.StartDate.Date + new TimeSpan(reservation.StartDate.Hour, minutes: 0, seconds: 0);
+
+            if (reservation.Comments.Count == 1)
+            {
+                reservation.Comments[0].UserId = _user.Id;
+                reservation.Comments[0].Timestamp = DateTime.Now;
+                reservation.Comments[0].Role = CommentRole.User;
+            }
+            if (reservation.Comments.Count > 1)
+            {
+                _telemetryClient.TrackTrace(
+                    "BadRequest: Only one comment can be added when creating a reservation.",
+                    Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
+                    new Dictionary<string, string>
+                    {
+                        { "UserId", reservation.UserId },
+                        { "Comments", reservation.CommentsJson }
+                    });
+                return BadRequest("Only one comment can be added when creating a reservation.");
+            }
 
             try
             {
@@ -293,20 +317,42 @@ namespace CarWash.PWA.Controllers
             #endregion
 
             #region Input validation
-            if (reservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin))
+            if (reservation.UserId != _user.Id)
             {
-                _telemetryClient.TrackTrace(
-                    "Forbid: User cannot reserve in the name of others unless admin.",
-                    Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
-                    new Dictionary<string, string>
-                    {
-                        { "UserId", reservation.UserId },
-                        { "IsAdmin", _user.IsAdmin.ToString() },
-                        { "IsCarwashAdmin", _user.IsCarwashAdmin.ToString() },
-                        { "CreatedById", reservation.CreatedById }
-                    });
+                if (!_user.IsAdmin && !_user.IsCarwashAdmin)
+                {
+                    _telemetryClient.TrackTrace(
+                        "Forbid: User cannot reserve in the name of others unless admin.",
+                        Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
+                        new Dictionary<string, string>
+                        {
+                            { "UserId", reservation.UserId },
+                            { "IsAdmin", _user.IsAdmin.ToString() },
+                            { "IsCarwashAdmin", _user.IsCarwashAdmin.ToString() },
+                            { "CreatedById", reservation.CreatedById }
+                        });
 
-                return Forbid();
+                    return Forbid();
+                }
+
+                if (reservation.UserId != null)
+                {
+                    var reservationUser = _context.Users.Find(reservation.UserId);
+                    if (_user.IsAdmin && reservationUser.Company != _user.Company)
+                    {
+                        _telemetryClient.TrackTrace(
+                            "Forbid: Admin cannot reserve in the name of compnaies' users.",
+                            Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
+                            new Dictionary<string, string>
+                            {
+                                { "UserId", reservation.UserId },
+                                { "IsAdmin", _user.IsAdmin.ToString() },
+                                { "IsCarwashAdmin", _user.IsCarwashAdmin.ToString() },
+                                { "CreatedById", reservation.CreatedById }
+                            });
+                        return Forbid();
+                    }
+                }
             }
 
             if (reservation.Services == null || reservation.Services.Count == 0)
@@ -484,8 +530,7 @@ namespace CarWash.PWA.Controllers
                     Mpv = reservation.Mpv,
                     StartDate = reservation.StartDate,
                     EndDate = (DateTime)reservation.EndDate,
-                    Comment = reservation.Comment,
-                    CarwashComment = reservation.CarwashComment,
+                    Comments = reservation.Comments,
                     User = new UserViewModel
                     {
                         Id = reservation.User.Id,
@@ -517,7 +562,7 @@ namespace CarWash.PWA.Controllers
 
             var reservations = await _context.Reservation
                 .Include(r => r.User)
-                .Where(r => r.StartDate.Date >= DateTime.Today || r.State != State.Done)
+                .Where(r => r.StartDate.Date >= DateTime.Today.AddDays(-3) || r.State != State.Done)
                 .OrderBy(r => r.StartDate)
                 .Select(reservation => new AdminReservationViewModel
                 {
@@ -531,8 +576,7 @@ namespace CarWash.PWA.Controllers
                     Mpv = reservation.Mpv,
                     StartDate = reservation.StartDate,
                     EndDate = (DateTime)reservation.EndDate,
-                    Comment = reservation.Comment,
-                    CarwashComment = reservation.CarwashComment,
+                    Comments = reservation.Comments,
                     User = new UserViewModel
                     {
                         Id = reservation.User.Id,
@@ -937,6 +981,8 @@ namespace CarWash.PWA.Controllers
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         [UserAction]
         [HttpPost("{id}/carwashcomment")]
+        [Obsolete("Use AddComment instead.")]
+
         public async Task<IActionResult> AddCarwashComment([FromRoute] string id, [FromBody] string comment)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
@@ -948,8 +994,13 @@ namespace CarWash.PWA.Controllers
 
             if (reservation == null) return NotFound();
 
-            if (reservation.CarwashComment != null) reservation.CarwashComment += "\n";
-            reservation.CarwashComment += comment;
+            reservation.Comments.Add(new Comment
+            {
+                UserId = _user.Id,
+                Role = CommentRole.Carwash,
+                Timestamp = DateTime.Now,
+                Message = comment
+            });
 
             try
             {
@@ -977,7 +1028,7 @@ namespace CarWash.PWA.Controllers
                     var notification = new Notification
                     {
                         Title = "CarWash has left a comment on your reservation.",
-                        Body = reservation.CarwashComment,
+                        Body = comment,
                         Tag = NotificationTag.Comment
                     };
                     try
@@ -995,6 +1046,103 @@ namespace CarWash.PWA.Controllers
 
             // Try to send message through bot
             await _botService.SendCarWashCommentLeftMessageAsync(reservation);
+
+            return NoContent();
+        }
+
+        // POST: api/reservations/{id}/comment
+        /// <summary>
+        /// Add a comment to a reservation
+        /// </summary>
+        /// <param name="id">reservation id</param>
+        /// <param name="comment">comment to be added</param>
+        /// <returns>No content</returns>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if id or comment is null.</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">Forbidden if user is not carwash admin.</response>
+        [UserAction]
+        [HttpPost("{id}/comment")]
+        public async Task<IActionResult> AddComment([FromRoute] string id, [FromBody] string comment)
+        {
+            if (id == null) return BadRequest("Reservation id cannot be null.");
+            if (comment == null) return BadRequest("Comment cannot be null.");
+
+            var reservation = await _context.Reservation.Include(r => r.User).SingleOrDefaultAsync(r => r.Id == id);
+
+            if (reservation == null) return NotFound();
+
+            if (reservation.UserId != _user.Id)
+            {
+                if (!_user.IsAdmin && !_user.IsCarwashAdmin) return Forbid();
+
+                if (_user.IsAdmin && reservation.User.Company != _user.Company) return Forbid();
+            }
+
+            reservation.AddComment(new Comment
+            {
+                UserId = _user.Id,
+                Role = reservation.UserId != _user.Id && _user.IsCarwashAdmin ? CommentRole.Carwash : CommentRole.User,
+                Timestamp = DateTime.Now,
+                Message = comment
+            });
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Reservation.Any(e => e.Id == id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            // Send notification to user if CarWash sends message
+            if (_user.IsCarwashAdmin)
+            {
+                switch (reservation.User.NotificationChannel)
+                {
+                    case NotificationChannel.Disabled:
+                        break;
+                    case NotificationChannel.NotSet:
+                    case NotificationChannel.Email:
+                        var email = new Email
+                        {
+                            To = reservation.User.Email,
+                            Subject = "CarWash has left a comment on your reservation.",
+                            Body = comment,
+                        };
+                        await _emailService.Send(email, TimeSpan.FromMinutes(1));
+                        break;
+                    case NotificationChannel.Push:
+                        var notification = new Notification
+                        {
+                            Title = "CarWash has left a comment on your reservation.",
+                            Body = comment,
+                            Tag = NotificationTag.Comment
+                        };
+                        try
+                        {
+                            await _pushService.Send(reservation.UserId, notification);
+                        }
+                        catch (Exception e)
+                        {
+                            _telemetryClient.TrackException(e);
+                        }
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+                // Try to send message through bot
+                await _botService.SendCarWashCommentLeftMessageAsync(reservation);
+            }
 
             return NoContent();
         }
@@ -1476,9 +1624,7 @@ namespace CarWash.PWA.Controllers
 
                     worksheet.Cells[i, 9].Value = reservation.GetServiceNames(_configuration.CurrentValue);
 
-                    worksheet.Cells[i, 10].Value = reservation.Comment;
-
-                    worksheet.Cells[i, 11].Value = reservation.CarwashComment;
+                    worksheet.Cells[i, 10].Value = reservation.CommentsJson;
 
                     worksheet.Cells[i, 12].Value = reservation.GetPrice(_configuration.CurrentValue);
 
@@ -1885,8 +2031,7 @@ namespace CarWash.PWA.Controllers
             Mpv = reservation.Mpv;
             StartDate = reservation.StartDate;
             if (reservation.EndDate != null) EndDate = (DateTime)reservation.EndDate;
-            Comment = reservation.Comment;
-            CarwashComment = reservation.CarwashComment;
+            Comments = reservation.Comments;
         }
 
         public string Id { get; set; }
@@ -1899,8 +2044,7 @@ namespace CarWash.PWA.Controllers
         public bool Mpv { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-        public string Comment { get; set; }
-        public string CarwashComment { get; set; }
+        public List<Comment> Comments { get; set; }
     }
 
     public class AdminReservationViewModel
@@ -1916,8 +2060,7 @@ namespace CarWash.PWA.Controllers
         public bool? Mpv { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-        public string Comment { get; set; }
-        public string CarwashComment { get; set; }
+        public List<Comment> Comments { get; set; }
     }
 
     public class ObfuscatedReservationViewModel

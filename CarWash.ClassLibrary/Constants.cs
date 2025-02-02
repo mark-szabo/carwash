@@ -1,4 +1,5 @@
 ﻿using CarWash.ClassLibrary.Models;
+using System.Text.Json;
 
 namespace CarWash.ClassLibrary
 {
@@ -27,5 +28,14 @@ namespace CarWash.ClassLibrary
             /// </summary>
             public const int Carpet = 2;
         }
+
+        /// <summary>
+        /// Default <see cref="JsonSerializerOptions"/> used for serialization.
+        /// </summary>
+        public static JsonSerializerOptions DefaultJsonSerializerOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true
+        };
     }
 }

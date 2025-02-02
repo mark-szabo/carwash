@@ -9,8 +9,7 @@ env:
     AZURE_RESOURCE_GROUP: rg-carwash-mimosonk-prod
     AZURE_APPCONFIG_NAME: appcs-carwash-mimosonk-prod
     AZURE_APPCONFIG_ENDPOINT: https://appcs-carwash-mimosonk-prod.azconfig.io
-    AZURE_CDN_PROFILE_NAME: cdnp-carwash-mimosonk-prod
-    AZURE_CDN_ENDPOINT: cdne-carwash-mimosonk-prod
+    CLOUDFLARE_PURGE_URLS: '["https://mimosonk.hu/", "https://mimosonk.hu/sw.js", "https://mimosonk.hu/api/.well-known/configuration", "https://www.mimosonk.hu/", "https://www.mimosonk.hu/sw.js", "https://www.mimosonk.hu/api/.well-known/configuration"]'
     CONFIGURATION: Release
     DOTNET_CORE_VERSION: 8.0.x
     WORKING_DIRECTORY: CarWash.PWA
@@ -77,13 +76,11 @@ jobs:
                   --key VERSION `
                   --value ${{ needs.build.outputs.build_number }} `
                   --yes
-            - name: Purge Azure CDN endpoint
-              run: |
-                  az cdn endpoint purge `
-                  --resource-group ${{ env.AZURE_RESOURCE_GROUP }} `
-                  --profile-name ${{ env.AZURE_CDN_PROFILE_NAME }} `
-                  --name ${{ env.AZURE_CDN_ENDPOINT }} `
-                  --content-paths '/' '/sw.js' '/api/.well-known/configuration' `
-                  --no-wait
+            - name: Purge Cloudflare Cache
+              uses: jakejarvis/cloudflare-purge-action@v0.3.0
+              env:
+                  CLOUDFLARE_ZONE: ${{ secrets.CLOUDFLARE_ZONE }}
+                  CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
+                  PURGE_URLS: ${{ env.CLOUDFLARE_PURGE_URLS }}
             - name: Azure service principal logout
               run: az logout

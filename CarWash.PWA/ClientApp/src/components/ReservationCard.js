@@ -31,7 +31,7 @@ import Tooltip from '@mui/material/Tooltip';
 import red from '@mui/material/colors/red';
 import { getStateName, getServiceName, State, Garages, BacklogHubMethods } from '../Constants';
 import { formatLocation, formatDate2 } from '../Helpers';
-import Comments from './Comments';
+import Chat from './Chat';
 import * as moment from 'moment';
 import ErrorBoundary from './ErrorBoundary';
 
@@ -335,10 +335,11 @@ function ReservationCard(props) {
                                 </Typography>
                             </React.Fragment>
                         )}
-                        <Comments
-                            commentOutgoing={reservation.comment}
-                            commentIncoming={reservation.carwashComment}
-                            commentIncomingName="CarWash"
+                        <Chat
+                            reservation={reservation}
+                            updateReservation={props.updateReservation}
+                            openSnackbar={props.openSnackbar}
+                            invokeBacklogHub={props.invokeBacklogHub}
                         />
                         <Divider className={classes.divider} />
                         <Typography variant="subtitle1">Selected services</Typography>

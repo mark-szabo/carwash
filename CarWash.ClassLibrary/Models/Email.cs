@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace CarWash.ClassLibrary.Models
 {
@@ -10,19 +10,19 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Gets or sets the recipient of the email.
         /// </summary>
-        [JsonProperty("to")]
+        [JsonPropertyName("to")]
         public string To { get; set; }
 
         /// <summary>
         /// Gets or sets the subject of the email.
         /// </summary>
-        [JsonProperty("subject")]
+        [JsonPropertyName("subject")]
         public string Subject { get; set; }
 
         /// <summary>
         /// Gets or sets the text (body) of the email.
         /// </summary>
-        [JsonProperty("body")]
+        [JsonPropertyName("body")]
         public string Body { get; set; }
     }
 }

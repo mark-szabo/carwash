@@ -1,5 +1,5 @@
 ﻿using CarWash.ClassLibrary.Enums;
-using Newtonsoft.Json;
+using System.Text.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -58,8 +58,8 @@ namespace CarWash.ClassLibrary.Models
         [NotMapped]
         public List<int> Services
         {
-            get => ServicesJson == null ? null : JsonConvert.DeserializeObject<List<int>>(ServicesJson);
-            set => ServicesJson = JsonConvert.SerializeObject(value);
+            get => ServicesJson == null ? null : JsonSerializer.Deserialize<List<int>>(ServicesJson, Constants.DefaultJsonSerializerOptions);
+            set => ServicesJson = JsonSerializer.Serialize(value, Constants.DefaultJsonSerializerOptions);
         }
 
         /// <summary>
@@ -103,16 +103,6 @@ namespace CarWash.ClassLibrary.Models
         public DateTime? EndDate { get; set; }
 
         /// <summary>
-        /// Gets or sets the reservation comment.
-        /// </summary>
-        public string Comment { get; set; }
-
-        /// <summary>
-        /// Gets or sets the comment from the carwash.
-        /// </summary>
-        public string CarwashComment { get; set; }
-
-        /// <summary>
         /// Gets or sets the user id of the reservation creator.
         /// </summary>
         public string CreatedById { get; set; }
@@ -127,6 +117,27 @@ namespace CarWash.ClassLibrary.Models
         /// Gets or sets Outlook's even id of the reservation.
         /// </summary>
         public string OutlookEventId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the reservation comments.
+        /// </summary>
+        /// <value>
+        /// List of comments deserialized from <see cref="CommentsJson"/>.
+        /// </value>
+        [NotMapped]
+        public List<Comment> Comments
+        {
+            get => CommentsJson == null ? [] : JsonSerializer.Deserialize<List<Comment>>(CommentsJson, Constants.DefaultJsonSerializerOptions);
+            set => CommentsJson = JsonSerializer.Serialize(value, Constants.DefaultJsonSerializerOptions);
+        }
+
+        /// <summary>
+        /// Gets or sets the reservation comments serialized in JSON.
+        /// </summary>
+        /// <value>
+        /// List of comments serialized in JSON.
+        /// </value>
+        public string CommentsJson { get; set; }
 
         /// <summary>
         /// Gets reservation's costs.
@@ -160,6 +171,17 @@ namespace CarWash.ClassLibrary.Models
                 .Where(name => !string.IsNullOrEmpty(name));
 
             return string.Join(", ", serviceNames);
-        }        
+        }
+
+        /// <summary>
+        /// Adds a comment to the reservation.
+        /// </summary>
+        /// <param name="comment">The comment to add.</param>
+        public void AddComment(Comment comment)
+        {
+            var comments = Comments ?? [];
+            comments.Add(comment);
+            Comments = comments;
+        }
     }
 }

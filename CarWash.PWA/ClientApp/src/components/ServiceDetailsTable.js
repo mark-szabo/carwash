@@ -165,7 +165,11 @@ class ServiceDetailsTable extends React.Component {
                 ))}
                 <TableRow className={this.props.classes.row}>
                     <TableCell colSpan="3" className={this.props.classes.contactUs}>
-                        Prices are for reference and may vary by company according to individual agreements.
+                        Prices are for reference and may vary by company according to individual agreements. During the
+                        service, our team may add essential additional treatments if they are deemed necessary for your
+                        vehicle's proper cleaning and maintenance. The final amount may therefore be higher than the
+                        price displayed at booking.
+                        <br />
                         <br />
                         Call us (
                         <a href="tel:+36704506612" className={this.props.classes.link}>

@@ -128,6 +128,7 @@ const styles = theme => ({
 
 class Reserve extends TrackedComponent {
     displayName = 'Reserve';
+    isUpdate = false;
 
     constructor(props) {
         super(props);
@@ -170,6 +171,7 @@ class Reserve extends TrackedComponent {
         super.componentDidMount();
 
         if (this.props.match.params.id) {
+            this.isUpdate = true;
             this.setState({
                 loadingReservation: true,
             });
@@ -212,8 +214,16 @@ class Reserve extends TrackedComponent {
                 }
             );
         } else {
+            const lastSelectedServices = this.props.lastSettings.services || [];
+                      
+            // if exterior, should include prewash and wheel cleaning too
+            if (lastSelectedServices.includes(Service.Exterior)) {
+                this.setServiceSelection(lastSelectedServices, Service.Prewash, true);
+                this.setServiceSelection(lastSelectedServices, Service.WheelCleaning, true);
+            }
+
             this.setState({
-                selectedServices: this.props.lastSettings.services || [],
+                selectedServices: lastSelectedServices,
                 vehiclePlateNumber: this.props.lastSettings.vehiclePlateNumber || '',
                 garage: this.props.lastSettings.garage || '',
             });
@@ -321,9 +331,17 @@ class Reserve extends TrackedComponent {
             const selectedServices = [...state.selectedServices];
             this.toggleServiceSelection(selectedServices, service.id);
 
+            // if exterior, should include prewash and wheel cleaning too
+            if (service.id === Service.Exterior && selectedServices.includes(service.id)) {
+                this.setServiceSelection(selectedServices, Service.Prewash, true);
+                this.setServiceSelection(selectedServices, Service.WheelCleaning, true);
+            }
+
             // if carpet, must include exterior and interior too
             if (service.id === Service.Carpet && selectedServices.includes(service.id)) {
                 this.setServiceSelection(selectedServices, Service.Exterior, true);
+                this.setServiceSelection(selectedServices, Service.Prewash, true);
+                this.setServiceSelection(selectedServices, Service.WheelCleaning, true);
                 this.setServiceSelection(selectedServices, Service.Interior, true);
             }
             if ((service.id === Service.Exterior || service.id === Service.Interior) && !selectedServices.includes(service.id)) {
@@ -478,8 +496,14 @@ class Reserve extends TrackedComponent {
             services: this.state.selectedServices,
             private: this.state.private,
             startDate: this.state.selectedDate,
-            comment: this.state.comment,
         };
+
+        if (this.state.comment) {
+            if (!payload.comments) payload.comments = [];
+            payload.comments.push({
+                message: this.state.comment,
+            });
+        }
 
         let apiUrl = 'api/reservations';
         let apiMethod = 'POST';
@@ -906,27 +930,29 @@ class Reserve extends TrackedComponent {
                                                     />
                                                 </FormGroup>
                                                 {dropoffPreConfirmed && (
-                                                    <Typography color="textSecondary" component="span" style={{ margin: '8px 0 0 8px' }}>
-                                                        <WarningIcon style={{ verticalAlign: 'middle' }} /> You won't be able to modify your reservation after
+                                                    <Alert variant="outlined" severity="warning" className={classes.infoAlert}>
+                                                        You won't be able to modify your reservation after
                                                         you click Reserve!
-                                                    </Typography>
+                                                    </Alert>
                                                 )}
                                             </>
                                         )}
                                     </>
                                 )}
-                                <div>
-                                    <TextField
-                                        id="reserve-comment"
-                                        label="Comment"
-                                        multiline
-                                        maxRows="4"
-                                        value={comment}
-                                        onChange={this.handleCommentChange}
-                                        className={classes.textField}
-                                        margin="normal"
-                                    />
-                                </div>
+                                {!this.isUpdate && (
+                                    <div>
+                                        <TextField
+                                            id="reserve-comment"
+                                            label="Comment"
+                                            multiline
+                                            maxRows="4"
+                                            value={comment}
+                                            onChange={this.handleCommentChange}
+                                            className={classes.textField}
+                                            margin="normal"
+                                        />
+                                    </div>
+                                )}
                                 <div className={classes.actionsContainer}>
                                     <div>
                                         <Button onClick={this.handleBack} className={classes.button}>
@@ -939,7 +965,7 @@ class Reserve extends TrackedComponent {
                                             className={classes.button}
                                             id="reserve-submit-button"
                                         >
-                                            {!this.props.match.params.id ? 'Reserve' : 'Update'}
+                                            {!this.isUpdate ? 'Reserve' : 'Update'}
                                         </Button>
                                     </div>
                                 </div>

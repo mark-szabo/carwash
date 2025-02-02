@@ -1,12 +1,18 @@
 {
   /* See all the pre-defined configs here: https://www.npmjs.com/package/eslint-config-defaults */
   "extends": [
-    "defaults/configurations/airbnb/es6",
+    "eslint:recommended",
+    "plugin:react/recommended",
     "prettier"
   ],
   "parser": "@babel/eslint-parser",
   "parserOptions": {
-    "requireConfigFile": false
+    "requireConfigFile": false,
+    "ecmaVersion": 2020,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
   },
   "plugins": ["react", "import", "jsx"],
   "env": {
@@ -19,14 +25,15 @@
   },
   "rules": {
     "eqeqeq": 2,
-    "comma-dangle": 1,
+    "comma-dangle": 0,
     "no-console": 0,
     "no-debugger": 1,
     "no-extra-semi": 1,
-    "no-extra-parens": 1,
+    "no-extra-parens": 0,
     "no-irregular-whitespace": 0,
     "no-undef": 0,
     "no-unused-vars": 0,
+    "no-prototype-builtins": 0,
     "semi": 1,
     "semi-spacing": 1,
     "valid-jsdoc": [2, { "requireReturn": false }],
@@ -54,6 +61,7 @@
     "react/no-multi-comp": [1, { "ignoreStateless": true }],
     "react/no-set-state": 0,
     "react/no-unknown-property": 1,
+    "react/no-unescaped-entities": 0,
     "react/prop-types": 0,
     "react/react-in-jsx-scope": 0,
     "react/self-closing-comp": 1,

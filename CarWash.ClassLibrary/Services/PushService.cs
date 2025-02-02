@@ -1,7 +1,7 @@
 ﻿using Microsoft.ApplicationInsights;
 using Microsoft.EntityFrameworkCore;
 using CarWash.ClassLibrary.Models;
-using Newtonsoft.Json;
+using System.Text.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -99,7 +99,7 @@ namespace CarWash.ClassLibrary.Services
             foreach (var subscription in subscriptions)
                 try
                 {
-                    _client.SendNotification(subscription.ToWebPushSubscription(), JsonConvert.SerializeObject(notification), _vapidDetails);
+                    _client.SendNotification(subscription.ToWebPushSubscription(), JsonSerializer.Serialize(notification, Constants.DefaultJsonSerializerOptions), _vapidDetails);
                     notificationSentSuccessfully = true;
                 }
                 catch (WebPushException e)

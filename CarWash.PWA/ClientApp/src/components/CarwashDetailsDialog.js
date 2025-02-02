@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { withStyles } from '@mui/styles';
-import { useTheme, useMediaQuery } from '@mui/material';
+import { useMediaQuery } from '@mui/material';
 import apiFetch from '../Auth';
 import Button from '@mui/material/Button';
 import Fab from '@mui/material/Fab';
@@ -14,9 +14,7 @@ import red from '@mui/material/colors/red';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
-import Input from '@mui/material/Input';
 import InputLabel from '@mui/material/InputLabel';
-import InputAdornment from '@mui/material/InputAdornment';
 import FormControl from '@mui/material/FormControl';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
@@ -28,12 +26,11 @@ import CloseIcon from '@mui/icons-material/Close';
 import DoneIcon from '@mui/icons-material/Done';
 import EditIcon from '@mui/icons-material/Edit';
 import MoneyOffIcon from '@mui/icons-material/MoneyOff';
-import SendIcon from '@mui/icons-material/Send';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import { State, getServiceName, getAdminStateName, Garages, Service, BacklogHubMethods } from '../Constants';
+import { State, getServiceName, getAdminStateName, Service, BacklogHubMethods } from '../Constants';
 import { formatLocation, formatDate } from '../Helpers';
-import Comments from './Comments';
+import Chat from './Chat';
 
 const styles = theme => ({
     chip: {
@@ -94,12 +91,6 @@ const styles = theme => ({
     subheader: {
         marginTop: theme.spacing(4),
     },
-    comments: {
-        maxWidth: 300,
-        [theme.breakpoints.down('md')]: {
-            maxWidth: '100%',
-        },
-    },
     formControl: {
         margin: `${theme.spacing(2)} ${theme.spacing(1)} 0 0`,
         [theme.breakpoints.down('md')]: {
@@ -126,7 +117,6 @@ class CarwashDetailsDialog extends React.Component {
     displayName = 'CarwashDetailsDialog';
 
     state = {
-        commentTextfield: '',
         editLocation: false,
         garage: '',
         floor: '',
@@ -344,44 +334,6 @@ class CarwashDetailsDialog extends React.Component {
         );
     };
 
-    handleAddComment = () => {
-        const reservation = this.props.reservation;
-        const oldComment = reservation.carwashComment;
-        if (reservation.carwashComment !== null) reservation.carwashComment += `\n ${this.state.commentTextfield}`;
-        else reservation.carwashComment = this.state.commentTextfield;
-        this.props.updateReservation(reservation);
-
-        const oldTextfield = this.state.commentTextfield;
-        this.setState({ commentTextfield: '' });
-
-        apiFetch(
-            `api/reservations/${this.props.reservation.id}/carwashcomment`,
-            {
-                method: 'POST',
-                body: JSON.stringify(this.state.commentTextfield),
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            },
-            true
-        ).then(
-            () => {
-                this.props.openSnackbar('Comment saved.');
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, this.props.reservation.id);
-            },
-            error => {
-                reservation.carwashComment = oldComment;
-                this.props.updateReservation(reservation);
-
-                this.setState({ commentTextfield: oldTextfield });
-
-                this.props.openSnackbar(error);
-            }
-        );
-    };
-
     handleToggleMpv = () => {
         const reservation = this.props.reservation;
         const oldMpv = reservation.mpv;
@@ -457,8 +409,10 @@ class CarwashDetailsDialog extends React.Component {
 
         // if carpet, must include exterior and interior too
         if (service === Service.Carpet) {
-            if (reservation.services.filter(s => s === Service.Exterior).length <= 0) reservation.services.push(Service.Exterior);
-            if (reservation.services.filter(s => s === Service.Interior).length <= 0) reservation.services.push(Service.Interior);
+            if (reservation.services.filter(s => s === Service.Exterior).length <= 0)
+                reservation.services.push(Service.Exterior);
+            if (reservation.services.filter(s => s === Service.Interior).length <= 0)
+                reservation.services.push(Service.Interior);
         }
 
         // cannot have both AC cleaning
@@ -540,14 +494,6 @@ class CarwashDetailsDialog extends React.Component {
         );
     };
 
-    handleCommentChange = event => {
-        this.setState({ commentTextfield: event.target.value });
-    };
-
-    handleCommentKeyPress = event => {
-        if (event.key === 'Enter') this.handleAddComment();
-    };
-
     handleEditLocation = () => {
         this.setState({ editLocation: true });
     };
@@ -604,10 +550,6 @@ class CarwashDetailsDialog extends React.Component {
         );
     };
 
-    preventDefault = event => {
-        event.preventDefault();
-    };
-
     render() {
         const { editLocation, garage, floor, seat, validationErrors, editServices } = this.state;
         const { reservation, configuration, open, snackbarOpen, classes } = this.props;
@@ -632,7 +574,7 @@ class CarwashDetailsDialog extends React.Component {
                             {getAdminStateName(reservation.state)} • {formatDate(reservation)} •{' '}
                             {reservation.user.firstName} {reservation.user.lastName} • {reservation.user.company}
                         </Typography>
-                        <br/>
+                        <br />
                         {!editLocation ? (
                             <Typography variant="subtitle1" gutterBottom>
                                 {reservation.location ? formatLocation(reservation.location) : 'Location not set'}
@@ -654,7 +596,9 @@ class CarwashDetailsDialog extends React.Component {
                                         }}
                                     >
                                         {configuration.garages.map(g => (
-                                            <MenuItem value={g.building} key={g.building}>{g.building}</MenuItem>
+                                            <MenuItem value={g.building} key={g.building}>
+                                                {g.building}
+                                            </MenuItem>
                                         ))}
                                     </Select>
                                 </FormControl>
@@ -670,9 +614,13 @@ class CarwashDetailsDialog extends React.Component {
                                                 id: 'floor',
                                             }}
                                         >
-                                            {configuration.garages.find(g => g.building === garage).floors.map(f => (
-                                                <MenuItem value={f} key={f}>{f}</MenuItem>
-                                            ))}
+                                            {configuration.garages
+                                                .find(g => g.building === garage)
+                                                .floors.map(f => (
+                                                    <MenuItem value={f} key={f}>
+                                                        {f}
+                                                    </MenuItem>
+                                                ))}
                                         </Select>
                                     </FormControl>
                                 )}
@@ -698,38 +646,13 @@ class CarwashDetailsDialog extends React.Component {
                                 )}
                             </React.Fragment>
                         )}
-                        <div className={classes.comments}>
-                            <Comments
-                                commentOutgoing={reservation.carwashComment}
-                                commentIncoming={reservation.comment}
-                                commentIncomingName={reservation.user.firstName}
-                                incomingFirst
-                            />
-                            <FormControl className={classes.commentTextfield}>
-                                <InputLabel htmlFor="comment">Reply</InputLabel>
-                                <Input
-                                    id="comment"
-                                    type="text"
-                                    value={this.state.commentTextfield}
-                                    onChange={this.handleCommentChange}
-                                    onKeyPress={this.handleCommentKeyPress}
-                                    endAdornment={
-                                        <InputAdornment position="end">
-                                            {this.state.commentTextfield && (
-                                                <IconButton
-                                                    aria-label="Save comment"
-                                                    onClick={this.handleAddComment}
-                                                    onMouseDown={this.preventDefault}
-                                                    size="large"
-                                                >
-                                                    <SendIcon />
-                                                </IconButton>
-                                            )}
-                                        </InputAdornment>
-                                    }
-                                />
-                            </FormControl>
-                        </div>
+                        <Chat
+                            carWashChat
+                            reservation={reservation}
+                            updateReservation={() => {}}
+                            openSnackbar={() => {}}
+                            invokeBacklogHub={() => {}}
+                        />
                         <Typography variant="subtitle1" className={classes.subheader}>
                             Selected services
                         </Typography>

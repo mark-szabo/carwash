@@ -1,9 +1,10 @@
 ﻿using Microsoft.ApplicationInsights;
 using CarWash.ClassLibrary.Models;
-using Newtonsoft.Json;
 using System;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 
@@ -75,7 +76,7 @@ namespace CarWash.ClassLibrary.Services
         /// <returns>response body</returns>
         private async Task<string> CallLogicApp(Event calendarEvent)
         {
-            var content = new StringContent(JsonConvert.SerializeObject(calendarEvent), Encoding.UTF8, "application/json");
+            var content = new StringContent(JsonSerializer.Serialize(calendarEvent, Constants.DefaultJsonSerializerOptions), Encoding.UTF8, "application/json");
             var response = await _client.PostAsync(configuration.CurrentValue.CalendarService.LogicAppUrl, content);
             response.EnsureSuccessStatusCode();
 
@@ -107,28 +108,28 @@ namespace CarWash.ClassLibrary.Services
 
     internal class Event
     {
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Id { get; set; }
 
-        [JsonProperty("subject")]
+        [JsonPropertyName("subject")]
         public string Subject { get; set; }
 
-        [JsonProperty("isCancelled")]
+        [JsonPropertyName("isCancelled")]
         public bool IsCancelled { get; set; }
 
-        [JsonProperty("to")]
+        [JsonPropertyName("to")]
         public string To { get; set; }
 
-        [JsonProperty("startTime")]
+        [JsonPropertyName("startTime")]
         public string StartTime { get; set; }
 
-        [JsonProperty("endTime")]
+        [JsonPropertyName("endTime")]
         public string EndTime { get; set; }
 
-        [JsonProperty("location")]
+        [JsonPropertyName("location")]
         public string Location { get; set; }
 
-        [JsonProperty("body")]
+        [JsonPropertyName("body")]
         public string Body { get; set; }
     }
 }
