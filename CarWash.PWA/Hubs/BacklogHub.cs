@@ -43,5 +43,14 @@ namespace CarWash.PWA.Hubs
         {
             await Clients.Others.SendAsync(nameof(ReservationDropoffConfirmed), id);
         }
+
+        /// <summary>
+        /// Broadcast ReservationChatMessageSent message to all devices except caller's
+        /// </summary>
+        /// <param name="id">reservation id</param>
+        public async Task ReservationChatMessageSent(string id)
+        {
+            await Clients.Others.SendAsync(nameof(ReservationChatMessageSent), id);
+        }
     }
 }

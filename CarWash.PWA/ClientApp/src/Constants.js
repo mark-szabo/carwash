@@ -43,6 +43,7 @@ export const BacklogHubMethods = Object.freeze({
     ReservationUpdated: 'ReservationUpdated',
     ReservationDeleted: 'ReservationDeleted',
     ReservationDropoffConfirmed: 'ReservationDropoffConfirmed',
+    ReservationChatMessageSent: 'ReservationChatMessageSent',
 });
 
 export function getStateName(state) {

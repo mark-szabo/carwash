@@ -486,6 +486,10 @@ export default class App extends Component {
                 console.log(`SignalR: a key was just dropped off (${id})`);
                 this.loadBacklog().then(() => this.openSnackbar('A key was just dropped off!'));
             });
+            this.backlogHubConnection.on(BacklogHubMethods.ReservationChatMessageSent, id => {
+                console.log(`SignalR: a chat message was just received (${id})`);
+                this.loadBacklog().then(() => this.openSnackbar('New message received!'));
+            });
         }
 
         this.backlogHubConnection.onclose(error => {

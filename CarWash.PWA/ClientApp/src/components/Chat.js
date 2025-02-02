@@ -47,7 +47,7 @@ export default function Chat(props) {
             props.openSnackbar('Comment saved.');
 
             // Broadcast using SignalR
-            props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, props.reservation.id);
+            props.invokeBacklogHub(BacklogHubMethods.ReservationChatMessageSent, props.reservation.id);
         } catch (error) {
             reservation.comments = oldComments;
             props.updateReservation(reservation);
