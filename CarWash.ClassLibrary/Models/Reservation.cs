@@ -128,7 +128,7 @@ namespace CarWash.ClassLibrary.Models
         public List<Comment> Comments
         {
             get => CommentsJson == null ? [] : JsonSerializer.Deserialize<List<Comment>>(CommentsJson, Constants.DefaultJsonSerializerOptions);
-            private set => CommentsJson = JsonSerializer.Serialize(value, Constants.DefaultJsonSerializerOptions);
+            set => CommentsJson = JsonSerializer.Serialize(value, Constants.DefaultJsonSerializerOptions);
         }
 
         /// <summary>

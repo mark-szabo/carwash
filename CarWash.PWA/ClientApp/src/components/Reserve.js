@@ -496,8 +496,14 @@ class Reserve extends TrackedComponent {
             services: this.state.selectedServices,
             private: this.state.private,
             startDate: this.state.selectedDate,
-            comment: this.state.comment,
         };
+
+        if (this.state.comment) {
+            if (!payload.comments) payload.comments = [];
+            payload.comments.push({
+                message: this.state.comment,
+            });
+        }
 
         let apiUrl = 'api/reservations';
         let apiMethod = 'POST';

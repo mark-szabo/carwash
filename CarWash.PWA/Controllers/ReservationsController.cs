@@ -263,6 +263,25 @@ namespace CarWash.PWA.Controllers
             reservation.StartDate = reservation.StartDate.ToLocalTime();
             reservation.StartDate = reservation.StartDate.Date + new TimeSpan(reservation.StartDate.Hour, minutes: 0, seconds: 0);
 
+            if (reservation.Comments.Count == 1)
+            {
+                reservation.Comments[0].UserId = _user.Id;
+                reservation.Comments[0].Timestamp = DateTime.Now;
+                reservation.Comments[0].Role = CommentRole.User;
+            }
+            if (reservation.Comments.Count > 1)
+            {
+                _telemetryClient.TrackTrace(
+                    "BadRequest: Only one comment can be added when creating a reservation.",
+                    Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
+                    new Dictionary<string, string>
+                    {
+                        { "UserId", reservation.UserId },
+                        { "Comments", reservation.CommentsJson }
+                    });
+                return BadRequest("Only one comment can be added when creating a reservation.");
+            }
+
             try
             {
                 reservation.EndDate = CalculateEndTime(reservation.StartDate, reservation.EndDate);
