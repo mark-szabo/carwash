@@ -77,9 +77,12 @@ namespace CarWash.PWA
             services.AddScoped<IBotService, BotService>();
 
             // Add framework services
-            services.AddApplicationInsightsTelemetry(configuration);
-            services.AddApplicationInsightsTelemetryProcessor<SignalrTelemetryFilter>();
-            // services.AddApplicationInsightsTelemetryProcessor<ForbiddenTelemetryFilter>();
+            if (currentEnvironment.IsProduction())
+            {
+                services.AddApplicationInsightsTelemetry(configuration);
+                services.AddApplicationInsightsTelemetryProcessor<SignalrTelemetryFilter>();
+                // services.AddApplicationInsightsTelemetryProcessor<ForbiddenTelemetryFilter>();
+            }
 
             // Configure SnapshotCollector from application settings
             services.Configure<SnapshotCollectorConfiguration>(configuration.GetSection(nameof(SnapshotCollectorConfiguration)));

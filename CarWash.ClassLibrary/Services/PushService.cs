@@ -19,7 +19,7 @@ namespace CarWash.ClassLibrary.Services
     {
         private readonly WebPushClient _client;
         private readonly IPushDbContext _context;
-        private readonly TelemetryClient _telemetryClient;
+        private readonly TelemetryClient? _telemetryClient;
         private readonly VapidDetails _vapidDetails;
 
         /// <inheritdoc />
@@ -35,7 +35,7 @@ namespace CarWash.ClassLibrary.Services
         }
 
         /// <inheritdoc />
-        public PushService(ApplicationDbContext context, IOptionsMonitor<CarWashConfiguration> configuration, TelemetryClient telemetryClient)
+        public PushService(ApplicationDbContext context, IOptionsMonitor<CarWashConfiguration> configuration, TelemetryClient? telemetryClient = null)
         {
             _context = context;
             _client = new WebPushClient();
@@ -111,7 +111,7 @@ namespace CarWash.ClassLibrary.Services
                     }
                     else
                     {
-                        _telemetryClient.TrackException(e);
+                        _telemetryClient?.TrackException(e);
                     }
                 }
 
