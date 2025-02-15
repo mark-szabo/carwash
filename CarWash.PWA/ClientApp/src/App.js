@@ -120,22 +120,13 @@ export default class App extends Component {
             });
         }
 
-        apiFetch('api/reservations').then(
-            data => {
-                this.setState({
-                    reservations: data,
-                    reservationsLoading: false,
-                });
-            },
-            error => {
-                this.setState({ reservationsLoading: false });
-                this.openSnackbar(error);
-            }
-        );
-
         apiFetch('api/users/me').then(
             data => {
                 this.setState({ user: data });
+
+                this.loadReservations(false);
+
+                this.loadLastSettings();
 
                 if (data.notificationChannel === NotificationChannel.Push) {
                     this.openNotificationDialog();
@@ -159,8 +150,6 @@ export default class App extends Component {
 
         // Register service worker
         this.registerServiceWorker();
-
-        this.loadLastSettings();
 
         const browserHistory = createBrowserHistory({ basename: '' });
         const reactPlugin = new ReactPlugin();
