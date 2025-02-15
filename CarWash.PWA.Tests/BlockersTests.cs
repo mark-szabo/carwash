@@ -328,11 +328,11 @@ namespace CarWash.PWA.Tests
             var calendarServiceMock = new Mock<ICalendarService>();
             calendarServiceMock.Setup(m => m.DeleteEventAsync(It.IsAny<Reservation>())).Returns(Task.CompletedTask);
             var carWashAdmin = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
-            var userControllerStub = new Mock<IUsersController>();
-            userControllerStub.Setup(s => s.GetCurrentUser()).Returns(carWashAdmin);
+            var userServiceStub = new Mock<IUserService>();
+            userServiceStub.Setup(s => s.CurrentUser).Returns(carWashAdmin);
             var controller = new BlockersController(
                 dbContext,
-                userControllerStub.Object,
+                userServiceStub.Object,
                 emailServiceMock.Object,
                 calendarServiceMock.Object,
                 CreateTelemetryClientStub());
@@ -463,12 +463,12 @@ namespace CarWash.PWA.Tests
             var emailServiceStub = new Mock<IEmailService>();
             var calendarServiceStub = new Mock<ICalendarService>();
             var user = dbContext.Users.Single(u => u.Email == email);
-            var userControllerStub = new Mock<IUsersController>();
-            userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
+            var userServiceStub = new Mock<IUserService>();
+            userServiceStub.Setup(s => s.CurrentUser).Returns(user);
 
             return new BlockersController(
                 dbContext,
-                userControllerStub.Object,
+                userServiceStub.Object,
                 emailServiceStub.Object,
                 calendarServiceStub.Object,
                 CreateTelemetryClientStub());

@@ -34,22 +34,6 @@ namespace CarWash.PWA.Tests
         }
 
         [Fact]
-        public void GetCurrentUser_ByDefault_ReturnsCurrentUser()
-        {
-            var dbContext = CreateInMemoryDbContext();
-            var john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
-            var httpContextAccessorStub = new Mock<IHttpContextAccessor>();
-            httpContextAccessorStub.SetupGet(s => s.HttpContext.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new List<Claim> { new Claim(ClaimTypes.Upn, JOHN_EMAIL) })));
-            var emailServiceStub = new Mock<IEmailService>();
-            var controller = new UsersController(dbContext, httpContextAccessorStub.Object, emailServiceStub.Object);
-
-            var result = controller.GetCurrentUser();
-
-            Assert.IsType<User>(result);
-            Assert.Equal(john, result);
-        }
-
-        [Fact]
         public void GetMe_ByDefault_ReturnsCurrentUser()
         {
             var dbContext = CreateInMemoryDbContext();

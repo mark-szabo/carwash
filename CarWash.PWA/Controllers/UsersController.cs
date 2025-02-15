@@ -23,7 +23,7 @@ namespace CarWash.PWA.Controllers
     [UserAction]
     [Route("api/users")]
     [ApiController]
-    public class UsersController : ControllerBase, IUsersController
+    public class UsersController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
         private readonly User _user;
@@ -300,10 +300,6 @@ Please keep in mind, that we are required to continue storing your previous rese
 
             return Ok(new UserViewModel(user));
         }
-
-        /// <inheritdoc />
-        [NonAction]
-        public User GetCurrentUser() => _user;
     }
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member

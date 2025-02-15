@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -24,9 +24,9 @@ namespace CarWash.PWA.Controllers
         private readonly IPushService _pushService;
 
         /// <inheritdoc />
-        public PushController(IUsersController usersController, IWebHostEnvironment hostingEnvironment, IPushService pushService)
+        public PushController(IUserService userService, IWebHostEnvironment hostingEnvironment, IPushService pushService)
         {
-            _user = usersController.GetCurrentUser();
+            _user = userService.CurrentUser;
             _env = hostingEnvironment;
             _pushService = pushService;
         }

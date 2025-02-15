@@ -1515,9 +1515,9 @@ namespace CarWash.PWA.Tests
             botServiceMock.Setup(m => m.SendWashCompletedMessageAsync(It.IsAny<Reservation>())).Returns(Task.CompletedTask);
             var calendarServiceStub = new Mock<ICalendarService>();
             var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
-            var userControllerStub = new Mock<IUsersController>();
-            userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
+            var userServiceStub = new Mock<IUserService>();
+            userServiceStub.Setup(s => s.CurrentUser).Returns(user);
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
 
             var result = await controller.CompleteWash(reservation.Id);
 
@@ -1543,9 +1543,9 @@ namespace CarWash.PWA.Tests
             botServiceMock.Setup(m => m.SendWashCompletedMessageAsync(It.IsAny<Reservation>())).Returns(Task.CompletedTask);
             var calendarServiceStub = new Mock<ICalendarService>();
             var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
-            var userControllerStub = new Mock<IUsersController>();
-            userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
+            var userServiceStub = new Mock<IUserService>();
+            userServiceStub.Setup(s => s.CurrentUser).Returns(user);
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
 
             var result = await controller.CompleteWash(reservation.Id);
 
@@ -1571,9 +1571,9 @@ namespace CarWash.PWA.Tests
             botServiceMock.Setup(m => m.SendWashCompletedMessageAsync(It.IsAny<Reservation>())).Returns(Task.CompletedTask);
             var calendarServiceStub = new Mock<ICalendarService>();
             var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
-            var userControllerStub = new Mock<IUsersController>();
-            userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
+            var userServiceStub = new Mock<IUserService>();
+            userServiceStub.Setup(s => s.CurrentUser).Returns(user);
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
 
             var result = await controller.CompleteWash(reservation.Id);
 
@@ -1763,9 +1763,9 @@ namespace CarWash.PWA.Tests
             botServiceMock.Setup(m => m.SendCarWashCommentLeftMessageAsync(It.IsAny<Reservation>())).Returns(Task.CompletedTask);
             var calendarServiceStub = new Mock<ICalendarService>();
             var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
-            var userControllerStub = new Mock<IUsersController>();
-            userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userControllerStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
+            var userServiceStub = new Mock<IUserService>();
+            userServiceStub.Setup(s => s.CurrentUser).Returns(user);
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
             const string COMMENT = "test";
 
             var result = await controller.AddCarwashComment(reservation.Id, COMMENT);
@@ -2317,13 +2317,13 @@ namespace CarWash.PWA.Tests
             var pushServiceStub = new Mock<IPushService>();
             var botServiceStub = new Mock<IBotService>();
             var user = dbContext.Users.Single(u => u.Email == email);
-            var userControllerStub = new Mock<IUsersController>();
-            userControllerStub.Setup(s => s.GetCurrentUser()).Returns(user);
+            var userServiceStub = new Mock<IUserService>();
+            userServiceStub.Setup(s => s.CurrentUser).Returns(user);
 
             return new ReservationsController(
                 configurationStub,
                 dbContext,
-                userControllerStub.Object,
+                userServiceStub.Object,
                 emailServiceStub.Object,
                 calendarServiceStub.Object,
                 pushServiceStub.Object,
@@ -2338,13 +2338,13 @@ namespace CarWash.PWA.Tests
             var calendarServiceStub = new Mock<ICalendarService>();
             var pushServiceStub = new Mock<IPushService>();
             var botServiceStub = new Mock<IBotService>();
-            var userControllerStub = new Mock<IUsersController>();
-            userControllerStub.Setup(s => s.GetCurrentUser()).Returns(() => null);
+            var userServiceStub = new Mock<IUserService>();
+            userServiceStub.Setup(s => s.CurrentUser).Returns(() => null);
 
             return new ReservationsController(
                 configurationStub,
                 dbContext,
-                userControllerStub.Object,
+                userServiceStub.Object,
                 emailServiceStub.Object,
                 calendarServiceStub.Object,
                 pushServiceStub.Object,

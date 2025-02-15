@@ -37,11 +37,11 @@ namespace CarWash.PWA.Controllers
         private readonly TelemetryClient _telemetryClient;
 
         /// <inheritdoc />
-        public ReservationsController(IOptionsMonitor<CarWashConfiguration> configuration, ApplicationDbContext context, IUsersController usersController, IEmailService emailService, ICalendarService calendarService, IPushService pushService, IBotService botService, TelemetryClient telemetryClient)
+        public ReservationsController(IOptionsMonitor<CarWashConfiguration> configuration, ApplicationDbContext context, IUserService userService, IEmailService emailService, ICalendarService calendarService, IPushService pushService, IBotService botService, TelemetryClient telemetryClient)
         {
             _configuration = configuration;
             _context = context;
-            _user = usersController.GetCurrentUser();
+            _user = userService.CurrentUser;
             _emailService = emailService;
             _calendarService = calendarService;
             _pushService = pushService;
@@ -1456,11 +1456,17 @@ namespace CarWash.PWA.Controllers
 
             if (lastReservation == null) return NoContent();
 
+            var lastPrivateReservation = await _context.Reservation
+                .Where(r => r.UserId == _user.Id && r.Private)
+                .OrderByDescending(r => r.CreatedOn)
+                .FirstOrDefaultAsync();
+
             return Ok(new LastSettingsViewModel
             {
                 VehiclePlateNumber = lastReservation.VehiclePlateNumber,
                 Location = lastReservation.Location,
-                Services = lastReservation.Services
+                Services = lastReservation.Services,
+                // add invoice details
             });
         }
 

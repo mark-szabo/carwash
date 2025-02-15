@@ -70,7 +70,6 @@ namespace CarWash.PWA
 
             // Add application services
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddScoped<IUsersController, UsersController>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ICalendarService, CalendarService>();
             services.AddScoped<IPushService, PushService>();
@@ -190,6 +189,8 @@ namespace CarWash.PWA
                                 new Claim("carwashadmin", user.IsCarwashAdmin.ToString())
                             };
                             context.Principal.AddIdentity(new ClaimsIdentity(claims));
+
+                            services.AddScoped<IUserService>(sp => new UserService(user));
                         },
                         OnAuthenticationFailed = context =>
                         {
