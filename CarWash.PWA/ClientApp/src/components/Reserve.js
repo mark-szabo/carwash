@@ -331,10 +331,13 @@ class Reserve extends TrackedComponent {
             const selectedServices = [...state.selectedServices];
             this.toggleServiceSelection(selectedServices, service.id);
 
-            // if exterior, should include prewash and wheel cleaning too
+            // if exterior, must include prewash and wheel cleaning too
             if (service.id === Service.Exterior && selectedServices.includes(service.id)) {
                 this.setServiceSelection(selectedServices, Service.Prewash, true);
                 this.setServiceSelection(selectedServices, Service.WheelCleaning, true);
+            }
+            if ((service.id === Service.Prewash || service.id === Service.WheelCleaning) && !selectedServices.includes(service.id)) {
+                this.setServiceSelection(selectedServices, Service.Exterior, false);
             }
 
             // if carpet, must include exterior and interior too
