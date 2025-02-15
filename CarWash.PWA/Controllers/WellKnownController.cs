@@ -3,6 +3,7 @@ using CarWash.ClassLibrary.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
+using CarWash.ClassLibrary.Services;
 
 namespace CarWash.PWA.Controllers
 {
@@ -13,7 +14,7 @@ namespace CarWash.PWA.Controllers
     [Produces("application/json")]
     [Route("api/.well-known")]
     [ApiController]
-    public class WellKnownController(IOptionsMonitor<CarWashConfiguration> configuration, ApplicationDbContext context) : ControllerBase
+    public class WellKnownController(IOptionsMonitor<CarWashConfiguration> configuration, ApplicationDbContext context, IPushService pushService) : ControllerBase
     {
         // GET: api/.well-known/configuration
         /// <summary>
@@ -36,6 +37,18 @@ namespace CarWash.PWA.Controllers
             };
 
             return Ok(wellKnown);
+        }
+
+        // GET: api/.well-known/vapidpublickey
+        /// <summary>
+        /// Get VAPID Public Key
+        /// </summary>
+        /// <returns>VAPID Public Key</returns>
+        /// <response code="200">OK</response>
+        [HttpGet, Route("vapidpublickey")]
+        public ActionResult<string> GetVapidPublicKey()
+        {
+            return Ok(pushService.GetVapidPublicKey());
         }
     }
 }

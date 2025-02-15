@@ -1,4 +1,4 @@
-﻿importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.3.0/workbox-sw.js');
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.3.0/workbox-sw.js');
 
 if (workbox) {
     console.log('Yay! Workbox is loaded 🎉');
@@ -36,6 +36,7 @@ workbox.precaching.precacheAndRoute([
     { url: 'images/state3.png', revision: '2' },
     { url: 'images/state4.png', revision: '2' },
     { url: 'images/state5.png', revision: '2' },
+    { url: 'api/.well-known/vapidpublickey', revision: '2' },
 ]);
 
 const bgSyncPlugin = new BackgroundSyncPlugin('bgSyncQueue');

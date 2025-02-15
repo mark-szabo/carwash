@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -37,11 +37,10 @@ namespace CarWash.PWA.Controllers
         /// </summary>
         /// <returns>VAPID Public Key</returns>
         /// <response code="200">OK</response>
-        /// <response code="401">Unauthorized</response>
         [HttpGet, Route("vapidpublickey")]
         public ActionResult<string> GetVapidPublicKey()
         {
-            return Ok(_pushService.GetVapidPublicKey());
+            return Redirect("/api/.well-known/vapidpublickey");
         }
 
         // POST: api/push/register

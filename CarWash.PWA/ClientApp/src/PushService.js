@@ -52,7 +52,7 @@ export default function registerPush() {
                     }
 
                     // Otherwise subscribe with the server public key
-                    const vapidPublicKey = await apiFetch('/api/push/vapidpublickey');
+                    const vapidPublicKey = await apiFetch('/api/.well-known/vapidpublickey');
                     const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
 
                     return registration.pushManager.subscribe({

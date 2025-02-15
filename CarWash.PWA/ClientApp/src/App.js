@@ -145,6 +145,7 @@ export default class App extends Component {
             },
             error => {
                 this.openSnackbar(error);
+                this.setState({ reservationsLoading: false });
             }
         );
 
