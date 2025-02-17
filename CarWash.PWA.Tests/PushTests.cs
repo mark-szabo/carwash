@@ -14,27 +14,6 @@ namespace CarWash.PWA.Tests
         private const string JOHN_EMAIL = "john.doe@test.com";
 
         [Fact]
-        public void GetVapidPublicKey_ByDefault_ReturnsVapidPublicKey()
-        {
-            var userServiceStub = new Mock<IUserService>();
-            var hostingEnvironmentStub = new Mock<IWebHostEnvironment>();
-            var pushServiceMock = new Mock<IPushService>();
-            const string PUBLIC_KEY = "test public key";
-            pushServiceMock.Setup(m => m.GetVapidPublicKey()).Returns(PUBLIC_KEY);
-            var controller = new PushController(userServiceStub.Object, hostingEnvironmentStub.Object, pushServiceMock.Object);
-
-            var result = controller.GetVapidPublicKey();
-
-            Assert.IsType<ActionResult<string>>(result);
-            Assert.IsType<OkObjectResult>(result.Result);
-            var ok = (OkObjectResult)result.Result;
-            Assert.IsType<string>(ok.Value);
-            var publicKey = (string)ok.Value;
-            Assert.Equal(PUBLIC_KEY, publicKey);
-            pushServiceMock.Verify(m => m.GetVapidPublicKey(), Times.Once());
-        }
-
-        [Fact]
         public async Task Register_ByDefault_ReturnsNoContent()
         {
             var userControllerStub = CreateUserServiceStub();

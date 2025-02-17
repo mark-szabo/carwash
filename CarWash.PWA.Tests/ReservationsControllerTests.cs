@@ -2079,8 +2079,9 @@ namespace CarWash.PWA.Tests
             optionsBuilder.EnableSensitiveDataLogging();
             var dbContext = new ApplicationDbContext(optionsBuilder.Options);
 
-            // Datae database
+            // Recreate database
             dbContext.Database.EnsureDeleted();
+            dbContext.Database.EnsureCreated();
 
             // Seed database
             var john = new User
