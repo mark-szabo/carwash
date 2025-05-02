@@ -62,10 +62,10 @@ namespace CarWash.PWA
             {
                 if (config.Services.Count == 0)
                 {
-                    config.Services = JsonSerializer.Deserialize<List<Service>>(configuration.GetValue<string>("Services"), Constants.DefaultJsonSerializerOptions);
+                    config.Services = JsonSerializer.Deserialize<List<Service>>(configuration.GetValue<string>("Services") ?? throw new Exception("Services are missing from configuration."), DefaultJsonSerializerOptions) ?? throw new Exception("Parsed Services are null.");
                 }
 
-                config.BuildNumber = configuration.GetValue<string>("BUILD_NUMBER");
+                config.BuildNumber = configuration.GetValue<string>("BUILD_NUMBER") ?? "0.0.0";
             });
 
             // Add application services
@@ -116,12 +116,12 @@ namespace CarWash.PWA
                         OnTokenValidated = async context =>
                         {
                             // Check if request is coming from an authorized service application.
-                            var serviceAppId = context.Principal.FindFirstValue("appid");
+                            var serviceAppId = context.Principal?.FindFirstValue("appid");
                             if (serviceAppId != null && serviceAppId != configuration["AzureAd:ClientId"])
                             {
-                                if (configuration["AzureAd:AuthorizedApplications"].Contains(serviceAppId))
+                                if (configuration["AzureAd:AuthorizedApplications"]?.Contains(serviceAppId) == true)
                                 {
-                                    context.Principal.AddIdentity(new ClaimsIdentity([new("appId", serviceAppId)]));
+                                    context.Principal?.AddIdentity(new ClaimsIdentity([new("appId", serviceAppId)]));
 
                                     return;
                                 }
@@ -141,7 +141,7 @@ namespace CarWash.PWA
                                 throw new SecurityTokenInvalidIssuerException("Tenant ('tenantid') cannot be found in auth token.");
                             var email = context.Principal.FindFirstValue(ClaimTypes.Upn)?.ToLower();
                             if (email == null && company.Name == Company.Carwash) email = context.Principal.FindFirstValue(ClaimTypes.Email)?.ToLower() ??
-                                context.Principal.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.ToLower().Replace("live.com#", "");
+                                context.Principal.FindFirstValue(ClaimTypes.Name)?.ToLower().Replace("live.com#", "");
                             if (email == null) throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
 
                             var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
