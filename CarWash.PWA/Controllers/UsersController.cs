@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CarWash.ClassLibrary.Enums;
@@ -7,7 +6,6 @@ using CarWash.ClassLibrary.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using User = CarWash.ClassLibrary.Models.User;
 using CarWash.PWA.Attributes;
@@ -30,22 +28,11 @@ namespace CarWash.PWA.Controllers
         private readonly IEmailService _emailService;
 
         /// <inheritdoc />
-        public UsersController(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor, IEmailService emailService)
+        public UsersController(ApplicationDbContext context, IUserService userService, IEmailService emailService)
         {
             _context = context;
             _emailService = emailService;
-
-            var email = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Upn)?.ToLower() ??
-                        httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Email)?.ToLower() ??
-                        httpContextAccessor.HttpContext.User.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.ToLower().Replace("live.com#", "");
-
-            // Check if request is coming from an authorized service application.
-            var serviceAppId = httpContextAccessor.HttpContext.User.FindFirstValue("appid");
-            if (serviceAppId != null && email == null) return;
-
-            if (email == null) throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
-
-            _user = _context.Users.SingleOrDefault(u => u.Email == email);
+            _user = userService.CurrentUser;
         }
 
         // GET: api/users
