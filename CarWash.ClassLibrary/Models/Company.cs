@@ -24,14 +24,14 @@ namespace CarWash.ClassLibrary.Models
         /// Gets or sets the name of the company.
         /// </summary>
         [Required]
-        public string Name { get; set; }
+        public required string Name { get; set; }
 
         /// <summary>
         /// Gets or sets the tenant id of the company.
         /// </summary>
         [Required]
         [StringLength(36)]
-        public string TenantId { get; set; }
+        public required string TenantId { get; set; }
 
         /// <summary>
         /// Gets or sets the company's daily reservation limit.
@@ -40,9 +40,19 @@ namespace CarWash.ClassLibrary.Models
         public int DailyLimit { get; set; }
 
         /// <summary>
+        /// Gets or sets the company's color in HEX.
+        /// </summary>
+        public string? Color { get; set; }
+
+        /// <summary>
         /// Gets or sets the date and time when the company was added.
         /// </summary>
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime CreatedOn { get; set; }
+
+        /// <summary>
+        /// Gets or sets the date and time when the company was last updated.
+        /// </summary>
+        public DateTime UpdatedOn { get; set; }
     }
 }

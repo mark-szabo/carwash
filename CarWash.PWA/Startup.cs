@@ -144,7 +144,19 @@ namespace CarWash.PWA
                                 context.Principal.FindFirstValue(ClaimTypes.Name)?.ToLower().Replace("live.com#", "");
                             if (email == null) throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
 
-                            var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
+                            var entraOid = context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/objectidentifier");
+                            var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Oid == entraOid);
+
+                            if (user == null)
+                            {
+                                user = await dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
+                                if (user != null)
+                                {
+                                    user.Oid = entraOid;
+                                    dbContext.Update(user);
+                                    await dbContext.SaveChangesAsync();
+                                }
+                            }
 
                             if (user == null)
                             {

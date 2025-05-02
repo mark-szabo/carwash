@@ -12,21 +12,27 @@ namespace CarWash.ClassLibrary.Models
     public class User : IdentityUser
     {
         /// <summary>
+        /// Gets or sets the oid of the user from the IDP.
+        /// </summary>
+        //[Required]
+        public string? Oid { get; set; }
+
+        /// <summary>
         /// Gets or sets the email of the user, as-is in AD.
         /// </summary>
         [Required]
-        public override string Email { get; set; }
+        public override string? Email { get; set; }
 
         /// <summary>
         /// Gets or sets the given name of the user, as-is in AD.
         /// </summary>
         [Required]
-        public string FirstName { get; set; }
+        public required string FirstName { get; set; }
 
         /// <summary>
         /// Gets or sets the surname of the user, as-is in AD.
         /// </summary>
-        public string LastName { get; set; }
+        public required string LastName { get; set; }
 
         /// <summary>
         /// Gets the full name of the user concatenated from the first and last names.
@@ -38,7 +44,7 @@ namespace CarWash.ClassLibrary.Models
         /// Gets or sets the company of the user, determined by tenant id at first login.
         /// </summary>
         [Required]
-        public string Company { get; set; }
+        public required string Company { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the user is an admin.
