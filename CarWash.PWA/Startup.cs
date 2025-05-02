@@ -35,7 +35,12 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using System.Text.Json;
 using Microsoft.Data.SqlClient;
-using CarWash.ClassLibrary;
+using Microsoft.Graph;
+using Microsoft.Kiota.Abstractions.Authentication;
+using Microsoft.Identity.Web;
+using static CarWash.ClassLibrary.Constants;
+using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.IdentityModel.Logging;
 
 namespace CarWash.PWA
 {
@@ -95,13 +100,22 @@ namespace CarWash.PWA
                 {
                     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
                 })
-                .AddJwtBearer(options =>
+                .AddMicrosoftIdentityWebApi(options =>
                 {
+                    options.IncludeErrorDetails = true;
                     options.Audience = configuration["AzureAd:ClientId"];
                     options.Authority = configuration["AzureAd:Instance"];
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
+                        ValidateAudience = false,
                         ValidateIssuer = false,
+                        ValidateIssuerSigningKey = false,
+                        ValidateLifetime = false,
+                        RequireExpirationTime = false,
+                        RequireSignedTokens = false,
+                        RequireAudience = false,
+                        ValidateActor = false,
+                        ValidateTokenReplay = false,
                         /*IssuerValidator = (issuer, token, tvp) =>
                         {
                             issuer = issuer.Substring(24, 36); // Get the tenant id out of the issuer string (eg. https://sts.windows.net/72f988bf-86f1-41af-91ab-2d7cd011db47/)
@@ -133,6 +147,33 @@ namespace CarWash.PWA
 
                                 return;
                             }
+                            /*
+                            // Graph API
+                            var tokenAcquisition = context.HttpContext.RequestServices.GetRequiredService<ITokenAcquisition>();
+
+                            var graphClient = new GraphServiceClient(
+                                new BaseBearerTokenAuthenticationProvider(
+                                    new TokenAcquisitionTokenProvider(
+                                        tokenAcquisition,
+                                        ["User.Read"],
+                                        context.Principal)));
+
+                            // Get user information from Graph
+                            var graphUser = await graphClient.Me.GetAsync((requestConfiguration) =>
+                            {
+                                requestConfiguration.QueryParameters.Select = ["mobilePhone", "businessPhones"];
+                            });
+                            var phoneNumber = graphUser?.MobilePhone ?? (graphUser?.BusinessPhones?.Count != 0 ? graphUser?.BusinessPhones?[0] : null);
+
+                            var branding = await graphClient.Organization[context.Principal?.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid")]
+                                .Branding
+                                .GetAsync((requestConfiguration) =>
+                                {
+                                    requestConfiguration.Headers.Add("Accept-Language", "0");
+                                    requestConfiguration.QueryParameters.Select = ["backgroundColor", "bannerLogoRelativeUrl", "CdnList"];
+                                });
+                            var companyColor = branding?.BackgroundColor;
+                            var companyLogo = branding?.BannerLogoRelativeUrl != null ? $"https://{branding.CdnList?[0]}/{branding.BannerLogoRelativeUrl}" : null;*/
 
                             // Get EF context
                             var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
@@ -194,13 +235,12 @@ namespace CarWash.PWA
                                     else throw;
                                 }
                             }
-
-                            var claims = new List<Claim>
+                            /*var claims = new List<Claim>
                             {
                                 new Claim("admin", user.IsAdmin.ToString()),
                                 new Claim("carwashadmin", user.IsCarwashAdmin.ToString())
                             };
-                            context.Principal.AddIdentity(new ClaimsIdentity(claims));
+                            context.Principal.AddIdentity(new ClaimsIdentity(claims));*/
 
                             services.AddScoped<IUserService>(sp => new UserService(user));
                         },
@@ -211,7 +251,19 @@ namespace CarWash.PWA
                             return Task.CompletedTask;
                         }
                     };
-                });
+                }, options =>
+                {
+                    IdentityModelEventSource.ShowPII = true;
+                    configuration.Bind("AzureAd", options);
+                })
+                .EnableTokenAcquisitionToCallDownstreamApi(
+                    options =>
+                    {
+                        configuration.Bind("AzureAd", options);
+                    })
+                .AddInMemoryTokenCaches();
+
+            services.AddAuthorization();
 
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
@@ -318,7 +370,7 @@ namespace CarWash.PWA
 
             services.AddHealthChecks();
 
-            services.AddControllers().AddJsonOptions(options =>
+            services.AddControllers(options => { options.Filters.Add(new AuthorizeFilter(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())); }).AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
                 options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
@@ -342,8 +394,6 @@ namespace CarWash.PWA
             }
 
             app.UseHttpsRedirection();
-
-            app.UseAuthentication();
 
             app.Use(async (context, next) =>
             {
@@ -391,6 +441,8 @@ namespace CarWash.PWA
             });
 
             app.UseRouting();
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 
