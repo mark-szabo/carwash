@@ -35,38 +35,6 @@ namespace CarWash.ClassLibrary.Enums
         /// <summary>
         /// Car is ready, and if needed, paid.
         /// </summary>
-        Done = 5
-    }
-
-    /// <summary>
-    /// Extension class for State.
-    /// </summary>
-    public static class StateExtensions
-    {
-        /// <summary>
-        /// Converts the State enum to a display-friendly string.
-        /// </summary>
-        /// <param name="state">The state type to convert.</param>
-        /// <returns>A display-friendly string.</returns>
-        public static string ToFriendlyString(this State state)
-        {
-            switch (state)
-            {
-                case State.SubmittedNotActual:
-                    return "Scheduled";
-                case State.ReminderSentWaitingForKey:
-                    return "Leave the key at reception";
-                case State.DropoffAndLocationConfirmed:
-                    return "All set, ready to wash";
-                case State.WashInProgress:
-                    return "Wash in progress";
-                case State.NotYetPaid:
-                    return "You need to pay";
-                case State.Done:
-                    return "Completed";
-                default:
-                    return "No info";
-            }
-        }
+        Done = 5,
     }
 }
