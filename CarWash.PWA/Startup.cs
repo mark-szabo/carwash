@@ -17,7 +17,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
-using CarWash.PWA.Controllers;
 using CarWash.PWA.Hubs;
 using System;
 using System.Collections.Generic;
@@ -35,7 +34,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using System.Text.Json;
 using Microsoft.Data.SqlClient;
-using CarWash.ClassLibrary;
+using static CarWash.ClassLibrary.Constants;
 
 namespace CarWash.PWA
 {
