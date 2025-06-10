@@ -30,6 +30,22 @@ namespace CarWash.ClassLibrary
         }
 
         /// <summary>
+        /// Key locker box door states.
+        /// </summary>
+        public class KeyLockerBoxDoorState
+        {
+            /// <summary>
+            /// Door is closed.
+            /// </summary>
+            public const byte Closed = 1;
+
+            /// <summary>
+            /// Door is open.
+            /// </summary>
+            public const byte Open = 0;
+        }
+
+        /// <summary>
         /// Default <see cref="JsonSerializerOptions"/> used for serialization.
         /// </summary>
         public static JsonSerializerOptions DefaultJsonSerializerOptions = new()

@@ -151,6 +151,11 @@ namespace CarWash.ClassLibrary.Models
         public CalendarServiceConfiguration CalendarService { get; set; } = new CalendarServiceConfiguration();
 
         /// <summary>
+        /// Configuration for the IoT Key Locker boxes.
+        /// </summary>
+        public KeyLockerConfiguration KeyLocker { get; set; } = new KeyLockerConfiguration();
+
+        /// <summary>
         /// Generated build number during CI/CD.
         /// </summary>
         public string BuildNumber { get; set; } = "";
@@ -267,6 +272,24 @@ namespace CarWash.ClassLibrary.Models
             /// Key: ConnectionStrings--StorageAccount
             /// </remarks>
             public string StorageAccount { get; set; }
+
+            /// <summary>
+            /// Azure IoT Hub connection string.
+            /// </summary>
+            /// <remarks>
+            /// Location: Azure Key Vault (DO NOT store secrets in Application Settings!)
+            /// Key: ConnectionStrings--IotHub
+            /// </remarks>
+            public string? IotHub { get; set; }
+
+            /// <summary>
+            /// Azure IoT Hub Event Hub compatible connection string.
+            /// </summary>
+            /// <remarks>
+            /// Location: Azure Key Vault (DO NOT store secrets in Application Settings!)
+            /// Key: ConnectionStrings--IotEventHub
+            /// </remarks>
+            public string? IotEventHub { get; set; }
         }
 
         /// <summary>
@@ -409,6 +432,22 @@ namespace CarWash.ClassLibrary.Models
             /// Key: CalendarService:LogicAppUrl
             /// </remarks>
             public string LogicAppUrl { get; set; }
+        }
+
+        /// <summary>
+        /// Configuration for the IoT Key Locker boxes.
+        /// </summary>
+        public class KeyLockerConfiguration
+        {
+            /// <summary>
+            /// Prefix for the IoT Hub Direct method name of each box.
+            /// </summary>
+            /// <remarks>
+            /// Location: Application Settings
+            /// Key: KeyLocker:BoxIotIdPrefix
+            /// Default value: "Relay"
+            /// </remarks>
+            public string BoxIotIdPrefix { get; set; } = "Relay";
         }
     }
 }

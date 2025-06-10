@@ -35,6 +35,16 @@ namespace CarWash.ClassLibrary.Models
         /// </summary>
         public DbSet<Company> Company { get; set; }
 
+        /// <summary>
+        /// KeyLockerBox table of the database.
+        /// </summary>
+        public DbSet<KeyLockerBox> KeyLockerBox { get; set; }
+
+        /// <summary>
+        /// KeyLockerBoxHistory audit table of the database.
+        /// </summary>
+        public DbSet<KeyLockerBoxHistory> KeyLockerBoxHistory { get; set; }
+
         /// <inheritdoc />
         /// <remarks>
         /// WORKAROUND:

@@ -35,6 +35,7 @@ using Microsoft.OpenApi.Models;
 using System.Text.Json;
 using Microsoft.Data.SqlClient;
 using static CarWash.ClassLibrary.Constants;
+using Microsoft.Azure.Devices;
 
 namespace CarWash.PWA
 {
@@ -67,12 +68,16 @@ namespace CarWash.PWA
                 config.BuildNumber = configuration.GetValue<string>("BUILD_NUMBER") ?? "0.0.0";
             });
 
+            var iotHubServiceClient = ServiceClient.CreateFromConnectionString(configuration.GetConnectionString("IotHub"), Microsoft.Azure.Devices.TransportType.Amqp, new ServiceClientOptions { SdkAssignsMessageId = Microsoft.Azure.Devices.Shared.SdkAssignsMessageId.WhenUnset });
+            services.AddSingleton(iotHubServiceClient);
+
             // Add application services
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ICalendarService, CalendarService>();
             services.AddScoped<IPushService, PushService>();
             services.AddScoped<IBotService, BotService>();
+            services.AddScoped<IKeyLockerService, KeyLockerService>();
 
             // Add framework services
             if (currentEnvironment.IsProduction())

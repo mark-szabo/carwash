@@ -16,8 +16,15 @@ namespace CarWash.ClassLibrary.Models
 
         /// <summary>
         /// Id of the key locker, containing multiple boxes.
+        /// Device id of the IoT Hub device.
         /// </summary>
         public required string LockerId { get; set; }
+
+        /// <summary>
+        /// Serial number of the key locker box, incrementing from 1 to N.
+        /// IoT Hub Direct method name that will open the given box can be generated from this by prefixing it with <see cref="CarWashConfiguration.KeyLockerConfiguration.BoxIotIdPrefix"/>
+        /// </summary>
+        public required int BoxSerial { get; set; }
 
         /// <summary>
         /// Name of the building where the key locker is located.
@@ -40,9 +47,9 @@ namespace CarWash.ClassLibrary.Models
         public KeyLockerBoxState State { get; set; } = KeyLockerBoxState.Unavailable;
 
         /// <summary>
-        /// Indicates if the box is currently open.
+        /// Indicates if the box door is currently closed.
         /// </summary>
-        public bool IsDoorOpen { get; set; } = false;
+        public bool IsDoorClosed { get; set; } = false;
 
         /// <summary>
         /// Identifies if the box is currently connected.
@@ -52,11 +59,16 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Gets or sets the date and time when the entity was last modified.
         /// </summary>
-        public DateTime LastModifiedAt { get; set; }
+        public DateTime LastModifiedAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// Gets or sets the user who last modified the entity.
         /// </summary>
         public string? LastModifiedBy { get; set; }
+
+        /// <summary>
+        /// Gets or sets the date and time when the box last transmitted any information.
+        /// </summary>
+        public DateTime LastActivity { get; set; } = DateTime.UtcNow;
     }
 }
