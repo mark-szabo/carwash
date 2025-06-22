@@ -45,6 +45,11 @@ namespace CarWash.ClassLibrary.Models
         public string Location { get; set; }
 
         /// <summary>
+        /// Gets or sets the key locker box id.
+        /// </summary>
+        public string? KeyLockerBoxId { get; set; }
+
+        /// <summary>
         /// Gets or sets the reservation state.
         /// </summary>
         public State State { get; set; }
