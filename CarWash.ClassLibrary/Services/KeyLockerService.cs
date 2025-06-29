@@ -89,6 +89,17 @@ namespace CarWash.ClassLibrary.Services
             await OpenBoxAsync(lockerId, boxSerial, userId, onBoxClosedCallback);
         }
 
+        /// <inheritdoc />
+        public async Task FreeUpBoxAsync(string boxId, string? userId = null)
+        {
+            if (string.IsNullOrEmpty(boxId))
+            {
+                throw new ArgumentException("Box ID cannot be null or empty.", nameof(boxId));
+            }
+
+            await UpdateBoxStateAsync(boxId, KeyLockerBoxState.Empty, userId);
+        }
+
         private async Task OpenBoxAsync(string lockerId, int boxSerial, string? userId = null, Func<string, Task>? onBoxClosedCallback = null)
         {
             var methodInvocation = new CloudToDeviceMethod(configuration.KeyLocker.BoxIotIdPrefix + boxSerial)
@@ -191,6 +202,20 @@ namespace CarWash.ClassLibrary.Services
 
             return availableBoxIds[index];
 
+        }
+
+        private async Task UpdateBoxStateAsync(string boxId, KeyLockerBoxState newState, string? modifiedById = null)
+        {
+            var box = await context.KeyLockerBox.SingleOrDefaultAsync(b => b.Id == boxId)
+                ?? throw new InvalidOperationException($"Box with ID {boxId} not found.");
+
+            box.State = newState;
+            box.LastModifiedAt = DateTime.UtcNow;
+            box.LastModifiedBy = modifiedById;
+
+            await context.KeyLockerBoxHistory.AddAsync(new KeyLockerBoxHistory(box));
+
+            await context.SaveChangesAsync();
         }
 
         private async Task UpdateBoxStateAsync(string lockerId, int boxSerial, KeyLockerBoxState newState, string? modifiedById = null)

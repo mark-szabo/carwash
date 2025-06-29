@@ -127,23 +127,37 @@ namespace CarWash.PWA.Controllers
 
         // POST: api/keylocker/{lockerId}/available/open
         /// <summary>
-        /// Open a random available box in a locker.
+        /// Open a random available box in a locker and optionally update a reservation with the opened box.
         /// </summary>
         /// <param name="lockerId"> The ID of the locker containing the boxes.</param>
+        /// <param name="reservationId"> (Optional) The ID of the reservation to update with the opened box.</param>
         /// <returns>200 OK with the ID of the opened box if successful, 400 Bad Request if the locker ID is invalid, 403 Forbidden if the user is not a carwash admin, or 500 Internal Server Error if an unexpected error occurs.</returns>
         /// <response code="200">OK with the ID of the opened box.</response>
         /// <response code="400">BadRequest if the locker ID is invalid.</response>
         [HttpPost("{lockerId}/available/open")]
-        public async Task<ActionResult<string>> OpenRandomAvailableBox([FromRoute] string lockerId)
+        public async Task<ActionResult<string>> OpenRandomAvailableBox([FromRoute] string lockerId, [FromQuery] string? reservationId = null)
         {
             if (string.IsNullOrEmpty(lockerId))
             {
                 return BadRequest("Invalid locker ID.");
-            }            
+            }
 
             try
             {
                 var boxId = await keyLockerService.OpenRandomAvailableBoxAsync(lockerId, _user.Id);
+
+                if (!string.IsNullOrEmpty(reservationId))
+                {
+                    var reservation = await context.Reservation.FirstOrDefaultAsync(r => r.Id == reservationId);
+                    if (reservation == null)
+                    {
+                        return NotFound($"Reservation with ID '{reservationId}' not found.");
+                    }
+                    reservation.KeyLockerBoxId = boxId;
+                    context.Reservation.Update(reservation);
+                    await context.SaveChangesAsync();
+                }
+
                 return Ok(boxId);
             }
             catch (InvalidOperationException ex)
@@ -193,6 +207,57 @@ namespace CarWash.PWA.Controllers
             }
 
             await keyLockerService.OpenBoxByIdAsync(reservation.KeyLockerBoxId, _user.Id);
+
+            return Ok();
+        }
+
+        // POST: api/keylocker/free/by-reservation
+        /// <summary>
+        /// Frees up a key locker box by reservation ID.
+        /// </summary>
+        /// <param name="reservationId">The ID of the reservation.</param>
+        /// <returns>200 OK if the box was freed, 404 Not Found if the reservation does not exist, 400 Bad Request if the reservation does not have an associated key locker box, or 403 Forbidden if the user is not authorized.</returns>
+        /// <response code="200">OK</response>
+        /// <response code="400">BadRequest if the reservation does not have an associated key locker box.</response>
+        /// <response code="403">Forbidden if the user is not authorized to free the box.</response>
+        /// <response code="404">NotFound if the reservation with the specified ID does not exist.</response>
+        [HttpPost("free/by-reservation")]
+        public async Task<IActionResult> FreeUpBoxByReservationId([FromQuery] string reservationId)
+        {
+            // Find the reservation by ID
+            var reservation = await context.Reservation
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Id == reservationId);
+
+            if (reservation == null)
+            {
+                return NotFound($"Reservation with ID '{reservationId}' not found.");
+            }
+
+            if (string.IsNullOrEmpty(reservation.KeyLockerBoxId))
+            {
+                return BadRequest("Reservation does not have an associated key locker box.");
+            }
+
+            // Only allow if current user is CarWash admin or the reservation's user
+            if (reservation.UserId != _user.Id && !_user.IsCarwashAdmin)
+            {
+                return Forbid();
+            }
+
+            try
+            {
+                await keyLockerService.FreeUpBoxAsync(reservation.KeyLockerBoxId, _user.Id);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                telemetryClient.TrackException(ex);
+                return StatusCode(500, "An error occurred while trying to free up the box.");
+            }
 
             return Ok();
         }

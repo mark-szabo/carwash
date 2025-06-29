@@ -54,5 +54,13 @@ namespace CarWash.ClassLibrary.Services
         /// <param name="onBoxClosedCallback">Optional callback to execute when the box is closed.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         Task<string> OpenRandomAvailableBoxAsync(string lockerId, string? userId = null, Func<string, Task>? onBoxClosedCallback = null);
+
+        /// <summary>
+        /// Frees up a box by setting its state to empty.
+        /// </summary>
+        /// <param name="boxId">The unique ID of the box to free up.</param>
+        /// <param name="userId">Optional ID of the user requesting the box to be freed.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task FreeUpBoxAsync(string boxId, string? userId = null);
     }
 }
