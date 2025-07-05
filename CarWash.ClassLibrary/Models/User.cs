@@ -32,7 +32,7 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Gets or sets the surname of the user, as-is in AD.
         /// </summary>
-        public required string LastName { get; set; }
+        public string? LastName { get; set; }
 
         /// <summary>
         /// Gets the full name of the user concatenated from the first and last names.

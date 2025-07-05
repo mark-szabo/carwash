@@ -22,7 +22,7 @@ namespace CarWash.ClassLibrary.Models
         /// Gets or sets the reservation user id.
         /// </summary>
         [ForeignKey("User")]
-        public string UserId { get; set; }
+        public string? UserId { get; set; }
 
         /// <summary>
         /// Gets or sets the virtual user object for the reservation.
@@ -42,7 +42,7 @@ namespace CarWash.ClassLibrary.Models
         /// <value>
         /// A concatenation of the building, floor and seat separated by '/'.
         /// </value>
-        public string Location { get; set; }
+        public string? Location { get; set; }
 
         /// <summary>
         /// Gets or sets the key locker box id.
@@ -73,7 +73,7 @@ namespace CarWash.ClassLibrary.Models
         /// <value>
         /// List of service ids serialized in JSON.
         /// </value>
-        public string ServicesJson { get; set; }
+        public string? ServicesJson { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the reservation is private.
@@ -110,7 +110,7 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Gets or sets the user id of the reservation creator.
         /// </summary>
-        public string CreatedById { get; set; }
+        public string? CreatedById { get; set; }
 
         /// <summary>
         /// Gets or sets the date and time when the reservation was created.
@@ -121,7 +121,7 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Gets or sets Outlook's even id of the reservation.
         /// </summary>
-        public string OutlookEventId { get; set; }
+        public string? OutlookEventId { get; set; }
 
         /// <summary>
         /// Gets or sets the reservation comments.
@@ -142,7 +142,7 @@ namespace CarWash.ClassLibrary.Models
         /// <value>
         /// List of comments serialized in JSON.
         /// </value>
-        public string CommentsJson { get; set; }
+        public string? CommentsJson { get; set; }
 
         /// <summary>
         /// Gets reservation's costs.

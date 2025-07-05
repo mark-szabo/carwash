@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using CarWash.ClassLibrary.Enums;
 
 namespace CarWash.ClassLibrary.Models
@@ -12,18 +13,18 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Default constructor for EF and serialization.
         /// </summary>
-        public KeyLockerBoxHistory()
-        {
-        }
+        public KeyLockerBoxHistory() { }
 
         /// <summary>
         /// Creates a new KeyLockerBoxHistory from a KeyLockerBox.
         /// </summary>
         /// <param name="box">The KeyLockerBox to copy values from.</param>
+        [SetsRequiredMembers]
         public KeyLockerBoxHistory(KeyLockerBox box)
         {
-            Id = box.Id;
+            BoxId = box.Id;
             LockerId = box.LockerId;
+            BoxSerial = box.BoxSerial;
             Name = box.Name;
             State = box.State;
             IsDoorClosed = box.IsDoorClosed;
@@ -32,18 +33,29 @@ namespace CarWash.ClassLibrary.Models
         }
 
         /// <inheritdoc />
-        public string Id { get; set; }
+        public required string Id { get; set; } = Guid.NewGuid().ToString();
+
+        /// <summary>
+        /// Gets or sets the original unique identifier for the box (not unique in the history table).
+        /// </summary>
+        public required string BoxId { get; set; }
 
         /// <summary>
         /// Id of the key locker, containing multiple boxes.
         /// Device id of the IoT Hub device.
         /// </summary>
-        public string LockerId { get; set; }
+        public required string LockerId { get; set; }
+
+        /// <summary>
+        /// Serial number of the key locker box, incrementing from 1 to N.
+        /// IoT Hub Direct method name that will open the given box can be generated from this by prefixing it with <see cref="CarWashConfiguration.KeyLockerConfiguration.BoxIotIdPrefix"/>
+        /// </summary>
+        public required int BoxSerial { get; set; }
 
         /// <summary>
         /// Friendly name of the box, used to identify it.
         /// </summary>
-        public string Name { get; set; }
+        public required string Name { get; set; }
 
         /// <summary>
         /// Curent state of the box.
