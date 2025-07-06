@@ -1,4 +1,5 @@
 ﻿using CarWash.ClassLibrary.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace CarWash.ClassLibrary.Services
 {
@@ -8,10 +9,19 @@ namespace CarWash.ClassLibrary.Services
     /// <remarks>
     /// Initializes a new instance of the <see cref="UserService"/> class.
     /// </remarks>
-    /// <param name="currentUser">The current user.</param>
-    public class UserService(User currentUser) : IUserService
+    public class UserService(IHttpContextAccessor httpContextAccessor) : IUserService
     {
         /// <inheritdoc />
-        public User CurrentUser { get; } = currentUser;
+        public User? CurrentUser
+        {
+            get
+            {
+                if (httpContextAccessor.HttpContext?.Items.TryGetValue("CurrentUser", out var userObj) == true)
+                {
+                    return userObj as User;
+                }
+                return null;
+            }
+        }
     }
 }

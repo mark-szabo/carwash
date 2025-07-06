@@ -1,23 +1,4 @@
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-using Microsoft.ApplicationInsights.AspNetCore;
-using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.ApplicationInsights.SnapshotCollector;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.Net.Http.Headers;
-using CarWash.ClassLibrary.Models;
-using CarWash.ClassLibrary.Services;
-using CarWash.PWA.Hubs;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,15 +8,34 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
+using CarWash.ClassLibrary.Models;
+using CarWash.ClassLibrary.Services;
+using CarWash.PWA.Hubs;
+using Microsoft.ApplicationInsights.AspNetCore;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
-using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
-using System.Text.Json;
-using Microsoft.Data.SqlClient;
-using static CarWash.ClassLibrary.Constants;
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.ApplicationInsights.SnapshotCollector;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Azure.Devices;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
+using Microsoft.OpenApi.Models;
+using static CarWash.ClassLibrary.Constants;
 
 namespace CarWash.PWA
 {
@@ -73,6 +73,7 @@ namespace CarWash.PWA
 
             // Add application services
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddScoped<IUserService, UserService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ICalendarService, CalendarService>();
             services.AddScoped<IPushService, PushService>();
@@ -80,12 +81,9 @@ namespace CarWash.PWA
             services.AddScoped<IKeyLockerService, KeyLockerService>();
 
             // Add framework services
-            if (currentEnvironment.IsProduction())
-            {
-                services.AddApplicationInsightsTelemetry(configuration);
-                services.AddApplicationInsightsTelemetryProcessor<SignalrTelemetryFilter>();
-                // services.AddApplicationInsightsTelemetryProcessor<ForbiddenTelemetryFilter>();
-            }
+            services.AddApplicationInsightsTelemetry(configuration);
+            services.AddApplicationInsightsTelemetryProcessor<SignalrTelemetryFilter>();
+            // services.AddApplicationInsightsTelemetryProcessor<ForbiddenTelemetryFilter>();
 
             // Configure SnapshotCollector from application settings
             services.Configure<SnapshotCollectorConfiguration>(configuration.GetSection(nameof(SnapshotCollectorConfiguration)));
@@ -205,8 +203,7 @@ namespace CarWash.PWA
                                 new Claim("carwashadmin", user.IsCarwashAdmin.ToString())
                             };
                             context.Principal.AddIdentity(new ClaimsIdentity(claims));
-
-                            services.AddScoped<IUserService>(sp => new UserService(user));
+                            context.HttpContext.Items["CurrentUser"] = user;
                         },
                         OnAuthenticationFailed = context =>
                         {

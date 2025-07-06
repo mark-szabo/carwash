@@ -10,6 +10,6 @@ namespace CarWash.ClassLibrary.Services
         /// <summary>
         /// Gets the current user.
         /// </summary>
-        User CurrentUser { get; }
+        User? CurrentUser { get; }
     }
 }
