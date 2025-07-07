@@ -86,8 +86,7 @@ namespace CarWash.ClassLibrary.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_KeyLockerBoxHistory_LockerId_BoxSerial",
                 table: "KeyLockerBoxHistory",
-                columns: new[] { "LockerId", "BoxSerial" },
-                unique: true);
+                columns: new[] { "LockerId", "BoxSerial" });
         }
 
         /// <inheritdoc />

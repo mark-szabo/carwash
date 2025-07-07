@@ -175,8 +175,7 @@ namespace CarWash.ClassLibrary.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LockerId", "BoxSerial")
-                        .IsUnique();
+                    b.HasIndex("LockerId", "BoxSerial");
 
                     b.ToTable("KeyLockerBoxHistory");
                 });

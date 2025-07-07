@@ -106,8 +106,7 @@ namespace CarWash.ClassLibrary.Models
                 .IsUnique();
 
             builder.Entity<KeyLockerBoxHistory>()
-                .HasIndex(k => new { k.LockerId, k.BoxSerial })
-                .IsUnique();
+                .HasIndex(k => new { k.LockerId, k.BoxSerial });
         }
 
         /// <summary>
