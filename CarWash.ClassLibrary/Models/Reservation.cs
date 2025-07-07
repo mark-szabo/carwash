@@ -1,10 +1,10 @@
-﻿using CarWash.ClassLibrary.Enums;
-using System.Text.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Text.Json;
+using CarWash.ClassLibrary.Enums;
 
 namespace CarWash.ClassLibrary.Models
 {
@@ -16,7 +16,7 @@ namespace CarWash.ClassLibrary.Models
     {
         /// <inheritdoc />
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string Id { get; set; }
+        public string Id { get; set; } = Guid.NewGuid().ToString();
 
         /// <summary>
         /// Gets or sets the reservation user id.
@@ -27,14 +27,14 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Gets or sets the virtual user object for the reservation.
         /// </summary>
-        public virtual User User { get; set; }
+        public virtual User? User { get; set; }
 
         /// <summary>
         /// Gets or sets the reservation vehicle plate number.
         /// </summary>
         [Required]
         [StringLength(8)]
-        public string VehiclePlateNumber { get; set; }
+        public required string VehiclePlateNumber { get; set; }
 
         /// <summary>
         /// Gets or sets the reservation location.
@@ -61,7 +61,7 @@ namespace CarWash.ClassLibrary.Models
         /// List of service ids deserialized from <see cref="ServicesJson"/>.
         /// </value>
         [NotMapped]
-        public List<int> Services
+        public List<int>? Services
         {
             get => ServicesJson == null ? null : JsonSerializer.Deserialize<List<int>>(ServicesJson, Constants.DefaultJsonSerializerOptions);
             set => ServicesJson = JsonSerializer.Serialize(value, Constants.DefaultJsonSerializerOptions);
@@ -130,7 +130,7 @@ namespace CarWash.ClassLibrary.Models
         /// List of comments deserialized from <see cref="CommentsJson"/>.
         /// </value>
         [NotMapped]
-        public List<Comment> Comments
+        public List<Comment>? Comments
         {
             get => CommentsJson == null ? [] : JsonSerializer.Deserialize<List<Comment>>(CommentsJson, Constants.DefaultJsonSerializerOptions);
             set => CommentsJson = JsonSerializer.Serialize(value, Constants.DefaultJsonSerializerOptions);
@@ -153,6 +153,8 @@ namespace CarWash.ClassLibrary.Models
         {
             var sum = 0;
 
+            if (Services == null) return 0;
+
             foreach (var service in Services)
             {
                 var serviceCosts = configuration.Services.SingleOrDefault(s => s.Id == service)
@@ -171,6 +173,8 @@ namespace CarWash.ClassLibrary.Models
         /// <returns>A string of service names separated by commas and spaces.</returns>
         public string GetServiceNames(CarWashConfiguration configuration)
         {
+            if (Services == null) return "No services selected.";
+
             var serviceNames = Services
                 .Select(serviceId => configuration.Services.SingleOrDefault(s => s.Id == serviceId)?.Name)
                 .Where(name => !string.IsNullOrEmpty(name));

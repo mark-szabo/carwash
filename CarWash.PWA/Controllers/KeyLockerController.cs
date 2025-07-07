@@ -1,11 +1,12 @@
-﻿using System;
-using System.Threading.Tasks;
-using CarWash.ClassLibrary.Models;
+﻿using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using Microsoft.ApplicationInsights;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System;
+using System.Threading.Tasks;
 
 namespace CarWash.PWA.Controllers
 {
@@ -14,6 +15,7 @@ namespace CarWash.PWA.Controllers
     /// </summary>
     [Produces("application/json")]
     [Route("api/keylocker")]
+    [Authorize]
     [ApiController]
     public class KeyLockerController(
         IOptionsMonitor<CarWashConfiguration> configuration,

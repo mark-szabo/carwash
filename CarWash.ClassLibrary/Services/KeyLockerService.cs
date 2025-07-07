@@ -1,14 +1,15 @@
-﻿using System;
+﻿using Azure.Messaging.EventHubs.Consumer;
+using CarWash.ClassLibrary.Enums;
+using CarWash.ClassLibrary.Models;
+using Microsoft.Azure.Devices;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Azure.Messaging.EventHubs.Consumer;
-using CarWash.ClassLibrary.Enums;
-using CarWash.ClassLibrary.Models;
-using Microsoft.Azure.Devices;
-using Microsoft.EntityFrameworkCore;
 
 namespace CarWash.ClassLibrary.Services
 {
@@ -19,7 +20,7 @@ namespace CarWash.ClassLibrary.Services
     /// <param name="context"></param>
     /// <param name="configuration"></param>
     /// <param name="iotHubClient"></param>
-    public class KeyLockerService(ApplicationDbContext context, CarWashConfiguration configuration, ServiceClient iotHubClient) : IKeyLockerService
+    public class KeyLockerService(ApplicationDbContext context, IOptionsMonitor<CarWashConfiguration> configuration, ServiceClient iotHubClient) : IKeyLockerService
     {
         /// <inheritdoc />
         public async Task GenerateBoxesToLocker(string namePrefix, int numberOfBoxes, string building, string floor, string? lockerId = null)
@@ -102,7 +103,7 @@ namespace CarWash.ClassLibrary.Services
 
         private async Task OpenBoxAsync(string lockerId, int boxSerial, string? userId = null, Func<string, Task>? onBoxClosedCallback = null)
         {
-            var methodInvocation = new CloudToDeviceMethod(configuration.KeyLocker.BoxIotIdPrefix + boxSerial)
+            var methodInvocation = new CloudToDeviceMethod(configuration.CurrentValue.KeyLocker.BoxIotIdPrefix + boxSerial)
             {
                 ResponseTimeout = TimeSpan.FromSeconds(30)
             };
@@ -127,7 +128,7 @@ namespace CarWash.ClassLibrary.Services
             // Create the consumer using the default consumer group using a direct connection to the service.
             await using var consumer = new EventHubConsumerClient(
                 EventHubConsumerClient.DefaultConsumerGroupName,
-                configuration.ConnectionStrings.IotEventHub);
+                configuration.CurrentValue.ConnectionStrings.IotEventHub);
 
             try
             {
