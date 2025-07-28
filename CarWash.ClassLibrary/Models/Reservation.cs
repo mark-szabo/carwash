@@ -45,6 +45,24 @@ namespace CarWash.ClassLibrary.Models
         public string? Location { get; set; }
 
         /// <summary>
+        /// Gets the building name or identifier extracted from the <see cref="Location"/> property.
+        /// </summary>
+        /// <remarks>This property assumes that the <see cref="Location"/> string follows a format where
+        /// segments are separated by '/'. If the format is not adhered to, the property may return <see
+        /// langword="null"/> or an unexpected value.</remarks>
+        [NotMapped]
+        public string? Building => Location?.Split('/').ElementAtOrDefault(0);
+
+        /// <summary>
+        /// Gets the floor number or identifier extracted from the <see cref="Location"/> property.
+        /// </summary>
+        /// <remarks>This property assumes that the <see cref="Location"/> string follows a format where
+        /// segments are separated by '/'. If the format is not adhered to, the property may return <see
+        /// langword="null"/> or an unexpected value.</remarks>
+        [NotMapped]
+        public string? Floor => Location?.Split('/').ElementAtOrDefault(1);
+
+        /// <summary>
         /// Gets or sets the key locker box id.
         /// </summary>
         public string? KeyLockerBoxId { get; set; }

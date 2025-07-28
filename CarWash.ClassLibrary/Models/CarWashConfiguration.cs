@@ -77,11 +77,13 @@ namespace CarWash.ClassLibrary.Models
         /// [
         ///   {
         ///     "Building": "A",
-        ///     "Floors": [ "-1", "-2", "-2.5", "-3", "-3.5" ]
+        ///     "Floors": [ "-1", "-2", "-2.5", "-3", "-3.5" ],
+        ///     "KeyLockerId": "LOCKER-A1"
         ///   },
         ///   {
         ///     "Building": "B",
-        ///     "Floors": [ "-1", "-2", "-3", "outdoor" ]
+        ///     "Floors": [ "-1", "-2", "-3", "outdoor" ],
+        ///     "KeyLockerId": "LOCKER-B1"
         ///   },
         /// ]
         /// </example>

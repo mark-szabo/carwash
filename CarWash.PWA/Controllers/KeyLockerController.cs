@@ -19,7 +19,7 @@ namespace CarWash.PWA.Controllers
     [ApiController]
     public class KeyLockerController(
         IOptionsMonitor<CarWashConfiguration> configuration,
-        ApplicationDbContext context, 
+        ApplicationDbContext context,
         IUserService userService,
         IKeyLockerService keyLockerService,
         TelemetryClient telemetryClient) : ControllerBase
@@ -51,7 +51,7 @@ namespace CarWash.PWA.Controllers
                 request.Floor,
                 request.LockerId);
 
-            return Ok(); 
+            return Ok();
         }
 
         // POST: api/keylocker/box/{id}/open
@@ -113,7 +113,7 @@ namespace CarWash.PWA.Controllers
             {
                 await keyLockerService.OpenBoxBySerialAsync(lockerId, boxSerial, _user.Id);
             }
-            catch(InvalidOperationException ex)
+            catch (InvalidOperationException ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -155,10 +155,57 @@ namespace CarWash.PWA.Controllers
                     {
                         return NotFound($"Reservation with ID '{reservationId}' not found.");
                     }
+
                     reservation.KeyLockerBoxId = boxId;
                     context.Reservation.Update(reservation);
                     await context.SaveChangesAsync();
                 }
+
+                return Ok(boxId);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception and return a 500 Internal Server Error
+                telemetryClient.TrackException(ex);
+                return StatusCode(500, "An error occurred while trying to open the box.");
+            }
+        }
+
+        // POST: api/keylocker/open/available
+        /// <summary>
+        /// Open a random available box in a locker and optionally update a reservation with the opened box.
+        /// </summary>
+        /// <param name="reservationId"> The ID of the reservation to update with the opened box.</param>
+        /// <returns>200 OK with the ID of the opened box if successful, 400 Bad Request if the locker ID is invalid, 403 Forbidden if the user is not a carwash admin, or 500 Internal Server Error if an unexpected error occurs.</returns>
+        /// <response code="200">OK with the ID of the opened box.</response>
+        /// <response code="400">BadRequest if the locker ID is invalid.</response>
+        [HttpPost("open/available")]
+        public async Task<ActionResult<string>> OpenRandomAvailableBox([FromQuery] string reservationId)
+        {
+            if (string.IsNullOrEmpty(reservationId))
+            {
+                return BadRequest("Invalid reservation ID.");
+            }
+
+            var reservation = await context.Reservation.FirstOrDefaultAsync(r => r.Id == reservationId);
+            if (reservation == null)
+            {
+                return NotFound($"Reservation with ID '{reservationId}' not found.");
+            }
+
+            var lockerId = configuration.CurrentValue.Garages.Find(g => g.Building == reservation.Building).KeyLockerId;
+
+            try
+            {
+                var boxId = await keyLockerService.OpenRandomAvailableBoxAsync(lockerId, _user.Id);
+
+                reservation.KeyLockerBoxId = boxId;
+                context.Reservation.Update(reservation);
+                await context.SaveChangesAsync();
 
                 return Ok(boxId);
             }
