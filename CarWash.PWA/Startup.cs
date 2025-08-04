@@ -357,6 +357,7 @@ namespace CarWash.PWA
                 context.Response.Headers.Append("Content-Security-Policy", new[] { ContentSecurityPolicy });
                 context.Response.Headers.Remove(HeaderNames.Server);
                 context.Response.Headers.Remove("X-Powered-By");
+                
                 await next();
             });
 

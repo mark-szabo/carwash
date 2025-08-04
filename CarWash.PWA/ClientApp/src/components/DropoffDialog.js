@@ -36,7 +36,6 @@ function DropoffDialog({
     reservation,
     open,
     onClose,
-    setOpen,
     updateReservation,
     invokeBacklogHub,
     openSnackbar,
@@ -156,8 +155,11 @@ function DropoffDialog({
                             Please drop-off the key at one of the lockers and confirm vehicle location!
                         </DialogContentText>
                         <FormControl className={classes.formControl} error={validationErrors.garage}>
-                            <InputLabel htmlFor="garage">Building</InputLabel>
+                            <InputLabel id="garageLabel">Building</InputLabel>
                             <Select
+                                id="garage"
+                                labelId="garageLabel"
+                                label="Building"
                                 required
                                 value={garage}
                                 onChange={handleGarageChange}
@@ -175,8 +177,11 @@ function DropoffDialog({
                         </FormControl>
                         {garage && configuration.garages.some(g => g.building === garage) && (
                             <FormControl className={classes.formControl} error={validationErrors.floor}>
-                                <InputLabel htmlFor="floor">Floor</InputLabel>
+                                <InputLabel id="floorLabel">Floor</InputLabel>
                                 <Select
+                                    id="floor"
+                                    labelId="floorLabel"
+                                    label="Floor"
                                     required
                                     value={floor}
                                     onChange={handleFloorChange}

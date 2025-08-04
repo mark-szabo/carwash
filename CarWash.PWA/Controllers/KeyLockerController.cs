@@ -197,6 +197,11 @@ namespace CarWash.PWA.Controllers
                 return NotFound($"Reservation with ID '{reservationId}' not found.");
             }
 
+            if (reservation.Building == null)
+            {
+                return BadRequest("Location is not set for reservation.");
+            }
+
             var lockerId = configuration.CurrentValue.Garages.Find(g => g.Building == reservation.Building).KeyLockerId;
 
             try
