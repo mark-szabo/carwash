@@ -15,6 +15,8 @@ import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import { State, BacklogHubMethods } from '../Constants';
+import Link from '@mui/material/Link';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const styles = theme => ({
     formControl: {
@@ -45,6 +47,7 @@ function DropoffDialog({
     const [floor, setFloor] = useState('');
     const [spot, setSpot] = useState('');
     const [validationErrors, setValidationErrors] = useState({ garage: false, floor: false });
+    const [openingLocker, setOpeningLocker] = useState(false);
     const history = useHistory();
 
     useEffect(() => {
@@ -138,6 +141,20 @@ function DropoffDialog({
         );
     };
 
+    const handleOpenLocker = async () => {
+        setOpeningLocker(true);
+        try {
+            await apiFetch(`/api/keylocker/open/available?reservationId=${reservation.id}`, {
+                method: 'POST',
+            });
+            openSnackbar('Locker opened. Please place your key inside.');
+        } catch (error) {
+            openSnackbar(error?.message || 'Failed to open locker.');
+        } finally {
+            setOpeningLocker(false);
+        }
+    };
+
     return (
         <Dialog
             open={open}
@@ -146,7 +163,7 @@ function DropoffDialog({
             aria-describedby="dropoff-dialog-title"
         >
             <DialogTitle id="dropoff-dialog-title">
-                {step === 1 ? 'Step 1: Confirm location' : 'Step 2: Review & Confirm'}
+                {step === 1 ? 'Step 1: Confirm location' : 'Step 2: Open locker'}
             </DialogTitle>
             <DialogContent>
                 {step === 1 && (
@@ -213,18 +230,37 @@ function DropoffDialog({
                     </>
                 )}
                 {step === 2 && (
-                    <>
-                        <DialogContentText>Please review your location details before confirming:</DialogContentText>
-                        <div>
-                            <strong>Building:</strong> {garage}
-                        </div>
-                        <div>
-                            <strong>Floor:</strong> {floor}
-                        </div>
-                        <div>
-                            <strong>Spot:</strong> {spot || <em>(none)</em>}
-                        </div>
-                    </>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: 250 }}>
+                        <DialogContentText style={{ marginBottom: 32 }}>
+                            Tap the button below to open an available box.
+                        </DialogContentText>
+                        <Button
+                            onClick={handleOpenLocker}
+                            disabled={openingLocker}
+                            style={{
+                                width: 120,
+                                height: 120,
+                                borderRadius: '50%',
+                                fontSize: 28,
+                                fontWeight: 700,
+                                marginBottom: 24,
+                                background: '#1976d2',
+                                color: '#fff',
+                                boxShadow: '0 4px 16px rgba(25, 118, 210, 0.2)',
+                            }}
+                            variant="contained"
+                        >
+                            {openingLocker ? <CircularProgress size={40} color="inherit" /> : 'OPEN'}
+                        </Button>
+                        <Link
+                            component="button"
+                            variant="body2"
+                            onClick={handleConfirm}
+                            style={{ marginTop: 8, textDecoration: 'underline', color: '#1976d2' }}
+                        >
+                            or confirm drop-off to non-locker
+                        </Link>
+                    </div>
                 )}
             </DialogContent>
             <DialogActions>
