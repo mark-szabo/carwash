@@ -51,7 +51,7 @@ export function getStateName(state) {
         case State.SubmittedNotActual:
             return 'Scheduled';
         case State.ReminderSentWaitingForKey:
-            return 'Leave the key at reception';
+            return 'Drop-off the key';
         case State.CarKeyLeftAndLocationConfirmed:
             return 'All set, ready to wash';
         case State.WashInProgress:
