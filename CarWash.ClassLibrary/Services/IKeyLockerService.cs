@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CarWash.ClassLibrary.Models;
+using System;
 using System.Threading.Tasks;
 
 namespace CarWash.ClassLibrary.Services
@@ -53,7 +54,7 @@ namespace CarWash.ClassLibrary.Services
         /// <param name="userId">Optional ID of the user requesting the box to be opened.</param>
         /// <param name="onBoxClosedCallback">Optional callback to execute when the box is closed.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        Task<string> OpenRandomAvailableBoxAsync(string lockerId, string? userId = null, Func<string, Task>? onBoxClosedCallback = null);
+        Task<KeyLockerBox> OpenRandomAvailableBoxAsync(string lockerId, string? userId = null, Func<string, Task>? onBoxClosedCallback = null);
 
         /// <summary>
         /// Frees up a box by setting its state to empty.

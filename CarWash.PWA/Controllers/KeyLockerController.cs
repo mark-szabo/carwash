@@ -32,7 +32,7 @@ namespace CarWash.PWA.Controllers
         /// </summary>
         /// <param name="request"> The request containing the details for box generation.</param>
         /// <returns>200 OK if boxes were generated successfully, 403 Forbidden if the user is not a carwash admin.</returns>
-        /// <response code="200">OK</response>
+        /// <response code="204">OK</response>
         /// <response code="400">BadRequest if the request parameters are invalid.</response>
         /// <response code="403">Forbidden if the user is not a carwash admin.</response>
         [HttpPost("generate")]
@@ -51,7 +51,7 @@ namespace CarWash.PWA.Controllers
                 request.Floor,
                 request.LockerId);
 
-            return Ok();
+            return NoContent();
         }
 
         // POST: api/keylocker/box/{id}/open
@@ -60,7 +60,7 @@ namespace CarWash.PWA.Controllers
         /// </summary>
         /// <param name="id"> The unique ID of the box to open.</param>
         /// <returns>200 OK if the box was opened successfully, 400 Bad Request if the ID is null or empty, 403 Forbidden if the user is not a carwash admin, or 500 Internal Server Error if an unexpected error occurs.</returns>
-        /// <response code="200">OK</response>
+        /// <response code="204">OK</response>
         /// <response code="400">BadRequest if the box ID is null or empty.</response>
         /// <response code="403">Forbidden if the user is not a carwash admin.</response>
         [HttpPost("box/{id}/open")]
@@ -87,7 +87,7 @@ namespace CarWash.PWA.Controllers
                 return StatusCode(500, "An error occurred while trying to open the box.");
             }
 
-            return Ok();
+            return NoContent();
         }
 
         // POST: api/keylocker/{lockerId}/{boxSerial}/open
@@ -97,7 +97,7 @@ namespace CarWash.PWA.Controllers
         /// <param name="lockerId">The ID of the locker containing the box.</param>
         /// <param name="boxSerial">The serial number of the box to open.</param>
         /// <returns>200 OK if the box was opened successfully, 400 Bad Request if the locker ID or box serial is invalid, 403 Forbidden if the user is not a carwash admin, or 500 Internal Server Error if an unexpected error occurs.</returns>
-        /// <reponse code="200">OK</reponse>
+        /// <reponse code="204">OK</reponse>
         /// <response code="400">BadRequest if the locker ID or box serial is invalid.</response>
         /// <response code="403">Forbidden if the user is not a carwash admin.</response>
         [HttpPost("{lockerId}/{boxSerial}/open")]
@@ -124,7 +124,7 @@ namespace CarWash.PWA.Controllers
                 return StatusCode(500, "An error occurred while trying to open the box.");
             }
 
-            return Ok();
+            return NoContent();
         }
 
         // POST: api/keylocker/{lockerId}/available/open
@@ -134,7 +134,7 @@ namespace CarWash.PWA.Controllers
         /// <param name="lockerId"> The ID of the locker containing the boxes.</param>
         /// <param name="reservationId"> (Optional) The ID of the reservation to update with the opened box.</param>
         /// <returns>200 OK with the ID of the opened box if successful, 400 Bad Request if the locker ID is invalid, 403 Forbidden if the user is not a carwash admin, or 500 Internal Server Error if an unexpected error occurs.</returns>
-        /// <response code="200">OK with the ID of the opened box.</response>
+        /// <response code="200">OK with the the opened box.</response>
         /// <response code="400">BadRequest if the locker ID is invalid.</response>
         [HttpPost("{lockerId}/available/open")]
         public async Task<ActionResult<string>> OpenRandomAvailableBox([FromRoute] string lockerId, [FromQuery] string? reservationId = null)
@@ -146,7 +146,7 @@ namespace CarWash.PWA.Controllers
 
             try
             {
-                var boxId = await keyLockerService.OpenRandomAvailableBoxAsync(lockerId, _user.Id);
+                var box = await keyLockerService.OpenRandomAvailableBoxAsync(lockerId, _user.Id);
 
                 if (!string.IsNullOrEmpty(reservationId))
                 {
@@ -156,12 +156,12 @@ namespace CarWash.PWA.Controllers
                         return NotFound($"Reservation with ID '{reservationId}' not found.");
                     }
 
-                    reservation.KeyLockerBoxId = boxId;
+                    reservation.KeyLockerBoxId = box.Id;
                     context.Reservation.Update(reservation);
                     await context.SaveChangesAsync();
                 }
 
-                return Ok(boxId);
+                return Ok(new BoxResponse(box.Id, box.BoxSerial, box.Building, box.Floor, box.Name));
             }
             catch (InvalidOperationException ex)
             {
@@ -181,7 +181,7 @@ namespace CarWash.PWA.Controllers
         /// </summary>
         /// <param name="reservationId"> The ID of the reservation to update with the opened box.</param>
         /// <returns>200 OK with the ID of the opened box if successful, 400 Bad Request if the locker ID is invalid, 403 Forbidden if the user is not a carwash admin, or 500 Internal Server Error if an unexpected error occurs.</returns>
-        /// <response code="200">OK with the ID of the opened box.</response>
+        /// <response code="200">OK with the opened box.</response>
         /// <response code="400">BadRequest if the locker ID is invalid.</response>
         [HttpPost("open/available")]
         public async Task<ActionResult<string>> OpenRandomAvailableBox([FromQuery] string reservationId)
@@ -206,13 +206,13 @@ namespace CarWash.PWA.Controllers
 
             try
             {
-                var boxId = await keyLockerService.OpenRandomAvailableBoxAsync(lockerId, _user.Id);
+                var box = await keyLockerService.OpenRandomAvailableBoxAsync(lockerId, _user.Id);
 
-                reservation.KeyLockerBoxId = boxId;
+                reservation.KeyLockerBoxId = box.Id;
                 context.Reservation.Update(reservation);
                 await context.SaveChangesAsync();
 
-                return Ok(boxId);
+                return Ok(new BoxResponse(box.Id, box.BoxSerial, box.Building, box.Floor, box.Name));
             }
             catch (InvalidOperationException ex)
             {
@@ -232,7 +232,7 @@ namespace CarWash.PWA.Controllers
         /// </summary>
         /// <param name="reservationId"> The ID of the reservation.</param>
         /// <returns>200 OK if the box was opened successfully, 404 Not Found if the reservation does not exist, 400 Bad Request if the reservation does not have an associated key locker box, or 403 Forbidden if the user is not authorized to open the box.</returns>
-        /// <response code="200">OK</response>
+        /// <response code="204">OK</response>
         /// <response code="400">BadRequest if the reservation does not have an associated key locker box.</response>
         /// <response code="403">Forbidden if the user is not authorized to open the box.</response>
         /// <response code="404">NotFound if the reservation with the specified ID does not exist.</response>
@@ -262,7 +262,7 @@ namespace CarWash.PWA.Controllers
 
             await keyLockerService.OpenBoxByIdAsync(reservation.KeyLockerBoxId, _user.Id);
 
-            return Ok();
+            return NoContent();
         }
 
         // POST: api/keylocker/free/by-reservation
@@ -271,7 +271,7 @@ namespace CarWash.PWA.Controllers
         /// </summary>
         /// <param name="reservationId">The ID of the reservation.</param>
         /// <returns>200 OK if the box was freed, 404 Not Found if the reservation does not exist, 400 Bad Request if the reservation does not have an associated key locker box, or 403 Forbidden if the user is not authorized.</returns>
-        /// <response code="200">OK</response>
+        /// <response code="204">OK</response>
         /// <response code="400">BadRequest if the reservation does not have an associated key locker box.</response>
         /// <response code="403">Forbidden if the user is not authorized to free the box.</response>
         /// <response code="404">NotFound if the reservation with the specified ID does not exist.</response>
@@ -313,7 +313,7 @@ namespace CarWash.PWA.Controllers
                 return StatusCode(500, "An error occurred while trying to free up the box.");
             }
 
-            return Ok();
+            return NoContent();
         }
     }
 
@@ -347,4 +347,14 @@ namespace CarWash.PWA.Controllers
         /// </summary>
         public string? LockerId { get; set; }
     }
+
+    /// <summary>
+    /// ViewModel for a key locker box response.
+    /// </summary>
+    /// <param name="BoxId">The unique ID of the opened box.</param>
+    /// <param name="BoxSerial">Serial number of the key locker box, incrementing from 1 to N.</param>
+    /// <param name="Building">Name of the building where the key locker is located.</param>
+    /// <param name="Floor">Name of the floor where the key locker is located.</param>
+    /// <param name="Name">Friendly name of the box, used to identify it.</param>
+    public record BoxResponse(string BoxId, int BoxSerial, string Building, string Floor, string Name);
 }

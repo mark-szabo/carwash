@@ -56,7 +56,7 @@ namespace CarWash.ClassLibrary.Services
         }
 
         /// <inheritdoc />
-        public async Task<string> OpenRandomAvailableBoxAsync(string lockerId, string? userId = null, Func<string, Task>? onBoxClosedCallback = null)
+        public async Task<KeyLockerBox> OpenRandomAvailableBoxAsync(string lockerId, string? userId = null, Func<string, Task>? onBoxClosedCallback = null)
         {
             var boxId = await GetRandomAvailableBoxSerialAsync(lockerId)
                 ?? throw new InvalidOperationException("No available boxes.");
@@ -67,7 +67,7 @@ namespace CarWash.ClassLibrary.Services
                 .SingleOrDefaultAsync(b => b.LockerId == lockerId && b.BoxSerial == boxId)
                 ?? throw new InvalidOperationException($"Box with serial {boxId} not found in locker {lockerId}.");
 
-            return box.Id;
+            return box;
         }
 
         /// <inheritdoc />
