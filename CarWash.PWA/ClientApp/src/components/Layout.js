@@ -244,11 +244,11 @@ class Layout extends React.Component {
                 <Divider />
                 <List className={classes.menuList}>{otherDrawerItems(this.handleDrawerClose)}</List>
                 <div className={classes.footer}>
-                    <a href="https://go.microsoft.com/fwlink/?LinkID=206977" className={classes.link}>
+                    <a href="https://mimosonk.hu/terms-of-service" className={classes.link}>
                         Terms of use
                     </a>
                     <br />
-                    <a href="https://go.microsoft.com/fwlink/?LinkId=521839" className={classes.link}>
+                    <a href="https://mimosonk.hu/privacy" className={classes.link}>
                         Privacy & cookies policy
                     </a>
                     <br />
