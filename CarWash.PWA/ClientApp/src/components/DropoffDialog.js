@@ -14,7 +14,7 @@ import FormControl from '@mui/material/FormControl';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
-import { State, BacklogHubMethods } from '../Constants';
+import { State } from '../Constants';
 import CircularProgress from '@mui/material/CircularProgress';
 
 const styles = theme => ({
@@ -52,7 +52,6 @@ function DropoffDialog({
     open,
     onClose,
     updateReservation,
-    invokeBacklogHub,
     openSnackbar,
 }) {
     const [step, setStep] = useState(1);
@@ -156,9 +155,6 @@ function DropoffDialog({
         }).then(
             () => {
                 openSnackbar('Drop-off and location confirmed.');
-
-                // Broadcast using SignalR
-                invokeBacklogHub(BacklogHubMethods.ReservationDropoffConfirmed, reservation.id);
             },
             error => {
                 reservation.state = oldState;
@@ -375,7 +371,6 @@ DropoffDialog.propTypes = {
     open: PropTypes.bool.isRequired,
     onClose: PropTypes.func.isRequired,
     updateReservation: PropTypes.func.isRequired,
-    invokeBacklogHub: PropTypes.func.isRequired,
     openSnackbar: PropTypes.func.isRequired,
 };
 

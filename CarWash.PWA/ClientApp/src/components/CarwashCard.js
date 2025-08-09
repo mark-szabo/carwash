@@ -1,4 +1,4 @@
-﻿import React, { Component } from 'react';
+﻿import { Component } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import apiFetch from '../Auth';
@@ -18,7 +18,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import red from '@mui/material/colors/red';
 import CarwashCardHeader from './CarwashCardHeader';
 import CarwashDetailsDialog from './CarwashDetailsDialog';
-import { getAdminStateName, getServiceName, BacklogHubMethods } from '../Constants';
+import { getAdminStateName, getServiceName } from '../Constants';
 import { formatLocation, formatDate } from '../Helpers';
 import Chat from './Chat';
 import ErrorBoundary from './ErrorBoundary';
@@ -98,9 +98,6 @@ class CarwashCard extends Component {
         }).then(
             () => {
                 this.props.openSnackbar('Reservation successfully canceled.');
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationDeleted, this.props.reservation.id);
 
                 // Remove deleted reservation from reservations
                 // this.props.removeReservation(this.props.reservation.id);
@@ -192,7 +189,6 @@ class CarwashCard extends Component {
                                     reservation={reservation}
                                     updateReservation={this.props.updateReservation}
                                     openSnackbar={this.props.openSnackbar}
-                                    invokeBacklogHub={this.props.invokeBacklogHub}
                                 />
                                 <Divider className={classes.divider} />
                                 <Typography variant="subtitle1">Selected services</Typography>
@@ -214,7 +210,6 @@ class CarwashCard extends Component {
                     handleClose={this.handleDetailsDialogClose}
                     updateReservation={this.props.updateReservation}
                     removeReservation={this.props.removeReservation}
-                    invokeBacklogHub={this.props.invokeBacklogHub}
                     snackbarOpen={this.props.snackbarOpen}
                     openSnackbar={this.props.openSnackbar}
                 />
@@ -250,7 +245,6 @@ CarwashCard.propTypes = {
     configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     updateReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func.isRequired,
-    invokeBacklogHub: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
 };

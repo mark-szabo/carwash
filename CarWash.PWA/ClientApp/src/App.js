@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Route, Switch } from 'react-router';
 import { Workbox } from 'workbox-window';
@@ -452,35 +452,31 @@ export default class App extends Component {
         });
     };
 
-    invokeBacklogHub = (method, id) => {
-        this.backlogHubConnection.invoke(method, id);
-    };
-
     connectToBacklogHub = () => {
+        if (!this.state.user.isCarwashAdmin) return;
+
         this.backlogHubConnection = new signalR.HubConnectionBuilder().withUrl('/hub/backlog').build();
 
-        if (this.state.user.isCarwashAdmin) {
-            this.backlogHubConnection.on(BacklogHubMethods.ReservationCreated, id => {
-                console.log(`SignalR: new reservation (${id})`);
-                this.loadBacklog().then(() => this.openSnackbar('New reservation!'));
-            });
-            this.backlogHubConnection.on(BacklogHubMethods.ReservationUpdated, id => {
-                console.log(`SignalR: a reservation was just updated (${id})`);
-                this.loadBacklog();
-            });
-            this.backlogHubConnection.on(BacklogHubMethods.ReservationDeleted, id => {
-                console.log(`SignalR: a reservation was just deleted (${id})`);
-                this.loadBacklog().then(() => this.openSnackbar('A reservation was just deleted.'));
-            });
-            this.backlogHubConnection.on(BacklogHubMethods.ReservationDropoffConfirmed, id => {
-                console.log(`SignalR: a key was just dropped off (${id})`);
-                this.loadBacklog().then(() => this.openSnackbar('A key was just dropped off!'));
-            });
-            this.backlogHubConnection.on(BacklogHubMethods.ReservationChatMessageSent, id => {
-                console.log(`SignalR: a chat message was just received (${id})`);
-                this.loadBacklog().then(() => this.openSnackbar('New message received!'));
-            });
-        }
+        this.backlogHubConnection.on(BacklogHubMethods.ReservationCreated, id => {
+            console.log(`SignalR: new reservation (${id})`);
+            this.loadBacklog().then(() => this.openSnackbar('New reservation!'));
+        });
+        this.backlogHubConnection.on(BacklogHubMethods.ReservationUpdated, id => {
+            console.log(`SignalR: a reservation was just updated (${id})`);
+            this.loadBacklog();
+        });
+        this.backlogHubConnection.on(BacklogHubMethods.ReservationDeleted, id => {
+            console.log(`SignalR: a reservation was just deleted (${id})`);
+            this.loadBacklog().then(() => this.openSnackbar('A reservation was just deleted.'));
+        });
+        this.backlogHubConnection.on(BacklogHubMethods.ReservationDropoffConfirmed, id => {
+            console.log(`SignalR: a key was just dropped off (${id})`);
+            this.loadBacklog().then(() => this.openSnackbar('A key was just dropped off!'));
+        });
+        this.backlogHubConnection.on(BacklogHubMethods.ReservationChatMessageSent, id => {
+            console.log(`SignalR: a chat message was just received (${id})`);
+            this.loadBacklog().then(() => this.openSnackbar('New message received!'));
+        });
 
         this.backlogHubConnection.onclose(error => {
             console.error(`SignalR: Connection to the hub was closed. Reconnecting... (${error})`);
@@ -567,7 +563,6 @@ export default class App extends Component {
                                                 reservationsLoading={reservationsLoading}
                                                 removeReservation={this.removeReservation}
                                                 updateReservation={this.updateReservation}
-                                                invokeBacklogHub={this.invokeBacklogHub}
                                                 lastSettings={lastSettings}
                                                 openSnackbar={this.openSnackbar}
                                                 dropoffDeepLink={props.location.hash === '#dropoffkey'}
@@ -588,7 +583,6 @@ export default class App extends Component {
                                                     reservations={reservations}
                                                     configuration={configuration}
                                                     addReservation={this.addReservation}
-                                                    invokeBacklogHub={this.invokeBacklogHub}
                                                     lastSettings={lastSettings}
                                                     loadLastSettings={this.loadLastSettings}
                                                     openSnackbar={this.openSnackbar}
@@ -613,7 +607,6 @@ export default class App extends Component {
                                                     configuration={configuration}
                                                     addReservation={this.addReservation}
                                                     removeReservation={this.removeReservation}
-                                                    invokeBacklogHub={this.invokeBacklogHub}
                                                     loadLastSettings={this.loadLastSettings}
                                                     openSnackbar={this.openSnackbar}
                                                     openNotificationDialog={this.openNotificationDialog}
@@ -653,7 +646,6 @@ export default class App extends Component {
                                                 reservationsLoading={companyReservationsLoading}
                                                 removeReservation={this.removeReservationFromCompanyReservations}
                                                 updateReservation={this.updateCompanyReservation}
-                                                invokeBacklogHub={this.invokeBacklogHub}
                                                 lastSettings={lastSettings}
                                                 openSnackbar={this.openSnackbar}
                                                 {...props}
@@ -675,7 +667,6 @@ export default class App extends Component {
                                                 backlogUpdateFound={backlogUpdateFound}
                                                 updateBacklogItem={this.updateBacklogItem}
                                                 removeBacklogItem={this.removeBacklogItem}
-                                                invokeBacklogHub={this.invokeBacklogHub}
                                                 snackbarOpen={this.state.snackbarOpen}
                                                 openSnackbar={this.openSnackbar}
                                                 searchTerm={searchTerm}

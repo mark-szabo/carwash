@@ -124,7 +124,7 @@ class ReservationGrid extends React.PureComponent {
         const waitingForKey = reservations.filter(r => r.state === State.ReminderSentWaitingForKey);
         const reservationIdToOpenDropoffDialog = this.props.dropoffDeepLink && waitingForKey.length > 0 ? waitingForKey[0].id : null;
 
-        const { removeReservation, updateReservation, invokeBacklogHub, openSnackbar, lastSettings, admin } = this.props;
+        const { removeReservation, updateReservation, openSnackbar, lastSettings, admin } = this.props;
 
         if (!reservations[index]) return null;
 
@@ -135,7 +135,6 @@ class ReservationGrid extends React.PureComponent {
                     configuration={this.props.configuration}
                     removeReservation={removeReservation}
                     updateReservation={updateReservation}
-                    invokeBacklogHub={invokeBacklogHub}
                     lastSettings={lastSettings}
                     openSnackbar={openSnackbar}
                     admin={admin}
@@ -205,7 +204,6 @@ ReservationGrid.propTypes = {
     reservationsLoading: PropTypes.bool.isRequired,
     removeReservation: PropTypes.func.isRequired,
     updateReservation: PropTypes.func.isRequired,
-    invokeBacklogHub: PropTypes.func.isRequired,
     lastSettings: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
     admin: PropTypes.bool,

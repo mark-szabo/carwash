@@ -1,9 +1,15 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using CarWash.ClassLibrary;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
+using CarWash.PWA.Attributes;
+using CarWash.PWA.Hubs;
+using Microsoft.ApplicationInsights;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
@@ -11,10 +17,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.ApplicationInsights;
-using CarWash.PWA.Attributes;
-using CarWash.ClassLibrary;
-using Microsoft.Extensions.Options;
 
 namespace CarWash.PWA.Controllers
 {
@@ -34,10 +36,11 @@ namespace CarWash.PWA.Controllers
         private readonly ICalendarService _calendarService;
         private readonly IPushService _pushService;
         private readonly IBotService _botService;
+        private readonly IHubContext<BacklogHub> _backlogHub;
         private readonly TelemetryClient _telemetryClient;
 
         /// <inheritdoc />
-        public ReservationsController(IOptionsMonitor<CarWashConfiguration> configuration, ApplicationDbContext context, IUserService userService, IEmailService emailService, ICalendarService calendarService, IPushService pushService, IBotService botService, TelemetryClient telemetryClient)
+        public ReservationsController(IOptionsMonitor<CarWashConfiguration> configuration, ApplicationDbContext context, IUserService userService, IEmailService emailService, ICalendarService calendarService, IPushService pushService, IBotService botService, IHubContext<BacklogHub> backlogHub, TelemetryClient telemetryClient)
         {
             _configuration = configuration;
             _context = context;
@@ -46,6 +49,7 @@ namespace CarWash.PWA.Controllers
             _calendarService = calendarService;
             _pushService = pushService;
             _botService = botService;
+            _backlogHub = backlogHub;
             _telemetryClient = telemetryClient;
         }
 
@@ -222,6 +226,9 @@ namespace CarWash.PWA.Controllers
                     throw;
                 }
             }
+
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, dbReservation.Id);
 
             // Track event with AppInsight
             _telemetryClient.TrackEvent(
@@ -445,6 +452,9 @@ namespace CarWash.PWA.Controllers
             _context.Reservation.Add(reservation);
             await _context.SaveChangesAsync();
 
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationCreated, reservation.Id);
+
             // Track event with AppInsight
             _telemetryClient.TrackEvent(
                 "New reservation was submitted.",
@@ -485,6 +495,9 @@ namespace CarWash.PWA.Controllers
 
             // Delete calendar event using Microsoft Graph
             await _calendarService.DeleteEventAsync(reservation);
+
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationDeleted, reservation.Id);
 
             // Track event with AppInsight
             _telemetryClient.TrackEvent(
@@ -635,6 +648,9 @@ namespace CarWash.PWA.Controllers
                 }
             }
 
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationDropoffConfirmed, reservation.Id);
+
             // Track event with AppInsight
             _telemetryClient.TrackEvent(
                 "Key dropoff was confirmed by user.",
@@ -735,6 +751,9 @@ namespace CarWash.PWA.Controllers
                 }
             }
 
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationDropoffConfirmed, reservation.Id);
+
             // Track event with AppInsight
             _telemetryClient.TrackEvent(
                 "Key dropoff was confirmed by 3rd party service.",
@@ -792,6 +811,9 @@ namespace CarWash.PWA.Controllers
                     throw;
                 }
             }
+
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
 
             // Try to send message through bot
             await _botService.SendWashStartedMessageAsync(reservation);
@@ -873,6 +895,9 @@ namespace CarWash.PWA.Controllers
                     throw new ArgumentOutOfRangeException();
             }
 
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
+
             // Try to send message through bot
             await _botService.SendWashCompletedMessageAsync(reservation);
 
@@ -921,6 +946,9 @@ namespace CarWash.PWA.Controllers
                 }
             }
 
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
+
             return NoContent();
         }
 
@@ -964,6 +992,9 @@ namespace CarWash.PWA.Controllers
                     throw;
                 }
             }
+
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
 
             return NoContent();
         }
@@ -1043,6 +1074,9 @@ namespace CarWash.PWA.Controllers
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationChatMessageSent, reservation.Id);
 
             // Try to send message through bot
             await _botService.SendCarWashCommentLeftMessageAsync(reservation);
@@ -1144,6 +1178,9 @@ namespace CarWash.PWA.Controllers
                 await _botService.SendCarWashCommentLeftMessageAsync(reservation);
             }
 
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationChatMessageSent, reservation.Id);
+
             return NoContent();
         }
 
@@ -1187,6 +1224,9 @@ namespace CarWash.PWA.Controllers
                     throw;
                 }
             }
+
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
 
             return NoContent();
         }
@@ -1233,6 +1273,9 @@ namespace CarWash.PWA.Controllers
                 }
             }
 
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
+
             return NoContent();
         }
 
@@ -1277,6 +1320,9 @@ namespace CarWash.PWA.Controllers
                     throw;
                 }
             }
+
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
 
             return NoContent();
         }

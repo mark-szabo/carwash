@@ -30,6 +30,37 @@ namespace CarWash.ClassLibrary
         }
 
         /// <summary>
+        /// SignalR hub method names for backlog-related events.
+        /// </summary>
+        public class BacklogHubMethods
+        {
+            /// <summary>
+            /// Method name for when a reservation is created.
+            /// </summary>
+            public const string ReservationCreated  = nameof(ReservationCreated);
+
+            /// <summary>
+            /// Method name for when a reservation is updated.
+            /// </summary>
+            public const string ReservationUpdated = nameof(ReservationUpdated);
+
+            /// <summary>
+            /// Method name for when a reservation is deleted.
+            /// </summary>
+            public const string ReservationDeleted = nameof(ReservationDeleted);
+
+            /// <summary>
+            /// Method name for when a reservation dropoff is confirmed.
+            /// </summary>
+            public const string ReservationDropoffConfirmed = nameof(ReservationDropoffConfirmed);
+
+            /// <summary>
+            /// Method name for when a reservation chat message is sent.
+            /// </summary>
+            public const string ReservationChatMessageSent = nameof(ReservationChatMessageSent);
+        }
+
+        /// <summary>
         /// Key locker box door states.
         /// </summary>
         public class KeyLockerBoxDoorState

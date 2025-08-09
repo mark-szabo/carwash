@@ -52,7 +52,6 @@ class CarwashGrid extends Component {
             backlogLoading,
             updateBacklogItem,
             removeBacklogItem,
-            invokeBacklogHub,
             openSnackbar,
             snackbarOpen,
             searchTerm,
@@ -109,7 +108,6 @@ class CarwashGrid extends Component {
                                 snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
                                 removeReservation={removeBacklogItem}
-                                invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
                             />
                         </Grid>
@@ -124,7 +122,6 @@ class CarwashGrid extends Component {
                                 snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
                                 removeReservation={removeBacklogItem}
-                                invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
                             />
                         </Grid>
@@ -145,7 +142,6 @@ class CarwashGrid extends Component {
                                 snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
                                 removeReservation={removeBacklogItem}
-                                invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
                             />
                         </Grid>
@@ -160,7 +156,6 @@ class CarwashGrid extends Component {
                                 snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
                                 removeReservation={removeBacklogItem}
-                                invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
                             />
                         </Grid>
@@ -175,7 +170,6 @@ class CarwashGrid extends Component {
                                 snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
                                 removeReservation={removeBacklogItem}
-                                invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
                             />
                         </Grid>
@@ -193,7 +187,6 @@ CarwashGrid.propTypes = {
     backlogLoading: PropTypes.bool.isRequired,
     updateBacklogItem: PropTypes.func.isRequired,
     removeBacklogItem: PropTypes.func.isRequired,
-    invokeBacklogHub: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
     searchTerm: PropTypes.string.isRequired,

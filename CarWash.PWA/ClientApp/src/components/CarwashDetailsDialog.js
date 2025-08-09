@@ -28,7 +28,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import MoneyOffIcon from '@mui/icons-material/MoneyOff';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import { State, getServiceName, getAdminStateName, Service, BacklogHubMethods } from '../Constants';
+import { State, getServiceName, getAdminStateName, Service } from '../Constants';
 import { formatLocation, formatDate } from '../Helpers';
 import Chat from './Chat';
 
@@ -230,9 +230,6 @@ class CarwashDetailsDialog extends React.Component {
         apiFetch(`api/reservations/${this.props.reservation.id}/startwash`, { method: 'POST' }, true).then(
             () => {
                 this.props.openSnackbar('Wash started.');
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, this.props.reservation.id);
             },
             error => {
                 reservation.state = oldState;
@@ -251,9 +248,6 @@ class CarwashDetailsDialog extends React.Component {
         apiFetch(`api/reservations/${this.props.reservation.id}/completewash`, { method: 'POST' }, true).then(
             () => {
                 this.props.openSnackbar('Wash completed.');
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, this.props.reservation.id);
             },
             error => {
                 reservation.state = oldState;
@@ -272,9 +266,6 @@ class CarwashDetailsDialog extends React.Component {
         apiFetch(`api/reservations/${this.props.reservation.id}/confirmpayment`, { method: 'POST' }, true).then(
             () => {
                 this.props.openSnackbar('Payment confirmed.');
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, this.props.reservation.id);
             },
             error => {
                 reservation.state = oldState;
@@ -297,9 +288,6 @@ class CarwashDetailsDialog extends React.Component {
         ).then(
             () => {
                 this.props.openSnackbar('Wash canceled.');
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, this.props.reservation.id);
             },
             error => {
                 reservation.state = oldState;
@@ -322,9 +310,6 @@ class CarwashDetailsDialog extends React.Component {
         ).then(
             () => {
                 this.props.openSnackbar('Wash in progress.');
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, this.props.reservation.id);
             },
             error => {
                 reservation.state = oldState;
@@ -353,9 +338,6 @@ class CarwashDetailsDialog extends React.Component {
         ).then(
             () => {
                 this.props.openSnackbar(reservation.mpv ? 'Saved as MPV.' : 'Saved as not MPV.');
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, this.props.reservation.id);
             },
             error => {
                 reservation.mpv = oldMpv;
@@ -383,9 +365,6 @@ class CarwashDetailsDialog extends React.Component {
             () => {
                 this.setState({ oldServices: [] });
                 this.props.openSnackbar('Updated selected services.');
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, this.props.reservation.id);
             },
             error => {
                 const reservation = this.props.reservation;
@@ -482,9 +461,6 @@ class CarwashDetailsDialog extends React.Component {
         ).then(
             () => {
                 this.props.openSnackbar('Updated vehicle location.');
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, this.props.reservation.id);
             },
             error => {
                 reservation.location = oldLocation;
@@ -540,9 +516,6 @@ class CarwashDetailsDialog extends React.Component {
 
                 // Remove deleted reservation from reservations
                 this.props.removeReservation(this.props.reservation.id);
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationDeleted, this.props.reservation.id);
             },
             error => {
                 this.props.openSnackbar(error);
@@ -651,7 +624,6 @@ class CarwashDetailsDialog extends React.Component {
                             reservation={reservation}
                             updateReservation={() => {}}
                             openSnackbar={() => {}}
-                            invokeBacklogHub={() => {}}
                         />
                         <Typography variant="subtitle1" className={classes.subheader}>
                             Selected services
@@ -741,7 +713,6 @@ CarwashDetailsDialog.propTypes = {
     handleClose: PropTypes.func.isRequired,
     updateReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func.isRequired,
-    invokeBacklogHub: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
 };

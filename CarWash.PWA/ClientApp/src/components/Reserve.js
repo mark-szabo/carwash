@@ -1,4 +1,3 @@
-import React from 'react';
 import PropTypes from 'prop-types';
 import TrackedComponent from './TrackedComponent';
 import { Redirect } from 'react-router';
@@ -28,10 +27,9 @@ import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import WarningIcon from '@mui/icons-material/Warning';
 import Grid from '@mui/material/Grid';
 import * as moment from 'moment';
-import { Garages, Service, NotificationChannel, BacklogHubMethods, getServiceName } from '../Constants';
+import { Service, NotificationChannel, getServiceName } from '../Constants';
 import './Reserve.css';
 import ServiceDetailsTable from './ServiceDetailsTable';
 import Spinner from './Spinner';
@@ -537,15 +535,9 @@ class Reserve extends TrackedComponent {
                     // Update reservation locally
                     this.props.removeReservation(data.id);
                     this.props.addReservation(data);
-
-                    // Broadcast using SignalR
-                    this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, data.id);
                 } else {
                     // Add new reservation locally
                     this.props.addReservation(data);
-
-                    // Broadcast using SignalR
-                    this.props.invokeBacklogHub(BacklogHubMethods.ReservationCreated, data.id);
                 }
 
                 // Refresh last settings

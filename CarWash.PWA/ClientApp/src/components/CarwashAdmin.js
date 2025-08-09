@@ -13,7 +13,6 @@ export default class CarwashAdmin extends TrackedComponent {
             backlogLoading,
             updateBacklogItem,
             removeBacklogItem,
-            invokeBacklogHub,
             openSnackbar,
             snackbarOpen,
             searchTerm,
@@ -26,7 +25,6 @@ export default class CarwashAdmin extends TrackedComponent {
                 backlogLoading={backlogLoading}
                 updateBacklogItem={updateBacklogItem}
                 removeBacklogItem={removeBacklogItem}
-                invokeBacklogHub={invokeBacklogHub}
                 snackbarOpen={snackbarOpen}
                 openSnackbar={openSnackbar}
                 searchTerm={searchTerm}
@@ -41,7 +39,6 @@ CarwashAdmin.propTypes = {
     backlogLoading: PropTypes.bool.isRequired,
     updateBacklogItem: PropTypes.func.isRequired,
     removeBacklogItem: PropTypes.func.isRequired,
-    invokeBacklogHub: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
     searchTerm: PropTypes.string.isRequired,

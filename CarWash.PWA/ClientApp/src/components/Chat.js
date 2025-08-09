@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import Divider from '@mui/material/Divider';
 import apiFetch from '../Auth';
-import { BacklogHubMethods } from '../Constants';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputLabel from '@mui/material/InputLabel';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -45,9 +44,6 @@ export default function Chat(props) {
                 true
             );
             props.openSnackbar('Comment saved.');
-
-            // Broadcast using SignalR
-            props.invokeBacklogHub(BacklogHubMethods.ReservationChatMessageSent, props.reservation.id);
         } catch (error) {
             reservation.comments = oldComments;
             props.updateReservation(reservation);
@@ -119,5 +115,4 @@ Chat.propTypes = {
     hideInput: PropTypes.bool,
     updateReservation: PropTypes.func.isRequired,
     openSnackbar: PropTypes.func.isRequired,
-    invokeBacklogHub: PropTypes.func.isRequired,
 };

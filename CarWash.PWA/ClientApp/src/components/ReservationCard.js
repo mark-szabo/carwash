@@ -22,7 +22,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogTitle from '@mui/material/DialogTitle';
 import Tooltip from '@mui/material/Tooltip';
 import red from '@mui/material/colors/red';
-import { getStateName, getServiceName, State, BacklogHubMethods } from '../Constants';
+import { getStateName, getServiceName, State } from '../Constants';
 import { formatLocation, formatDate2 } from '../Helpers';
 import Chat from './Chat';
 import * as moment from 'moment';
@@ -176,9 +176,6 @@ function ReservationCard(props) {
 
                 // Remove deleted reservation from reservations
                 props.removeReservation(reservation.id);
-
-                // Broadcast using SignalR
-                props.invokeBacklogHub(BacklogHubMethods.ReservationDeleted, reservation.id);
             },
             error => {
                 props.openSnackbar(error);
@@ -278,7 +275,6 @@ function ReservationCard(props) {
                             reservation={reservation}
                             updateReservation={props.updateReservation}
                             openSnackbar={props.openSnackbar}
-                            invokeBacklogHub={props.invokeBacklogHub}
                         />
                         <Divider className={classes.divider} />
                         <Typography variant="subtitle1">Selected services</Typography>
@@ -321,7 +317,6 @@ function ReservationCard(props) {
                 open={dropoffDialogOpen}
                 onClose={() => setDropoffDialogOpen(false)}
                 updateReservation={props.updateReservation}
-                invokeBacklogHub={props.invokeBacklogHub}
                 openSnackbar={props.openSnackbar}
             />
         </ErrorBoundary>
@@ -334,7 +329,6 @@ ReservationCard.propTypes = {
     configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     updateReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func.isRequired,
-    invokeBacklogHub: PropTypes.func.isRequired,
     lastSettings: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
     dropoffDialogOpen: PropTypes.bool.isRequired,
