@@ -285,6 +285,13 @@ class Reserve extends TrackedComponent {
         }));
     };
 
+    handleNextFromDateSelection = () => {
+        this.setState(state => ({
+            activeStep: state.activeStep + 1,
+            reservationPercentageDataArrived: true,
+        }));
+    };
+
     handleBack = () => {
         this.setState(state => ({
             activeStep: state.activeStep - 1,
@@ -745,7 +752,7 @@ class Reserve extends TrackedComponent {
                                 </Button>
                                 <Button
                                     disabled={!dateSelected}
-                                    onClick={this.handleNext}
+                                    onClick={this.handleNextFromDateSelection}
                                     variant="contained"
                                     color="primary"
                                     className={classes.button}
