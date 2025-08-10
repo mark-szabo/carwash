@@ -32,7 +32,7 @@ namespace CarWash.ClassLibrary.Services
         /// <param name="userId">Optional ID of the user requesting the box to be opened.</param>
         /// <param name="onBoxClosedCallback">Optional callback to execute when the box is closed.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        Task OpenBoxByIdAsync(string boxId, string? userId = null, Func<string, Task>? onBoxClosedCallback = null);
+        Task<KeyLockerBox> OpenBoxByIdAsync(string boxId, string? userId = null, Func<string, Task>? onBoxClosedCallback = null);
 
         /// <summary>
         /// Opens a specific box in the locker by its locker id and serial number.
@@ -43,7 +43,7 @@ namespace CarWash.ClassLibrary.Services
         /// <param name="userId">Optional ID of the user requesting the box to be opened.</param>
         /// <param name="onBoxClosedCallback">Optional callback to execute when the box is closed.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        Task OpenBoxBySerialAsync(string lockerId, int boxSerial, string? userId = null, Func<string, Task>? onBoxClosedCallback = null);
+        Task<KeyLockerBox> OpenBoxBySerialAsync(string lockerId, int boxSerial, string? userId = null, Func<string, Task>? onBoxClosedCallback = null);
 
         /// <summary>
         /// Opens a random available box in the specified locker.

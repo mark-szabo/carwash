@@ -71,7 +71,7 @@ namespace CarWash.ClassLibrary.Services
         }
 
         /// <inheritdoc />
-        public async Task OpenBoxByIdAsync(string boxId, string? userId = null, Func<string, Task>? onBoxClosedCallback = null)
+        public async Task<KeyLockerBox> OpenBoxByIdAsync(string boxId, string? userId = null, Func<string, Task>? onBoxClosedCallback = null)
         {
             if (string.IsNullOrEmpty(boxId))
             {
@@ -82,12 +82,21 @@ namespace CarWash.ClassLibrary.Services
                 ?? throw new InvalidOperationException($"Box with ID {boxId} not found.");
 
             await OpenBoxAsync(box.LockerId, box.BoxSerial, userId, onBoxClosedCallback);
+
+            return box;
         }
 
         /// <inheritdoc />
-        public async Task OpenBoxBySerialAsync(string lockerId, int boxSerial, string? userId = null, Func<string, Task>? onBoxClosedCallback = null)
+        public async Task<KeyLockerBox> OpenBoxBySerialAsync(string lockerId, int boxSerial, string? userId = null, Func<string, Task>? onBoxClosedCallback = null)
         {
             await OpenBoxAsync(lockerId, boxSerial, userId, onBoxClosedCallback);
+
+            // Find the box by lockerId and boxSerial
+            var box = await context.KeyLockerBox
+                .SingleOrDefaultAsync(b => b.LockerId == lockerId && b.BoxSerial == boxSerial)
+                ?? throw new InvalidOperationException($"Box with serial {boxSerial} not found in locker {lockerId}.");
+
+            return box;
         }
 
         /// <inheritdoc />

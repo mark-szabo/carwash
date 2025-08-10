@@ -1,4 +1,5 @@
-﻿using CarWash.ClassLibrary;
+﻿#nullable enable
+using CarWash.ClassLibrary;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Hubs;
@@ -28,7 +29,7 @@ namespace CarWash.PWA.Controllers
         IHubContext<KeyLockerHub> keyLockerHub,
         TelemetryClient telemetryClient) : ControllerBase
     {
-        private readonly User _user = userService.CurrentUser;
+        private readonly User _user = userService.CurrentUser ?? throw new Exception("User is not authenticated.");
 
         // GET: api/keylocker/generate
         /// <summary>
@@ -78,7 +79,9 @@ namespace CarWash.PWA.Controllers
 
             try
             {
-                await keyLockerService.OpenBoxByIdAsync(id, _user.Id);
+                var box = await keyLockerService.OpenBoxByIdAsync(id, _user.Id);
+
+                await keyLockerHub.Clients.All.SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxOpened, box.Id);
             }
             catch (InvalidOperationException ex)
             {
@@ -115,7 +118,9 @@ namespace CarWash.PWA.Controllers
 
             try
             {
-                await keyLockerService.OpenBoxBySerialAsync(lockerId, boxSerial, _user.Id);
+                var box = await keyLockerService.OpenBoxBySerialAsync(lockerId, boxSerial, _user.Id);
+
+                await keyLockerHub.Clients.All.SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxOpened, box.Id);
             }
             catch (InvalidOperationException ex)
             {
@@ -131,7 +136,7 @@ namespace CarWash.PWA.Controllers
             return NoContent();
         }
 
-        // POST: api/keylocker/{lockerId}/available/open
+        /*// POST: api/keylocker/{lockerId}/available/open
         /// <summary>
         /// Open a random available box in a locker and optionally update a reservation with the opened box.
         /// </summary>
@@ -177,24 +182,21 @@ namespace CarWash.PWA.Controllers
                 telemetryClient.TrackException(ex);
                 return StatusCode(500, "An error occurred while trying to open the box.");
             }
-        }
+        }*/
 
         // POST: api/keylocker/open/available
         /// <summary>
-        /// Open a random available box in a locker and optionally update a reservation with the opened box.
+        /// Open a random available box in a locker and update a reservation with the opened box.
         /// </summary>
         /// <param name="reservationId"> The ID of the reservation to update with the opened box.</param>
         /// <returns>200 OK with the ID of the opened box if successful, 400 Bad Request if the locker ID is invalid, 403 Forbidden if the user is not a carwash admin, or 500 Internal Server Error if an unexpected error occurs.</returns>
         /// <response code="200">OK with the opened box.</response>
         /// <response code="400">BadRequest if the locker ID is invalid.</response>
         [HttpPost("open/available")]
-        public async Task<ActionResult<string>> OpenRandomAvailableBox([FromQuery] string reservationId)
+        public async Task<ActionResult<string>> OpenRandomAvailableBox([FromQuery] string reservationId, [FromQuery] string location)
         {
-            //TODO: add location as input param
-            if (string.IsNullOrEmpty(reservationId))
-            {
-                return BadRequest("Invalid reservation ID.");
-            }
+            if (string.IsNullOrEmpty(reservationId)) return BadRequest("Invalid reservation ID.");
+            if (string.IsNullOrEmpty(location)) return BadRequest("Invalid location.");
 
             var reservation = await context.Reservation.FirstOrDefaultAsync(r => r.Id == reservationId);
             if (reservation == null)
@@ -202,39 +204,48 @@ namespace CarWash.PWA.Controllers
                 return NotFound($"Reservation with ID '{reservationId}' not found.");
             }
 
+            reservation.Location = location;
+
             if (reservation.Building == null)
             {
                 return BadRequest("Location is not set for reservation.");
             }
 
-            var lockerId = configuration.CurrentValue.Garages.Find(g => g.Building == reservation.Building).KeyLockerId;
-
             try
             {
-                var box = await keyLockerService.OpenRandomAvailableBoxAsync(lockerId, _user.Id, id =>
+                var lockerId = configuration.CurrentValue.Garages.Find(g => g.Building == reservation.Building)?.KeyLockerId ?? throw new Exception($"No key locker id was found for building '{reservation.Building}'.");
+
+                var box = await keyLockerService.OpenRandomAvailableBoxAsync(lockerId, _user.Id, async id =>
                 {
                     // Callback when the box is closed
                     if (reservation != null)
                     {
-                        keyLockerHub.Clients.User(_user.Id).SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxClosed, id);
+                        await keyLockerHub.Clients.User(_user.Id).SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxClosed, id);
                     }
-                    return Task.CompletedTask;
+
+                    return;
                 });
 
+                await keyLockerHub.Clients.All.SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxOpened, box.Id);
+
                 reservation.KeyLockerBoxId = box.Id;
-                context.Reservation.Update(reservation);
                 await context.SaveChangesAsync();
 
                 return Ok(new BoxResponse(box.Id, box.BoxSerial, box.Building, box.Floor, box.Name));
             }
             catch (InvalidOperationException ex)
             {
+                await context.SaveChangesAsync();
+
                 return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
+                await context.SaveChangesAsync();
+
                 // Log the exception and return a 500 Internal Server Error
                 telemetryClient.TrackException(ex);
+
                 return StatusCode(500, "An error occurred while trying to open the box.");
             }
         }
@@ -273,7 +284,9 @@ namespace CarWash.PWA.Controllers
                 return Forbid();
             }
 
-            await keyLockerService.OpenBoxByIdAsync(reservation.KeyLockerBoxId, _user.Id);
+            var box = await keyLockerService.OpenBoxByIdAsync(reservation.KeyLockerBoxId, _user.Id);
+
+            await keyLockerHub.Clients.All.SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxOpened, box.Id);
 
             return NoContent();
         }

@@ -74,6 +74,11 @@ namespace CarWash.ClassLibrary
         public class KeyLockerHubMethods
         {
             /// <summary>
+            /// Method name for when a key locker box is opened.
+            /// </summary>
+            public const string KeyLockerBoxOpened = nameof(KeyLockerBoxOpened);
+
+            /// <summary>
             /// Method name for when a key locker box is closed.
             /// </summary>
             public const string KeyLockerBoxClosed = nameof(KeyLockerBoxClosed);
