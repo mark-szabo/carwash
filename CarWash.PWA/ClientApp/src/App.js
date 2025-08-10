@@ -5,7 +5,7 @@ import { Workbox } from 'workbox-window';
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import { ReactPlugin } from '@microsoft/applicationinsights-react-js';
 import { createBrowserHistory } from 'history';
-import apiFetch from './Auth';
+import apiFetch, { getToken } from './Auth';
 import registerPush from './PushService';
 import { ThemeProvider, StyledEngineProvider, createTheme, adaptV4Theme } from '@mui/material/styles';
 import Snackbar from '@mui/material/Snackbar';
@@ -455,7 +455,9 @@ export default class App extends Component {
     connectToBacklogHub = () => {
         if (!this.state.user.isCarwashAdmin) return;
 
-        this.backlogHubConnection = new signalR.HubConnectionBuilder().withUrl('/hub/backlog').build();
+        this.backlogHubConnection = new signalR.HubConnectionBuilder()
+            .withUrl('/hub/backlog', { accessTokenFactory: () => getToken() })
+            .build();
 
         this.backlogHubConnection.on(BacklogHubMethods.ReservationCreated, id => {
             console.log(`SignalR: new reservation (${id})`);

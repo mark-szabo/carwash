@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Azure.Devices;
 using Microsoft.Data.SqlClient;
@@ -218,6 +219,31 @@ namespace CarWash.PWA
                             context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                             context.Response.ContentType = "application/json";
                             return Task.CompletedTask;
+                        },
+                        // We have to hook the OnMessageReceived event in order to
+                        // allow the JWT authentication handler to read the access
+                        // token from the query string when a WebSocket or 
+                        // Server-Sent Events request comes in.
+
+                        // Sending the access token in the query string is required when using WebSockets or ServerSentEvents
+                        // due to a limitation in Browser APIs. We restrict it to only calls to the
+                        // SignalR hub in this code.
+                        // See https://docs.microsoft.com/aspnet/core/signalr/security#access-token-logging
+                        // for more information about security considerations when using
+                        // the query string to transmit the access token.
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+
+                            // If the request is for our hub...
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) &&
+                                (path.StartsWithSegments("/hub")))
+                            {
+                                // Read the token out of the query string
+                                context.Token = accessToken;
+                            }
+                            return Task.CompletedTask;
                         }
                     };
                 });
@@ -231,13 +257,13 @@ namespace CarWash.PWA
             // Add gzip compression
             if (!currentEnvironment.IsDevelopment())
             {
-            services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Optimal);
-            services.AddResponseCompression(options =>
-            {
-                options.Providers.Add<GzipCompressionProvider>();
-                //options.EnableForHttps = true;
-                options.MimeTypes = new[]
+                services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Optimal);
+                services.AddResponseCompression(options =>
                 {
+                    options.Providers.Add<GzipCompressionProvider>();
+                    //options.EnableForHttps = true;
+                    options.MimeTypes = new[]
+                    {
                     // Default
                     "text/plain",
                     "text/css",
@@ -251,18 +277,19 @@ namespace CarWash.PWA
                     // Custom
                     "image/svg+xml",
                     "application/font-woff2"
-                };
-            });
+                    };
+                });
 
-            services.Configure<HstsOptions>(options =>
-            {
-                options.IncludeSubDomains = true;
-                options.MaxAge = TimeSpan.FromDays(365);
-            });
+                services.Configure<HstsOptions>(options =>
+                {
+                    options.IncludeSubDomains = true;
+                    options.MaxAge = TimeSpan.FromDays(365);
+                });
             }
 
             // Configure SignalR
             services.AddSignalR();
+            services.AddSingleton<IUserIdProvider, SignalRUserIdProvider>();
 
             if (currentEnvironment.IsDevelopment())
             {
@@ -369,7 +396,7 @@ namespace CarWash.PWA
                 context.Response.Headers.Append("Content-Security-Policy", new[] { ContentSecurityPolicy });
                 context.Response.Headers.Remove(HeaderNames.Server);
                 context.Response.Headers.Remove("X-Powered-By");
-                
+
                 await next();
             });
 
@@ -440,6 +467,15 @@ namespace CarWash.PWA
                     spa.UseReactDevelopmentServer(npmScript: "start");
                 }
             });
+        }
+
+        public class SignalRUserIdProvider : IUserIdProvider
+        {
+            public string GetUserId(HubConnectionContext connection)
+            {
+                // Get the user id from the ClaimsPrincipal
+                return connection.User?.FindFirstValue("userid") ?? throw new Exception("User id ('userid') cannot be found in claims principal.");
+            }
         }
 
         private class SnapshotCollectorTelemetryProcessorFactory : ITelemetryProcessorFactory
