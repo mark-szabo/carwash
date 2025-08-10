@@ -221,6 +221,8 @@ namespace CarWash.PWA
             });
 
             // Add gzip compression
+            if (!currentEnvironment.IsDevelopment())
+            {
             services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Optimal);
             services.AddResponseCompression(options =>
             {
@@ -249,6 +251,7 @@ namespace CarWash.PWA
                 options.IncludeSubDomains = true;
                 options.MaxAge = TimeSpan.FromDays(365);
             });
+            }
 
             // Configure SignalR
             services.AddSignalR();
@@ -338,6 +341,7 @@ namespace CarWash.PWA
             }
             else
             {
+                app.UseResponseCompression();
                 app.UseExceptionHandler("/Error");
                 app.UseHsts();
             }
@@ -360,8 +364,6 @@ namespace CarWash.PWA
                 
                 await next();
             });
-
-            app.UseResponseCompression();
 
             app.UseStaticFiles(new StaticFileOptions
             {
