@@ -21,7 +21,7 @@ import Admin from './components/Admin';
 import Settings from './components/Settings';
 import CarwashAdmin from './components/CarwashAdmin';
 import NotificationDialog from './components/NotificationDialog';
-import { NotificationChannel, BacklogHubMethods } from './Constants';
+import { NotificationChannel, BacklogHubMethods, KeyLockerHubMethods } from './Constants';
 import Spinner from './components/Spinner';
 import { sleep } from './Helpers';
 import Blockers from './components/Blockers';
@@ -93,6 +93,8 @@ function getSafeString(obj) {
 
 export default class App extends Component {
     displayName = App.name;
+    keyLockerHubConnection = null; // SignalR connection to the key locker Hub
+    backlogHubConnection = null; // SignalR connection to the backlog Hub
 
     state = {
         version: '',
@@ -140,8 +142,9 @@ export default class App extends Component {
                     this.loadBacklog();
                 }
 
-                // Initiate SignalR connection to Backlog Hub
+                // Initiate SignalR connections
                 this.connectToBacklogHub();
+                this.connectToKeyLockerHub();
             },
             error => {
                 this.openSnackbar(error);
@@ -178,8 +181,6 @@ export default class App extends Component {
 
         this.keyboardListener();
     }
-
-    backlogHubConnection;
 
     registerServiceWorker = async () => {
         if ('serviceWorker' in navigator) {
@@ -452,6 +453,24 @@ export default class App extends Component {
         });
     };
 
+    connectToKeyLockerHub = () => {
+        this.keyLockerHubConnection = new signalR.HubConnectionBuilder()
+            .withUrl('/hub/keylocker', { accessTokenFactory: () => getToken() })
+            .build();
+
+        this.keyLockerHubConnection.on(KeyLockerHubMethods.KeyLockerBoxClosed, id => {
+            console.log(`SignalR: key locker box closed (${id})`);
+        });
+
+        this.keyLockerHubConnection.onclose(error => {
+            console.error(`SignalR: Connection to the key locker hub was closed. Reconnecting... (${error})`);
+            this.openSnackbar('Connection lost. Reconnecting...');
+            sleep(5000).then(() => this.keyLockerHubConnection.start().catch(e => console.error(e.toString())));
+        });
+
+        this.keyLockerHubConnection.start().catch(e => console.error(e.toString()));
+    };
+
     connectToBacklogHub = () => {
         if (!this.state.user.isCarwashAdmin) return;
 
@@ -481,8 +500,8 @@ export default class App extends Component {
         });
 
         this.backlogHubConnection.onclose(error => {
-            console.error(`SignalR: Connection to the hub was closed. Reconnecting... (${error})`);
-            if (this.state.user.isCarwashAdmin) this.loadBacklog();
+            console.error(`SignalR: Connection to the backlog hub was closed. Reconnecting... (${error})`);
+            this.loadBacklog();
             sleep(5000).then(() => this.backlogHubConnection.start().catch(e => console.error(e.toString())));
         });
 

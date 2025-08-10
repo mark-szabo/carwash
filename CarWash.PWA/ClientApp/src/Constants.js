@@ -46,6 +46,10 @@ export const BacklogHubMethods = Object.freeze({
     ReservationChatMessageSent: 'ReservationChatMessageSent',
 });
 
+export const KeyLockerHubMethods = Object.freeze({
+    KeyLockerBoxClosed: 'KeyLockerBoxClosed',
+});
+
 export function getStateName(state) {
     switch (state) {
         case State.SubmittedNotActual:
