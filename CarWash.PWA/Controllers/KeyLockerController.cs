@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using CarWash.ClassLibrary;
+using CarWash.ClassLibrary.Migrations;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Hubs;
@@ -118,7 +119,11 @@ namespace CarWash.PWA.Controllers
 
             try
             {
-                var box = await keyLockerService.OpenBoxBySerialAsync(lockerId, boxSerial, _user.Id);
+                var box = await keyLockerService.OpenBoxBySerialAsync(
+                    lockerId, 
+                    boxSerial, 
+                    _user.Id, 
+                    async id => await keyLockerHub.Clients.User(_user.Id).SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxClosed, id));
 
                 await keyLockerHub.Clients.All.SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxOpened, box.Id);
             }
@@ -215,16 +220,10 @@ namespace CarWash.PWA.Controllers
             {
                 var lockerId = configuration.CurrentValue.Garages.Find(g => g.Building == reservation.Building)?.KeyLockerId ?? throw new Exception($"No key locker id was found for building '{reservation.Building}'.");
 
-                var box = await keyLockerService.OpenRandomAvailableBoxAsync(lockerId, _user.Id, async id =>
-                {
-                    // Callback when the box is closed
-                    if (reservation != null)
-                    {
-                        await keyLockerHub.Clients.User(_user.Id).SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxClosed, id);
-                    }
-
-                    return;
-                });
+                var box = await keyLockerService.OpenRandomAvailableBoxAsync(
+                    lockerId,
+                    _user.Id,
+                    async id => await keyLockerHub.Clients.User(_user.Id).SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxClosed, id));
 
                 await keyLockerHub.Clients.All.SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxOpened, box.Id);
 
@@ -284,7 +283,10 @@ namespace CarWash.PWA.Controllers
                 return Forbid();
             }
 
-            var box = await keyLockerService.OpenBoxByIdAsync(reservation.KeyLockerBoxId, _user.Id);
+            var box = await keyLockerService.OpenBoxByIdAsync(
+                reservation.KeyLockerBoxId, 
+                _user.Id, 
+                async id => await keyLockerHub.Clients.User(_user.Id).SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxClosed, id));
 
             await keyLockerHub.Clients.All.SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxOpened, box.Id);
 
