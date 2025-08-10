@@ -400,6 +400,7 @@ namespace CarWash.PWA
             {
                 endpoints.MapHealthChecks("/api/healthcheck");
                 endpoints.MapHub<BacklogHub>("/hub/backlog");
+                endpoints.MapHub<KeyLockerHub>("/hub/keylocker");
                 endpoints.MapControllerRoute("default", "{controller}/{action=Index}/{id?}");
             });
 

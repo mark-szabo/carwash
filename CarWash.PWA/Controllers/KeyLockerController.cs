@@ -1,8 +1,11 @@
-﻿using CarWash.ClassLibrary.Models;
+﻿using CarWash.ClassLibrary;
+using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
+using CarWash.PWA.Hubs;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System;
@@ -22,6 +25,7 @@ namespace CarWash.PWA.Controllers
         ApplicationDbContext context,
         IUserService userService,
         IKeyLockerService keyLockerService,
+        IHubContext<KeyLockerHub> keyLockerHub,
         TelemetryClient telemetryClient) : ControllerBase
     {
         private readonly User _user = userService.CurrentUser;
@@ -186,6 +190,7 @@ namespace CarWash.PWA.Controllers
         [HttpPost("open/available")]
         public async Task<ActionResult<string>> OpenRandomAvailableBox([FromQuery] string reservationId)
         {
+            //TODO: add location as input param
             if (string.IsNullOrEmpty(reservationId))
             {
                 return BadRequest("Invalid reservation ID.");
@@ -206,7 +211,15 @@ namespace CarWash.PWA.Controllers
 
             try
             {
-                var box = await keyLockerService.OpenRandomAvailableBoxAsync(lockerId, _user.Id);
+                var box = await keyLockerService.OpenRandomAvailableBoxAsync(lockerId, _user.Id, id =>
+                {
+                    // Callback when the box is closed
+                    if (reservation != null)
+                    {
+                        keyLockerHub.Clients.User(_user.Id).SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxClosed, id);
+                    }
+                    return Task.CompletedTask;
+                });
 
                 reservation.KeyLockerBoxId = box.Id;
                 context.Reservation.Update(reservation);

@@ -32,6 +32,10 @@ namespace CarWash.ClassLibrary
         /// <summary>
         /// SignalR hub method names for backlog-related events.
         /// </summary>
+        /// <remarks>
+        /// This class contains predefined method names that represent specific SignalR actions. These 
+        /// constants can be used to ensure consistency when referencing method names in the hub communication.
+        /// </remarks>
         public class BacklogHubMethods
         {
             /// <summary>
@@ -58,6 +62,21 @@ namespace CarWash.ClassLibrary
             /// Method name for when a reservation chat message is sent.
             /// </summary>
             public const string ReservationChatMessageSent = nameof(ReservationChatMessageSent);
+        }
+
+        /// <summary>
+        /// SignalR hub method names for key locker-related events.
+        /// </summary>
+        /// <remarks>
+        /// This class contains predefined method names that represent specific SignalR actions. These 
+        /// constants can be used to ensure consistency when referencing method names in the hub communication.
+        /// </remarks>
+        public class KeyLockerHubMethods
+        {
+            /// <summary>
+            /// Method name for when a key locker box is closed.
+            /// </summary>
+            public const string KeyLockerBoxClosed = nameof(KeyLockerBoxClosed);
         }
 
         /// <summary>
