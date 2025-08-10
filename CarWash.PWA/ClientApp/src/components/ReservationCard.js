@@ -89,7 +89,7 @@ const styles = theme => ({
 });
 
 function ReservationCard(props) {
-    const { classes, reservation, configuration, admin, style } = props;
+    const { classes, reservation, configuration, admin, style, closedKeyLockerBoxIds } = props;
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [dropoffDialogOpen, setDropoffDialogOpen] = useState(props.dropoffDialogOpen);
     const [garage, setGarage] = useState('');
@@ -318,6 +318,7 @@ function ReservationCard(props) {
                 onClose={() => setDropoffDialogOpen(false)}
                 updateReservation={props.updateReservation}
                 openSnackbar={props.openSnackbar}
+                closedKeyLockerBoxIds={closedKeyLockerBoxIds} // Pass closedKeyLockerBoxIds to DropoffDialog
             />
         </ErrorBoundary>
     );
@@ -333,6 +334,7 @@ ReservationCard.propTypes = {
     openSnackbar: PropTypes.func.isRequired,
     dropoffDialogOpen: PropTypes.bool.isRequired,
     admin: PropTypes.bool,
+    closedKeyLockerBoxIds: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
 export default withStyles(styles)(ReservationCard);

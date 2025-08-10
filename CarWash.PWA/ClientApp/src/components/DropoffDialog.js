@@ -53,6 +53,7 @@ function DropoffDialog({
     onClose,
     updateReservation,
     openSnackbar,
+    closedKeyLockerBoxIds,
 }) {
     const [step, setStep] = useState(1);
     const [garage, setGarage] = useState('');
@@ -61,7 +62,7 @@ function DropoffDialog({
     const [validationErrors, setValidationErrors] = useState({ garage: false, floor: false });
     const [openingLocker, setOpeningLocker] = useState(false);
     const [openedBoxName, setOpenedBoxName] = useState('');
-    const [boxClosed, setBoxClosed] = useState(false); // Track if box is closed
+    const [openedBoxId, setOpenedBoxId] = useState('');
     const history = useHistory();
 
     useEffect(() => {
@@ -80,17 +81,16 @@ function DropoffDialog({
         }
     }, [open]);
 
-    // Simulate box closure for demo (replace with real event in production)
+    // When the locker closed event arrives from the SignalR hub,
+    // if the DropoffDialog is visible and on step 3 then push to step 4.
     useEffect(() => {
-        if (step === 3 && openedBoxName) {
-            // Simulate door closure after 2.5 seconds
-            const timer = setTimeout(() => {
-                setBoxClosed(true);
-                setStep(4);
-            }, 25000);
-            return () => clearTimeout(timer);
+        if (closedKeyLockerBoxIds && closedKeyLockerBoxIds.includes(openedBoxId) && step === 3) {
+            setStep(4);
         }
-    }, [step, openedBoxName]);
+        if (closedKeyLockerBoxIds && !closedKeyLockerBoxIds.includes(openedBoxId) && step === 4) {
+            setStep(3); // Go back to step 3 when the box is reopened
+        }
+    }, [closedKeyLockerBoxIds, reservation.id, step]);
 
     const handleGarageChange = event => {
         setGarage(event.target.value);
@@ -167,15 +167,18 @@ function DropoffDialog({
     const handleOpenLocker = async () => {
         setOpeningLocker(true);
         try {
-            const response = await apiFetch(`/api/keylocker/open/available?reservationId=${reservation.id}`, {
-                method: 'POST',
-            });
+            const response = await apiFetch(
+                `/api/keylocker/open/available?reservationId=${reservation.id}&location=${garage}/${floor}/${spot}`,
+                {
+                    method: 'POST',
+                }
+            );
             if (response && response.name) {
                 setOpenedBoxName(response.name);
+                setOpenedBoxId(response.boxId);
             }
             openSnackbar('Locker opened. Please place your key inside.');
             setStep(3);
-            setBoxClosed(false);
         } catch (error) {
             openSnackbar(error?.message || 'Failed to open locker.');
         } finally {
@@ -190,7 +193,6 @@ function DropoffDialog({
             });
             openSnackbar('Locker opened again.');
             setStep(3);
-            setBoxClosed(false);
         } catch (error) {
             openSnackbar(error?.message || 'Failed to open locker again.');
         }
@@ -372,6 +374,7 @@ DropoffDialog.propTypes = {
     onClose: PropTypes.func.isRequired,
     updateReservation: PropTypes.func.isRequired,
     openSnackbar: PropTypes.func.isRequired,
+    closedKeyLockerBoxIds: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
 export default withStyles(styles)(DropoffDialog);

@@ -47,6 +47,7 @@ export const BacklogHubMethods = Object.freeze({
 });
 
 export const KeyLockerHubMethods = Object.freeze({
+    KeyLockerBoxOpened: 'KeyLockerBoxOpened',
     KeyLockerBoxClosed: 'KeyLockerBoxClosed',
 });
 

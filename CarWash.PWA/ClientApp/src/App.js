@@ -113,6 +113,7 @@ export default class App extends Component {
         notificationDialogOpen: false,
         theme: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? darkTheme : lightTheme,
         searchTerm: '',
+        closedKeyLockerBoxIds: [],
     };
 
     componentDidMount() {
@@ -460,6 +461,21 @@ export default class App extends Component {
 
         this.keyLockerHubConnection.on(KeyLockerHubMethods.KeyLockerBoxClosed, id => {
             console.log(`SignalR: key locker box closed (${id})`);
+            this.setState(prevState => {
+                const closedKeyLockerBoxIds = prevState.closedKeyLockerBoxIds || [];
+                if (!closedKeyLockerBoxIds.includes(id)) {
+                    return { closedKeyLockerBoxIds: [...closedKeyLockerBoxIds, id] };
+                }
+                return null;
+            });
+        });
+
+        this.keyLockerHubConnection.on(KeyLockerHubMethods.KeyLockerBoxOpened, id => {
+            console.log(`SignalR: key locker box opened (${id})`);
+            this.setState(prevState => {
+                const closedKeyLockerBoxIds = prevState.closedKeyLockerBoxIds || [];
+                return { closedKeyLockerBoxIds: closedKeyLockerBoxIds.filter(lockerId => lockerId !== id) };
+            });
         });
 
         this.keyLockerHubConnection.onclose(error => {
@@ -587,6 +603,7 @@ export default class App extends Component {
                                                 lastSettings={lastSettings}
                                                 openSnackbar={this.openSnackbar}
                                                 dropoffDeepLink={props.location.hash === '#dropoffkey'}
+                                                closedKeyLockerBoxIds={this.state.closedKeyLockerBoxIds}
                                                 {...props}
                                             />
                                         </ErrorBoundary>

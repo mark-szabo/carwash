@@ -122,7 +122,8 @@ class ReservationGrid extends React.PureComponent {
     cellRenderer = ({ index, key, parent, style }) => {
         const reservations = this.reorderReservations(this.props.reservations);
         const waitingForKey = reservations.filter(r => r.state === State.ReminderSentWaitingForKey);
-        const reservationIdToOpenDropoffDialog = this.props.dropoffDeepLink && waitingForKey.length > 0 ? waitingForKey[0].id : null;
+        const reservationIdToOpenDropoffDialog =
+            this.props.dropoffDeepLink && waitingForKey.length > 0 ? waitingForKey[0].id : null;
 
         const { removeReservation, updateReservation, openSnackbar, lastSettings, admin } = this.props;
 
@@ -139,6 +140,7 @@ class ReservationGrid extends React.PureComponent {
                     openSnackbar={openSnackbar}
                     admin={admin}
                     dropoffDialogOpen={reservations[index].id === reservationIdToOpenDropoffDialog}
+                    closedKeyLockerBoxIds={this.props.closedKeyLockerBoxIds}
                     style={{
                         ...style,
                         width: CARD_WIDTH,
@@ -161,7 +163,9 @@ class ReservationGrid extends React.PureComponent {
                     <Typography variant="h6" gutterBottom className={classes.lonelyTitle}>
                         Your reservations will show up here...
                     </Typography>
-                    <Typography className={classes.lonelyText}>Tap the Reserve button on the left to get started.</Typography>
+                    <Typography className={classes.lonelyText}>
+                        Tap the Reserve button on the left to get started.
+                    </Typography>
                     <RoadAnimation />
                 </div>
             );
@@ -208,6 +212,7 @@ ReservationGrid.propTypes = {
     openSnackbar: PropTypes.func.isRequired,
     admin: PropTypes.bool,
     dropoffDeepLink: PropTypes.bool,
+    closedKeyLockerBoxIds: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
 export default withStyles(styles)(ReservationGrid);

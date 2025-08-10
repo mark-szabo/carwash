@@ -16,6 +16,7 @@ export default class Home extends TrackedComponent {
             openSnackbar,
             lastSettings,
             dropoffDeepLink,
+            closedKeyLockerBoxIds,
         } = this.props;
 
         return (
@@ -28,6 +29,7 @@ export default class Home extends TrackedComponent {
                 lastSettings={lastSettings}
                 openSnackbar={openSnackbar}
                 dropoffDeepLink={dropoffDeepLink}
+                closedKeyLockerBoxIds={closedKeyLockerBoxIds}
             />
         );
     }
@@ -42,4 +44,5 @@ Home.propTypes = {
     lastSettings: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
     dropoffDeepLink: PropTypes.bool,
+    closedKeyLockerBoxIds: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
