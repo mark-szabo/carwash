@@ -32,6 +32,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
@@ -139,14 +140,20 @@ namespace CarWash.PWA
                             // Get EF context
                             var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
 
-                            var company = (await dbContext.Company.SingleOrDefaultAsync(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))) ??
+                            var entraTenantId = context.Principal?.FindFirstValue(ClaimConstants.Tid) ??
+                                context.Principal?.FindFirstValue(ClaimConstants.TenantId) ??
+                                throw new SecurityTokenInvalidIssuerException("Tenant ('tid' or 'tenantid') cannot be found in auth token.");
+
+                            var entraOid = context.Principal.FindFirstValue(ClaimConstants.Oid) ??
+                                context.Principal.FindFirstValue(ClaimConstants.ObjectId);
+
+                            var company = (await dbContext.Company.SingleOrDefaultAsync(t => t.TenantId == entraTenantId)) ??
                                 throw new SecurityTokenInvalidIssuerException("Tenant ('tenantid') cannot be found in auth token.");
                             var email = context.Principal.FindFirstValue(ClaimTypes.Upn)?.ToLower();
                             if (email == null && company.Name == Company.Carwash) email = context.Principal.FindFirstValue(ClaimTypes.Email)?.ToLower() ??
                                 context.Principal.FindFirstValue(ClaimTypes.Name)?.ToLower().Replace("live.com#", "");
                             if (email == null) throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
 
-                            var entraOid = context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/objectidentifier");
                             var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Oid == entraOid);
 
                             if (user == null)
@@ -197,12 +204,13 @@ namespace CarWash.PWA
                                 }
                             }
 
-                            var claims = new List<Claim>
+                            // Add claims directly to the existing identity
+                            if (context.Principal.Identity is ClaimsIdentity identity)
                             {
-                                new Claim("admin", user.IsAdmin.ToString()),
-                                new Claim("carwashadmin", user.IsCarwashAdmin.ToString())
-                            };
-                            context.Principal.AddIdentity(new ClaimsIdentity(claims));
+                                identity.AddClaim(new Claim("userid", user.Id));
+                                identity.AddClaim(new Claim("admin", user.IsAdmin.ToString()));
+                                identity.AddClaim(new Claim("carwashadmin", user.IsCarwashAdmin.ToString()));
+                            }
                             context.HttpContext.Items["CurrentUser"] = user;
                         },
                         OnAuthenticationFailed = context =>
