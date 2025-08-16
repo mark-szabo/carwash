@@ -9,13 +9,9 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
-import InputLabel from '@mui/material/InputLabel';
-import FormControl from '@mui/material/FormControl';
-import TextField from '@mui/material/TextField';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
-import { State } from '../Constants';
 import CircularProgress from '@mui/material/CircularProgress';
+import { State } from '../Constants';
+import LocationSelector from './LocationSelector';
 
 const styles = theme => ({
     formControl: {
@@ -237,62 +233,16 @@ function DropoffDialog({
                         <DialogContentText>
                             Please drop-off the key at one of the lockers and confirm vehicle location!
                         </DialogContentText>
-                        <FormControl className={classes.formControl} error={validationErrors.garage}>
-                            <InputLabel id="garageLabel">Building</InputLabel>
-                            <Select
-                                id="garage"
-                                labelId="garageLabel"
-                                label="Building"
-                                required
-                                value={garage}
-                                onChange={handleGarageChange}
-                                inputProps={{
-                                    name: 'garage',
-                                    id: 'garage',
-                                }}
-                            >
-                                {configuration.garages.map(g => (
-                                    <MenuItem key={g.building} value={g.building}>
-                                        {g.building}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        {garage && configuration.garages.some(g => g.building === garage) && (
-                            <FormControl className={classes.formControl} error={validationErrors.floor}>
-                                <InputLabel id="floorLabel">Floor</InputLabel>
-                                <Select
-                                    id="floor"
-                                    labelId="floorLabel"
-                                    label="Floor"
-                                    required
-                                    value={floor}
-                                    onChange={handleFloorChange}
-                                    inputProps={{
-                                        name: 'floor',
-                                        id: 'floor',
-                                    }}
-                                >
-                                    {configuration.garages
-                                        .find(g => g.building === garage)
-                                        .floors.map(f => (
-                                            <MenuItem value={f} key={f}>
-                                                {f}
-                                            </MenuItem>
-                                        ))}
-                                </Select>
-                            </FormControl>
-                        )}
-                        {floor && (
-                            <TextField
-                                id="spot"
-                                label="Spot (optional)"
-                                value={spot}
-                                className={classes.formControl}
-                                margin="normal"
-                                onChange={handleSpotChange}
-                            />
-                        )}
+                        <LocationSelector
+                            configuration={configuration}
+                            garage={garage}
+                            floor={floor}
+                            spot={spot}
+                            validationErrors={validationErrors}
+                            onGarageChange={handleGarageChange}
+                            onFloorChange={handleFloorChange}
+                            onSpotChange={handleSpotChange}
+                        />
                     </>
                 )}
                 {step === 2 && (
