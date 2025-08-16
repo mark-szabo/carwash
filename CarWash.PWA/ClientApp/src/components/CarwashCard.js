@@ -163,6 +163,12 @@ class CarwashCard extends Component {
                                 <Typography gutterBottom>
                                     {reservation.location ? formatLocation(reservation.location) : 'Not set'}
                                 </Typography>
+                                <Typography variant="caption" color="textSecondary" gutterBottom>
+                                    Key locker
+                                </Typography>
+                                <Typography gutterBottom>
+                                    {reservation.keyLockerBox ? reservation.keyLockerBox.name : 'Not dropped off'}
+                                </Typography>
                                 <Typography
                                     variant="caption"
                                     color="textSecondary"
