@@ -708,6 +708,7 @@ export default class App extends Component {
                                                 snackbarOpen={this.state.snackbarOpen}
                                                 openSnackbar={this.openSnackbar}
                                                 searchTerm={searchTerm}
+                                                closedKeyLockerBoxIds={this.state.closedKeyLockerBoxIds}
                                                 {...props}
                                             />
                                         </ErrorBoundary>

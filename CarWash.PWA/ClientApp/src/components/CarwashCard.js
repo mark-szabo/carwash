@@ -218,6 +218,7 @@ class CarwashCard extends Component {
                     removeReservation={this.props.removeReservation}
                     snackbarOpen={this.props.snackbarOpen}
                     openSnackbar={this.props.openSnackbar}
+                    closedKeyLockerBoxIds={this.props.closedKeyLockerBoxIds}
                 />
                 <Dialog
                     open={this.state.cancelDialogOpen}
@@ -253,6 +254,7 @@ CarwashCard.propTypes = {
     removeReservation: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
+    closedKeyLockerBoxIds: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
 export default withStyles(styles)(CarwashCard);

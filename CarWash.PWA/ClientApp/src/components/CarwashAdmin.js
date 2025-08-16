@@ -16,6 +16,7 @@ export default class CarwashAdmin extends TrackedComponent {
             openSnackbar,
             snackbarOpen,
             searchTerm,
+            closedKeyLockerBoxIds,
         } = this.props;
 
         return (
@@ -28,6 +29,7 @@ export default class CarwashAdmin extends TrackedComponent {
                 snackbarOpen={snackbarOpen}
                 openSnackbar={openSnackbar}
                 searchTerm={searchTerm}
+                closedKeyLockerBoxIds={closedKeyLockerBoxIds}
             />
         );
     }
@@ -42,4 +44,5 @@ CarwashAdmin.propTypes = {
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
     searchTerm: PropTypes.string.isRequired,
+    closedKeyLockerBoxIds: PropTypes.arrayOf(PropTypes.string).isRequired,
 };

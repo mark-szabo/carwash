@@ -29,6 +29,7 @@ import { State, getServiceName, getAdminStateName, Service } from '../Constants'
 import { formatLocation, formatDate } from '../Helpers';
 import Chat from './Chat';
 import LocationSelector from './LocationSelector';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const styles = theme => ({
     chip: {
@@ -75,10 +76,7 @@ const styles = theme => ({
     },
     actions: {
         justifyContent: 'initial',
-        height: 36,
-        '&$pushActionsUp': {
-            marginBottom: 56,
-        },
+        padding: 16,
     },
     notSelectedMpv: {
         color: theme.palette.grey[300],
@@ -124,6 +122,10 @@ class CarwashDetailsDialog extends React.Component {
         editServices: false,
         oldServices: [],
         cancelDialogOpen: false,
+        lockerOpening: false,
+        waitingForClosure: false,
+        lockerBoxId: '',
+        lockerBoxName: '',
     };
 
     componentDidMount() {
@@ -134,6 +136,20 @@ class CarwashDetailsDialog extends React.Component {
                 floor,
                 seat,
             });
+        }
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        // Listen for door closure events
+        if (
+            this.state.waitingForClosure &&
+            this.state.lockerBoxId &&
+            this.props.closedKeyLockerBoxIds &&
+            this.props.closedKeyLockerBoxIds.includes(this.state.lockerBoxId) &&
+            (!prevProps.closedKeyLockerBoxIds || !prevProps.closedKeyLockerBoxIds.includes(this.state.lockerBoxId))
+        ) {
+            // Door just closed
+            this.setState({ waitingForClosure: false });
         }
     }
 
@@ -519,8 +535,64 @@ class CarwashDetailsDialog extends React.Component {
         );
     };
 
+    handleOpenLocker = async () => {
+        const { reservation, updateReservation, openSnackbar } = this.props;
+        this.setState({ lockerOpening: true, lockerBoxName: reservation.keyLockerBox?.name || '' });
+
+        try {
+            // Open locker by reservation
+            await apiFetch(`api/keylocker/pick-up/by-reservation?reservationId=${reservation.id}&updateState=false`, {
+                method: 'POST',
+            });
+
+            reservation.keyLockerBox = null;
+            updateReservation(reservation);
+
+            openSnackbar('Locker opened.');
+        } catch (error) {
+            openSnackbar(error?.message || 'Failed to open locker.');
+        } finally {
+            this.setState({ lockerOpening: false });
+        }
+    };
+
+    handleDropoffKey = async () => {
+        const { reservation, updateReservation, openSnackbar } = this.props;
+        this.setState({ lockerOpening: true, waitingForClosure: false });
+        try {
+            // Open available locker
+            const response = await apiFetch(`api/keylocker/open/available?reservationId=${reservation.id}`, {
+                method: 'POST',
+            });
+            if (response && response.name && response.boxId) {
+                reservation.keyLockerBox = { name: response.name, boxId: response.boxId };
+                updateReservation(reservation);
+                this.setState({
+                    lockerBoxName: response.name,
+                    lockerBoxId: response.boxId,
+                    waitingForClosure: true,
+                });
+                openSnackbar('Locker opened. Place your key inside.');
+            }
+        } catch (error) {
+            openSnackbar(error?.message || 'Failed to open locker.');
+        } finally {
+            this.setState({ lockerOpening: false });
+        }
+    };
+
     render() {
-        const { editLocation, garage, floor, seat, validationErrors, editServices } = this.state;
+        const {
+            editLocation,
+            garage,
+            floor,
+            seat,
+            validationErrors,
+            editServices,
+            lockerOpening,
+            waitingForClosure,
+            lockerBoxName,
+        } = this.state;
         const { reservation, configuration, open, snackbarOpen, classes } = this.props;
 
         return (
@@ -584,11 +656,32 @@ class CarwashDetailsDialog extends React.Component {
                             <Typography variant="subtitle1" gutterBottom>
                                 {reservation.keyLockerBox
                                     ? `Key locker: ${reservation.keyLockerBox.name}`
-                                    : 'Key not dropped off'}
+                                    : `Key not dropped off ${lockerBoxName ? `(was in ${lockerBoxName})` : ''}`}
                             </Typography>
-                            <Button onClick={this.handleEditLocation} variant="outlined" startIcon={<LockOpenIcon />}>
-                                Open locker
-                            </Button>
+                            {waitingForClosure ? (
+                                <>
+                                    <CircularProgress size={32} color="primary" style={{ marginRight: 8 }} />
+                                    <Typography variant="body2">Waiting for door closure</Typography>
+                                </>
+                            ) : reservation.keyLockerBox ? (
+                                <Button
+                                    onClick={this.handleOpenLocker}
+                                    variant="outlined"
+                                    startIcon={<LockOpenIcon />}
+                                    disabled={lockerOpening}
+                                >
+                                    Open locker
+                                </Button>
+                            ) : reservation.state === State.WashInProgress ? (
+                                <Button
+                                    onClick={this.handleDropoffKey}
+                                    variant="outlined"
+                                    startIcon={<LockIcon />}
+                                    disabled={lockerOpening}
+                                >
+                                    Drop-off key
+                                </Button>
+                            ) : null}
                         </div>
                         <Chat
                             carWashChat
@@ -686,6 +779,7 @@ CarwashDetailsDialog.propTypes = {
     removeReservation: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
+    closedKeyLockerBoxIds: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
 const withMediaQuery =
