@@ -1,7 +1,7 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import apiFetch from '../Auth';
-import { Link, useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { withStyles } from '@mui/styles';
 import Alert from '@mui/material/Alert';
 import Card from '@mui/material/Card';
@@ -20,6 +20,7 @@ import Divider from '@mui/material/Divider';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
 import Tooltip from '@mui/material/Tooltip';
 import red from '@mui/material/colors/red';
 import { getStateName, getServiceName, State } from '../Constants';
@@ -92,25 +93,11 @@ function ReservationCard(props) {
     const { classes, reservation, configuration, admin, style, closedKeyLockerBoxIds } = props;
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [dropoffDialogOpen, setDropoffDialogOpen] = useState(props.dropoffDialogOpen);
-    const [garage, setGarage] = useState('');
-    const [floor, setFloor] = useState('');
-    const [spot, setSpot] = useState('');
-    const [validationErrors, setValidationErrors] = useState({ garage: false, floor: false });
-    const history = useHistory();
-
-    useEffect(() => {
-        if (reservation.location) {
-            const [g, f, s] = reservation.location.split('/');
-            setGarage(g || '');
-            setFloor(f || '');
-            setSpot(s || '');
-        }
-    }, [props.lastSettings.garage, reservation.location]);
+    const [openLockerDialogOpen, setOpenLockerDialogOpen] = useState(false);
 
     const getButtons = () => {
         switch (reservation.state) {
             case 0:
-            case 1:
                 if (moment(reservation.startDate).isSame(moment(), 'day')) {
                     return (
                         <CardActions className={classes.cardActions}>
@@ -129,7 +116,7 @@ function ReservationCard(props) {
                                 size="small"
                                 color="secondary"
                                 className={classes.dangerButton}
-                                onClick={handleCancelDialogOpen}
+                                onClick={() => setCancelDialogOpen(true)}
                             >
                                 Cancel
                             </Button>
@@ -146,23 +133,58 @@ function ReservationCard(props) {
                             size="small"
                             color="secondary"
                             className={classes.dangerButton}
-                            onClick={handleCancelDialogOpen}
+                            onClick={() => setCancelDialogOpen(true)}
                         >
                             Cancel
                         </Button>
                     </CardActions>
                 );
+            case 1:
+                return (
+                    <CardActions className={classes.cardActions}>
+                        <Button
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                            onClick={() => setDropoffDialogOpen(true)}
+                        >
+                            Confirm key drop-off
+                        </Button>
+                        <Button component={Link} to={`/reserve/${reservation.id}`} size="small" color="primary">
+                            Edit
+                        </Button>
+                        <Button
+                            size="small"
+                            color="secondary"
+                            className={classes.dangerButton}
+                            onClick={() => setCancelDialogOpen(true)}
+                        >
+                            Cancel
+                        </Button>
+                    </CardActions>
+                );
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+                if (reservation.keyLockerBox) {
+                    return (
+                        <CardActions className={classes.cardActions}>
+                            <Button
+                                size="small"
+                                color="primary"
+                                variant="outlined"
+                                onClick={() => setOpenLockerDialogOpen(true)}
+                            >
+                                Open key locker
+                            </Button>
+                        </CardActions>
+                    );
+                }
+                return null;
             default:
                 return null;
         }
-    };
-
-    const handleCancelDialogOpen = () => {
-        setCancelDialogOpen(true);
-    };
-
-    const handleCancelDialogClose = () => {
-        setCancelDialogOpen(false);
     };
 
     const handleCancelConfirmed = () => {
@@ -181,6 +203,24 @@ function ReservationCard(props) {
                 props.openSnackbar(error);
             }
         );
+    };
+
+    const handleOpenLockerConfirmed = async () => {
+        setOpenLockerDialogOpen(false);
+        try {
+            reservation.keyLockerBox = null; // Clear the locker box from the reservation
+            if (reservation.state == State.CarKeyLeftAndLocationConfirmed)
+                reservation.state = State.ReminderSentWaitingForKey;
+            props.updateReservation(reservation);
+
+            await apiFetch(`api/keylocker/pick-up/by-reservation?reservationId=${reservation.id}`, {
+                method: 'POST',
+            });
+
+            props.openSnackbar('Locker opened.');
+        } catch (error) {
+            props.openSnackbar(error?.message || 'Failed to open locker.');
+        }
     };
 
     return (
@@ -256,6 +296,19 @@ function ReservationCard(props) {
                                 <Typography gutterBottom>{formatLocation(reservation.location)}</Typography>
                             </React.Fragment>
                         )}
+                        {reservation.keyLockerBox && (
+                            <React.Fragment>
+                                <Typography
+                                    variant="caption"
+                                    color="textSecondary"
+                                    gutterBottom
+                                    style={{ marginTop: 8 }}
+                                >
+                                    Key locker
+                                </Typography>
+                                <Typography gutterBottom>{reservation.keyLockerBox.name}</Typography>
+                            </React.Fragment>
+                        )}
                         {admin && (
                             <React.Fragment>
                                 <Typography
@@ -291,13 +344,17 @@ function ReservationCard(props) {
             </Grow>
             <Dialog
                 open={cancelDialogOpen}
-                onClose={handleCancelDialogClose}
+                onClose={() => setCancelDialogOpen(false)}
                 aria-labelledby="cancel-dialog-title"
                 aria-describedby="cancel-dialog-title"
             >
                 <DialogTitle id="cancel-dialog-title">Cancel this reservation?</DialogTitle>
                 <DialogActions>
-                    <Button onClick={handleCancelDialogClose} color="primary" id="reservationcard-dontcancel-button">
+                    <Button
+                        onClick={() => setCancelDialogOpen(false)}
+                        color="primary"
+                        id="reservationcard-dontcancel-button"
+                    >
                         Don't cancel
                     </Button>
                     <Button
@@ -318,8 +375,27 @@ function ReservationCard(props) {
                 onClose={() => setDropoffDialogOpen(false)}
                 updateReservation={props.updateReservation}
                 openSnackbar={props.openSnackbar}
-                closedKeyLockerBoxIds={closedKeyLockerBoxIds} // Pass closedKeyLockerBoxIds to DropoffDialog
+                closedKeyLockerBoxIds={closedKeyLockerBoxIds}
             />
+            <Dialog
+                open={openLockerDialogOpen}
+                onClose={() => setOpenLockerDialogOpen(false)}
+                aria-labelledby="open-locker-dialog-title"
+                aria-describedby="open-locker-dialog-title"
+            >
+                <DialogTitle id="open-locker-dialog-title">Are you sure you want to open the key locker?</DialogTitle>
+                <DialogContent>
+                    <Typography>This will open the key locker assigned to your reservation.</Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenLockerDialogOpen(false)} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleOpenLockerConfirmed} color="primary" variant="contained" autoFocus>
+                        Confirm
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </ErrorBoundary>
     );
 }

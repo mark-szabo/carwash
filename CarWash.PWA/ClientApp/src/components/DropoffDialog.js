@@ -40,6 +40,7 @@ const styles = theme => ({
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
+        color: 'rgba(0, 0, 0, 0.87)',
         background: '#80d8ff',
         boxShadow: '0px 3px 1px -2px rgba(0,0,0,0.2),0px 2px 2px 0px rgba(0,0,0,0.14),0px 1px 5px 0px rgba(0,0,0,0.12)',
     },
@@ -139,6 +140,9 @@ function DropoffDialog({
         reservation.location = `${garage}/${floor}/${spot}`;
         const oldState = reservation.state;
         reservation.state = State.CarKeyLeftAndLocationConfirmed;
+        reservation.keyLockerBox = {};
+        reservation.keyLockerBox.name = openedBoxName;
+        reservation.keyLockerBox.boxId = openedBoxId;
 
         onClose();
 
@@ -168,7 +172,7 @@ function DropoffDialog({
         setOpeningLocker(true);
         try {
             const response = await apiFetch(
-                `/api/keylocker/open/available?reservationId=${reservation.id}&location=${garage}/${floor}/${spot}`,
+                `api/keylocker/open/available?reservationId=${reservation.id}&location=${garage}/${floor}/${spot}`,
                 {
                     method: 'POST',
                 }
@@ -188,7 +192,7 @@ function DropoffDialog({
 
     const handleOpenDoorAgain = async () => {
         try {
-            await apiFetch(`/api/keylocker/open/by-reservation?reservationId=${reservation.id}`, {
+            await apiFetch(`api/keylocker/open/by-reservation?reservationId=${reservation.id}`, {
                 method: 'POST',
             });
             openSnackbar('Locker opened again.');
@@ -202,7 +206,7 @@ function DropoffDialog({
     const handleCancel = () => {
         if (step === 3 || step === 4) {
             // Fire and forget, do not block dialog closure
-            apiFetch(`/api/keylocker/free/by-reservation?reservationId=${reservation.id}`, {
+            apiFetch(`api/keylocker/free/by-reservation?reservationId=${reservation.id}`, {
                 method: 'POST',
             });
         }
