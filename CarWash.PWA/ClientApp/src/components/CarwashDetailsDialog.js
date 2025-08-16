@@ -23,6 +23,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import MoneyOffIcon from '@mui/icons-material/MoneyOff';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
+import LockIcon from '@mui/icons-material/Lock';
 import { State, getServiceName, getAdminStateName, Service } from '../Constants';
 import { formatLocation, formatDate } from '../Helpers';
 import Chat from './Chat';
@@ -87,16 +89,6 @@ const styles = theme => ({
     subheader: {
         marginTop: theme.spacing(4),
     },
-    formControl: {
-        margin: `${theme.spacing(2)} ${theme.spacing(1)} 0 0`,
-        [theme.breakpoints.down('md')]: {
-            width: '100%',
-        },
-        [theme.breakpoints.up('md')]: {
-            minWidth: 100,
-            maxWidth: 200,
-        },
-    },
     saveButton: {
         margin: `${theme.spacing(2)} 0`,
     },
@@ -106,7 +98,15 @@ const styles = theme => ({
             backgroundColor: 'rgba(229,115,115,0.08)',
         },
     },
-    pushActionsUp: {},
+    dialogLine: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: theme.spacing(2),
+        '& > *:not(:last-child)': {
+            marginRight: theme.spacing(2),
+        },
+    },
 });
 
 class CarwashDetailsDialog extends React.Component {
@@ -196,16 +196,16 @@ class CarwashDetailsDialog extends React.Component {
                 return null;
             case State.WashInProgress:
                 return (
-                    <React.Fragment>
+                    <>
                         <Button onClick={this.handleBackToWaiting}>Back to waiting</Button>
-                    </React.Fragment>
+                    </>
                 );
             case State.NotYetPaid:
             case State.Done:
                 return (
-                    <React.Fragment>
+                    <>
                         <Button onClick={this.handleBackToWash}>Back to wash</Button>
-                    </React.Fragment>
+                    </>
                 );
             default:
                 return null;
@@ -524,8 +524,9 @@ class CarwashDetailsDialog extends React.Component {
         const { reservation, configuration, open, snackbarOpen, classes } = this.props;
 
         return (
-            <React.Fragment>
+            <>
                 <Dialog open={open} onClose={this.handleClose} fullScreen={this.props.fullScreen}>
+                    <DialogTitle>{reservation.vehiclePlateNumber}</DialogTitle>
                     <DialogContent className={classes.details}>
                         <div className={classes.closeButton}>
                             <IconButton onClick={this.handleCancelDialogOpen} aria-label="Delete" size="large">
@@ -538,21 +539,24 @@ class CarwashDetailsDialog extends React.Component {
                                 <CloseIcon />
                             </IconButton>
                         </div>
-                        <Typography variant="h3">{reservation.vehiclePlateNumber}</Typography>
-                        <Typography color="textSecondary" component="span" style={{ margin: '8px 0' }}>
+                        <Typography color="textSecondary" component="span" style={{ margin: '8px 0 32px 0' }}>
                             {getAdminStateName(reservation.state)} • {formatDate(reservation)} •{' '}
                             {reservation.user.firstName} {reservation.user.lastName} • {reservation.user.company}
                         </Typography>
                         <br />
                         {!editLocation ? (
-                            <Typography variant="subtitle1" gutterBottom>
-                                {reservation.location ? formatLocation(reservation.location) : 'Location not set'}
-                                <IconButton onClick={this.handleEditLocation} aria-label="Edit location" size="large">
-                                    <EditIcon />
-                                </IconButton>
-                            </Typography>
+                            <div className={classes.dialogLine}>
+                                <Typography variant="subtitle1" gutterBottom>
+                                    {reservation.location
+                                        ? `Location: ${formatLocation(reservation.location)}`
+                                        : 'Location not set'}
+                                </Typography>
+                                <Button onClick={this.handleEditLocation} variant="outlined" startIcon={<EditIcon />}>
+                                    Edit location
+                                </Button>
+                            </div>
                         ) : (
-                            <React.Fragment>
+                            <>
                                 <LocationSelector
                                     configuration={configuration}
                                     garage={garage}
@@ -574,8 +578,18 @@ class CarwashDetailsDialog extends React.Component {
                                         <SaveIcon />
                                     </IconButton>
                                 )}
-                            </React.Fragment>
+                            </>
                         )}
+                        <div className={classes.dialogLine}>
+                            <Typography variant="subtitle1" gutterBottom>
+                                {reservation.keyLockerBox
+                                    ? `Key locker: ${reservation.keyLockerBox.name}`
+                                    : 'Key not dropped off'}
+                            </Typography>
+                            <Button onClick={this.handleEditLocation} variant="outlined" startIcon={<LockOpenIcon />}>
+                                Open locker
+                            </Button>
+                        </div>
                         <Chat
                             carWashChat
                             reservation={reservation}
@@ -586,7 +600,7 @@ class CarwashDetailsDialog extends React.Component {
                             Selected services
                         </Typography>
                         {!editServices ? (
-                            <React.Fragment>
+                            <>
                                 {reservation.services.map(serviceId => (
                                     <Chip
                                         label={getServiceName(configuration, serviceId)}
@@ -597,9 +611,9 @@ class CarwashDetailsDialog extends React.Component {
                                 <IconButton onClick={this.handleEditServices} aria-label="Add service" size="large">
                                     <EditIcon />
                                 </IconButton>
-                            </React.Fragment>
+                            </>
                         ) : (
-                            <React.Fragment>
+                            <>
                                 {reservation.services.map(serviceId => (
                                     <Chip
                                         label={getServiceName(configuration, serviceId)}
@@ -624,7 +638,7 @@ class CarwashDetailsDialog extends React.Component {
                                 >
                                     <SaveIcon />
                                 </IconButton>
-                            </React.Fragment>
+                            </>
                         )}
                         {this.getFab(reservation.state)}
                     </DialogContent>
@@ -657,7 +671,7 @@ class CarwashDetailsDialog extends React.Component {
                         </Button>
                     </DialogActions>
                 </Dialog>
-            </React.Fragment>
+            </>
         );
     }
 }
