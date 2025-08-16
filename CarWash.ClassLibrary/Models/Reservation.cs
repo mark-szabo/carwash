@@ -68,6 +68,11 @@ namespace CarWash.ClassLibrary.Models
         public string? KeyLockerBoxId { get; set; }
 
         /// <summary>
+        /// Gets or sets the virtual KeyLockerBox object for the reservation.
+        /// </summary>
+        public virtual KeyLockerBox? KeyLockerBox { get; set; }
+
+        /// <summary>
         /// Gets or sets the reservation state.
         /// </summary>
         public State State { get; set; }

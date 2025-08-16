@@ -1,6 +1,6 @@
 ﻿#nullable enable
 using CarWash.ClassLibrary;
-using CarWash.ClassLibrary.Migrations;
+using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Hubs;
@@ -120,9 +120,9 @@ namespace CarWash.PWA.Controllers
             try
             {
                 var box = await keyLockerService.OpenBoxBySerialAsync(
-                    lockerId, 
-                    boxSerial, 
-                    _user.Id, 
+                    lockerId,
+                    boxSerial,
+                    _user.Id,
                     async id => await keyLockerHub.Clients.User(_user.Id).SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxClosed, id));
 
                 await keyLockerHub.Clients.All.SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxOpened, box.Id);
@@ -230,7 +230,7 @@ namespace CarWash.PWA.Controllers
                 reservation.KeyLockerBoxId = box.Id;
                 await context.SaveChangesAsync();
 
-                return Ok(new BoxResponse(box.Id, box.BoxSerial, box.Building, box.Floor, box.Name));
+                return Ok(new KeyLockerBoxViewModel(box));
             }
             catch (InvalidOperationException ex)
             {
@@ -264,6 +264,7 @@ namespace CarWash.PWA.Controllers
         {
             // Find the reservation by ID
             var reservation = await context.Reservation
+                .Include(r => r.User) // Include User to check permissions
                 .AsNoTracking()
                 .FirstOrDefaultAsync(r => r.Id == reservationId);
 
@@ -277,18 +278,99 @@ namespace CarWash.PWA.Controllers
                 return BadRequest("Reservation does not have an associated key locker box.");
             }
 
-            // Only allow if current user is CarWash admin or the reservation's user
-            if (reservation.UserId != _user.Id && !_user.IsCarwashAdmin)
+            // Only allow if current user is CarWash admin or the reservation's user, or admin of the user's company
+            if (!_user.IsCarwashAdmin && reservation.UserId != _user.Id && !(_user.IsAdmin && reservation?.User?.Company == _user.Company))
             {
                 return Forbid();
             }
 
-            var box = await keyLockerService.OpenBoxByIdAsync(
-                reservation.KeyLockerBoxId, 
-                _user.Id, 
+            try
+            {
+                var box = await keyLockerService.OpenBoxByIdAsync(
+                reservation.KeyLockerBoxId,
+                _user.Id,
+                async id => await keyLockerHub.Clients.User(_user.Id).SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxClosed, id));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                telemetryClient.TrackException(ex);
+                return StatusCode(500, "An error occurred while trying to open the box.");
+            }
+
+            await keyLockerHub.Clients.All.SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxOpened, reservation.KeyLockerBoxId);
+
+            return NoContent();
+        }
+
+        // POST api/keylocker/pick-up/by-reservation
+        /// <summary>
+        /// Open a box and pick up key by reservation ID. This endpoint will open the box, free it up, and move back the reservation's stage if washing has not yet started.
+        /// </summary>
+        /// <param name="reservationId"> The ID of the reservation.</param>
+        /// <returns>200 OK if the box was opened successfully, 404 Not Found if the reservation does not exist, 400 Bad Request if the reservation does not have an associated key locker box, or 403 Forbidden if the user is not authorized to open the box.</returns>
+        /// <response code="204">OK</response>
+        /// <response code="400">BadRequest if the reservation does not have an associated key locker box.</response>
+        /// <response code="403">Forbidden if the user is not authorized to open the box.</response>
+        /// <response code="404">NotFound if the reservation with the specified ID does not exist.</response>
+        [HttpPost("pick-up/by-reservation")]
+        public async Task<IActionResult> PickUpByReservationId([FromQuery] string reservationId)
+        {
+            // Find the reservation by ID
+            var reservation = await context.Reservation
+                .Include(r => r.User) // Include User to check permissions
+                .FirstOrDefaultAsync(r => r.Id == reservationId);
+
+            if (reservation == null)
+            {
+                return NotFound($"Reservation with ID '{reservationId}' not found.");
+            }
+
+            if (string.IsNullOrEmpty(reservation.KeyLockerBoxId))
+            {
+                return BadRequest("Reservation does not have an associated key locker box.");
+            }
+
+            // Only allow if current user is CarWash admin or the reservation's user, or admin of the user's company
+            if (!_user.IsCarwashAdmin && reservation.UserId != _user.Id && !(_user.IsAdmin && reservation?.User?.Company == _user.Company))
+            {
+                return Forbid();
+            }
+            
+            try
+            {
+                var box = await keyLockerService.OpenBoxByIdAsync(
+                reservation.KeyLockerBoxId,
+                _user.Id,
                 async id => await keyLockerHub.Clients.User(_user.Id).SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxClosed, id));
 
-            await keyLockerHub.Clients.All.SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxOpened, box.Id);
+                // Free up the box after opening
+                await keyLockerService.FreeUpBoxAsync(box.Id, _user.Id);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                telemetryClient.TrackException(ex);
+                return StatusCode(500, "An error occurred while trying to pick up the key.");
+            }
+
+            reservation.KeyLockerBoxId = null;
+
+            // If the reservation is not in the washing stage, move it back to the previous stage
+            if (reservation.State == State.DropoffAndLocationConfirmed)
+            {
+                reservation.State = State.ReminderSentWaitingForKey;                
+            }
+
+            await context.SaveChangesAsync();
+
+            await keyLockerHub.Clients.All.SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxOpened, reservation.KeyLockerBoxId);
 
             return NoContent();
         }
@@ -308,7 +390,6 @@ namespace CarWash.PWA.Controllers
         {
             // Find the reservation by ID
             var reservation = await context.Reservation
-                .AsNoTracking()
                 .FirstOrDefaultAsync(r => r.Id == reservationId);
 
             if (reservation == null)
@@ -340,6 +421,9 @@ namespace CarWash.PWA.Controllers
                 telemetryClient.TrackException(ex);
                 return StatusCode(500, "An error occurred while trying to free up the box.");
             }
+
+            reservation.KeyLockerBoxId = null;
+            await context.SaveChangesAsync();
 
             return NoContent();
         }
@@ -384,5 +468,18 @@ namespace CarWash.PWA.Controllers
     /// <param name="Building">Name of the building where the key locker is located.</param>
     /// <param name="Floor">Name of the floor where the key locker is located.</param>
     /// <param name="Name">Friendly name of the box, used to identify it.</param>
-    public record BoxResponse(string BoxId, int BoxSerial, string Building, string Floor, string Name);
+    public record KeyLockerBoxViewModel(string BoxId, int BoxSerial, string Building, string Floor, string Name)
+    {
+        /// <summary>
+        /// ViewModel for a key locker box response.
+        /// </summary>
+        /// <param name="box"></param>
+        public KeyLockerBoxViewModel(KeyLockerBox box) : this(
+            box.Id,
+            box.BoxSerial,
+            box.Building,
+            box.Floor,
+            box.Name)
+        { }
+    }
 }

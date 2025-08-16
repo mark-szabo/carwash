@@ -60,6 +60,7 @@ namespace CarWash.PWA.Controllers
         public IEnumerable<ReservationViewModel> GetReservations()
         {
             return _context.Reservation
+                .Include(r => r.KeyLockerBox)
                 .Where(r => r.UserId == _user.Id)
                 .OrderByDescending(r => r.StartDate)
                 .Select(reservation => new ReservationViewModel(reservation));
@@ -343,7 +344,7 @@ namespace CarWash.PWA.Controllers
                     if (_user.IsAdmin && reservationUser.Company != _user.Company)
                     {
                         _telemetryClient.TrackTrace(
-                            "Forbid: Admin cannot reserve in the name of compnaies' users.",
+                            "Forbid: Admin cannot reserve in the name of other companies' users.",
                             Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
                             new Dictionary<string, string>
                             {
@@ -2008,7 +2009,7 @@ namespace CarWash.PWA.Controllers
         string UserId,
         string VehiclePlateNumber,
         string Location,
-        string KeyLockerBoxId,
+        KeyLockerBoxViewModel? KeyLockerBox,
         State State,
         List<int> Services,
         bool Private,
@@ -2022,7 +2023,7 @@ namespace CarWash.PWA.Controllers
                 reservation.UserId,
                 reservation.VehiclePlateNumber,
                 reservation.Location,
-                reservation.KeyLockerBoxId,
+                reservation.KeyLockerBox != null ? new KeyLockerBoxViewModel(reservation.KeyLockerBox) : null,
                 reservation.State,
                 reservation.Services,
                 reservation.Private,
