@@ -11,7 +11,7 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Gets or sets the message of the comment.
         /// </summary>
-        public string Message { get; set; }
+        public required string Message { get; set; }
 
         /// <summary>
         /// Gets or sets the role of the comment author.
@@ -26,6 +26,6 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Gets or sets the user ID of the comment author.
         /// </summary>
-        public string UserId { get; set; }
+        public string? UserId { get; set; }
     }
 }
