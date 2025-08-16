@@ -14,11 +14,6 @@ import red from '@mui/material/colors/red';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
-import InputLabel from '@mui/material/InputLabel';
-import FormControl from '@mui/material/FormControl';
-import TextField from '@mui/material/TextField';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
 import LocalCarWashIcon from '@mui/icons-material/LocalCarWash';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
@@ -31,6 +26,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { State, getServiceName, getAdminStateName, Service } from '../Constants';
 import { formatLocation, formatDate } from '../Helpers';
 import Chat from './Chat';
+import LocationSelector from './LocationSelector';
 
 const styles = theme => ({
     chip: {
@@ -557,65 +553,26 @@ class CarwashDetailsDialog extends React.Component {
                             </Typography>
                         ) : (
                             <React.Fragment>
-                                <FormControl className={classes.formControl} error={validationErrors.garage}>
-                                    <InputLabel htmlFor="garage">Building</InputLabel>
-                                    <Select
-                                        required
-                                        value={garage}
-                                        onChange={this.handleGarageChange}
-                                        inputProps={{
-                                            name: 'garage',
-                                            id: 'garage',
-                                        }}
-                                    >
-                                        {configuration.garages.map(g => (
-                                            <MenuItem value={g.building} key={g.building}>
-                                                {g.building}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                                {garage && configuration.garages.some(g => g.building === garage) && (
-                                    <FormControl className={classes.formControl} error={validationErrors.floor}>
-                                        <InputLabel htmlFor="floor">Floor</InputLabel>
-                                        <Select
-                                            required
-                                            value={floor}
-                                            onChange={this.handleFloorChange}
-                                            inputProps={{
-                                                name: 'floor',
-                                                id: 'floor',
-                                            }}
-                                        >
-                                            {configuration.garages
-                                                .find(g => g.building === garage)
-                                                .floors.map(f => (
-                                                    <MenuItem value={f} key={f}>
-                                                        {f}
-                                                    </MenuItem>
-                                                ))}
-                                        </Select>
-                                    </FormControl>
-                                )}
+                                <LocationSelector
+                                    configuration={configuration}
+                                    garage={garage}
+                                    floor={floor}
+                                    spot={seat}
+                                    validationErrors={validationErrors}
+                                    onGarageChange={this.handleGarageChange}
+                                    onFloorChange={this.handleFloorChange}
+                                    onSpotChange={this.handleSeatChange}
+                                    textFieldWidth={132}
+                                />
                                 {floor && (
-                                    <React.Fragment>
-                                        <TextField
-                                            id="seat"
-                                            label="Spot (optional)"
-                                            value={seat}
-                                            className={classes.textField}
-                                            margin="normal"
-                                            onChange={this.handleSeatChange}
-                                        />
-                                        <IconButton
-                                            onClick={this.handleUpdateLocation}
-                                            aria-label="Save location"
-                                            size="large"
-                                            className={classes.saveButton}
-                                        >
-                                            <SaveIcon />
-                                        </IconButton>
-                                    </React.Fragment>
+                                    <IconButton
+                                        onClick={this.handleUpdateLocation}
+                                        aria-label="Save location"
+                                        size="large"
+                                        className={classes.saveButton}
+                                    >
+                                        <SaveIcon />
+                                    </IconButton>
                                 )}
                             </React.Fragment>
                         )}
@@ -717,9 +674,13 @@ CarwashDetailsDialog.propTypes = {
     openSnackbar: PropTypes.func.isRequired,
 };
 
-const withMediaQuery = (...args) => Component => props => { // eslint-disable-line react/display-name
-    const mediaQuery = useMediaQuery(...args);
-    return <Component fullScreen={mediaQuery} {...props} />;
-};
+const withMediaQuery =
+    (...args) =>
+    Component =>
+    props => {
+        // eslint-disable-line react/display-name
+        const mediaQuery = useMediaQuery(...args);
+        return <Component fullScreen={mediaQuery} {...props} />;
+    };
 
 export default withStyles(styles)(withMediaQuery(theme => theme.breakpoints.down('sm'))(CarwashDetailsDialog));

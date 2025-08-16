@@ -14,11 +14,10 @@ const styles = theme => ({
         [theme.breakpoints.down('md')]: {
             width: '100%',
         },
-        [theme.breakpoints.up('md')]: {
-            width: 176,
-        },
     },
 });
+
+const DEFAULT_WIDTH = 176;
 
 function LocationSelector({
     classes,
@@ -30,10 +29,21 @@ function LocationSelector({
     onGarageChange,
     onFloorChange,
     onSpotChange,
+    textFieldWidth,
 }) {
     return (
         <>
-            <FormControl className={classes.formControl} error={validationErrors.garage}>
+            <FormControl
+                className={classes.formControl}
+                error={validationErrors.garage}
+                sx={{
+                    width: {
+                        md: textFieldWidth || DEFAULT_WIDTH,
+                        lg: textFieldWidth || DEFAULT_WIDTH,
+                        xl: textFieldWidth || DEFAULT_WIDTH,
+                    },
+                }}
+            >
                 <InputLabel id="garageLabel">Building</InputLabel>
                 <Select
                     id="garage"
@@ -55,7 +65,17 @@ function LocationSelector({
                 </Select>
             </FormControl>
             {garage && configuration.garages.some(g => g.building === garage) && (
-                <FormControl className={classes.formControl} error={validationErrors.floor}>
+                <FormControl
+                    className={classes.formControl}
+                    error={validationErrors.floor}
+                    sx={{
+                        width: {
+                            md: textFieldWidth || DEFAULT_WIDTH,
+                            lg: textFieldWidth || DEFAULT_WIDTH,
+                            xl: textFieldWidth || DEFAULT_WIDTH,
+                        },
+                    }}
+                >
                     <InputLabel id="floorLabel">Floor</InputLabel>
                     <Select
                         id="floor"
@@ -87,6 +107,13 @@ function LocationSelector({
                     className={classes.formControl}
                     margin="normal"
                     onChange={onSpotChange}
+                    sx={{
+                        width: {
+                            md: textFieldWidth || DEFAULT_WIDTH,
+                            lg: textFieldWidth || DEFAULT_WIDTH,
+                            xl: textFieldWidth || DEFAULT_WIDTH,
+                        },
+                    }}
                 />
             )}
         </>
@@ -106,6 +133,7 @@ LocationSelector.propTypes = {
     onGarageChange: PropTypes.func.isRequired,
     onFloorChange: PropTypes.func.isRequired,
     onSpotChange: PropTypes.func.isRequired,
+    textFieldWidth: PropTypes.number,
 };
 
 export default withStyles(styles)(LocationSelector);

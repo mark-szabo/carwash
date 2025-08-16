@@ -19,9 +19,6 @@ import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
 import TextField from '@mui/material/TextField';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
@@ -33,6 +30,7 @@ import { Service, NotificationChannel, getServiceName } from '../Constants';
 import './Reserve.css';
 import ServiceDetailsTable from './ServiceDetailsTable';
 import Spinner from './Spinner';
+import LocationSelector from './LocationSelector';
 
 const styles = theme => ({
     stepper: {
@@ -213,7 +211,7 @@ class Reserve extends TrackedComponent {
             );
         } else {
             const lastSelectedServices = this.props.lastSettings.services || [];
-                      
+
             // if exterior, should include prewash and wheel cleaning too
             if (lastSelectedServices.includes(Service.Exterior)) {
                 this.setServiceSelection(lastSelectedServices, Service.Prewash, true);
@@ -322,9 +320,9 @@ class Reserve extends TrackedComponent {
         const i = services.indexOf(selectedServiceId);
 
         // remove if found in array
-        if ((i >= 0) && !shouldContain) {
+        if (i >= 0 && !shouldContain) {
             services.splice(i, 1);
-        } else if ((i < 0) && shouldContain) {
+        } else if (i < 0 && shouldContain) {
             services.push(selectedServiceId);
         }
 
@@ -341,7 +339,10 @@ class Reserve extends TrackedComponent {
                 this.setServiceSelection(selectedServices, Service.Prewash, true);
                 this.setServiceSelection(selectedServices, Service.WheelCleaning, true);
             }
-            if ((service.id === Service.Prewash || service.id === Service.WheelCleaning) && !selectedServices.includes(service.id)) {
+            if (
+                (service.id === Service.Prewash || service.id === Service.WheelCleaning) &&
+                !selectedServices.includes(service.id)
+            ) {
                 this.setServiceSelection(selectedServices, Service.Exterior, false);
             }
 
@@ -352,13 +353,18 @@ class Reserve extends TrackedComponent {
                 this.setServiceSelection(selectedServices, Service.WheelCleaning, true);
                 this.setServiceSelection(selectedServices, Service.Interior, true);
             }
-            if ((service.id === Service.Exterior || service.id === Service.Interior) && !selectedServices.includes(service.id)) {
+            if (
+                (service.id === Service.Exterior || service.id === Service.Interior) &&
+                !selectedServices.includes(service.id)
+            ) {
                 this.setServiceSelection(selectedServices, Service.Carpet, false);
             }
 
             // cannot have both AC cleaning
-            if (service.id === Service.AcCleaningBomba) this.setServiceSelection(selectedServices, Service.AcCleaningOzon, false);
-            if (service.id === Service.AcCleaningOzon) this.setServiceSelection(selectedServices, Service.AcCleaningBomba, false);
+            if (service.id === Service.AcCleaningBomba)
+                this.setServiceSelection(selectedServices, Service.AcCleaningOzon, false);
+            if (service.id === Service.AcCleaningOzon)
+                this.setServiceSelection(selectedServices, Service.AcCleaningBomba, false);
 
             return { selectedServices };
         });
@@ -367,20 +373,22 @@ class Reserve extends TrackedComponent {
     handleServiceSelectionComplete = () => {
         this.setState(state => ({
             activeStep: 1,
-            servicesStepLabel: state.selectedServices
-                .map(s => getServiceName(this.props.configuration, s))
-                .join(', '),
+            servicesStepLabel: state.selectedServices.map(s => getServiceName(this.props.configuration, s)).join(', '),
         }));
     };
 
-    handleDateSelectionComplete = (date) => {
+    handleDateSelectionComplete = date => {
         if (!date) return;
         const selectedDate = moment(date);
 
         this.setState({
             activeStep: 2,
             selectedDate,
-            disabledSlots: [this.isTimeNotAvailable(selectedDate, 8), this.isTimeNotAvailable(selectedDate, 11), this.isTimeNotAvailable(selectedDate, 14)],
+            disabledSlots: [
+                this.isTimeNotAvailable(selectedDate, 8),
+                this.isTimeNotAvailable(selectedDate, 11),
+                this.isTimeNotAvailable(selectedDate, 14),
+            ],
             dateStepLabel: selectedDate.format('MMMM D, YYYY'),
             dateSelected: true,
         });
@@ -425,7 +433,9 @@ class Reserve extends TrackedComponent {
 
     isTimeNotAvailable = (date, time) => {
         date.hours(time);
-        return this.state.notAvailableTimes.filter(notAvailableTime => notAvailableTime.isSame(date, 'hour')).length > 0;
+        return (
+            this.state.notAvailableTimes.filter(notAvailableTime => notAvailableTime.isSame(date, 'hour')).length > 0
+        );
     };
 
     handlePlateNumberChange = event => {
@@ -530,7 +540,8 @@ class Reserve extends TrackedComponent {
             },
         }).then(
             data => {
-                if (this.props.user.notificationChannel === NotificationChannel.NotSet) this.props.openNotificationDialog();
+                if (this.props.user.notificationChannel === NotificationChannel.NotSet)
+                    this.props.openNotificationDialog();
 
                 this.setState({
                     loading: false,
@@ -573,20 +584,28 @@ class Reserve extends TrackedComponent {
 
         for (const serviceGroup in serviceGroups) {
             if (serviceGroups && typeof serviceGroups === 'object' && Object.hasOwn(serviceGroups, serviceGroup)) {
-                jsx.push(<div key={serviceGroup}><Typography variant="caption">{serviceGroup}</Typography></div>);
-                jsx.push(serviceGroups[serviceGroup]
-                    .filter(s => s.hidden === false)
-                    .map(service => (
-                        <span key={service.id}>
-                            <Chip
-                                key={service.id}
-                                label={service.name}
-                                onClick={this.handleServiceChipClick(service)}
-                                className={selectedServices.includes(service.id) ? classes.selectedChip : classes.chip}
-                                id={`reserve-${service.name}-service-chip`}
-                            />
-                        </span>
-                    )));
+                jsx.push(
+                    <div key={serviceGroup}>
+                        <Typography variant="caption">{serviceGroup}</Typography>
+                    </div>
+                );
+                jsx.push(
+                    serviceGroups[serviceGroup]
+                        .filter(s => s.hidden === false)
+                        .map(service => (
+                            <span key={service.id}>
+                                <Chip
+                                    key={service.id}
+                                    label={service.name}
+                                    onClick={this.handleServiceChipClick(service)}
+                                    className={
+                                        selectedServices.includes(service.id) ? classes.selectedChip : classes.chip
+                                    }
+                                    id={`reserve-${service.name}-service-chip`}
+                                />
+                            </span>
+                        ))
+                );
                 jsx.push(<br />);
             }
         }
@@ -604,7 +623,7 @@ class Reserve extends TrackedComponent {
             if (this.state.reservationPercentageDataArrived) {
                 if (!this.state.reservationPercentage[i]) freeSlotsText = '(unknown free slots)';
                 else {
-                    freeSlots = this.state.reservationPercentage[i].freeCapacity; 
+                    freeSlots = this.state.reservationPercentage[i].freeCapacity;
                     freeSlotsText = `(~${freeSlots} free slots)`;
                 }
             }
@@ -653,8 +672,8 @@ class Reserve extends TrackedComponent {
         const today = moment();
         const yearFromToday = moment().add(1, 'year');
         const isDateToday = selectedDate?.isSame(today, 'day');
-        
-        const shouldDisableDate = (date) => {
+
+        const shouldDisableDate = date => {
             const dayOfWeek = date.day();
             if (dayOfWeek === 0 || dayOfWeek === 6) return true;
 
@@ -673,7 +692,9 @@ class Reserve extends TrackedComponent {
                         <Typography variant="h6" gutterBottom className={classes.errorText}>
                             Connect to the Internet
                         </Typography>
-                        <Typography className={classes.errorText}>You must be connected to make a new reservation.</Typography>
+                        <Typography className={classes.errorText}>
+                            You must be connected to make a new reservation.
+                        </Typography>
                     </div>
                 </div>
             );
@@ -687,7 +708,9 @@ class Reserve extends TrackedComponent {
                         <Typography variant="h6" gutterBottom className={classes.errorText}>
                             Limit reached
                         </Typography>
-                        <Typography className={classes.errorText}>You cannot have more than two concurrent active reservations.</Typography>
+                        <Typography className={classes.errorText}>
+                            You cannot have more than two concurrent active reservations.
+                        </Typography>
                     </div>
                 </div>
             );
@@ -768,8 +791,8 @@ class Reserve extends TrackedComponent {
                     <StepLabel>{timeStepLabel}</StepLabel>
                     <StepContent>
                         <Alert variant="outlined" severity="info" className={classes.infoAlert}>
-                            Drop the car key before your slot starts to ensure timely completion.
-                            Ending times are indicative. For special requests, use the comment field.
+                            Drop the car key before your slot starts to ensure timely completion. Ending times are
+                            indicative. For special requests, use the comment field.
                         </Alert>
                         <FormControl component="fieldset">
                             <RadioGroup
@@ -809,13 +832,20 @@ class Reserve extends TrackedComponent {
                         ) : (
                             <div>
                                 <Alert variant="outlined" severity="warning" className={classes.infoAlert}>
-                                    Failure to specify a private reservation will result in the associated company being billed.
-                                    Users will be charged for overhead accounting costs incurred to correct errors.
+                                    Failure to specify a private reservation will result in the associated company being
+                                    billed. Users will be charged for overhead accounting costs incurred to correct
+                                    errors.
                                 </Alert>
                                 <div>
                                     <FormGroup className={classes.checkbox}>
                                         <FormControlLabel
-                                            control={<Checkbox checked={this.state.private} onChange={this.handlePrivateChange} value="private" />}
+                                            control={
+                                                <Checkbox
+                                                    checked={this.state.private}
+                                                    onChange={this.handlePrivateChange}
+                                                    value="private"
+                                                />
+                                            }
                                             label="Private (car is not company-owned)"
                                         />
                                     </FormGroup>
@@ -832,7 +862,7 @@ class Reserve extends TrackedComponent {
                                             handleHomeEndKeys
                                             id="user"
                                             options={Object.keys(users)}
-                                            getOptionLabel={(option) => users[option]}
+                                            getOptionLabel={option => users[option]}
                                             renderOption={(props, option) => {
                                                 const { key, ...optionProps } = props;
                                                 return (
@@ -841,9 +871,7 @@ class Reserve extends TrackedComponent {
                                                     </li>
                                                 );
                                             }}
-                                            renderInput={(params) => (
-                                                <TextField {...params} label="User" />
-                                            )}
+                                            renderInput={params => <TextField {...params} label="User" />}
                                         />
                                     </FormControl>
                                 )}
@@ -864,7 +892,12 @@ class Reserve extends TrackedComponent {
                                     <FormGroup className={classes.checkbox} style={{ marginTop: 8 }}>
                                         <FormControlLabel
                                             control={
-                                                <Checkbox checked={locationKnown} onChange={this.handleLocationKnown} value="locationKnown" color="primary" />
+                                                <Checkbox
+                                                    checked={locationKnown}
+                                                    onChange={this.handleLocationKnown}
+                                                    value="locationKnown"
+                                                    color="primary"
+                                                />
                                             }
                                             label="I have already parked the car"
                                         />
@@ -872,50 +905,19 @@ class Reserve extends TrackedComponent {
                                 </div>
                                 {locationKnown && (
                                     <>
-                                        <FormControl className={classes.formControl} error={validationErrors.garage}>
-                                            <InputLabel htmlFor="garage">Building</InputLabel>
-                                            <Select
-                                                required
-                                                value={garage}
-                                                onChange={this.handleGarageChange}
-                                                inputProps={{
-                                                    name: 'garage',
-                                                    id: 'garage',
-                                                }}
-                                            >
-                                                {configuration.garages.map(g => (
-                                                    <MenuItem value={g.building} key={g.building}>{g.building}</MenuItem>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
-                                        {garage && configuration.garages.some(g => g.building === garage) && (
-                                            <FormControl className={classes.formControl} error={validationErrors.floor}>
-                                                <InputLabel htmlFor="floor">Floor</InputLabel>
-                                                <Select
-                                                    required
-                                                    value={floor}
-                                                    onChange={this.handleFloorChange}
-                                                    inputProps={{
-                                                        name: 'floor',
-                                                        id: 'floor',
-                                                    }}
-                                                >
-                                                    {configuration.garages.find(g => g.building === garage).floors.map(f => (
-                                                        <MenuItem value={f} key={f}>{f}</MenuItem>
-                                                    ))}
-                                                </Select>
-                                            </FormControl>
-                                        )}
-                                        {floor && (
-                                            <TextField
-                                                id="reserve-seat"
-                                                label="Spot (optional)"
-                                                value={seat}
-                                                className={classes.textField}
-                                                margin="normal"
-                                                onChange={this.handleSeatChange}
+                                        <div style={{ marginLeft: 8 }}>
+                                            <LocationSelector
+                                                configuration={configuration}
+                                                garage={garage}
+                                                floor={floor}
+                                                spot={seat}
+                                                validationErrors={validationErrors}
+                                                onGarageChange={this.handleGarageChange}
+                                                onFloorChange={this.handleFloorChange}
+                                                onSpotChange={this.handleSeatChange}
+                                                textFieldWidth={200}
                                             />
-                                        )}
+                                        </div>
                                         {isDateToday && (
                                             <>
                                                 <FormGroup className={classes.checkbox} style={{ marginTop: 8 }}>
@@ -932,9 +934,13 @@ class Reserve extends TrackedComponent {
                                                     />
                                                 </FormGroup>
                                                 {dropoffPreConfirmed && (
-                                                    <Alert variant="outlined" severity="warning" className={classes.infoAlert}>
-                                                        You won't be able to modify your reservation after
-                                                        you click Reserve!
+                                                    <Alert
+                                                        variant="outlined"
+                                                        severity="warning"
+                                                        className={classes.infoAlert}
+                                                    >
+                                                        You won't be able to modify your reservation after you click
+                                                        Reserve!
                                                     </Alert>
                                                 )}
                                             </>
