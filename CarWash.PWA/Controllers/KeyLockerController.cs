@@ -1,4 +1,6 @@
 ﻿#nullable enable
+using System;
+using System.Threading.Tasks;
 using CarWash.ClassLibrary;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
@@ -10,8 +12,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using System;
-using System.Threading.Tasks;
 
 namespace CarWash.PWA.Controllers
 {
@@ -194,14 +194,14 @@ namespace CarWash.PWA.Controllers
         /// Open a random available box in a locker and update a reservation with the opened box.
         /// </summary>
         /// <param name="reservationId"> The ID of the reservation to update with the opened box.</param>
+        /// <param name="location">Car location to set on the reservation (optional).</param>
         /// <returns>200 OK with the ID of the opened box if successful, 400 Bad Request if the locker ID is invalid, 403 Forbidden if the user is not a carwash admin, or 500 Internal Server Error if an unexpected error occurs.</returns>
         /// <response code="200">OK with the opened box.</response>
         /// <response code="400">BadRequest if the locker ID is invalid.</response>
         [HttpPost("open/available")]
-        public async Task<ActionResult<string>> OpenRandomAvailableBox([FromQuery] string reservationId, [FromQuery] string location)
+        public async Task<ActionResult<string>> OpenRandomAvailableBox([FromQuery] string reservationId, [FromQuery] string? location)
         {
             if (string.IsNullOrEmpty(reservationId)) return BadRequest("Invalid reservation ID.");
-            if (string.IsNullOrEmpty(location)) return BadRequest("Invalid location.");
 
             var reservation = await context.Reservation.FirstOrDefaultAsync(r => r.Id == reservationId);
             if (reservation == null)
@@ -209,7 +209,10 @@ namespace CarWash.PWA.Controllers
                 return NotFound($"Reservation with ID '{reservationId}' not found.");
             }
 
-            reservation.Location = location;
+            if (!string.IsNullOrEmpty(location))
+            {
+                reservation.Location = location;
+            }
 
             if (reservation.Building == null)
             {
@@ -311,13 +314,14 @@ namespace CarWash.PWA.Controllers
         /// Open a box and pick up key by reservation ID. This endpoint will open the box, free it up, and move back the reservation's stage if washing has not yet started.
         /// </summary>
         /// <param name="reservationId"> The ID of the reservation.</param>
+        /// <param name="updateState">Indicates whether to update state of reservation back to waiting for key when the key is picked up.</param>
         /// <returns>200 OK if the box was opened successfully, 404 Not Found if the reservation does not exist, 400 Bad Request if the reservation does not have an associated key locker box, or 403 Forbidden if the user is not authorized to open the box.</returns>
         /// <response code="204">OK</response>
         /// <response code="400">BadRequest if the reservation does not have an associated key locker box.</response>
         /// <response code="403">Forbidden if the user is not authorized to open the box.</response>
         /// <response code="404">NotFound if the reservation with the specified ID does not exist.</response>
         [HttpPost("pick-up/by-reservation")]
-        public async Task<IActionResult> PickUpByReservationId([FromQuery] string reservationId)
+        public async Task<IActionResult> PickUpByReservationId([FromQuery] string reservationId, [FromQuery] bool updateState = true)
         {
             // Find the reservation by ID
             var reservation = await context.Reservation
@@ -339,7 +343,7 @@ namespace CarWash.PWA.Controllers
             {
                 return Forbid();
             }
-            
+
             try
             {
                 var box = await keyLockerService.OpenBoxByIdAsync(
@@ -363,9 +367,9 @@ namespace CarWash.PWA.Controllers
             reservation.KeyLockerBoxId = null;
 
             // If the reservation is not in the washing stage, move it back to the previous stage
-            if (reservation.State == State.DropoffAndLocationConfirmed)
+            if (updateState && reservation.State == State.DropoffAndLocationConfirmed)
             {
-                reservation.State = State.ReminderSentWaitingForKey;                
+                reservation.State = State.ReminderSentWaitingForKey;
             }
 
             await context.SaveChangesAsync();

@@ -549,6 +549,7 @@ namespace CarWash.PWA.Controllers
 
             var reservations = await _context.Reservation
                 .Include(r => r.User)
+                .Include(r => r.KeyLockerBox)
                 .Where(r => r.StartDate.Date >= DateTime.Today.AddDays(-3) || r.State != State.Done)
                 .OrderBy(r => r.StartDate)
                 .Select(reservation => new AdminReservationViewModel(reservation, new UserViewModel(reservation.User)))
@@ -2040,6 +2041,7 @@ namespace CarWash.PWA.Controllers
         UserViewModel User,
         string VehiclePlateNumber,
         string Location,
+        KeyLockerBoxViewModel? KeyLockerBox,
         State State,
         List<int> Services,
         bool? Private,
@@ -2054,6 +2056,7 @@ namespace CarWash.PWA.Controllers
                 user,
                 reservation.VehiclePlateNumber,
                 reservation.Location,
+                reservation.KeyLockerBox != null ? new KeyLockerBoxViewModel(reservation.KeyLockerBox) : null,
                 reservation.State,
                 reservation.Services,
                 reservation.Private,
