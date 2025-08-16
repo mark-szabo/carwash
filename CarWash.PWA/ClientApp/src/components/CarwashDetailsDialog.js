@@ -100,10 +100,10 @@ const styles = theme => ({
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
+        flexWrap: 'wrap',
+        rowGap: theme.spacing(1),
+        columnGap: theme.spacing(2),
         marginTop: theme.spacing(2),
-        '& > *:not(:last-child)': {
-            marginRight: theme.spacing(2),
-        },
     },
 });
 
