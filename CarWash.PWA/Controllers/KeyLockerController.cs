@@ -141,54 +141,6 @@ namespace CarWash.PWA.Controllers
             return NoContent();
         }
 
-        /*// POST: api/keylocker/{lockerId}/available/open
-        /// <summary>
-        /// Open a random available box in a locker and optionally update a reservation with the opened box.
-        /// </summary>
-        /// <param name="lockerId"> The ID of the locker containing the boxes.</param>
-        /// <param name="reservationId"> (Optional) The ID of the reservation to update with the opened box.</param>
-        /// <returns>200 OK with the ID of the opened box if successful, 400 Bad Request if the locker ID is invalid, 403 Forbidden if the user is not a carwash admin, or 500 Internal Server Error if an unexpected error occurs.</returns>
-        /// <response code="200">OK with the the opened box.</response>
-        /// <response code="400">BadRequest if the locker ID is invalid.</response>
-        [HttpPost("{lockerId}/available/open")]
-        public async Task<ActionResult<string>> OpenRandomAvailableBox([FromRoute] string lockerId, [FromQuery] string? reservationId = null)
-        {
-            if (string.IsNullOrEmpty(lockerId))
-            {
-                return BadRequest("Invalid locker ID.");
-            }
-
-            try
-            {
-                var box = await keyLockerService.OpenRandomAvailableBoxAsync(lockerId, _user.Id);
-
-                if (!string.IsNullOrEmpty(reservationId))
-                {
-                    var reservation = await context.Reservation.FirstOrDefaultAsync(r => r.Id == reservationId);
-                    if (reservation == null)
-                    {
-                        return NotFound($"Reservation with ID '{reservationId}' not found.");
-                    }
-
-                    reservation.KeyLockerBoxId = box.Id;
-                    context.Reservation.Update(reservation);
-                    await context.SaveChangesAsync();
-                }
-
-                return Ok(new BoxResponse(box.Id, box.BoxSerial, box.Building, box.Floor, box.Name));
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                // Log the exception and return a 500 Internal Server Error
-                telemetryClient.TrackException(ex);
-                return StatusCode(500, "An error occurred while trying to open the box.");
-            }
-        }*/
-
         // POST: api/keylocker/open/available
         /// <summary>
         /// Open a random available box in a locker and update a reservation with the opened box.
