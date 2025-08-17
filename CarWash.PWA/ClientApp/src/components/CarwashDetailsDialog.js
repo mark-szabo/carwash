@@ -213,14 +213,18 @@ class CarwashDetailsDialog extends React.Component {
             case State.WashInProgress:
                 return (
                     <>
-                        <Button onClick={this.handleBackToWaiting}>Back to waiting</Button>
+                        <Button onClick={this.handleBackToWaiting} color="bw">
+                            Back to waiting
+                        </Button>
                     </>
                 );
             case State.NotYetPaid:
             case State.Done:
                 return (
                     <>
-                        <Button onClick={this.handleBackToWash}>Back to wash</Button>
+                        <Button onClick={this.handleBackToWash} color="bw">
+                            Back to wash
+                        </Button>
                     </>
                 );
             default:
@@ -595,9 +599,52 @@ class CarwashDetailsDialog extends React.Component {
         } = this.state;
         const { reservation, configuration, open, snackbarOpen, classes } = this.props;
 
+        // Determine dark/light mode
+        const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        // Map reservation state to gradient backgrounds
+        const stateGradients = {
+            0: {
+                dark: 'linear-gradient(rgba(0, 0, 0, 0.35)), linear-gradient(135deg, #f3f4f6, #e5e7eb, #d1d5db, #9ca3af, #6b7280)',
+                light: 'linear-gradient(135deg, #f3f4f6, #e5e7eb, #d1d5db, #9ca3af, #6b7280)',
+            },
+            1: {
+                dark: 'linear-gradient(rgba(0, 0, 0, 0.35)), linear-gradient(135deg, #fff3b0, #ffe08a, #fbbf24, #f59e0b, #d97706)',
+                light: 'linear-gradient(135deg, #fff3b0, #ffe08a, #fbbf24, #f59e0b, #d97706)',
+            },
+            2: {
+                dark: 'linear-gradient(rgba(0, 0, 0, 0.35)), linear-gradient(135deg, #a7f3d0, #6ee7b7, #10b981, #059669, #065f46)',
+                light: 'linear-gradient(135deg, #a7f3d0, #6ee7b7, #10b981, #059669, #065f46)',
+            },
+            3: {
+                dark: 'linear-gradient(rgba(0, 0, 0, 0.35)), linear-gradient(135deg, #bfdbfe, #93c5fd, #5b95f3, #2563eb, #1e3a8a)',
+                light: 'linear-gradient(135deg, #bfdbfe, #93c5fd, #5b95f3, #2563eb, #1e3a8a)',
+            },
+            4: {
+                dark: 'linear-gradient(rgba(0, 0, 0, 0.35)), linear-gradient(135deg, #fecaca, #fca5a5, #f87171, #ef4444, #991b1b)',
+                light: 'linear-gradient(135deg, #fecaca, #fca5a5, #f87171, #ef4444, #991b1b)',
+            },
+            5: {
+                dark: 'linear-gradient(rgba(0, 0, 0, 0.35)), linear-gradient(135deg, #bbf7d0, #86efac, #4ade80, #22c55e, #15803d)',
+                light: 'linear-gradient(135deg, #bbf7d0, #86efac, #4ade80, #22c55e, #15803d)',
+            },
+        };
+        const gradient =
+            (stateGradients[reservation.state] &&
+                (isDarkMode ? stateGradients[reservation.state].dark : stateGradients[reservation.state].light)) ||
+            stateGradients[0].light;
+
         return (
             <>
-                <Dialog open={open} onClose={this.handleClose} fullScreen={this.props.fullScreen}>
+                <Dialog
+                    open={open}
+                    onClose={this.handleClose}
+                    fullScreen={this.props.fullScreen}
+                    sx={{
+                        '& .MuiDialog-paper': {
+                            background: gradient,
+                        },
+                    }}
+                >
                     <DialogTitle>{reservation.vehiclePlateNumber}</DialogTitle>
                     <DialogContent className={classes.details}>
                         <div className={classes.closeButton}>
@@ -618,12 +665,17 @@ class CarwashDetailsDialog extends React.Component {
                         <br />
                         {!editLocation ? (
                             <div className={classes.dialogLine}>
-                                <Typography variant="subtitle1" gutterBottom>
+                                <Typography variant="body1" gutterBottom>
                                     {reservation.location
                                         ? `Location: ${formatLocation(reservation.location)}`
                                         : 'Location not set'}
                                 </Typography>
-                                <Button onClick={this.handleEditLocation} variant="outlined" startIcon={<EditIcon />}>
+                                <Button
+                                    onClick={this.handleEditLocation}
+                                    variant="outlined"
+                                    color="bw"
+                                    startIcon={<EditIcon />}
+                                >
                                     Edit location
                                 </Button>
                             </div>
@@ -653,20 +705,21 @@ class CarwashDetailsDialog extends React.Component {
                             </>
                         )}
                         <div className={classes.dialogLine}>
-                            <Typography variant="subtitle1" gutterBottom>
+                            <Typography variant="body1" gutterBottom>
                                 {reservation.keyLockerBox
                                     ? `Key locker: ${reservation.keyLockerBox.name}`
                                     : `Key not dropped off ${lockerBoxName ? `(was in ${lockerBoxName})` : ''}`}
                             </Typography>
                             {waitingForClosure ? (
                                 <>
-                                    <CircularProgress size={32} color="primary" style={{ marginRight: 8 }} />
-                                    <Typography variant="body2">Waiting for door closure</Typography>
+                                    <CircularProgress size={32} color="bw" style={{ marginRight: 8 }} />
+                                    <Typography variant="body1">Waiting for door closure</Typography>
                                 </>
                             ) : reservation.keyLockerBox ? (
                                 <Button
                                     onClick={this.handleOpenLocker}
                                     variant="outlined"
+                                    color="bw"
                                     startIcon={<LockOpenIcon />}
                                     disabled={lockerOpening}
                                 >
@@ -676,6 +729,7 @@ class CarwashDetailsDialog extends React.Component {
                                 <Button
                                     onClick={this.handleDropoffKey}
                                     variant="outlined"
+                                    color="bw"
                                     startIcon={<LockIcon />}
                                     disabled={lockerOpening}
                                 >
