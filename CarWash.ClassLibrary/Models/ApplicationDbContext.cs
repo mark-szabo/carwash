@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using System;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using System;
 
 namespace CarWash.ClassLibrary.Models
 {
@@ -44,6 +44,11 @@ namespace CarWash.ClassLibrary.Models
         /// KeyLockerBoxHistory audit table of the database.
         /// </summary>
         public DbSet<KeyLockerBoxHistory> KeyLockerBoxHistory { get; set; }
+
+        /// <summary>
+        /// SystemMessage table of the database.
+        /// </summary>
+        public DbSet<SystemMessage> SystemMessage { get; set; }
 
         /// <inheritdoc />
         /// <remarks>

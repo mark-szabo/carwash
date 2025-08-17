@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using CarWash.ClassLibrary.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Options;
+using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace CarWash.PWA.Controllers
 {
@@ -32,6 +34,9 @@ namespace CarWash.PWA.Controllers
                 Garages = configuration.CurrentValue.Garages,
                 Services = configuration.CurrentValue.Services,
                 ReservationSettings = configuration.CurrentValue.Reservation,
+                ActiveSystemMessages = await context.SystemMessage
+                    .Where(m => m.StartDateTime <= DateTime.UtcNow && m.EndDateTime >= DateTime.UtcNow)
+                    .ToListAsync(),
                 BuildNumber = configuration.CurrentValue.BuildNumber,
                 Version = configuration.CurrentValue.Version
             };
