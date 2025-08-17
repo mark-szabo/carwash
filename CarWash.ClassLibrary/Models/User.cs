@@ -69,5 +69,20 @@ namespace CarWash.ClassLibrary.Models
         /// </summary>
         [Required]
         public NotificationChannel NotificationChannel { get; set; } = NotificationChannel.NotSet;
+
+        /// <summary>
+        /// Gets or sets the billing name for the user.
+        /// </summary>
+        public string? BillingName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the billing address for the user.
+        /// </summary>
+        public string? BillingAddress { get; set; }
+
+        /// <summary>
+        /// Gets or sets the payment method for the user.
+        /// </summary>
+        public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.WireTransfer;
     }
 }
