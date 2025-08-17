@@ -24,40 +24,40 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.4.0" />
-		<PackageReference Include="Azure.Identity" Version="1.13.2" />
-		<PackageReference Include="Azure.Messaging.ServiceBus" Version="7.19.0" />
-		<PackageReference Include="Azure.Security.KeyVault.Certificates" Version="4.7.0" />
-		<PackageReference Include="Azure.Storage.Common" Version="12.23.0" />
-		<PackageReference Include="EPPlus" Version="7.5.2">
+		<PackageReference Include="Azure.Identity" Version="1.15.0" />
+		<PackageReference Include="Azure.Messaging.ServiceBus" Version="7.20.1" />
+		<PackageReference Include="Azure.Security.KeyVault.Certificates" Version="4.8.0" />
+		<PackageReference Include="Azure.Storage.Common" Version="12.24.0" />
+		<PackageReference Include="EPPlus" Version="7.7.3">
 			<NoWarn>NU1701</NoWarn>
 		</PackageReference>
 		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.23.0" />
 		<PackageReference Include="Microsoft.ApplicationInsights.SnapshotCollector" Version="1.4.6" />
-		<PackageReference Include="Microsoft.Azure.AppConfiguration.AspNetCore" Version="8.1.2" />
-		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0">
+		<PackageReference Include="Microsoft.Azure.AppConfiguration.AspNetCore" Version="8.3.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
-		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.13.0" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.4">
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.14.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.8">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Graph" Version="5.77.0" />
-		<PackageReference Include="Microsoft.Identity.Client" Version="4.71.1" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
-		<PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="8.1.1" />
-		<PackageReference Include="System.Formats.Asn1" Version="9.0.4" />
+		<PackageReference Include="Microsoft.Graph" Version="5.90.0" />
+		<PackageReference Include="Microsoft.Identity.Client" Version="4.76.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
+		<PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="9.0.3" />
+		<PackageReference Include="System.Formats.Asn1" Version="9.0.8" />
 		<PackageReference Include="WebPush" Version="1.0.12" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.15" />
 		<PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="8.0.15" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.4" />
-		<PackageReference Include="System.Drawing.Common" Version="9.0.4" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" />
+		<PackageReference Include="System.Drawing.Common" Version="9.0.8" />
 	</ItemGroup>
 	<ItemGroup>
 		<!-- Don't publish the SPA source files, but do show them in the project files list -->
