@@ -4,16 +4,17 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using CarWash.ClassLibrary;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Extensions;
 using CarWash.ClassLibrary.Models;
+using Microsoft.Azure.Functions.Worker;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Azure.Functions.Worker;
-using CarWash.ClassLibrary;
 
 namespace CarWash.Functions
 {
@@ -50,7 +51,7 @@ namespace CarWash.Functions
                 .Select(s => s.vehicle?.normalized_licence_plate?.ToUpper())
                 .ToList();
 
-            log.LogMetric("VehicleArrived", parkingSessions.Count(s => s.start > DateTime.UtcNow.AddMinutes(-1)));
+            FunctionsLoggerExtensions.LogMetric(log, "VehicleArrived", parkingSessions.Count(s => s.start > DateTime.UtcNow.AddMinutes(-1)));
 
             if (licensePlates.Count == 0)
             {
@@ -141,7 +142,7 @@ If don't want to get email reminders in the future, you can <a href='https://www
                 log.LogInformation($"Bot reminder was sent to the user ({reservation.User.Id}) about the reservation with id: {reservation.Id}. ({watch.ElapsedMilliseconds}ms)");
             }
 
-            log.LogMetric("VehicleArrivedNotificationSent", reservations.Count);
+            FunctionsLoggerExtensions.LogMetric(log, "VehicleArrivedNotificationSent", reservations.Count);
             log.LogInformation("All reminders have been sent successfully.");
             watch.Stop();
         }
