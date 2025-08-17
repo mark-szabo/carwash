@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -43,7 +42,6 @@ namespace CarWash.PWA.Controllers
         /// <param name="systemMessage">The system message to create.</param>
         /// <returns>The created system message.</returns>
         [HttpPost]
-        [Authorize(Roles = "CarwashAdmin")]
         public async Task<ActionResult<SystemMessage>> CreateSystemMessage(SystemMessage systemMessage)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
@@ -61,7 +59,6 @@ namespace CarWash.PWA.Controllers
         /// <param name="systemMessage">The updated system message.</param>
         /// <returns>No content if successful.</returns>
         [HttpPut("{id}")]
-        [Authorize(Roles = "CarwashAdmin")]
         public async Task<IActionResult> UpdateSystemMessage(string id, SystemMessage systemMessage)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
@@ -98,7 +95,6 @@ namespace CarWash.PWA.Controllers
         /// <param name="id">The ID of the system message to delete.</param>
         /// <returns>No content if successful.</returns>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "CarwashAdmin")]
         public async Task<IActionResult> DeleteSystemMessage(string id)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
