@@ -13,6 +13,7 @@ import HelpIcon from '@mui/icons-material/Help';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import BlockIcon from '@mui/icons-material/Block';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import AnnouncementIcon from '@mui/icons-material/Announcement';
 import { signOut } from '../Auth';
 
 function DrawerItem(props) {
@@ -40,16 +41,57 @@ export function drawerItems(closeDrawer, user) {
                 <AddIcon style={{ marginRight: '16px' }} />
                 Reserve
             </Fab>
-            <DrawerItem path="/" icon={<ListIcon />} title="My reservations" closeDrawer={closeDrawer} id="draweritems-myreservations" />
+            <DrawerItem
+                path="/"
+                icon={<ListIcon />}
+                title="My reservations"
+                closeDrawer={closeDrawer}
+                id="draweritems-myreservations"
+            />
             {user.isCarwashAdmin && (
-                <DrawerItem path="/carwashadmin" icon={<LocalCarWashIcon />} title="CarWash admin" closeDrawer={closeDrawer} id="draweritems-carwashadmin" />
+                <DrawerItem
+                    path="/carwashadmin"
+                    icon={<LocalCarWashIcon />}
+                    title="CarWash admin"
+                    closeDrawer={closeDrawer}
+                    id="draweritems-carwashadmin"
+                />
             )}
-            {user.isAdmin && <DrawerItem path="/admin" icon={<BuildIcon />} title="Admin" closeDrawer={closeDrawer} id="draweritems-admin" />}
-            {(user.isAdmin || user.isCarwashAdmin) && (
-                <DrawerItem path="/blockers" icon={<BlockIcon />} title="Blockers" closeDrawer={closeDrawer} id="draweritems-blockers" />
+            {user.isAdmin && (
+                <DrawerItem
+                    path="/admin"
+                    icon={<BuildIcon />}
+                    title="Admin"
+                    closeDrawer={closeDrawer}
+                    id="draweritems-admin"
+                />
             )}
             {(user.isAdmin || user.isCarwashAdmin) && (
-                <DrawerItem path="/analytics" icon={<BarChartIcon />} title="Analytics" closeDrawer={closeDrawer} id="draweritems-analytics" />
+                <DrawerItem
+                    path="/blockers"
+                    icon={<BlockIcon />}
+                    title="Blockers"
+                    closeDrawer={closeDrawer}
+                    id="draweritems-blockers"
+                />
+            )}
+            {user.isCarwashAdmin && (
+                <DrawerItem
+                    path="/system-messages"
+                    icon={<AnnouncementIcon />}
+                    title="System messages"
+                    closeDrawer={closeDrawer}
+                    id="draweritems-systemmessages"
+                />
+            )}
+            {(user.isAdmin || user.isCarwashAdmin) && (
+                <DrawerItem
+                    path="/analytics"
+                    icon={<BarChartIcon />}
+                    title="Analytics"
+                    closeDrawer={closeDrawer}
+                    id="draweritems-analytics"
+                />
             )}
         </div>
     );
@@ -58,8 +100,20 @@ export function drawerItems(closeDrawer, user) {
 export function otherDrawerItems(closeDrawer) {
     return (
         <div>
-            <DrawerItem path="/settings" icon={<SettingsIcon />} title="Settings" closeDrawer={closeDrawer} id="draweritems-settings" />
-            <DrawerItem path="/support" icon={<HelpIcon />} title="Contact support" closeDrawer={closeDrawer} id="draweritems-support" />
+            <DrawerItem
+                path="/settings"
+                icon={<SettingsIcon />}
+                title="Settings"
+                closeDrawer={closeDrawer}
+                id="draweritems-settings"
+            />
+            <DrawerItem
+                path="/support"
+                icon={<HelpIcon />}
+                title="Contact support"
+                closeDrawer={closeDrawer}
+                id="draweritems-support"
+            />
             <ListItem button onClick={signOut} id="draweritems-signout">
                 <ListItemIcon>
                     <ExitToAppIcon />

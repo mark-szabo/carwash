@@ -28,6 +28,13 @@ export const NotificationChannel = Object.freeze({
     Push: 3,
 });
 
+export const Severity = Object.freeze({
+    Error: 0,
+    Warning: 1,
+    Info: 2,
+    Success: 3,
+});
+
 /**
  * @deprecated
  */

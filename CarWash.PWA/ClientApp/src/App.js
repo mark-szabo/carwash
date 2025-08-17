@@ -21,6 +21,8 @@ import Admin from './components/Admin';
 import Settings from './components/Settings';
 import CarwashAdmin from './components/CarwashAdmin';
 import NotificationDialog from './components/NotificationDialog';
+import SystemMessageBar from './components/SystemMessageBar';
+import SystemMessagesAdmin from './components/SystemMessagesAdmin';
 import { NotificationChannel, BacklogHubMethods, KeyLockerHubMethods } from './Constants';
 import Spinner from './components/Spinner';
 import { sleep } from './Helpers';
@@ -600,6 +602,7 @@ export default class App extends Component {
                                     refresh={this.loadReservations}
                                     render={props => (
                                         <ErrorBoundary>
+                                            <SystemMessageBar messages={configuration.activeSystemMessages} />
                                             <Home
                                                 reservations={reservations}
                                                 configuration={configuration}
@@ -752,6 +755,20 @@ export default class App extends Component {
                                     render={props => (
                                         <ErrorBoundary>
                                             <Support {...props} />
+                                        </ErrorBoundary>
+                                    )}
+                                />
+                                <Route
+                                    exact
+                                    path="/system-messages"
+                                    navbarName="System messages"
+                                    render={props => (
+                                        <ErrorBoundary>
+                                            <SystemMessagesAdmin
+                                                user={user}
+                                                openSnackbar={this.openSnackbar}
+                                                {...props}
+                                            />
                                         </ErrorBoundary>
                                     )}
                                 />
