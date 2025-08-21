@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Azure.Messaging.EventHubs.Consumer;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
+using Microsoft.ApplicationInsights;
 using Microsoft.Azure.Devices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -20,7 +21,8 @@ namespace CarWash.ClassLibrary.Services
     /// <param name="context"></param>
     /// <param name="configuration"></param>
     /// <param name="iotHubClient"></param>
-    public class KeyLockerService(ApplicationDbContext context, IOptionsMonitor<CarWashConfiguration> configuration, ServiceClient iotHubClient) : IKeyLockerService
+    /// <param name="telemetryClient"></param>
+    public class KeyLockerService(ApplicationDbContext context, IOptionsMonitor<CarWashConfiguration> configuration, ServiceClient iotHubClient, TelemetryClient telemetryClient) : IKeyLockerService
     {
         /// <inheritdoc />
         public async Task GenerateBoxesToLocker(string namePrefix, int numberOfBoxes, string building, string floor, string? lockerId = null)
@@ -134,6 +136,12 @@ namespace CarWash.ClassLibrary.Services
             {
                 await UpdateBoxStateAsync(lockerId, boxSerial, KeyLockerBoxState.Used, userId);
 
+                telemetryClient.TrackEvent("KeyLockerBoxOpened", new Dictionary<string, string> {
+                    { "LockerId", lockerId },
+                    { "BoxSerial", boxSerial.ToString() },
+                    { "UserId", userId ?? "" },
+                });
+
                 if (box != null) _ = ListenForBoxClosureAsync(box, userId, onBoxClosedCallback);
             }
             else
@@ -165,11 +173,11 @@ namespace CarWash.ClassLibrary.Services
                 //   https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/eventhub/Azure.Messaging.EventHubs.Processor/README.md
                 await foreach (PartitionEvent partitionEvent in consumer.ReadEventsAsync())
                 {
-                    Console.WriteLine($"\nMessage received on partition {partitionEvent.Partition.PartitionId} enqued at {partitionEvent.Data.EnqueuedTime}.");
+                    //Debug.WriteLine($"\nMessage received on partition {partitionEvent.Partition.PartitionId} enqued at {partitionEvent.Data.EnqueuedTime}.");
                     if (partitionEvent.Data.EnqueuedTime < listeningStartTime) continue;
 
                     string data = Encoding.UTF8.GetString(partitionEvent.Data.Body.ToArray());
-                    Console.WriteLine($"\tMessage body: {data}");
+                    //Debug.WriteLine($"\tMessage body: {data}");
 
                     var messageLockerId = partitionEvent.Data.SystemProperties["iothub-connection-device-id"]?.ToString();
 
@@ -182,9 +190,25 @@ namespace CarWash.ClassLibrary.Services
                             throw new InvalidOperationException($"Box serial {box.BoxSerial} is out of range for the received message. Message contains {states.Count} boxes.");
                         }
 
+                        telemetryClient.TrackEvent("IoTDeviceMessageProcessed", new Dictionary<string, string> {
+                            { "PartitionId", partitionEvent.Partition.PartitionId},
+                            { "EnqueuedTime", partitionEvent.Data.EnqueuedTime.ToString("o") },
+                            { "MessageBody", data },
+                            { "LockerId", messageLockerId },
+                            { "BoxSerial", box.BoxSerial.ToString() },
+                            { "BoxState", states[box.BoxSerial - 1].ToString() },
+                        });
+
                         if (states[box.BoxSerial - 1])
                         {
-                            Console.WriteLine($"Box {box.BoxSerial} has been closed by the user.");
+                            telemetryClient.TrackEvent("KeyLockerBoxClosed", new Dictionary<string, string> {
+                                { "PartitionId", partitionEvent.Partition.PartitionId},
+                                { "EnqueuedTime", partitionEvent.Data.EnqueuedTime.ToString("o") },
+                                { "MessageBody", data },
+                                { "LockerId", messageLockerId },
+                                { "BoxSerial", box.BoxSerial.ToString() },
+                                { "UserId", userId ?? "" },
+                            });
 
                             if (onBoxClosedCallback != null)
                             {
