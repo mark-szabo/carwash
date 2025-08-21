@@ -1,15 +1,15 @@
-﻿using Azure.Messaging.EventHubs.Consumer;
-using CarWash.ClassLibrary.Enums;
-using CarWash.ClassLibrary.Models;
-using Microsoft.Azure.Devices;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Azure.Messaging.EventHubs.Consumer;
+using CarWash.ClassLibrary.Enums;
+using CarWash.ClassLibrary.Models;
+using Microsoft.Azure.Devices;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace CarWash.ClassLibrary.Services
 {
@@ -112,7 +112,17 @@ namespace CarWash.ClassLibrary.Services
 
         private async Task OpenBoxAsync(string lockerId, int boxSerial, string? userId = null, Func<string, Task>? onBoxClosedCallback = null)
         {
-            var methodInvocation = new CloudToDeviceMethod(configuration.CurrentValue.KeyLocker.BoxIotIdPrefix + boxSerial)
+            KeyLockerBox? box = null;
+            if (onBoxClosedCallback != null)
+            {
+                // Find the box by lockerId and boxSerial
+                box = await context.KeyLockerBox
+                    .SingleOrDefaultAsync(b => b.LockerId == lockerId && b.BoxSerial == boxSerial)
+                    ?? throw new InvalidOperationException($"Box with serial {boxSerial} not found in locker {lockerId}.");
+
+            }
+
+            var methodInvocation = new CloudToDeviceMethod(configuration.CurrentValue.KeyLocker.BoxIotIdPrefix + (boxSerial - 1))
             {
                 ResponseTimeout = TimeSpan.FromSeconds(30)
             };
@@ -124,7 +134,7 @@ namespace CarWash.ClassLibrary.Services
             {
                 await UpdateBoxStateAsync(lockerId, boxSerial, KeyLockerBoxState.Used, userId);
 
-                _ = ListenForBoxClosureAsync(lockerId, boxSerial, userId, onBoxClosedCallback);
+                if (box != null) _ = ListenForBoxClosureAsync(box, userId, onBoxClosedCallback);
             }
             else
             {
@@ -132,8 +142,10 @@ namespace CarWash.ClassLibrary.Services
             }
         }
 
-        private async Task ListenForBoxClosureAsync(string lockerId, int boxSerial, string? userId = null, Func<string, Task>? onBoxClosedCallback = null)
+        private async Task ListenForBoxClosureAsync(KeyLockerBox box, string? userId = null, Func<string, Task>? onBoxClosedCallback = null)
         {
+            var listeningStartTime = DateTime.UtcNow;
+
             // Create the consumer using the default consumer group using a direct connection to the service.
             await using var consumer = new EventHubConsumerClient(
                 EventHubConsumerClient.DefaultConsumerGroupName,
@@ -153,32 +165,29 @@ namespace CarWash.ClassLibrary.Services
                 //   https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/eventhub/Azure.Messaging.EventHubs.Processor/README.md
                 await foreach (PartitionEvent partitionEvent in consumer.ReadEventsAsync())
                 {
-                    Console.WriteLine($"\nMessage received on partition {partitionEvent.Partition.PartitionId}:");
+                    Console.WriteLine($"\nMessage received on partition {partitionEvent.Partition.PartitionId} enqued at {partitionEvent.Data.EnqueuedTime}.");
+                    if (partitionEvent.Data.EnqueuedTime < listeningStartTime) continue;
 
                     string data = Encoding.UTF8.GetString(partitionEvent.Data.Body.ToArray());
                     Console.WriteLine($"\tMessage body: {data}");
 
-                    var messageLockerId = partitionEvent.Data.Properties["iothub-connection-device-id"]?.ToString();
+                    var messageLockerId = partitionEvent.Data.SystemProperties["iothub-connection-device-id"]?.ToString();
 
-                    if (messageLockerId == lockerId)
+                    if (messageLockerId == box.LockerId)
                     {
                         var states = ParseKeyLockerDeviceMessage(data);
 
-                        if (states.Count <= (boxSerial - 1))
+                        if (states.Count <= (box.BoxSerial - 1))
                         {
-                            throw new InvalidOperationException($"Box serial {boxSerial} is out of range for the received message. Message contains {states.Count} boxes.");
+                            throw new InvalidOperationException($"Box serial {box.BoxSerial} is out of range for the received message. Message contains {states.Count} boxes.");
                         }
 
-                        if (states[boxSerial - 1])
+                        if (states[box.BoxSerial - 1])
                         {
-                            Console.WriteLine($"Box {boxSerial} has been closed by the user.");
+                            Console.WriteLine($"Box {box.BoxSerial} has been closed by the user.");
 
                             if (onBoxClosedCallback != null)
                             {
-                                var box = context.KeyLockerBox
-                                    .SingleOrDefault(b => b.LockerId == lockerId && b.BoxSerial == boxSerial)
-                                    ?? throw new InvalidOperationException($"Box with serial {boxSerial} not found in locker {lockerId}.");
-
                                 await onBoxClosedCallback(box.Id);
                             }
 
@@ -245,7 +254,7 @@ namespace CarWash.ClassLibrary.Services
 
         private static List<bool> ParseKeyLockerDeviceMessage(string message)
         {
-            var deviceMessage = JsonSerializer.Deserialize<KeyLockerDeviceMessage>(message)
+            var deviceMessage = JsonSerializer.Deserialize<KeyLockerDeviceMessage>(message, Constants.DefaultJsonSerializerOptions)
                 ?? throw new InvalidOperationException("Failed to parse key locker device message.");
 
             // Get the box states from the device message
