@@ -217,6 +217,7 @@ function DropoffDialog({
             maxWidth="sm"
             aria-labelledby="dropoff-dialog-title"
             aria-describedby="dropoff-dialog-title"
+            translate="no" // React Chrome Translator bug workaround: https://github.com/facebook/react/issues/11538
         >
             <DialogTitle id="dropoff-dialog-title">
                 {step === 1
