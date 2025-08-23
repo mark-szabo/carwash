@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.FeatureManagement.Mvc;
 
 namespace CarWash.PWA.Controllers
 {
@@ -21,6 +22,7 @@ namespace CarWash.PWA.Controllers
     [Produces("application/json")]
     [Route("api/keylocker")]
     [Authorize]
+    [FeatureGate("keylocker")]
     [ApiController]
     public class KeyLockerController(
         IOptionsMonitor<CarWashConfiguration> configuration,

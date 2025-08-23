@@ -221,7 +221,10 @@ class SystemMessagesAdmin extends React.Component {
                             <ListItem key={message.id}>
                                 <ListItemAvatar>
                                     <Avatar>
-                                        <Alert severity={getSeverityName(message.severity)}></Alert>
+                                        <Alert
+                                            severity={getSeverityName(message.severity)}
+                                            sx={{ '& .MuiAlert-icon': { marginRight: 0 } }}
+                                        ></Alert>
                                     </Avatar>
                                 </ListItemAvatar>
                                 <ListItemText
