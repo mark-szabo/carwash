@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
@@ -5,11 +10,6 @@ using CarWash.PWA.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CarWash.PWA.Tests
@@ -253,7 +253,7 @@ namespace CarWash.PWA.Tests
 
             var result = await controller.PutSettings("notificationchannel", JsonSerializer.SerializeToElement(NOT_EXISTENT_NOTIFICATION_CHANNEL));
 
-            //Assert.IsType<BadRequestObjectResult>(result);
+            Assert.IsType<BadRequestObjectResult>(result);
         }
 
         [Fact]
