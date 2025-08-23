@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -241,10 +242,9 @@ namespace CarWash.ClassLibrary.Services
             }
 
             // Randomly select one available box ID
-            int index = new Random().Next(availableBoxIds.Count);
+            int index = RandomNumberGenerator.GetInt32(availableBoxIds.Count);
 
             return availableBoxIds[index];
-
         }
 
         private async Task UpdateBoxStateAsync(string boxId, KeyLockerBoxState newState, string? modifiedById = null)

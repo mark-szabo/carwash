@@ -22,7 +22,7 @@ namespace CarWash.PWA.Controllers
     [Produces("application/json")]
     [Route("api/keylocker")]
     [Authorize]
-    [FeatureGate("keylocker")]
+    [FeatureGate("KeyLocker")]
     [ApiController]
     public class KeyLockerController(
         IOptionsMonitor<CarWashConfiguration> configuration,

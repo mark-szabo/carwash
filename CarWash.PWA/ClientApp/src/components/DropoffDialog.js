@@ -298,7 +298,7 @@ function DropoffDialog({
                         <Button onClick={handleCancel} color="primary">
                             Cancel
                         </Button>
-                        {configuration.featureFlags.includes('keylocker') ? (
+                        {configuration.featureFlags.includes('KeyLocker') ? (
                             <Button onClick={handleNext} color="primary" autoFocus>
                                 Next
                             </Button>

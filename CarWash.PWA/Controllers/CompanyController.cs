@@ -4,11 +4,13 @@ using CarWash.PWA.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.FeatureManagement.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace CarWash.PWA.Controllers
 {
@@ -23,6 +25,7 @@ namespace CarWash.PWA.Controllers
     public class CompanyController(ApplicationDbContext context, IUserService userService) : ControllerBase
     {
         private readonly User _user = userService.CurrentUser;
+        private readonly HttpClient httpClient = new();
 
         // GET: api/companies
         /// <summary>
@@ -63,11 +66,10 @@ namespace CarWash.PWA.Controllers
 
             // Now, use Entra's tenant discovery endpoint to get the tenant id for the domain
             // https://login.microsoftonline.com/{domain}/v2.0/.well-known/openid-configuration
-            using var httpClient = new HttpClient();
             string tenantId;
             try
             {
-                var domainConfigUrl = $"https://login.microsoftonline.com/{domain}/v2.0/.well-known/openid-configuration";
+                var domainConfigUrl = $"https://login.microsoftonline.com/{HttpUtility.UrlEncode(domain)}/v2.0/.well-known/openid-configuration";
                 var domainResponse = await httpClient.GetAsync(domainConfigUrl);
                 if (!domainResponse.IsSuccessStatusCode)
                     return BadRequest("Invalid domain or unable to resolve tenant id from domain.");
@@ -131,22 +133,23 @@ namespace CarWash.PWA.Controllers
             return NoContent();
         }
 
-        /*// DELETE: api/companies/{id}
+        // DELETE: api/companies/{id}
         /// <summary>
         /// Delete a company
         /// </summary>
+        [FeatureGate("DeleteCompany")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCompany([FromRoute] string id)
         {
             if (!_user.IsCarwashAdmin) return Forbid();
             
-            var company = await _context.Company.FindAsync(id);
+            var company = await context.Company.FindAsync(id);
             if (company == null) return NotFound();
 
-            _context.Company.Remove(company);
-            await _context.SaveChangesAsync();
+            context.Company.Remove(company);
+            await context.SaveChangesAsync();
 
             return NoContent();
-        }*/
+        }
     }
 }
