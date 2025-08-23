@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using System;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using System;
 
 namespace CarWash.ClassLibrary.Models
 {
@@ -34,6 +34,21 @@ namespace CarWash.ClassLibrary.Models
         /// Company table of the database.
         /// </summary>
         public DbSet<Company> Company { get; set; }
+
+        /// <summary>
+        /// KeyLockerBox table of the database.
+        /// </summary>
+        public DbSet<KeyLockerBox> KeyLockerBox { get; set; }
+
+        /// <summary>
+        /// KeyLockerBoxHistory audit table of the database.
+        /// </summary>
+        public DbSet<KeyLockerBoxHistory> KeyLockerBoxHistory { get; set; }
+
+        /// <summary>
+        /// SystemMessage table of the database.
+        /// </summary>
+        public DbSet<SystemMessage> SystemMessage { get; set; }
 
         /// <inheritdoc />
         /// <remarks>
@@ -90,6 +105,13 @@ namespace CarWash.ClassLibrary.Models
             builder.Entity<Company>()
                 .HasIndex(c => c.Name)
                 .IsUnique();
+
+            builder.Entity<KeyLockerBox>()
+                .HasIndex(k => new { k.LockerId, k.BoxSerial })
+                .IsUnique();
+
+            builder.Entity<KeyLockerBoxHistory>()
+                .HasIndex(k => new { k.LockerId, k.BoxSerial });
         }
 
         /// <summary>

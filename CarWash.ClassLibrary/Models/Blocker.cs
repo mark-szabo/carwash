@@ -29,12 +29,12 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Gets or sets the comment of the blocker for the UI of the admins (normal users won't be able to see this).
         /// </summary>
-        public string Comment { get; set; }
+        public string? Comment { get; set; }
 
         /// <summary>
         /// Gets or sets the id of the user who created the blocker.
         /// </summary>
-        public string CreatedById { get; set; }
+        public string? CreatedById { get; set; }
 
         /// <summary>
         /// Gets or sets the timestamp when the blocker was created.

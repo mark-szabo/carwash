@@ -1,4 +1,4 @@
-﻿import AuthenticationContext from 'adal-angular';
+import AuthenticationContext from 'adal-angular';
 import * as download from 'downloadjs';
 
 const adalConfig = {
@@ -142,7 +142,11 @@ export default async function apiFetch(url, options, errorIfOffline = false) {
     if (response.status === 204 || response.status === 202) return {};
 
     // Excel export file download
-    if (response.headers.get('content-type').indexOf('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') !== -1) {
+    if (
+        response.headers
+            .get('content-type')
+            .indexOf('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') !== -1
+    ) {
         let filename = 'carwash-export.xlsx';
         const disposition = response.headers.get('content-disposition');
         if (disposition && disposition.indexOf('attachment') !== -1) {

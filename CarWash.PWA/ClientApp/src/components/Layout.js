@@ -11,6 +11,7 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import Hidden from '@mui/material/Hidden';
 import Divider from '@mui/material/Divider';
+import MuiLink from '@mui/material/Link';
 import MenuIcon from '@mui/icons-material/Menu';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -185,8 +186,8 @@ class Layout extends React.Component {
         if (window.location.pathname === '/') return this.props.children.props.children[0].props.navbarName;
 
         let name;
-        this.props.children.props.children.map(child => {
-            if (child.props.path === '/') return null;
+        for (const child of this.props.children.props.children) {
+            if (child.props.path === '/') continue;
 
             try {
                 if (window.location.pathname.includes(child.props.path)) {
@@ -199,7 +200,7 @@ class Layout extends React.Component {
             }
 
             return null;
-        });
+        }
 
         return name;
     }
@@ -208,8 +209,8 @@ class Layout extends React.Component {
         if (window.location.pathname === '/') return this.props.children.props.children[0].props.refresh;
 
         let func;
-        this.props.children.props.children.map(child => {
-            if (child.props.path === '/') return null;
+        for (const child of this.props.children.props.children) {
+            if (child.props.path === '/') continue;
 
             try {
                 if (window.location.pathname.includes(child.props.path)) {
@@ -220,9 +221,7 @@ class Layout extends React.Component {
                     func = child.props.refresh;
                 }
             }
-
-            return null;
-        });
+        }
 
         return func;
     }
@@ -244,11 +243,11 @@ class Layout extends React.Component {
                 <Divider />
                 <List className={classes.menuList}>{otherDrawerItems(this.handleDrawerClose)}</List>
                 <div className={classes.footer}>
-                    <a href="https://go.microsoft.com/fwlink/?LinkID=206977" className={classes.link}>
+                    <a href="https://mimosonk.hu/terms-of-service" className={classes.link}>
                         Terms of use
                     </a>
                     <br />
-                    <a href="https://go.microsoft.com/fwlink/?LinkId=521839" className={classes.link}>
+                    <a href="https://mimosonk.hu/privacy" className={classes.link}>
                         Privacy & cookies policy
                     </a>
                     <br />
@@ -257,15 +256,16 @@ class Layout extends React.Component {
                         {version !== configuration.version && (
                             <>
                                 {' - '}
-                                <a
-                                    href="#"
+                                <MuiLink
+                                    component="button"
+                                    variant="body2"
+                                    className={classes.link}
                                     onClick={() => {
                                         window.location.reload();
                                     }}
-                                    className={classes.link}
                                 >
                                     Update available!
-                                </a>
+                                </MuiLink>
                             </>
                         )}
                     </span>
@@ -359,6 +359,7 @@ Layout.propTypes = {
     version: PropTypes.string.isRequired,
     searchTerm: PropTypes.string.isRequired,
     handleSearchChange: PropTypes.func.isRequired,
+    children: PropTypes.node.isRequired,
 };
 
 export default withStyles(styles, { withTheme: true })(Layout);

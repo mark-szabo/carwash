@@ -1,11 +1,11 @@
-import React, { Component } from 'react';
+import { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Route, Switch } from 'react-router';
 import { Workbox } from 'workbox-window';
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import { ReactPlugin } from '@microsoft/applicationinsights-react-js';
 import { createBrowserHistory } from 'history';
-import apiFetch from './Auth';
+import apiFetch, { getToken } from './Auth';
 import registerPush from './PushService';
 import { ThemeProvider, StyledEngineProvider, createTheme, adaptV4Theme } from '@mui/material/styles';
 import Snackbar from '@mui/material/Snackbar';
@@ -21,7 +21,9 @@ import Admin from './components/Admin';
 import Settings from './components/Settings';
 import CarwashAdmin from './components/CarwashAdmin';
 import NotificationDialog from './components/NotificationDialog';
-import { NotificationChannel, BacklogHubMethods } from './Constants';
+import SystemMessageBar from './components/SystemMessageBar';
+import SystemMessagesAdmin from './components/SystemMessagesAdmin';
+import { NotificationChannel, BacklogHubMethods, KeyLockerHubMethods } from './Constants';
 import Spinner from './components/Spinner';
 import { sleep } from './Helpers';
 import Blockers from './components/Blockers';
@@ -39,12 +41,15 @@ const lightTheme = createTheme(
                 dark: '#49a7cc',
             },
             secondary: {
-                light: '#b5ffff',
-                main: '#80d8ff',
-                dark: '#49a7cc',
+                light: '#99ffeb',
+                main: '#80ffe6',
+                dark: '#59b2a1',
             },
             background: {
                 default: '#fafafa',
+            },
+            bw: {
+                main: 'rgba(0, 0, 0, 0.54)',
             },
         },
         typography: {
@@ -65,13 +70,16 @@ const darkTheme = createTheme(
                 dark: '#49a7cc',
             },
             secondary: {
-                light: '#b5ffff',
-                main: '#80d8ff',
-                dark: '#49a7cc',
+                light: '#99ffeb',
+                main: '#80ffe6',
+                dark: '#59b2a1',
             },
             background: {
                 default: '#1d1d1d',
                 paper: '#323232',
+            },
+            bw: {
+                main: '#fff',
             },
         },
         typography: {
@@ -92,8 +100,6 @@ function getSafeString(obj) {
 }
 
 export default class App extends Component {
-    displayName = App.name;
-
     state = {
         version: '',
         user: {},
@@ -111,6 +117,7 @@ export default class App extends Component {
         notificationDialogOpen: false,
         theme: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? darkTheme : lightTheme,
         searchTerm: '',
+        closedKeyLockerBoxIds: [],
     };
 
     componentDidMount() {
@@ -120,22 +127,13 @@ export default class App extends Component {
             });
         }
 
-        apiFetch('api/reservations').then(
-            data => {
-                this.setState({
-                    reservations: data,
-                    reservationsLoading: false,
-                });
-            },
-            error => {
-                this.setState({ reservationsLoading: false });
-                this.openSnackbar(error);
-            }
-        );
-
         apiFetch('api/users/me').then(
             data => {
                 this.setState({ user: data });
+
+                this.loadReservations(false);
+
+                this.loadLastSettings();
 
                 if (data.notificationChannel === NotificationChannel.Push) {
                     this.openNotificationDialog();
@@ -149,18 +147,18 @@ export default class App extends Component {
                     this.loadBacklog();
                 }
 
-                // Initiate SignalR connection to Backlog Hub
+                // Initiate SignalR connections
                 this.connectToBacklogHub();
+                this.connectToKeyLockerHub();
             },
             error => {
                 this.openSnackbar(error);
+                this.setState({ reservationsLoading: false });
             }
         );
 
         // Register service worker
         this.registerServiceWorker();
-
-        this.loadLastSettings();
 
         const browserHistory = createBrowserHistory({ basename: '' });
         const reactPlugin = new ReactPlugin();
@@ -189,7 +187,8 @@ export default class App extends Component {
         this.keyboardListener();
     }
 
-    backlogHubConnection;
+    keyLockerHubConnection = null; // SignalR connection to the key locker Hub
+    backlogHubConnection = null; // SignalR connection to the backlog Hub
 
     registerServiceWorker = async () => {
         if ('serviceWorker' in navigator) {
@@ -414,13 +413,14 @@ export default class App extends Component {
         // Delete cached response for /api/users/me
         // Not perfect solution as it seems Safari does not support this
         // https://developer.mozilla.org/en-US/docs/Web/API/Cache/delete#Browser_compatibility
-        try {
-            caches.open('api-cache').then(cache => {
+        caches
+            .open('api-cache')
+            .then(cache => {
                 cache.delete('/api/users/me');
+            })
+            .catch(error => {
+                console.error(`Cannot delete user data from cache: ${error}`);
             });
-        } catch (error) {
-            console.error(`Cannot delete user data from cache: ${error}`);
-        }
     };
 
     updateBacklogItem = backlogItem => {
@@ -462,39 +462,70 @@ export default class App extends Component {
         });
     };
 
-    invokeBacklogHub = (method, id) => {
-        this.backlogHubConnection.invoke(method, id);
+    connectToKeyLockerHub = () => {
+        this.keyLockerHubConnection = new signalR.HubConnectionBuilder()
+            .withUrl('/hub/keylocker', { accessTokenFactory: () => getToken() })
+            .build();
+
+        this.keyLockerHubConnection.on(KeyLockerHubMethods.KeyLockerBoxClosed, id => {
+            console.log(`SignalR: key locker box closed (${id})`);
+            this.setState(prevState => {
+                const closedKeyLockerBoxIds = prevState.closedKeyLockerBoxIds || [];
+                if (!closedKeyLockerBoxIds.includes(id)) {
+                    return { closedKeyLockerBoxIds: [...closedKeyLockerBoxIds, id] };
+                }
+                return null;
+            });
+        });
+
+        this.keyLockerHubConnection.on(KeyLockerHubMethods.KeyLockerBoxOpened, id => {
+            console.log(`SignalR: key locker box opened (${id})`);
+            this.setState(prevState => {
+                const closedKeyLockerBoxIds = prevState.closedKeyLockerBoxIds || [];
+                return { closedKeyLockerBoxIds: closedKeyLockerBoxIds.filter(lockerId => lockerId !== id) };
+            });
+        });
+
+        this.keyLockerHubConnection.onclose(error => {
+            console.error(`SignalR: Connection to the key locker hub was closed. Reconnecting... (${error})`);
+            this.openSnackbar('Connection lost. Reconnecting...');
+            sleep(5000).then(() => this.keyLockerHubConnection.start().catch(e => console.error(e.toString())));
+        });
+
+        this.keyLockerHubConnection.start().catch(e => console.error(e.toString()));
     };
 
     connectToBacklogHub = () => {
-        this.backlogHubConnection = new signalR.HubConnectionBuilder().withUrl('/hub/backlog').build();
+        if (!this.state.user.isCarwashAdmin) return;
 
-        if (this.state.user.isCarwashAdmin) {
-            this.backlogHubConnection.on(BacklogHubMethods.ReservationCreated, id => {
-                console.log(`SignalR: new reservation (${id})`);
-                this.loadBacklog().then(() => this.openSnackbar('New reservation!'));
-            });
-            this.backlogHubConnection.on(BacklogHubMethods.ReservationUpdated, id => {
-                console.log(`SignalR: a reservation was just updated (${id})`);
-                this.loadBacklog();
-            });
-            this.backlogHubConnection.on(BacklogHubMethods.ReservationDeleted, id => {
-                console.log(`SignalR: a reservation was just deleted (${id})`);
-                this.loadBacklog().then(() => this.openSnackbar('A reservation was just deleted.'));
-            });
-            this.backlogHubConnection.on(BacklogHubMethods.ReservationDropoffConfirmed, id => {
-                console.log(`SignalR: a key was just dropped off (${id})`);
-                this.loadBacklog().then(() => this.openSnackbar('A key was just dropped off!'));
-            });
-            this.backlogHubConnection.on(BacklogHubMethods.ReservationChatMessageSent, id => {
-                console.log(`SignalR: a chat message was just received (${id})`);
-                this.loadBacklog().then(() => this.openSnackbar('New message received!'));
-            });
-        }
+        this.backlogHubConnection = new signalR.HubConnectionBuilder()
+            .withUrl('/hub/backlog', { accessTokenFactory: () => getToken() })
+            .build();
+
+        this.backlogHubConnection.on(BacklogHubMethods.ReservationCreated, id => {
+            console.log(`SignalR: new reservation (${id})`);
+            this.loadBacklog().then(() => this.openSnackbar('New reservation!'));
+        });
+        this.backlogHubConnection.on(BacklogHubMethods.ReservationUpdated, id => {
+            console.log(`SignalR: a reservation was just updated (${id})`);
+            this.loadBacklog();
+        });
+        this.backlogHubConnection.on(BacklogHubMethods.ReservationDeleted, id => {
+            console.log(`SignalR: a reservation was just deleted (${id})`);
+            this.loadBacklog().then(() => this.openSnackbar('A reservation was just deleted.'));
+        });
+        this.backlogHubConnection.on(BacklogHubMethods.ReservationDropoffConfirmed, id => {
+            console.log(`SignalR: a key was just dropped off (${id})`);
+            this.loadBacklog().then(() => this.openSnackbar('A key was just dropped off!'));
+        });
+        this.backlogHubConnection.on(BacklogHubMethods.ReservationChatMessageSent, id => {
+            console.log(`SignalR: a chat message was just received (${id})`);
+            this.loadBacklog().then(() => this.openSnackbar('New message received!'));
+        });
 
         this.backlogHubConnection.onclose(error => {
-            console.error(`SignalR: Connection to the hub was closed. Reconnecting... (${error})`);
-            if (this.state.user.isCarwashAdmin) this.loadBacklog();
+            console.error(`SignalR: Connection to the backlog hub was closed. Reconnecting... (${error})`);
+            this.loadBacklog();
             sleep(5000).then(() => this.backlogHubConnection.start().catch(e => console.error(e.toString())));
         });
 
@@ -502,7 +533,7 @@ export default class App extends Component {
     };
 
     keyboardListener = () => {
-        const keys = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        const keys = new Array(11);
         document.addEventListener('keydown', event => {
             keys.shift();
             keys.push(event.key);
@@ -571,16 +602,17 @@ export default class App extends Component {
                                     refresh={this.loadReservations}
                                     render={props => (
                                         <ErrorBoundary>
+                                            <SystemMessageBar messages={configuration.activeSystemMessages} />
                                             <Home
                                                 reservations={reservations}
                                                 configuration={configuration}
                                                 reservationsLoading={reservationsLoading}
                                                 removeReservation={this.removeReservation}
                                                 updateReservation={this.updateReservation}
-                                                invokeBacklogHub={this.invokeBacklogHub}
                                                 lastSettings={lastSettings}
                                                 openSnackbar={this.openSnackbar}
                                                 dropoffDeepLink={props.location.hash === '#dropoffkey'}
+                                                closedKeyLockerBoxIds={this.state.closedKeyLockerBoxIds}
                                                 {...props}
                                             />
                                         </ErrorBoundary>
@@ -598,7 +630,6 @@ export default class App extends Component {
                                                     reservations={reservations}
                                                     configuration={configuration}
                                                     addReservation={this.addReservation}
-                                                    invokeBacklogHub={this.invokeBacklogHub}
                                                     lastSettings={lastSettings}
                                                     loadLastSettings={this.loadLastSettings}
                                                     openSnackbar={this.openSnackbar}
@@ -623,7 +654,6 @@ export default class App extends Component {
                                                     configuration={configuration}
                                                     addReservation={this.addReservation}
                                                     removeReservation={this.removeReservation}
-                                                    invokeBacklogHub={this.invokeBacklogHub}
                                                     loadLastSettings={this.loadLastSettings}
                                                     openSnackbar={this.openSnackbar}
                                                     openNotificationDialog={this.openNotificationDialog}
@@ -663,7 +693,6 @@ export default class App extends Component {
                                                 reservationsLoading={companyReservationsLoading}
                                                 removeReservation={this.removeReservationFromCompanyReservations}
                                                 updateReservation={this.updateCompanyReservation}
-                                                invokeBacklogHub={this.invokeBacklogHub}
                                                 lastSettings={lastSettings}
                                                 openSnackbar={this.openSnackbar}
                                                 {...props}
@@ -685,10 +714,10 @@ export default class App extends Component {
                                                 backlogUpdateFound={backlogUpdateFound}
                                                 updateBacklogItem={this.updateBacklogItem}
                                                 removeBacklogItem={this.removeBacklogItem}
-                                                invokeBacklogHub={this.invokeBacklogHub}
                                                 snackbarOpen={this.state.snackbarOpen}
                                                 openSnackbar={this.openSnackbar}
                                                 searchTerm={searchTerm}
+                                                closedKeyLockerBoxIds={this.state.closedKeyLockerBoxIds}
                                                 {...props}
                                             />
                                         </ErrorBoundary>
@@ -726,6 +755,20 @@ export default class App extends Component {
                                     render={props => (
                                         <ErrorBoundary>
                                             <Support {...props} />
+                                        </ErrorBoundary>
+                                    )}
+                                />
+                                <Route
+                                    exact
+                                    path="/system-messages"
+                                    navbarName="System messages"
+                                    render={props => (
+                                        <ErrorBoundary>
+                                            <SystemMessagesAdmin
+                                                user={user}
+                                                openSnackbar={this.openSnackbar}
+                                                {...props}
+                                            />
                                         </ErrorBoundary>
                                     )}
                                 />

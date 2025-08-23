@@ -28,6 +28,13 @@ export const NotificationChannel = Object.freeze({
     Push: 3,
 });
 
+export const Severity = Object.freeze({
+    Error: 0,
+    Warning: 1,
+    Info: 2,
+    Success: 3,
+});
+
 /**
  * @deprecated
  */
@@ -46,12 +53,17 @@ export const BacklogHubMethods = Object.freeze({
     ReservationChatMessageSent: 'ReservationChatMessageSent',
 });
 
+export const KeyLockerHubMethods = Object.freeze({
+    KeyLockerBoxOpened: 'KeyLockerBoxOpened',
+    KeyLockerBoxClosed: 'KeyLockerBoxClosed',
+});
+
 export function getStateName(state) {
     switch (state) {
         case State.SubmittedNotActual:
             return 'Scheduled';
         case State.ReminderSentWaitingForKey:
-            return 'Leave the key at reception';
+            return 'Drop-off the key';
         case State.CarKeyLeftAndLocationConfirmed:
             return 'All set, ready to wash';
         case State.WashInProgress:

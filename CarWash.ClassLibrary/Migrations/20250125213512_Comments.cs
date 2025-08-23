@@ -21,9 +21,9 @@ namespace CarWash.ClassLibrary.Migrations
                     SET CommentsJson = 
                         CASE 
                             WHEN Comment IS NOT NULL AND CarwashComment IS NOT NULL THEN 
-                                '[{""role"":""user"", ""message"":""'+ Comment + '"", ""timestamp"":""'+ FORMAT(CreatedOn, 'yyyy-MM-ddTHH:mm:ss') + '""}, {""role"":""carwash"", ""message"":""'+ CarwashComment + '"", ""timestamp"":""'+ FORMAT(CreatedOn, 'yyyy-MM-ddTHH:mm:ss') + '""}]'
+                                '[{""role"":""user"", ""message"":""'+ REPLACE(CAST(Comment AS NVARCHAR(MAX)), CHAR(10), ' ') + '"", ""timestamp"":""'+ FORMAT(CreatedOn, 'yyyy-MM-ddTHH:mm:ss') + '""}, {""role"":""carwash"", ""message"":""'+ REPLACE(CAST(CarwashComment AS NVARCHAR(MAX)), CHAR(10), ' ') + '"", ""timestamp"":""'+ FORMAT(CreatedOn, 'yyyy-MM-ddTHH:mm:ss') + '""}]'
                             WHEN Comment IS NOT NULL THEN
-                                '[{""role"":""user"", ""message"":""'+ Comment + '"", ""timestamp"":""'+ FORMAT(CreatedOn, 'yyyy-MM-ddTHH:mm:ss') + '""}]'
+                                '[{""role"":""user"", ""message"":""'+ REPLACE(CAST(Comment AS NVARCHAR(MAX)), CHAR(10), ' ') + '"", ""timestamp"":""'+ FORMAT(CreatedOn, 'yyyy-MM-ddTHH:mm:ss') + '""}]'
                             WHEN CarwashComment IS NOT NULL THEN
                                 '[{""role"":""carwash"", ""message"":""'+ CarwashComment + '"", ""timestamp"":""'+ FORMAT(CreatedOn, 'yyyy-MM-ddTHH:mm:ss') + '""}]'
                             ELSE NULL

@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CarWash.ClassLibrary.Enums;
@@ -7,7 +6,6 @@ using CarWash.ClassLibrary.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using User = CarWash.ClassLibrary.Models.User;
 using CarWash.PWA.Attributes;
@@ -23,29 +21,18 @@ namespace CarWash.PWA.Controllers
     [UserAction]
     [Route("api/users")]
     [ApiController]
-    public class UsersController : ControllerBase, IUsersController
+    public class UsersController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
         private readonly User _user;
         private readonly IEmailService _emailService;
 
         /// <inheritdoc />
-        public UsersController(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor, IEmailService emailService)
+        public UsersController(ApplicationDbContext context, IUserService userService, IEmailService emailService)
         {
             _context = context;
             _emailService = emailService;
-
-            var email = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Upn)?.ToLower() ??
-                        httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Email)?.ToLower() ??
-                        httpContextAccessor.HttpContext.User.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.ToLower().Replace("live.com#", "");
-
-            // Check if request is coming from an authorized service application.
-            var serviceAppId = httpContextAccessor.HttpContext.User.FindFirstValue("appid");
-            if (serviceAppId != null && email == null) return;
-
-            if (email == null) throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
-
-            _user = _context.Users.SingleOrDefault(u => u.Email == email);
+            _user = userService.CurrentUser;
         }
 
         // GET: api/users
@@ -174,7 +161,9 @@ namespace CarWash.PWA.Controllers
                         _user.CalendarIntegration = value.GetBoolean();
                         break;
                     case "notificationchannel":
-                        _user.NotificationChannel = (NotificationChannel)value.GetInt32();
+                        var notificationChannel = (NotificationChannel)value.GetInt32();
+                        if (!Enum.IsDefined(notificationChannel)) return BadRequest("Notification channel is not valid.");
+                        _user.NotificationChannel = notificationChannel;
                         break;
                     default:
                         return BadRequest("Setting key is not valid.");
@@ -270,7 +259,7 @@ namespace CarWash.PWA.Controllers
                 To = user.Email,
                 Subject = "CarWash account deleted",
                 Body = $@"Hi, 
-we just wanted to let you know, that { (user.Id == _user.Id ? "you have successfully deleted you CarWash account" : "your Car Fleet Manager has deleted your CarWash account") }. 
+we just wanted to let you know, that {(user.Id == _user.Id ? "you have successfully deleted you CarWash account" : "your Car Fleet Manager has deleted your CarWash account")}. 
 If it wasn't intentional, please contact the CarWash app support by replying to this email!
 Please keep in mind, that we are required to continue storing your previous reservations including their vehicle registration plates for accounting and auditing purposes."
             };
@@ -300,37 +289,28 @@ Please keep in mind, that we are required to continue storing your previous rese
 
             return Ok(new UserViewModel(user));
         }
-
-        /// <inheritdoc />
-        [NonAction]
-        public User GetCurrentUser() => _user;
     }
-
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public class UserViewModel
+    public record UserViewModel(
+        string Id,
+        string FirstName,
+        string LastName,
+        string Company,
+        bool IsAdmin,
+        bool IsCarwashAdmin,
+        bool CalendarIntegration,
+        NotificationChannel NotificationChannel)
     {
-        public UserViewModel() { }
-
-        public UserViewModel(User user)
-        {
-            Id = user.Id;
-            FirstName = user.FirstName;
-            LastName = user.LastName;
-            Company = user.Company;
-            IsAdmin = user.IsAdmin;
-            IsCarwashAdmin = user.IsCarwashAdmin;
-            CalendarIntegration = user.CalendarIntegration;
-            NotificationChannel = user.NotificationChannel;
-        }
-
-        public string Id { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string Company { get; set; }
-        public bool IsAdmin { get; set; }
-        public bool IsCarwashAdmin { get; set; }
-        public bool CalendarIntegration { get; set; }
-        public NotificationChannel NotificationChannel { get; set; }
+        public UserViewModel(User user) : this(
+            user.Id,
+            user.FirstName,
+            user.LastName,
+            user.Company,
+            user.IsAdmin,
+            user.IsCarwashAdmin,
+            user.CalendarIntegration,
+            user.NotificationChannel)
+        { }
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

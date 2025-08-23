@@ -50,7 +50,7 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Gets or sets the device id for later use.
         /// </summary>
-        public string DeviceId { get; set; }
+        public string? DeviceId { get; set; }
 
         /// <summary>
         /// Gets or sets the endpoint associated with the push subscription.

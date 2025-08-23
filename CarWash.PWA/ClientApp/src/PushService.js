@@ -28,13 +28,9 @@ export function askPermission() {
     return new Promise((resolve, reject) => {
         if (!('Notification' in window)) reject();
 
-        const permissionResult = Notification.requestPermission(result => {
+        Notification.requestPermission(result => {
             resolve(result);
-        });
-
-        if (permissionResult) {
-            permissionResult.then(resolve, reject);
-        }
+        })?.then(resolve, reject);
     });
 }
 
@@ -52,7 +48,7 @@ export default function registerPush() {
                     }
 
                     // Otherwise subscribe with the server public key
-                    const vapidPublicKey = await apiFetch('/api/push/vapidpublickey');
+                    const vapidPublicKey = await apiFetch('/api/.well-known/vapidpublickey');
                     const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
 
                     return registration.pushManager.subscribe({

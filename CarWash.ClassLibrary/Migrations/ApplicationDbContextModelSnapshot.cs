@@ -17,7 +17,7 @@ namespace CarWash.ClassLibrary.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "9.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -55,6 +55,9 @@ namespace CarWash.ClassLibrary.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("Color")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedOn")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2");
@@ -71,6 +74,9 @@ namespace CarWash.ClassLibrary.Migrations
                         .HasMaxLength(36)
                         .HasColumnType("nvarchar(36)");
 
+                    b.Property<DateTime>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
@@ -80,6 +86,95 @@ namespace CarWash.ClassLibrary.Migrations
                         .IsUnique();
 
                     b.ToTable("Company");
+                });
+
+            modelBuilder.Entity("CarWash.ClassLibrary.Models.KeyLockerBox", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("BoxSerial")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Building")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Floor")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsConnected")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDoorClosed")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastActivity")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LockerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("State")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LockerId", "BoxSerial")
+                        .IsUnique();
+
+                    b.ToTable("KeyLockerBox");
+                });
+
+            modelBuilder.Entity("CarWash.ClassLibrary.Models.KeyLockerBoxHistory", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("BoxId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("BoxSerial")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDoorClosed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LockerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("State")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LockerId", "BoxSerial");
+
+                    b.ToTable("KeyLockerBoxHistory");
                 });
 
             modelBuilder.Entity("CarWash.ClassLibrary.Models.PushSubscription", b =>
@@ -139,6 +234,9 @@ namespace CarWash.ClassLibrary.Migrations
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("KeyLockerBoxId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("Location")
                         .HasColumnType("nvarchar(max)");
 
@@ -173,9 +271,34 @@ namespace CarWash.ClassLibrary.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("KeyLockerBoxId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Reservation");
+                });
+
+            modelBuilder.Entity("CarWash.ClassLibrary.Models.SystemMessage", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("EndDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Severity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SystemMessage");
                 });
 
             modelBuilder.Entity("CarWash.ClassLibrary.Models.User", b =>
@@ -185,6 +308,12 @@ namespace CarWash.ClassLibrary.Migrations
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
+
+                    b.Property<string>("BillingAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BillingName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("CalendarIntegration")
                         .HasColumnType("bit");
@@ -235,8 +364,14 @@ namespace CarWash.ClassLibrary.Migrations
                     b.Property<int>("NotificationChannel")
                         .HasColumnType("int");
 
+                    b.Property<string>("Oid")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PaymentMethod")
+                        .HasColumnType("int");
 
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
@@ -416,9 +551,15 @@ namespace CarWash.ClassLibrary.Migrations
 
             modelBuilder.Entity("CarWash.ClassLibrary.Models.Reservation", b =>
                 {
+                    b.HasOne("CarWash.ClassLibrary.Models.KeyLockerBox", "KeyLockerBox")
+                        .WithMany()
+                        .HasForeignKey("KeyLockerBoxId");
+
                     b.HasOne("CarWash.ClassLibrary.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId");
+
+                    b.Navigation("KeyLockerBox");
 
                     b.Navigation("User");
                 });

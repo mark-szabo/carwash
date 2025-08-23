@@ -1,24 +1,4 @@
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-using Microsoft.ApplicationInsights.AspNetCore;
-using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.ApplicationInsights.SnapshotCollector;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.Net.Http.Headers;
-using CarWash.ClassLibrary.Models;
-using CarWash.ClassLibrary.Services;
-using CarWash.PWA.Controllers;
-using CarWash.PWA.Hubs;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -28,14 +8,37 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
+using CarWash.ClassLibrary.Models;
+using CarWash.ClassLibrary.Services;
+using CarWash.PWA.Hubs;
+using Microsoft.ApplicationInsights.AspNetCore;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
-using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
-using System.Text.Json;
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.ApplicationInsights.SnapshotCollector;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
+using Microsoft.Azure.Devices;
 using Microsoft.Data.SqlClient;
-using CarWash.ClassLibrary;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using Microsoft.FeatureManagement;
+using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
+using Microsoft.OpenApi.Models;
+using static CarWash.ClassLibrary.Constants;
 
 namespace CarWash.PWA
 {
@@ -56,25 +59,30 @@ namespace CarWash.PWA
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddAzureAppConfiguration();
+            services.AddFeatureManagement();
 
             services.Configure<CarWashConfiguration>(configuration);
             services.PostConfigure<CarWashConfiguration>(config =>
             {
                 if (config.Services.Count == 0)
                 {
-                    config.Services = JsonSerializer.Deserialize<List<Service>>(configuration.GetValue<string>("Services"), Constants.DefaultJsonSerializerOptions);
+                    config.Services = JsonSerializer.Deserialize<List<Service>>(configuration.GetValue<string>("Services") ?? throw new Exception("Services are missing from configuration."), DefaultJsonSerializerOptions) ?? throw new Exception("Parsed Services are null.");
                 }
 
-                config.BuildNumber = configuration.GetValue<string>("BUILD_NUMBER");
+                config.BuildNumber = configuration.GetValue<string>("BUILD_NUMBER") ?? "0.0.0";
             });
+
+            var iotHubServiceClient = ServiceClient.CreateFromConnectionString(configuration.GetConnectionString("IotHub"), Microsoft.Azure.Devices.TransportType.Amqp, new ServiceClientOptions { SdkAssignsMessageId = Microsoft.Azure.Devices.Shared.SdkAssignsMessageId.WhenUnset });
+            services.AddSingleton(iotHubServiceClient);
 
             // Add application services
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddScoped<IUsersController, UsersController>();
+            services.AddScoped<IUserService, UserService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ICalendarService, CalendarService>();
             services.AddScoped<IPushService, PushService>();
             services.AddScoped<IBotService, BotService>();
+            services.AddScoped<IKeyLockerService, KeyLockerService>();
 
             // Add framework services
             services.AddApplicationInsightsTelemetry(configuration);
@@ -114,12 +122,12 @@ namespace CarWash.PWA
                         OnTokenValidated = async context =>
                         {
                             // Check if request is coming from an authorized service application.
-                            var serviceAppId = context.Principal.FindFirstValue("appid");
+                            var serviceAppId = context.Principal?.FindFirstValue("appid");
                             if (serviceAppId != null && serviceAppId != configuration["AzureAd:ClientId"])
                             {
-                                if (configuration["AzureAd:AuthorizedApplications"].Contains(serviceAppId))
+                                if (configuration["AzureAd:AuthorizedApplications"]?.Contains(serviceAppId) == true)
                                 {
-                                    context.Principal.AddIdentity(new ClaimsIdentity([new("appId", serviceAppId)]));
+                                    context.Principal?.AddIdentity(new ClaimsIdentity([new("appId", serviceAppId)]));
 
                                     return;
                                 }
@@ -135,14 +143,32 @@ namespace CarWash.PWA
                             // Get EF context
                             var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
 
-                            var company = (await dbContext.Company.SingleOrDefaultAsync(t => t.TenantId == context.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid"))) ??
+                            var entraTenantId = context.Principal?.FindFirstValue(ClaimConstants.Tid) ??
+                                context.Principal?.FindFirstValue(ClaimConstants.TenantId) ??
+                                throw new SecurityTokenInvalidIssuerException("Tenant ('tid' or 'tenantid') cannot be found in auth token.");
+
+                            var entraOid = context.Principal.FindFirstValue(ClaimConstants.Oid) ??
+                                context.Principal.FindFirstValue(ClaimConstants.ObjectId);
+
+                            var company = (await dbContext.Company.SingleOrDefaultAsync(t => t.TenantId == entraTenantId)) ??
                                 throw new SecurityTokenInvalidIssuerException("Tenant ('tenantid') cannot be found in auth token.");
                             var email = context.Principal.FindFirstValue(ClaimTypes.Upn)?.ToLower();
                             if (email == null && company.Name == Company.Carwash) email = context.Principal.FindFirstValue(ClaimTypes.Email)?.ToLower() ??
-                                context.Principal.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.ToLower().Replace("live.com#", "");
+                                context.Principal.FindFirstValue(ClaimTypes.Name)?.ToLower().Replace("live.com#", "");
                             if (email == null) throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
 
-                            var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
+                            var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Oid == entraOid);
+
+                            if (user == null)
+                            {
+                                user = await dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
+                                if (user != null)
+                                {
+                                    user.Oid = entraOid;
+                                    dbContext.Update(user);
+                                    await dbContext.SaveChangesAsync();
+                                }
+                            }
 
                             if (user == null)
                             {
@@ -181,17 +207,44 @@ namespace CarWash.PWA
                                 }
                             }
 
-                            var claims = new List<Claim>
+                            // Add claims directly to the existing identity
+                            if (context.Principal.Identity is ClaimsIdentity identity)
                             {
-                                new Claim("admin", user.IsAdmin.ToString()),
-                                new Claim("carwashadmin", user.IsCarwashAdmin.ToString())
-                            };
-                            context.Principal.AddIdentity(new ClaimsIdentity(claims));
+                                identity.AddClaim(new Claim("userid", user.Id));
+                                identity.AddClaim(new Claim("admin", user.IsAdmin.ToString()));
+                                identity.AddClaim(new Claim("carwashadmin", user.IsCarwashAdmin.ToString()));
+                            }
+                            context.HttpContext.Items["CurrentUser"] = user;
                         },
                         OnAuthenticationFailed = context =>
                         {
                             context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                             context.Response.ContentType = "application/json";
+                            return Task.CompletedTask;
+                        },
+                        // We have to hook the OnMessageReceived event in order to
+                        // allow the JWT authentication handler to read the access
+                        // token from the query string when a WebSocket or 
+                        // Server-Sent Events request comes in.
+
+                        // Sending the access token in the query string is required when using WebSockets or ServerSentEvents
+                        // due to a limitation in Browser APIs. We restrict it to only calls to the
+                        // SignalR hub in this code.
+                        // See https://docs.microsoft.com/aspnet/core/signalr/security#access-token-logging
+                        // for more information about security considerations when using
+                        // the query string to transmit the access token.
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+
+                            // If the request is for our hub...
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) &&
+                                (path.StartsWithSegments("/hub")))
+                            {
+                                // Read the token out of the query string
+                                context.Token = accessToken;
+                            }
                             return Task.CompletedTask;
                         }
                     };
@@ -204,13 +257,15 @@ namespace CarWash.PWA
             });
 
             // Add gzip compression
-            services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Optimal);
-            services.AddResponseCompression(options =>
+            if (!currentEnvironment.IsDevelopment())
             {
-                options.Providers.Add<GzipCompressionProvider>();
-                //options.EnableForHttps = true;
-                options.MimeTypes = new[]
+                services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Optimal);
+                services.AddResponseCompression(options =>
                 {
+                    options.Providers.Add<GzipCompressionProvider>();
+                    //options.EnableForHttps = true;
+                    options.MimeTypes = new[]
+                    {
                     // Default
                     "text/plain",
                     "text/css",
@@ -224,17 +279,19 @@ namespace CarWash.PWA
                     // Custom
                     "image/svg+xml",
                     "application/font-woff2"
-                };
-            });
+                    };
+                });
 
-            services.Configure<HstsOptions>(options =>
-            {
-                options.IncludeSubDomains = true;
-                options.MaxAge = TimeSpan.FromDays(365);
-            });
+                services.Configure<HstsOptions>(options =>
+                {
+                    options.IncludeSubDomains = true;
+                    options.MaxAge = TimeSpan.FromDays(365);
+                });
+            }
 
             // Configure SignalR
             services.AddSignalR();
+            services.AddSingleton<IUserIdProvider, SignalRUserIdProvider>();
 
             if (currentEnvironment.IsDevelopment())
             {
@@ -321,6 +378,7 @@ namespace CarWash.PWA
             }
             else
             {
+                app.UseResponseCompression();
                 app.UseExceptionHandler("/Error");
                 app.UseHsts();
             }
@@ -340,10 +398,9 @@ namespace CarWash.PWA
                 context.Response.Headers.Append("Content-Security-Policy", new[] { ContentSecurityPolicy });
                 context.Response.Headers.Remove(HeaderNames.Server);
                 context.Response.Headers.Remove("X-Powered-By");
+
                 await next();
             });
-
-            app.UseResponseCompression();
 
             app.UseStaticFiles(new StaticFileOptions
             {
@@ -382,6 +439,7 @@ namespace CarWash.PWA
             {
                 endpoints.MapHealthChecks("/api/healthcheck");
                 endpoints.MapHub<BacklogHub>("/hub/backlog");
+                endpoints.MapHub<KeyLockerHub>("/hub/keylocker");
                 endpoints.MapControllerRoute("default", "{controller}/{action=Index}/{id?}");
             });
 
@@ -411,6 +469,15 @@ namespace CarWash.PWA
                     spa.UseReactDevelopmentServer(npmScript: "start");
                 }
             });
+        }
+
+        public class SignalRUserIdProvider : IUserIdProvider
+        {
+            public string GetUserId(HubConnectionContext connection)
+            {
+                // Get the user id from the ClaimsPrincipal
+                return connection.User?.FindFirstValue("userid") ?? throw new Exception("User id ('userid') cannot be found in claims principal.");
+            }
         }
 
         private class SnapshotCollectorTelemetryProcessorFactory : ITelemetryProcessorFactory

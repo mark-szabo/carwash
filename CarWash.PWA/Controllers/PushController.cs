@@ -24,9 +24,9 @@ namespace CarWash.PWA.Controllers
         private readonly IPushService _pushService;
 
         /// <inheritdoc />
-        public PushController(IUsersController usersController, IWebHostEnvironment hostingEnvironment, IPushService pushService)
+        public PushController(IUserService userService, IWebHostEnvironment hostingEnvironment, IPushService pushService)
         {
-            _user = usersController.GetCurrentUser();
+            _user = userService.CurrentUser;
             _env = hostingEnvironment;
             _pushService = pushService;
         }
@@ -37,11 +37,10 @@ namespace CarWash.PWA.Controllers
         /// </summary>
         /// <returns>VAPID Public Key</returns>
         /// <response code="200">OK</response>
-        /// <response code="401">Unauthorized</response>
         [HttpGet, Route("vapidpublickey")]
         public ActionResult<string> GetVapidPublicKey()
         {
-            return Ok(_pushService.GetVapidPublicKey());
+            return Redirect("/api/.well-known/vapidpublickey");
         }
 
         // POST: api/push/register
