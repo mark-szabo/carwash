@@ -128,7 +128,7 @@ class CarwashGrid extends Component {
                         </Grid>
                     ))}
                 </CardSection>
-                <CardSection title="Today" expanded>
+                <CardSection title={`Today (${done.length}/${today.length + done.length})`} expanded>
                     {today.length <= 0 && (
                         // eslint-disable-next-line
                         <Typography gutterBottom className={classes.readyText}>
@@ -149,7 +149,7 @@ class CarwashGrid extends Component {
                         </Grid>
                     ))}
                 </CardSection>
-                <CardSection title="Tomorrow">
+                <CardSection title={`Tomorrow (${tomorrow.length})`}>
                     {tomorrow.map(reservation => (
                         <Grid item key={reservation.id} className={classes.card}>
                             <CarwashCard
