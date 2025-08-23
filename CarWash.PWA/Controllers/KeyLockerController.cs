@@ -33,6 +33,7 @@ namespace CarWash.PWA.Controllers
         TelemetryClient telemetryClient) : ControllerBase
     {
         private readonly User _user = userService.CurrentUser ?? throw new Exception("User is not authenticated.");
+        private const int MAX_BOXES_TO_GENERATE = 100;
 
         // GET: api/keylocker/generate
         /// <summary>
@@ -50,6 +51,11 @@ namespace CarWash.PWA.Controllers
             if (string.IsNullOrEmpty(request.NamePrefix) || request.NumberOfBoxes <= 0 || string.IsNullOrEmpty(request.Building) || string.IsNullOrEmpty(request.Floor))
             {
                 return BadRequest("Invalid request parameters.");
+            }
+
+            if (request.NumberOfBoxes > MAX_BOXES_TO_GENERATE)
+            {
+                return BadRequest($"Cannot generate more than {MAX_BOXES_TO_GENERATE} boxes at once.");
             }
 
             await keyLockerService.GenerateBoxesToLocker(

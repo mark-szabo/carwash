@@ -81,10 +81,10 @@ function DropoffDialog({
     // When the locker closed event arrives from the SignalR hub,
     // if the DropoffDialog is visible and on step 3 then push to step 4.
     useEffect(() => {
-        if (closedKeyLockerBoxIds && closedKeyLockerBoxIds.includes(openedBoxId) && step === 3) {
+        if (closedKeyLockerBoxIds?.includes(openedBoxId) && step === 3) {
             setStep(4);
         }
-        if (closedKeyLockerBoxIds && !closedKeyLockerBoxIds.includes(openedBoxId) && step === 4) {
+        if (!closedKeyLockerBoxIds?.includes(openedBoxId) && step === 4) {
             setStep(3); // Go back to step 3 when the box is reopened
         }
     }, [closedKeyLockerBoxIds, reservation.id, step]);
@@ -116,10 +116,6 @@ function DropoffDialog({
         if (!errors.garage && !errors.floor) {
             setStep(step + 1);
         }
-    };
-
-    const handleBack = () => {
-        setStep(step - 1);
     };
 
     const handleConfirm = () => {
@@ -173,7 +169,7 @@ function DropoffDialog({
                     method: 'POST',
                 }
             );
-            if (response && response.name) {
+            if (response?.name) {
                 setOpenedBoxName(response.name);
                 setOpenedBoxId(response.boxId);
             }
@@ -209,6 +205,54 @@ function DropoffDialog({
         onClose();
     };
 
+    const getDialogTitle = () => {
+        if (step === 1) return 'Step 1: Confirm location';
+        if (step === 2) return 'Step 2: Open locker';
+        if (step === 3) return 'Step 3: Leave key';
+        if (step === 4) return 'Step 4: Confirm drop-off';
+        return 'Unknown step';
+    };
+
+    function renderDialogActions() {
+        if (step === 1) {
+            return (
+                <DialogActions>
+                    <Button onClick={handleCancel} color="primary">
+                        Cancel
+                    </Button>
+                    {configuration.featureFlags.includes('KeyLocker') ? (
+                        <Button onClick={handleNext} color="primary" autoFocus>
+                            Next
+                        </Button>
+                    ) : (
+                        <Button onClick={handleConfirm} color="primary" autoFocus>
+                            Confirm
+                        </Button>
+                    )}
+                </DialogActions>
+            );
+        }
+        if (step === 4) {
+            return (
+                <DialogActions>
+                    <Button onClick={handleCancel} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleConfirm} color="primary" variant="contained" autoFocus>
+                        Confirm
+                    </Button>
+                </DialogActions>
+            );
+        }
+        return (
+            <DialogActions>
+                <Button onClick={handleCancel} color="primary">
+                    Cancel
+                </Button>
+            </DialogActions>
+        );
+    }
+
     return (
         <Dialog
             open={open}
@@ -219,15 +263,7 @@ function DropoffDialog({
             aria-describedby="dropoff-dialog-title"
             translate="no" // React Chrome Translator bug workaround: https://github.com/facebook/react/issues/11538
         >
-            <DialogTitle id="dropoff-dialog-title">
-                {step === 1
-                    ? 'Step 1: Confirm location'
-                    : step === 2
-                      ? 'Step 2: Open locker'
-                      : step === 3
-                        ? 'Step 3: Leave key'
-                        : 'Step 4: Confirm drop-off'}
-            </DialogTitle>
+            <DialogTitle id="dropoff-dialog-title">{getDialogTitle()}</DialogTitle>
             <DialogContent>
                 {step === 1 && (
                     <>
@@ -292,37 +328,7 @@ function DropoffDialog({
                     </div>
                 )}
             </DialogContent>
-            <DialogActions>
-                {step === 1 ? (
-                    <>
-                        <Button onClick={handleCancel} color="primary">
-                            Cancel
-                        </Button>
-                        {configuration.featureFlags.includes('KeyLocker') ? (
-                            <Button onClick={handleNext} color="primary" autoFocus>
-                                Next
-                            </Button>
-                        ) : (
-                            <Button onClick={handleConfirm} color="primary" autoFocus>
-                                Confirm
-                            </Button>
-                        )}
-                    </>
-                ) : step === 4 ? (
-                    <>
-                        <Button onClick={handleCancel} color="primary">
-                            Cancel
-                        </Button>
-                        <Button onClick={handleConfirm} color="primary" variant="contained" autoFocus>
-                            Confirm
-                        </Button>
-                    </>
-                ) : (
-                    <Button onClick={handleCancel} color="primary">
-                        Cancel
-                    </Button>
-                )}
-            </DialogActions>
+            {renderDialogActions()}
         </Dialog>
     );
 }

@@ -185,8 +185,8 @@ class Layout extends React.Component {
         if (window.location.pathname === '/') return this.props.children.props.children[0].props.navbarName;
 
         let name;
-        this.props.children.props.children.map(child => {
-            if (child.props.path === '/') return null;
+        for (const child of this.props.children.props.children) {
+            if (child.props.path === '/') continue;
 
             try {
                 if (window.location.pathname.includes(child.props.path)) {
@@ -199,7 +199,7 @@ class Layout extends React.Component {
             }
 
             return null;
-        });
+        }
 
         return name;
     }
@@ -208,8 +208,8 @@ class Layout extends React.Component {
         if (window.location.pathname === '/') return this.props.children.props.children[0].props.refresh;
 
         let func;
-        this.props.children.props.children.map(child => {
-            if (child.props.path === '/') return null;
+        for (const child of this.props.children.props.children) {
+            if (child.props.path === '/') continue;
 
             try {
                 if (window.location.pathname.includes(child.props.path)) {
@@ -220,9 +220,7 @@ class Layout extends React.Component {
                     func = child.props.refresh;
                 }
             }
-
-            return null;
-        });
+        }
 
         return func;
     }
@@ -359,6 +357,7 @@ Layout.propTypes = {
     version: PropTypes.string.isRequired,
     searchTerm: PropTypes.string.isRequired,
     handleSearchChange: PropTypes.func.isRequired,
+    children: PropTypes.node.isRequired,
 };
 
 export default withStyles(styles, { withTheme: true })(Layout);

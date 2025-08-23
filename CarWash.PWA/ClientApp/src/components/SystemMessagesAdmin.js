@@ -13,7 +13,7 @@ import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Spinner from './Spinner';
-import { Alert, AlertTitle } from '@mui/material';
+import { Alert } from '@mui/material';
 import { Severity } from '../Constants';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
@@ -45,8 +45,6 @@ const styles = theme => ({
 });
 
 class SystemMessagesAdmin extends React.Component {
-    displayName = 'System messages';
-
     state = {
         loading: true,
         systemMessages: [],
