@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import apiFetch from '../Auth';
 import { Link } from 'react-router-dom';

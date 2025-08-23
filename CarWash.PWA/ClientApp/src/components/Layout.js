@@ -11,6 +11,7 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import Hidden from '@mui/material/Hidden';
 import Divider from '@mui/material/Divider';
+import MuiLink from '@mui/material/Link';
 import MenuIcon from '@mui/icons-material/Menu';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -255,15 +256,16 @@ class Layout extends React.Component {
                         {version !== configuration.version && (
                             <>
                                 {' - '}
-                                <a
-                                    href="#"
+                                <MuiLink
+                                    component="button"
+                                    variant="body2"
+                                    className={classes.link}
                                     onClick={() => {
                                         window.location.reload();
                                     }}
-                                    className={classes.link}
                                 >
                                     Update available!
-                                </a>
+                                </MuiLink>
                             </>
                         )}
                     </span>
