@@ -41,6 +41,11 @@ namespace CarWash.ClassLibrary.Models
         public List<SystemMessage> ActiveSystemMessages { get; set; } = [];
 
         /// <summary>
+        /// List of feature flags enabled for the application.
+        /// </summary>
+        public List<string> FeatureFlags { get; set; } = [];
+
+        /// <summary>
         /// Build number.
         /// </summary>
         public string BuildNumber { get; set; } = string.Empty;
