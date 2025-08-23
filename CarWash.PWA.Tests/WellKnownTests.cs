@@ -25,7 +25,8 @@ namespace CarWash.PWA.Tests
             const string PUBLIC_KEY = "test public key";
             pushServiceMock.Setup(m => m.GetVapidPublicKey()).Returns(PUBLIC_KEY);
             var configurationStub = CreateConfigurationStub();
-            var controller = new WellKnownController(configurationStub, dbContext, pushServiceMock.Object);
+            var featureManagerMock = new Mock<Microsoft.FeatureManagement.IFeatureManager>();
+            var controller = new WellKnownController(configurationStub, dbContext, pushServiceMock.Object, featureManagerMock.Object);
 
             var result = controller.GetVapidPublicKey();
 

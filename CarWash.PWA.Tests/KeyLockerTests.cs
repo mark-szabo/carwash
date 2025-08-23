@@ -1,4 +1,7 @@
-﻿using CarWash.ClassLibrary.Enums;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Controllers;
@@ -8,12 +11,10 @@ using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Azure.Devices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Moq;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CarWash.PWA.Tests
@@ -52,8 +53,8 @@ namespace CarWash.PWA.Tests
             // Arrange
             var context = TestDbContextFactory.Create();
             var config = TestOptionsMonitorFactory.Create();
-            var iotHubClient = new Mock<Microsoft.Azure.Devices.ServiceClient>().Object;
-            var service = new KeyLockerService(context, config, iotHubClient);
+            var iotHubClient = new Mock<ServiceClient>().Object;
+            var service = new KeyLockerService(context, config, iotHubClient, TestControllerFactory.CreateTelemetryClientStub());
 
             // Act
             await service.GenerateBoxesToLocker("Box", 2, "Bldg", "1");
@@ -69,8 +70,8 @@ namespace CarWash.PWA.Tests
             // Arrange
             var context = TestDbContextFactory.Create();
             var config = TestOptionsMonitorFactory.Create();
-            var iotHubClient = new Mock<Microsoft.Azure.Devices.ServiceClient>().Object;
-            var service = new KeyLockerService(context, config, iotHubClient);
+            var iotHubClient = new Mock<ServiceClient>().Object;
+            var service = new KeyLockerService(context, config, iotHubClient, TestControllerFactory.CreateTelemetryClientStub());
             await service.GenerateBoxesToLocker("Box", 1, "Bldg", "1");
             var boxId = context.KeyLockerBox.First().Id;
             context.KeyLockerBox.First().State = KeyLockerBoxState.Used;
@@ -88,8 +89,11 @@ namespace CarWash.PWA.Tests
             // Arrange
             var context = TestDbContextFactory.Create();
             var config = TestOptionsMonitorFactory.Create();
-            var iotHubClient = new Mock<Microsoft.Azure.Devices.ServiceClient>().Object;
-            var service = new KeyLockerService(context, config, iotHubClient);
+            var iotHubClientMock = new Mock<ServiceClient>();
+            iotHubClientMock
+                .Setup(x => x.InvokeDeviceMethodAsync(It.IsAny<string>(), It.IsAny<CloudToDeviceMethod>(), default))
+                .ReturnsAsync(new CloudToDeviceMethodResult() { Status = 200 });
+            var service = new KeyLockerService(context, config, iotHubClientMock.Object, TestControllerFactory.CreateTelemetryClientStub());
             await service.GenerateBoxesToLocker("Box", 1, "Bldg", "1", "locker1");
             context.KeyLockerBox.First().State = KeyLockerBoxState.Empty;
 
@@ -107,8 +111,8 @@ namespace CarWash.PWA.Tests
             // Arrange
             var context = TestDbContextFactory.Create();
             var config = TestOptionsMonitorFactory.Create();
-            var iotHubClient = new Mock<Microsoft.Azure.Devices.ServiceClient>().Object;
-            var service = new KeyLockerService(context, config, iotHubClient);
+            var iotHubClient = new Mock<ServiceClient>().Object;
+            var service = new KeyLockerService(context, config, iotHubClient, TestControllerFactory.CreateTelemetryClientStub());
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentException>(() => service.FreeUpBoxAsync(null));
@@ -120,8 +124,8 @@ namespace CarWash.PWA.Tests
             // Arrange
             var context = TestDbContextFactory.Create();
             var config = TestOptionsMonitorFactory.Create();
-            var iotHubClient = new Mock<Microsoft.Azure.Devices.ServiceClient>().Object;
-            var service = new KeyLockerService(context, config, iotHubClient);
+            var iotHubClient = new Mock<ServiceClient>().Object;
+            var service = new KeyLockerService(context, config, iotHubClient, TestControllerFactory.CreateTelemetryClientStub());
             await service.GenerateBoxesToLocker("Box", 1, "Bldg", "1");
             var boxId = context.KeyLockerBox.First().Id;
             context.KeyLockerBox.First().State = KeyLockerBoxState.Used;
@@ -140,8 +144,11 @@ namespace CarWash.PWA.Tests
             // Arrange
             var context = TestDbContextFactory.Create();
             var config = TestOptionsMonitorFactory.Create();
-            var iotHubClient = new Mock<Microsoft.Azure.Devices.ServiceClient>().Object;
-            var service = new KeyLockerService(context, config, iotHubClient);
+            var iotHubClientMock = new Mock<ServiceClient>();
+            iotHubClientMock
+                .Setup(x => x.InvokeDeviceMethodAsync(It.IsAny<string>(), It.IsAny<CloudToDeviceMethod>(), default))
+                .ReturnsAsync(new CloudToDeviceMethodResult() { Status = 200 });
+            var service = new KeyLockerService(context, config, iotHubClientMock.Object, TestControllerFactory.CreateTelemetryClientStub());
             await service.GenerateBoxesToLocker("Box", 2, "Bldg", "1", "locker1");
             // Set both boxes to Empty
             foreach (var box in context.KeyLockerBox) box.State = KeyLockerBoxState.Empty;
@@ -161,8 +168,8 @@ namespace CarWash.PWA.Tests
             // Arrange
             var context = TestDbContextFactory.Create();
             var config = TestOptionsMonitorFactory.Create();
-            var iotHubClient = new Mock<Microsoft.Azure.Devices.ServiceClient>().Object;
-            var service = new KeyLockerService(context, config, iotHubClient);
+            var iotHubClient = new Mock<ServiceClient>().Object;
+            var service = new KeyLockerService(context, config, iotHubClient, TestControllerFactory.CreateTelemetryClientStub());
             await service.GenerateBoxesToLocker("Box", 1, "Bldg", "1", "locker1");
             context.KeyLockerBox.First().State = KeyLockerBoxState.Used;
 
@@ -176,8 +183,8 @@ namespace CarWash.PWA.Tests
             // Arrange
             var context = TestDbContextFactory.Create();
             var config = TestOptionsMonitorFactory.Create();
-            var iotHubClient = new Mock<Microsoft.Azure.Devices.ServiceClient>().Object;
-            var service = new KeyLockerService(context, config, iotHubClient);
+            var iotHubClient = new Mock<ServiceClient>().Object;
+            var service = new KeyLockerService(context, config, iotHubClient, TestControllerFactory.CreateTelemetryClientStub());
 
             // Act
             await Assert.ThrowsAsync<ArgumentException>(() => service.OpenBoxByIdAsync(null));
@@ -189,8 +196,8 @@ namespace CarWash.PWA.Tests
             // Arrange
             var context = TestDbContextFactory.Create();
             var config = TestOptionsMonitorFactory.Create();
-            var iotHubClient = new Mock<Microsoft.Azure.Devices.ServiceClient>().Object;
-            var service = new KeyLockerService(context, config, iotHubClient);
+            var iotHubClient = new Mock<ServiceClient>().Object;
+            var service = new KeyLockerService(context, config, iotHubClient, TestControllerFactory.CreateTelemetryClientStub());
 
             // Act
             await Assert.ThrowsAsync<InvalidOperationException>(() => service.OpenBoxByIdAsync("notfound"));
@@ -202,8 +209,11 @@ namespace CarWash.PWA.Tests
             // Arrange
             var context = TestDbContextFactory.Create();
             var config = TestOptionsMonitorFactory.Create();
-            var iotHubClient = new Mock<Microsoft.Azure.Devices.ServiceClient>().Object;
-            var service = new KeyLockerService(context, config, iotHubClient);
+            var iotHubClientMock = new Mock<ServiceClient>();
+            iotHubClientMock
+                .Setup(x => x.InvokeDeviceMethodAsync(It.IsAny<string>(), It.IsAny<CloudToDeviceMethod>(), default))
+                .ReturnsAsync(new CloudToDeviceMethodResult() { Status = 200 });
+            var service = new KeyLockerService(context, config, iotHubClientMock.Object, TestControllerFactory.CreateTelemetryClientStub());
 
             // Act
             await Assert.ThrowsAsync<InvalidOperationException>(() => service.OpenBoxBySerialAsync("locker1", 99));
@@ -215,8 +225,8 @@ namespace CarWash.PWA.Tests
             // Arrange
             var context = TestDbContextFactory.Create();
             var config = TestOptionsMonitorFactory.Create();
-            var iotHubClient = new Mock<Microsoft.Azure.Devices.ServiceClient>().Object;
-            var service = new KeyLockerService(context, config, iotHubClient);
+            var iotHubClient = new Mock<ServiceClient>().Object;
+            var service = new KeyLockerService(context, config, iotHubClient, TestControllerFactory.CreateTelemetryClientStub());
 
             // Act
             await Assert.ThrowsAsync<InvalidOperationException>(() => service.FreeUpBoxAsync("notfound"));
@@ -294,7 +304,7 @@ namespace CarWash.PWA.Tests
             // Arrange
             var controller = TestControllerFactory.CreateKeyLockerController(true);
             var context = TestDbContextFactory.Create();
-            var service = new KeyLockerService(context, TestOptionsMonitorFactory.Create(), new Mock<Microsoft.Azure.Devices.ServiceClient>().Object);
+            var service = new KeyLockerService(context, TestOptionsMonitorFactory.Create(), new Mock<ServiceClient>().Object, TestControllerFactory.CreateTelemetryClientStub());
             await service.GenerateBoxesToLocker("Box", 1, "Bldg", "1");
             var boxId = context.KeyLockerBox.First().Id;
             var keyLockerServiceMock = new Mock<IKeyLockerService>();
@@ -491,7 +501,7 @@ namespace CarWash.PWA.Tests
             return hubContextStub.Object;
         }
 
-        private static TelemetryClient CreateTelemetryClientStub()
+        public static TelemetryClient CreateTelemetryClientStub()
         {
             TelemetryConfiguration configuration = new TelemetryConfiguration
             {
