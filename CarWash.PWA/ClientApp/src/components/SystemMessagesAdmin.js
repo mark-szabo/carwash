@@ -222,7 +222,7 @@ class SystemMessagesAdmin extends React.Component {
                                         <Alert
                                             severity={getSeverityName(message.severity)}
                                             sx={{ '& .MuiAlert-icon': { marginRight: 0 } }}
-                                        ></Alert>
+                                        />
                                     </Avatar>
                                 </ListItemAvatar>
                                 <ListItemText

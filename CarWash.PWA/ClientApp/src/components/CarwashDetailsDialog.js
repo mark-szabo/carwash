@@ -836,13 +836,9 @@ CarwashDetailsDialog.propTypes = {
     closedKeyLockerBoxIds: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
-const withMediaQuery =
-    (...args) =>
-    Component =>
-    props => {
-        // eslint-disable-line react/display-name
-        const mediaQuery = useMediaQuery(...args);
-        return <Component fullScreen={mediaQuery} {...props} />;
-    };
+const withMediaQuery = (...args) => (Component) => (props) => { // eslint-disable-line react/display-name
+    const mediaQuery = useMediaQuery(...args);
+    return <Component fullScreen={mediaQuery} {...props} />;
+};
 
 export default withStyles(styles)(withMediaQuery(theme => theme.breakpoints.down('sm'))(CarwashDetailsDialog));

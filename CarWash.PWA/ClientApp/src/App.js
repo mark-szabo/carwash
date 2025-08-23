@@ -100,10 +100,6 @@ function getSafeString(obj) {
 }
 
 export default class App extends Component {
-    displayName = App.name;
-    keyLockerHubConnection = null; // SignalR connection to the key locker Hub
-    backlogHubConnection = null; // SignalR connection to the backlog Hub
-
     state = {
         version: '',
         user: {},
@@ -190,6 +186,9 @@ export default class App extends Component {
 
         this.keyboardListener();
     }
+
+    keyLockerHubConnection = null; // SignalR connection to the key locker Hub
+    backlogHubConnection = null; // SignalR connection to the backlog Hub
 
     registerServiceWorker = async () => {
         if ('serviceWorker' in navigator) {
@@ -414,13 +413,14 @@ export default class App extends Component {
         // Delete cached response for /api/users/me
         // Not perfect solution as it seems Safari does not support this
         // https://developer.mozilla.org/en-US/docs/Web/API/Cache/delete#Browser_compatibility
-        try {
-            caches.open('api-cache').then(cache => {
+        caches
+            .open('api-cache')
+            .then(cache => {
                 cache.delete('/api/users/me');
+            })
+            .catch(error => {
+                console.error(`Cannot delete user data from cache: ${error}`);
             });
-        } catch (error) {
-            console.error(`Cannot delete user data from cache: ${error}`);
-        }
     };
 
     updateBacklogItem = backlogItem => {
@@ -533,7 +533,7 @@ export default class App extends Component {
     };
 
     keyboardListener = () => {
-        const keys = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        const keys = new Array(11);
         document.addEventListener('keydown', event => {
             keys.shift();
             keys.push(event.key);

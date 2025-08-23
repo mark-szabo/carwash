@@ -87,7 +87,7 @@ function DropoffDialog({
         if (!closedKeyLockerBoxIds?.includes(openedBoxId) && step === 4) {
             setStep(3); // Go back to step 3 when the box is reopened
         }
-    }, [closedKeyLockerBoxIds, reservation.id, step]);
+    }, [closedKeyLockerBoxIds, reservation.id, openedBoxId, step]);
 
     const handleGarageChange = event => {
         setGarage(event.target.value);
@@ -257,7 +257,7 @@ function DropoffDialog({
         <Dialog
             open={open}
             onClose={handleCancel}
-            fullWidth={true}
+            fullWidth
             maxWidth="sm"
             aria-labelledby="dropoff-dialog-title"
             aria-describedby="dropoff-dialog-title"

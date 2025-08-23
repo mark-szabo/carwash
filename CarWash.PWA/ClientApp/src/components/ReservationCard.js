@@ -209,7 +209,7 @@ function ReservationCard(props) {
         setOpenLockerDialogOpen(false);
         try {
             reservation.keyLockerBox = null; // Clear the locker box from the reservation
-            if (reservation.state == State.CarKeyLeftAndLocationConfirmed)
+            if (reservation.state === State.CarKeyLeftAndLocationConfirmed)
                 reservation.state = State.ReminderSentWaitingForKey;
             props.updateReservation(reservation);
 
@@ -251,7 +251,8 @@ function ReservationCard(props) {
                         subheader={formatDate2(reservation)}
                     />
                     {reservation.state === State.ReminderSentWaitingForKey &&
-                        moment(reservation.startDate) > moment() && (
+                        moment(reservation.startDate) > moment() && 
+                        (
                             <CardContent className={classes.cardWarning}>
                                 <Alert
                                     variant="filled"
@@ -265,7 +266,8 @@ function ReservationCard(props) {
                             </CardContent>
                         )}
                     {reservation.state === State.ReminderSentWaitingForKey &&
-                        moment(reservation.startDate) < moment() && (
+                        moment(reservation.startDate) < moment() && 
+                        (
                             <CardContent className={classes.cardWarning}>
                                 <Alert
                                     variant="filled"
@@ -339,7 +341,7 @@ function ReservationCard(props) {
                             />
                         ))}
                     </CardContent>
-                    {getButtons(reservation, classes)}
+                    {getButtons()}
                 </Card>
             </Grow>
             <Dialog
@@ -406,11 +408,11 @@ ReservationCard.propTypes = {
     configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     updateReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func.isRequired,
-    lastSettings: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
     dropoffDialogOpen: PropTypes.bool.isRequired,
     admin: PropTypes.bool,
     closedKeyLockerBoxIds: PropTypes.arrayOf(PropTypes.string).isRequired,
+    style: PropTypes.object, // eslint-disable-line react/forbid-prop-types
 };
 
 export default withStyles(styles)(ReservationCard);
