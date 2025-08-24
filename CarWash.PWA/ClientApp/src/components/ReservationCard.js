@@ -1,7 +1,7 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import apiFetch from '../Auth';
-import { Link, useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { withStyles } from '@mui/styles';
 import Alert from '@mui/material/Alert';
 import Card from '@mui/material/Card';
@@ -21,19 +21,14 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import InputLabel from '@mui/material/InputLabel';
-import FormControl from '@mui/material/FormControl';
-import TextField from '@mui/material/TextField';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
 import Tooltip from '@mui/material/Tooltip';
 import red from '@mui/material/colors/red';
-import { getStateName, getServiceName, State, Garages, BacklogHubMethods } from '../Constants';
+import { getStateName, getServiceName, State } from '../Constants';
 import { formatLocation, formatDate2 } from '../Helpers';
 import Chat from './Chat';
 import * as moment from 'moment';
 import ErrorBoundary from './ErrorBoundary';
+import DropoffDialog from './DropoffDialog';
 
 const styles = theme => ({
     chip: {
@@ -95,32 +90,23 @@ const styles = theme => ({
 });
 
 function ReservationCard(props) {
-    const { classes, reservation, configuration, admin, style } = props;
+    const { classes, reservation, configuration, admin, style, closedKeyLockerBoxIds } = props;
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [dropoffDialogOpen, setDropoffDialogOpen] = useState(props.dropoffDialogOpen);
-    const [garage, setGarage] = useState('');
-    const [floor, setFloor] = useState('');
-    const [spot, setSpot] = useState('');
-    const [validationErrors, setValidationErrors] = useState({ garage: false, floor: false });
-    const history = useHistory();
-
-    useEffect(() => {
-        if (reservation.location) {
-            const [g, f, s] = reservation.location.split('/');
-            setGarage(g || '');
-            setFloor(f || '');
-            setSpot(s || '');
-        }
-    }, [props.lastSettings.garage, reservation.location]);
+    const [openLockerDialogOpen, setOpenLockerDialogOpen] = useState(false);
 
     const getButtons = () => {
         switch (reservation.state) {
             case 0:
-            case 1:
                 if (moment(reservation.startDate).isSame(moment(), 'day')) {
                     return (
                         <CardActions className={classes.cardActions}>
-                            <Button size="small" color="primary" variant="outlined" onClick={handleDropoffDialogOpen}>
+                            <Button
+                                size="small"
+                                color="primary"
+                                variant="outlined"
+                                onClick={() => setDropoffDialogOpen(true)}
+                            >
                                 Confirm key drop-off
                             </Button>
                             <Button component={Link} to={`/reserve/${reservation.id}`} size="small" color="primary">
@@ -130,7 +116,7 @@ function ReservationCard(props) {
                                 size="small"
                                 color="secondary"
                                 className={classes.dangerButton}
-                                onClick={handleCancelDialogOpen}
+                                onClick={() => setCancelDialogOpen(true)}
                             >
                                 Cancel
                             </Button>
@@ -147,23 +133,58 @@ function ReservationCard(props) {
                             size="small"
                             color="secondary"
                             className={classes.dangerButton}
-                            onClick={handleCancelDialogOpen}
+                            onClick={() => setCancelDialogOpen(true)}
                         >
                             Cancel
                         </Button>
                     </CardActions>
                 );
+            case 1:
+                return (
+                    <CardActions className={classes.cardActions}>
+                        <Button
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                            onClick={() => setDropoffDialogOpen(true)}
+                        >
+                            Confirm key drop-off
+                        </Button>
+                        <Button component={Link} to={`/reserve/${reservation.id}`} size="small" color="primary">
+                            Edit
+                        </Button>
+                        <Button
+                            size="small"
+                            color="secondary"
+                            className={classes.dangerButton}
+                            onClick={() => setCancelDialogOpen(true)}
+                        >
+                            Cancel
+                        </Button>
+                    </CardActions>
+                );
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+                if (reservation.keyLockerBox) {
+                    return (
+                        <CardActions className={classes.cardActions}>
+                            <Button
+                                size="small"
+                                color="primary"
+                                variant="outlined"
+                                onClick={() => setOpenLockerDialogOpen(true)}
+                            >
+                                Open key locker
+                            </Button>
+                        </CardActions>
+                    );
+                }
+                return null;
             default:
                 return null;
         }
-    };
-
-    const handleCancelDialogOpen = () => {
-        setCancelDialogOpen(true);
-    };
-
-    const handleCancelDialogClose = () => {
-        setCancelDialogOpen(false);
     };
 
     const handleCancelConfirmed = () => {
@@ -177,9 +198,6 @@ function ReservationCard(props) {
 
                 // Remove deleted reservation from reservations
                 props.removeReservation(reservation.id);
-
-                // Broadcast using SignalR
-                props.invokeBacklogHub(BacklogHubMethods.ReservationDeleted, reservation.id);
             },
             error => {
                 props.openSnackbar(error);
@@ -187,66 +205,22 @@ function ReservationCard(props) {
         );
     };
 
-    const handleDropoffDialogOpen = () => {
-        setDropoffDialogOpen(true);
-    };
+    const handleOpenLockerConfirmed = async () => {
+        setOpenLockerDialogOpen(false);
+        try {
+            reservation.keyLockerBox = null; // Clear the locker box from the reservation
+            if (reservation.state === State.CarKeyLeftAndLocationConfirmed)
+                reservation.state = State.ReminderSentWaitingForKey;
+            props.updateReservation(reservation);
 
-    const handleDropoffDialogClose = () => {
-        setDropoffDialogOpen(false);
-    };
+            await apiFetch(`api/keylocker/pick-up/by-reservation?reservationId=${reservation.id}`, {
+                method: 'POST',
+            });
 
-    const handleDropoffConfirmed = () => {
-        const errors = {
-            garage: garage === '',
-            floor: floor === '',
-        };
-
-        if (errors.garage || errors.floor) {
-            setValidationErrors(errors);
-            return;
+            props.openSnackbar('Locker opened.');
+        } catch (error) {
+            props.openSnackbar(error?.message || 'Failed to open locker.');
         }
-
-        reservation.location = `${garage}/${floor}/${spot}`;
-        const oldState = reservation.state;
-        reservation.state = State.CarKeyLeftAndLocationConfirmed;
-
-        setDropoffDialogOpen(false);
-
-        history.replace('/');
-
-        props.updateReservation(reservation);
-
-        apiFetch(`api/reservations/${reservation.id}/confirmdropoff`, {
-            method: 'POST',
-            body: JSON.stringify(reservation.location),
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        }).then(
-            () => {
-                props.openSnackbar('Drop-off and location confirmed.');
-
-                // Broadcast using SignalR
-                props.invokeBacklogHub(BacklogHubMethods.ReservationDropoffConfirmed, reservation.id);
-            },
-            error => {
-                reservation.state = oldState;
-                props.updateReservation(reservation);
-                props.openSnackbar(error);
-            }
-        );
-    };
-
-    const handleGarageChange = event => {
-        setGarage(event.target.value);
-    };
-
-    const handleFloorChange = event => {
-        setFloor(event.target.value);
-    };
-
-    const handleSpotChange = event => {
-        setSpot(event.target.value);
     };
 
     return (
@@ -276,32 +250,36 @@ function ReservationCard(props) {
                         title={getStateName(reservation.state)}
                         subheader={formatDate2(reservation)}
                     />
-                    {reservation.state === State.ReminderSentWaitingForKey && moment(reservation.startDate) > moment() && (
-                        <CardContent className={classes.cardWarning}>
-                            <Alert
-                                variant="filled"
-                                severity="info"
-                                className={classes.cardWarningAlert}
-                                icon={<InfoOutlinedIcon className={classes.cardWarningAlertIcon} />}
-                            >
-                                Drop off the key before {moment(reservation.startDate).format('h:mm A')}
-                                or we cannot guarantee completion by {moment(reservation.endDate).format('h:mm A')}.
-                            </Alert>
-                        </CardContent>
-                    )}
-                    {reservation.state === State.ReminderSentWaitingForKey && moment(reservation.startDate) < moment() && (
-                        <CardContent className={classes.cardWarning}>
-                            <Alert
-                                variant="filled"
-                                severity="error"
-                                className={classes.cardErrorAlert}
-                                icon={<ErrorOutlineOutlinedIcon className={classes.cardWarningAlertIcon} />}
-                            >
-                                Key was not dropped off before {moment(reservation.startDate).format('h:mm A')}.
-                                Completion by {moment(reservation.endDate).format('h:mm A')} is not guaranteed.
-                            </Alert>
-                        </CardContent>
-                    )}
+                    {reservation.state === State.ReminderSentWaitingForKey &&
+                        moment(reservation.startDate) > moment() && 
+                        (
+                            <CardContent className={classes.cardWarning}>
+                                <Alert
+                                    variant="filled"
+                                    severity="info"
+                                    className={classes.cardWarningAlert}
+                                    icon={<InfoOutlinedIcon className={classes.cardWarningAlertIcon} />}
+                                >
+                                    Drop off the key before {moment(reservation.startDate).format('h:mm A')} or we
+                                    cannot guarantee completion by {moment(reservation.endDate).format('h:mm A')}.
+                                </Alert>
+                            </CardContent>
+                        )}
+                    {reservation.state === State.ReminderSentWaitingForKey &&
+                        moment(reservation.startDate) < moment() && 
+                        (
+                            <CardContent className={classes.cardWarning}>
+                                <Alert
+                                    variant="filled"
+                                    severity="error"
+                                    className={classes.cardErrorAlert}
+                                    icon={<ErrorOutlineOutlinedIcon className={classes.cardWarningAlertIcon} />}
+                                >
+                                    Key was not dropped off before {moment(reservation.startDate).format('h:mm A')}.{' '}
+                                    Completion by {moment(reservation.endDate).format('h:mm A')} is not guaranteed.
+                                </Alert>
+                            </CardContent>
+                        )}
                     <CardContent>
                         <Typography variant="caption" color="textSecondary" gutterBottom>
                             Vehicle plate number
@@ -318,6 +296,19 @@ function ReservationCard(props) {
                                     Location
                                 </Typography>
                                 <Typography gutterBottom>{formatLocation(reservation.location)}</Typography>
+                            </React.Fragment>
+                        )}
+                        {reservation.keyLockerBox && (
+                            <React.Fragment>
+                                <Typography
+                                    variant="caption"
+                                    color="textSecondary"
+                                    gutterBottom
+                                    style={{ marginTop: 8 }}
+                                >
+                                    Key locker
+                                </Typography>
+                                <Typography gutterBottom>{reservation.keyLockerBox.name}</Typography>
                             </React.Fragment>
                         )}
                         {admin && (
@@ -339,7 +330,6 @@ function ReservationCard(props) {
                             reservation={reservation}
                             updateReservation={props.updateReservation}
                             openSnackbar={props.openSnackbar}
-                            invokeBacklogHub={props.invokeBacklogHub}
                         />
                         <Divider className={classes.divider} />
                         <Typography variant="subtitle1">Selected services</Typography>
@@ -351,18 +341,22 @@ function ReservationCard(props) {
                             />
                         ))}
                     </CardContent>
-                    {getButtons(reservation, classes)}
+                    {getButtons()}
                 </Card>
             </Grow>
             <Dialog
                 open={cancelDialogOpen}
-                onClose={handleCancelDialogClose}
+                onClose={() => setCancelDialogOpen(false)}
                 aria-labelledby="cancel-dialog-title"
                 aria-describedby="cancel-dialog-title"
             >
                 <DialogTitle id="cancel-dialog-title">Cancel this reservation?</DialogTitle>
                 <DialogActions>
-                    <Button onClick={handleCancelDialogClose} color="primary" id="reservationcard-dontcancel-button">
+                    <Button
+                        onClick={() => setCancelDialogOpen(false)}
+                        color="primary"
+                        id="reservationcard-dontcancel-button"
+                    >
                         Don't cancel
                     </Button>
                     <Button
@@ -376,73 +370,30 @@ function ReservationCard(props) {
                     </Button>
                 </DialogActions>
             </Dialog>
-            <Dialog
+            <DropoffDialog
+                reservation={reservation}
+                configuration={configuration}
                 open={dropoffDialogOpen}
-                onClose={handleDropoffDialogClose}
-                aria-labelledby="dropoff-dialog-title"
-                aria-describedby="dropoff-dialog-title"
+                onClose={() => setDropoffDialogOpen(false)}
+                updateReservation={props.updateReservation}
+                openSnackbar={props.openSnackbar}
+                closedKeyLockerBoxIds={closedKeyLockerBoxIds}
+            />
+            <Dialog
+                open={openLockerDialogOpen}
+                onClose={() => setOpenLockerDialogOpen(false)}
+                aria-labelledby="open-locker-dialog-title"
+                aria-describedby="open-locker-dialog-title"
             >
-                <DialogTitle id="dropoff-dialog-title">Confirm drop-off and location</DialogTitle>
+                <DialogTitle id="open-locker-dialog-title">Are you sure you want to open the key locker?</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>
-                        Please drop-off the key at the reception and confirm vehicle location!
-                    </DialogContentText>
-                    <FormControl className={classes.formControl} error={validationErrors.garage}>
-                        <InputLabel htmlFor="garage">Building</InputLabel>
-                        <Select
-                            required
-                            value={garage}
-                            onChange={handleGarageChange}
-                            inputProps={{
-                                name: 'garage',
-                                id: 'garage',
-                            }}
-                        >
-                            {configuration.garages.map(g => (
-                                <MenuItem key={g.building} value={g.building}>
-                                    {g.building}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    {garage && configuration.garages.some(g => g.building === garage) && (
-                        <FormControl className={classes.formControl} error={validationErrors.floor}>
-                            <InputLabel htmlFor="floor">Floor</InputLabel>
-                            <Select
-                                required
-                                value={floor}
-                                onChange={handleFloorChange}
-                                inputProps={{
-                                    name: 'floor',
-                                    id: 'floor',
-                                }}
-                            >
-                                {configuration.garages
-                                    .find(g => g.building === garage)
-                                    .floors.map(f => (
-                                        <MenuItem value={f} key={f}>
-                                            {f}
-                                        </MenuItem>
-                                    ))}
-                            </Select>
-                        </FormControl>
-                    )}
-                    {floor && (
-                        <TextField
-                            id="spot"
-                            label="Spot (optional)"
-                            value={spot}
-                            className={classes.textField}
-                            margin="normal"
-                            onChange={handleSpotChange}
-                        />
-                    )}
+                    <Typography>This will open the key locker assigned to your reservation.</Typography>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleDropoffDialogClose} color="primary">
+                    <Button onClick={() => setOpenLockerDialogOpen(false)} color="primary">
                         Cancel
                     </Button>
-                    <Button onClick={handleDropoffConfirmed} color="primary" autoFocus>
+                    <Button onClick={handleOpenLockerConfirmed} color="primary" variant="contained" autoFocus>
                         Confirm
                     </Button>
                 </DialogActions>
@@ -457,11 +408,11 @@ ReservationCard.propTypes = {
     configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     updateReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func.isRequired,
-    invokeBacklogHub: PropTypes.func.isRequired,
-    lastSettings: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
     dropoffDialogOpen: PropTypes.bool.isRequired,
     admin: PropTypes.bool,
+    closedKeyLockerBoxIds: PropTypes.arrayOf(PropTypes.string).isRequired,
+    style: PropTypes.object, // eslint-disable-line react/forbid-prop-types
 };
 
 export default withStyles(styles)(ReservationCard);

@@ -1,4 +1,5 @@
 import * as moment from 'moment';
+import { Severity } from './Constants';
 
 /**
  * Format location for display
@@ -61,4 +62,19 @@ export function format2Dates(date1, date2) {
  */
 export function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export function getSeverityName(severity) {
+    switch (severity) {
+        case Severity.Error:
+            return 'error';
+        case Severity.Warning:
+            return 'warning';
+        case Severity.Info:
+            return 'info';
+        case Severity.Success:
+            return 'success';
+        default:
+            return 'info';
+    }
 }

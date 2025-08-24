@@ -22,7 +22,7 @@ workbox.core.setCacheNameDetails({
 // Don't forget to increase the revision number of index.html (aka. '/')
 // as it is needed to include the newly genereted js and css files.
 // Error would be thrown: Refused to execute script from '...' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled.
-const VERSION = '2.5.0';
+const VERSION = '2.6.0';
 console.log(`Build: ${VERSION}`);
 workbox.precaching.cleanupOutdatedCaches();
 workbox.precaching.precacheAndRoute([
@@ -66,7 +66,7 @@ workbox.routing.registerRoute(({ url }) => url.pathname === '/api/.well-known/co
 
 // [CACHE FIRST] Cache Google Fonts
 workbox.routing.registerRoute(
-    new RegExp('https://fonts.(?:googleapis|gstatic).com/(.*)'),
+    /https:\/\/fonts.(?:googleapis|gstatic).com\/(.*)/,
     new CacheFirst({
         cacheName: 'fonts-cache',
         plugins: [
@@ -107,7 +107,7 @@ workbox.routing.registerRoute(
 
 // [CACHE FIRST] Cache image files
 workbox.routing.registerRoute(
-    /.*\.(?:png|jpg|jpeg|svg|gif)/,
+    /\.(?:png|jpg|jpeg|svg|gif)$/,
     new CacheFirst({
         cacheName: 'image-cache',
         plugins: [
@@ -122,7 +122,6 @@ workbox.routing.registerRoute(
     })
 );
 
-// self.skipWaiting();
 workbox.core.clientsClaim();
 
 // Respond to a server push with a user notification
@@ -160,9 +159,12 @@ self.addEventListener('notificationclick', event => {
                 type: 'window',
             })
             .then(clientList => {
-                for (let i = 0; i < clientList.length; i++) {
-                    const client = clientList[i];
-                    if (client.url === 'https://mimosonk.hu/' && 'focus' in client) return client.focus();
+                for (const client of clientList) {
+                    if (
+                        (client.url === 'https://mimosonk.hu/' || client.url === 'https://www.mimosonk.hu/') &&
+                        'focus' in client
+                    )
+                        return client.focus();
                 }
                 if (clients.openWindow) return clients.openWindow('/');
                 return null;
@@ -171,6 +173,7 @@ self.addEventListener('notificationclick', event => {
 });
 
 self.addEventListener('message', event => {
+    if (event.origin !== 'https://mimosonk.hu' && event.origin !== 'https://www.mimosonk.hu') return;
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
     }

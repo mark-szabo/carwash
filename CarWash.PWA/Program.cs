@@ -21,21 +21,27 @@ namespace CarWash.PWA
                     var config = builder.Build();
 
                     var keyVaultBaseUri = new Uri(config.GetValue<string>("KeyVault:BaseUrl"));
-                    builder.AddAzureKeyVault(keyVaultBaseUri, new DefaultAzureCredential());
+                    var defaultAzureCredential = new DefaultAzureCredential();
+                    builder.AddAzureKeyVault(keyVaultBaseUri, defaultAzureCredential);
 
                     // Load configuration from Azure App Configuration
-                    var endpoint = config.GetValue<string>("AppConfig:Endpoint");
+                    var appConfigBaseUri = new Uri(config.GetValue<string>("AppConfig:Endpoint"));
                     builder.AddAzureAppConfiguration(options =>
                     {
-                        options.Connect(new Uri(endpoint), new DefaultAzureCredential())
+                        options.Connect(appConfigBaseUri, defaultAzureCredential)
                             // Configure to reload configuration if the registered sentinel key is modified
                             .ConfigureRefresh(refreshOptions =>
                                 refreshOptions.Register("VERSION", refreshAll: true)
                                               .SetRefreshInterval(TimeSpan.FromMinutes(5)));
 
+                        options.UseFeatureFlags(featureFlagOptions =>
+                        {
+                            featureFlagOptions.SetRefreshInterval(TimeSpan.FromMinutes(5));
+                        });
+
                         options.ConfigureKeyVault(kv =>
                         {
-                            kv.SetCredential(new DefaultAzureCredential());
+                            kv.SetCredential(defaultAzureCredential);
                         });
                     });
                 })

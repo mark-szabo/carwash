@@ -32,7 +32,7 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Gets or sets the surname of the user, as-is in AD.
         /// </summary>
-        public required string LastName { get; set; }
+        public string? LastName { get; set; }
 
         /// <summary>
         /// Gets the full name of the user concatenated from the first and last names.
@@ -69,5 +69,20 @@ namespace CarWash.ClassLibrary.Models
         /// </summary>
         [Required]
         public NotificationChannel NotificationChannel { get; set; } = NotificationChannel.NotSet;
+
+        /// <summary>
+        /// Gets or sets the billing name for the user.
+        /// </summary>
+        public string? BillingName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the billing address for the user.
+        /// </summary>
+        public string? BillingAddress { get; set; }
+
+        /// <summary>
+        /// Gets or sets the payment method for the user.
+        /// </summary>
+        public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.WireTransfer;
     }
 }

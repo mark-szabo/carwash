@@ -52,10 +52,10 @@ class CarwashGrid extends Component {
             backlogLoading,
             updateBacklogItem,
             removeBacklogItem,
-            invokeBacklogHub,
             openSnackbar,
             snackbarOpen,
             searchTerm,
+            closedKeyLockerBoxIds,
         } = this.props;
 
         if (backlogLoading) {
@@ -66,20 +66,9 @@ class CarwashGrid extends Component {
             r.vehiclePlateNumber.toUpperCase().includes(searchTerm.toUpperCase())
         );
 
-        const yesterdayMidnight = moment()
-            .hours(0)
-            .minutes(0)
-            .seconds(0);
-        const todayMidnight = moment()
-            .hours(0)
-            .minutes(0)
-            .seconds(0)
-            .add(1, 'days');
-        const tomorrowMidnight = moment()
-            .hours(0)
-            .minutes(0)
-            .seconds(0)
-            .add(2, 'days');
+        const yesterdayMidnight = moment().hours(0).minutes(0).seconds(0);
+        const todayMidnight = moment().hours(0).minutes(0).seconds(0).add(1, 'days');
+        const tomorrowMidnight = moment().hours(0).minutes(0).seconds(0).add(2, 'days');
 
         const earlier = filteredBacklog.filter(r => moment(r.startDate).isBefore(yesterdayMidnight));
         const done = filteredBacklog.filter(
@@ -95,11 +84,20 @@ class CarwashGrid extends Component {
                 moment(r.startDate).isAfter(yesterdayMidnight) &&
                 moment(r.startDate).isBefore(todayMidnight)
         );
-        const tomorrow = filteredBacklog.filter(r => moment(r.startDate).isAfter(todayMidnight) && moment(r.startDate).isBefore(tomorrowMidnight));
+        const tomorrow = filteredBacklog.filter(
+            r => moment(r.startDate).isAfter(todayMidnight) && moment(r.startDate).isBefore(tomorrowMidnight)
+        );
         const later = filteredBacklog.filter(r => moment(r.startDate).isAfter(tomorrowMidnight));
 
         return (
-            <Grid container direction="row" justifyContent="flex-start" alignItems="flex-start" spacing={1} className={classes.grid}>
+            <Grid
+                container
+                direction="row"
+                justifyContent="flex-start"
+                alignItems="flex-start"
+                spacing={1}
+                className={classes.grid}
+            >
                 <CardSection title="Earlier">
                     {earlier.map(reservation => (
                         <Grid item key={reservation.id} className={classes.card}>
@@ -109,8 +107,8 @@ class CarwashGrid extends Component {
                                 snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
                                 removeReservation={removeBacklogItem}
-                                invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
+                                closedKeyLockerBoxIds={closedKeyLockerBoxIds}
                             />
                         </Grid>
                     ))}
@@ -124,13 +122,13 @@ class CarwashGrid extends Component {
                                 snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
                                 removeReservation={removeBacklogItem}
-                                invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
+                                closedKeyLockerBoxIds={closedKeyLockerBoxIds}
                             />
                         </Grid>
                     ))}
                 </CardSection>
-                <CardSection title="Today" expanded>
+                <CardSection title={`Today (${done.length}/${today.length + done.length})`} expanded>
                     {today.length <= 0 && (
                         // eslint-disable-next-line
                         <Typography gutterBottom className={classes.readyText}>
@@ -145,13 +143,13 @@ class CarwashGrid extends Component {
                                 snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
                                 removeReservation={removeBacklogItem}
-                                invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
+                                closedKeyLockerBoxIds={closedKeyLockerBoxIds}
                             />
                         </Grid>
                     ))}
                 </CardSection>
-                <CardSection title="Tomorrow">
+                <CardSection title={`Tomorrow (${tomorrow.length})`}>
                     {tomorrow.map(reservation => (
                         <Grid item key={reservation.id} className={classes.card}>
                             <CarwashCard
@@ -160,8 +158,8 @@ class CarwashGrid extends Component {
                                 snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
                                 removeReservation={removeBacklogItem}
-                                invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
+                                closedKeyLockerBoxIds={closedKeyLockerBoxIds}
                             />
                         </Grid>
                     ))}
@@ -175,8 +173,8 @@ class CarwashGrid extends Component {
                                 snackbarOpen={snackbarOpen}
                                 updateReservation={updateBacklogItem}
                                 removeReservation={removeBacklogItem}
-                                invokeBacklogHub={invokeBacklogHub}
                                 openSnackbar={openSnackbar}
+                                closedKeyLockerBoxIds={closedKeyLockerBoxIds}
                             />
                         </Grid>
                     ))}
@@ -193,10 +191,10 @@ CarwashGrid.propTypes = {
     backlogLoading: PropTypes.bool.isRequired,
     updateBacklogItem: PropTypes.func.isRequired,
     removeBacklogItem: PropTypes.func.isRequired,
-    invokeBacklogHub: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
     searchTerm: PropTypes.string.isRequired,
+    closedKeyLockerBoxIds: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
 export default withStyles(styles)(CarwashGrid);

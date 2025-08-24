@@ -14,11 +14,6 @@ import red from '@mui/material/colors/red';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
-import InputLabel from '@mui/material/InputLabel';
-import FormControl from '@mui/material/FormControl';
-import TextField from '@mui/material/TextField';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
 import LocalCarWashIcon from '@mui/icons-material/LocalCarWash';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
@@ -28,9 +23,13 @@ import EditIcon from '@mui/icons-material/Edit';
 import MoneyOffIcon from '@mui/icons-material/MoneyOff';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import { State, getServiceName, getAdminStateName, Service, BacklogHubMethods } from '../Constants';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
+import LockIcon from '@mui/icons-material/Lock';
+import { State, getServiceName, getAdminStateName, Service } from '../Constants';
 import { formatLocation, formatDate } from '../Helpers';
 import Chat from './Chat';
+import LocationSelector from './LocationSelector';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const styles = theme => ({
     chip: {
@@ -77,10 +76,7 @@ const styles = theme => ({
     },
     actions: {
         justifyContent: 'initial',
-        height: 36,
-        '&$pushActionsUp': {
-            marginBottom: 56,
-        },
+        padding: 16,
     },
     notSelectedMpv: {
         color: theme.palette.grey[300],
@@ -91,16 +87,6 @@ const styles = theme => ({
     subheader: {
         marginTop: theme.spacing(4),
     },
-    formControl: {
-        margin: `${theme.spacing(2)} ${theme.spacing(1)} 0 0`,
-        [theme.breakpoints.down('md')]: {
-            width: '100%',
-        },
-        [theme.breakpoints.up('md')]: {
-            minWidth: 100,
-            maxWidth: 200,
-        },
-    },
     saveButton: {
         margin: `${theme.spacing(2)} 0`,
     },
@@ -110,7 +96,15 @@ const styles = theme => ({
             backgroundColor: 'rgba(229,115,115,0.08)',
         },
     },
-    pushActionsUp: {},
+    dialogLine: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        rowGap: theme.spacing(1),
+        columnGap: theme.spacing(2),
+        marginTop: theme.spacing(2),
+    },
 });
 
 class CarwashDetailsDialog extends React.Component {
@@ -128,6 +122,10 @@ class CarwashDetailsDialog extends React.Component {
         editServices: false,
         oldServices: [],
         cancelDialogOpen: false,
+        lockerOpening: false,
+        waitingForClosure: false,
+        lockerBoxId: '',
+        lockerBoxName: '',
     };
 
     componentDidMount() {
@@ -138,6 +136,20 @@ class CarwashDetailsDialog extends React.Component {
                 floor,
                 seat,
             });
+        }
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        // Listen for door closure events
+        if (
+            this.state.waitingForClosure &&
+            this.state.lockerBoxId &&
+            this.props.closedKeyLockerBoxIds &&
+            this.props.closedKeyLockerBoxIds.includes(this.state.lockerBoxId) &&
+            (!prevProps.closedKeyLockerBoxIds || !prevProps.closedKeyLockerBoxIds.includes(this.state.lockerBoxId))
+        ) {
+            // Door just closed
+            this.setState({ waitingForClosure: false });
         }
     }
 
@@ -200,16 +212,20 @@ class CarwashDetailsDialog extends React.Component {
                 return null;
             case State.WashInProgress:
                 return (
-                    <React.Fragment>
-                        <Button onClick={this.handleBackToWaiting}>Back to waiting</Button>
-                    </React.Fragment>
+                    <>
+                        <Button onClick={this.handleBackToWaiting} color="bw">
+                            Back to waiting
+                        </Button>
+                    </>
                 );
             case State.NotYetPaid:
             case State.Done:
                 return (
-                    <React.Fragment>
-                        <Button onClick={this.handleBackToWash}>Back to wash</Button>
-                    </React.Fragment>
+                    <>
+                        <Button onClick={this.handleBackToWash} color="bw">
+                            Back to wash
+                        </Button>
+                    </>
                 );
             default:
                 return null;
@@ -230,9 +246,6 @@ class CarwashDetailsDialog extends React.Component {
         apiFetch(`api/reservations/${this.props.reservation.id}/startwash`, { method: 'POST' }, true).then(
             () => {
                 this.props.openSnackbar('Wash started.');
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, this.props.reservation.id);
             },
             error => {
                 reservation.state = oldState;
@@ -251,9 +264,6 @@ class CarwashDetailsDialog extends React.Component {
         apiFetch(`api/reservations/${this.props.reservation.id}/completewash`, { method: 'POST' }, true).then(
             () => {
                 this.props.openSnackbar('Wash completed.');
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, this.props.reservation.id);
             },
             error => {
                 reservation.state = oldState;
@@ -272,9 +282,6 @@ class CarwashDetailsDialog extends React.Component {
         apiFetch(`api/reservations/${this.props.reservation.id}/confirmpayment`, { method: 'POST' }, true).then(
             () => {
                 this.props.openSnackbar('Payment confirmed.');
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, this.props.reservation.id);
             },
             error => {
                 reservation.state = oldState;
@@ -297,9 +304,6 @@ class CarwashDetailsDialog extends React.Component {
         ).then(
             () => {
                 this.props.openSnackbar('Wash canceled.');
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, this.props.reservation.id);
             },
             error => {
                 reservation.state = oldState;
@@ -322,9 +326,6 @@ class CarwashDetailsDialog extends React.Component {
         ).then(
             () => {
                 this.props.openSnackbar('Wash in progress.');
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, this.props.reservation.id);
             },
             error => {
                 reservation.state = oldState;
@@ -353,9 +354,6 @@ class CarwashDetailsDialog extends React.Component {
         ).then(
             () => {
                 this.props.openSnackbar(reservation.mpv ? 'Saved as MPV.' : 'Saved as not MPV.');
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, this.props.reservation.id);
             },
             error => {
                 reservation.mpv = oldMpv;
@@ -383,9 +381,6 @@ class CarwashDetailsDialog extends React.Component {
             () => {
                 this.setState({ oldServices: [] });
                 this.props.openSnackbar('Updated selected services.');
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, this.props.reservation.id);
             },
             error => {
                 const reservation = this.props.reservation;
@@ -482,9 +477,6 @@ class CarwashDetailsDialog extends React.Component {
         ).then(
             () => {
                 this.props.openSnackbar('Updated vehicle location.');
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationUpdated, this.props.reservation.id);
             },
             error => {
                 reservation.location = oldLocation;
@@ -540,9 +532,6 @@ class CarwashDetailsDialog extends React.Component {
 
                 // Remove deleted reservation from reservations
                 this.props.removeReservation(this.props.reservation.id);
-
-                // Broadcast using SignalR
-                this.props.invokeBacklogHub(BacklogHubMethods.ReservationDeleted, this.props.reservation.id);
             },
             error => {
                 this.props.openSnackbar(error);
@@ -550,13 +539,113 @@ class CarwashDetailsDialog extends React.Component {
         );
     };
 
+    handleOpenLocker = async () => {
+        const { reservation, updateReservation, openSnackbar } = this.props;
+        this.setState({ lockerOpening: true, lockerBoxName: reservation.keyLockerBox?.name || '' });
+
+        try {
+            // Open locker by reservation
+            await apiFetch(`api/keylocker/pick-up/by-reservation?reservationId=${reservation.id}&updateState=false`, {
+                method: 'POST',
+            });
+
+            reservation.keyLockerBox = null;
+            updateReservation(reservation);
+
+            openSnackbar('Locker opened.');
+        } catch (error) {
+            openSnackbar(error?.message || 'Failed to open locker.');
+        } finally {
+            this.setState({ lockerOpening: false });
+        }
+    };
+
+    handleDropoffKey = async () => {
+        const { reservation, updateReservation, openSnackbar } = this.props;
+        this.setState({ lockerOpening: true, waitingForClosure: false });
+        try {
+            // Open available locker
+            const response = await apiFetch(`api/keylocker/open/available?reservationId=${reservation.id}`, {
+                method: 'POST',
+            });
+            if (response && response.name && response.boxId) {
+                reservation.keyLockerBox = { name: response.name, boxId: response.boxId };
+                updateReservation(reservation);
+                this.setState({
+                    lockerBoxName: response.name,
+                    lockerBoxId: response.boxId,
+                    waitingForClosure: true,
+                });
+                openSnackbar('Locker opened. Place your key inside.');
+            }
+        } catch (error) {
+            openSnackbar(error?.message || 'Failed to open locker.');
+        } finally {
+            this.setState({ lockerOpening: false });
+        }
+    };
+
     render() {
-        const { editLocation, garage, floor, seat, validationErrors, editServices } = this.state;
+        const {
+            editLocation,
+            garage,
+            floor,
+            seat,
+            validationErrors,
+            editServices,
+            lockerOpening,
+            waitingForClosure,
+            lockerBoxName,
+        } = this.state;
         const { reservation, configuration, open, snackbarOpen, classes } = this.props;
 
+        // Determine dark/light mode
+        const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        // Map reservation state to gradient backgrounds
+        const stateGradients = {
+            0: {
+                dark: 'linear-gradient(rgba(0, 0, 0, 0.35)), linear-gradient(135deg, #f3f4f6, #e5e7eb, #d1d5db, #9ca3af, #6b7280)',
+                light: 'linear-gradient(135deg, #f3f4f6, #e5e7eb, #d1d5db, #9ca3af, #6b7280)',
+            },
+            1: {
+                dark: 'linear-gradient(rgba(0, 0, 0, 0.35)), linear-gradient(135deg, #fff3b0, #ffe08a, #fbbf24, #f59e0b, #d97706)',
+                light: 'linear-gradient(135deg, #fff3b0, #ffe08a, #fbbf24, #f59e0b, #d97706)',
+            },
+            2: {
+                dark: 'linear-gradient(rgba(0, 0, 0, 0.35)), linear-gradient(135deg, #a7f3d0, #6ee7b7, #10b981, #059669, #065f46)',
+                light: 'linear-gradient(135deg, #a7f3d0, #6ee7b7, #10b981, #059669, #065f46)',
+            },
+            3: {
+                dark: 'linear-gradient(rgba(0, 0, 0, 0.35)), linear-gradient(135deg, #bfdbfe, #93c5fd, #5b95f3, #2563eb, #1e3a8a)',
+                light: 'linear-gradient(135deg, #bfdbfe, #93c5fd, #5b95f3, #2563eb, #1e3a8a)',
+            },
+            4: {
+                dark: 'linear-gradient(rgba(0, 0, 0, 0.35)), linear-gradient(135deg, #fecaca, #fca5a5, #f87171, #ef4444, #991b1b)',
+                light: 'linear-gradient(135deg, #fecaca, #fca5a5, #f87171, #ef4444, #991b1b)',
+            },
+            5: {
+                dark: 'linear-gradient(rgba(0, 0, 0, 0.35)), linear-gradient(135deg, #bbf7d0, #86efac, #4ade80, #22c55e, #15803d)',
+                light: 'linear-gradient(135deg, #bbf7d0, #86efac, #4ade80, #22c55e, #15803d)',
+            },
+        };
+        const gradient =
+            (stateGradients[reservation.state] &&
+                (isDarkMode ? stateGradients[reservation.state].dark : stateGradients[reservation.state].light)) ||
+            stateGradients[0].light;
+
         return (
-            <React.Fragment>
-                <Dialog open={open} onClose={this.handleClose} fullScreen={this.props.fullScreen}>
+            <>
+                <Dialog
+                    open={open}
+                    onClose={this.handleClose}
+                    fullScreen={this.props.fullScreen}
+                    sx={{
+                        '& .MuiDialog-paper': {
+                            background: gradient,
+                        },
+                    }}
+                >
+                    <DialogTitle>{reservation.vehiclePlateNumber}</DialogTitle>
                     <DialogContent className={classes.details}>
                         <div className={classes.closeButton}>
                             <IconButton onClick={this.handleCancelDialogOpen} aria-label="Delete" size="large">
@@ -569,95 +658,96 @@ class CarwashDetailsDialog extends React.Component {
                                 <CloseIcon />
                             </IconButton>
                         </div>
-                        <Typography variant="h3">{reservation.vehiclePlateNumber}</Typography>
-                        <Typography color="textSecondary" component="span" style={{ margin: '8px 0' }}>
+                        <Typography color="textSecondary" component="span" style={{ margin: '8px 0 32px 0' }}>
                             {getAdminStateName(reservation.state)} • {formatDate(reservation)} •{' '}
                             {reservation.user.firstName} {reservation.user.lastName} • {reservation.user.company}
                         </Typography>
                         <br />
                         {!editLocation ? (
-                            <Typography variant="subtitle1" gutterBottom>
-                                {reservation.location ? formatLocation(reservation.location) : 'Location not set'}
-                                <IconButton onClick={this.handleEditLocation} aria-label="Edit location" size="large">
-                                    <EditIcon />
-                                </IconButton>
-                            </Typography>
+                            <div className={classes.dialogLine}>
+                                <Typography variant="body1" gutterBottom>
+                                    {reservation.location
+                                        ? `Location: ${formatLocation(reservation.location)}`
+                                        : 'Location not set'}
+                                </Typography>
+                                <Button
+                                    onClick={this.handleEditLocation}
+                                    variant="outlined"
+                                    color="bw"
+                                    startIcon={<EditIcon />}
+                                >
+                                    Edit location
+                                </Button>
+                            </div>
                         ) : (
-                            <React.Fragment>
-                                <FormControl className={classes.formControl} error={validationErrors.garage}>
-                                    <InputLabel htmlFor="garage">Building</InputLabel>
-                                    <Select
-                                        required
-                                        value={garage}
-                                        onChange={this.handleGarageChange}
-                                        inputProps={{
-                                            name: 'garage',
-                                            id: 'garage',
-                                        }}
-                                    >
-                                        {configuration.garages.map(g => (
-                                            <MenuItem value={g.building} key={g.building}>
-                                                {g.building}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                                {garage && configuration.garages.some(g => g.building === garage) && (
-                                    <FormControl className={classes.formControl} error={validationErrors.floor}>
-                                        <InputLabel htmlFor="floor">Floor</InputLabel>
-                                        <Select
-                                            required
-                                            value={floor}
-                                            onChange={this.handleFloorChange}
-                                            inputProps={{
-                                                name: 'floor',
-                                                id: 'floor',
-                                            }}
-                                        >
-                                            {configuration.garages
-                                                .find(g => g.building === garage)
-                                                .floors.map(f => (
-                                                    <MenuItem value={f} key={f}>
-                                                        {f}
-                                                    </MenuItem>
-                                                ))}
-                                        </Select>
-                                    </FormControl>
-                                )}
+                            <>
+                                <LocationSelector
+                                    configuration={configuration}
+                                    garage={garage}
+                                    floor={floor}
+                                    spot={seat}
+                                    validationErrors={validationErrors}
+                                    onGarageChange={this.handleGarageChange}
+                                    onFloorChange={this.handleFloorChange}
+                                    onSpotChange={this.handleSeatChange}
+                                    textFieldWidth={132}
+                                />
                                 {floor && (
-                                    <React.Fragment>
-                                        <TextField
-                                            id="seat"
-                                            label="Spot (optional)"
-                                            value={seat}
-                                            className={classes.textField}
-                                            margin="normal"
-                                            onChange={this.handleSeatChange}
-                                        />
-                                        <IconButton
-                                            onClick={this.handleUpdateLocation}
-                                            aria-label="Save location"
-                                            size="large"
-                                            className={classes.saveButton}
-                                        >
-                                            <SaveIcon />
-                                        </IconButton>
-                                    </React.Fragment>
+                                    <IconButton
+                                        onClick={this.handleUpdateLocation}
+                                        aria-label="Save location"
+                                        size="large"
+                                        className={classes.saveButton}
+                                    >
+                                        <SaveIcon />
+                                    </IconButton>
                                 )}
-                            </React.Fragment>
+                            </>
                         )}
+                        <div className={classes.dialogLine}>
+                            <Typography variant="body1" gutterBottom>
+                                {reservation.keyLockerBox
+                                    ? `Key locker: ${reservation.keyLockerBox.name}`
+                                    : `Key not dropped off ${lockerBoxName ? `(was in ${lockerBoxName})` : ''}`}
+                            </Typography>
+                            {waitingForClosure ? (
+                                <>
+                                    <CircularProgress size={32} color="bw" style={{ marginRight: 8 }} />
+                                    <Typography variant="body1">Waiting for door closure</Typography>
+                                </>
+                            ) : reservation.keyLockerBox ? (
+                                <Button
+                                    onClick={this.handleOpenLocker}
+                                    variant="outlined"
+                                    color="bw"
+                                    startIcon={<LockOpenIcon />}
+                                    disabled={lockerOpening}
+                                >
+                                    Open locker
+                                </Button>
+                            ) : reservation.state === State.WashInProgress ? (
+                                <Button
+                                    onClick={this.handleDropoffKey}
+                                    variant="outlined"
+                                    color="bw"
+                                    startIcon={<LockIcon />}
+                                    disabled={lockerOpening}
+                                >
+                                    Drop-off key
+                                </Button>
+                            ) : null}
+                        </div>
                         <Chat
                             carWashChat
                             reservation={reservation}
                             updateReservation={() => {}}
                             openSnackbar={() => {}}
-                            invokeBacklogHub={() => {}}
                         />
                         <Typography variant="subtitle1" className={classes.subheader}>
                             Selected services
                         </Typography>
                         {!editServices ? (
-                            <React.Fragment>
+                            <>
                                 {reservation.services.map(serviceId => (
                                     <Chip
                                         label={getServiceName(configuration, serviceId)}
@@ -668,9 +758,9 @@ class CarwashDetailsDialog extends React.Component {
                                 <IconButton onClick={this.handleEditServices} aria-label="Add service" size="large">
                                     <EditIcon />
                                 </IconButton>
-                            </React.Fragment>
+                            </>
                         ) : (
-                            <React.Fragment>
+                            <>
                                 {reservation.services.map(serviceId => (
                                     <Chip
                                         label={getServiceName(configuration, serviceId)}
@@ -695,7 +785,7 @@ class CarwashDetailsDialog extends React.Component {
                                 >
                                     <SaveIcon />
                                 </IconButton>
-                            </React.Fragment>
+                            </>
                         )}
                         {this.getFab(reservation.state)}
                     </DialogContent>
@@ -728,7 +818,7 @@ class CarwashDetailsDialog extends React.Component {
                         </Button>
                     </DialogActions>
                 </Dialog>
-            </React.Fragment>
+            </>
         );
     }
 }
@@ -741,12 +831,12 @@ CarwashDetailsDialog.propTypes = {
     handleClose: PropTypes.func.isRequired,
     updateReservation: PropTypes.func.isRequired,
     removeReservation: PropTypes.func.isRequired,
-    invokeBacklogHub: PropTypes.func.isRequired,
     snackbarOpen: PropTypes.bool.isRequired,
     openSnackbar: PropTypes.func.isRequired,
+    closedKeyLockerBoxIds: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
-const withMediaQuery = (...args) => Component => props => { // eslint-disable-line react/display-name
+const withMediaQuery = (...args) => (Component) => (props) => { // eslint-disable-line react/display-name
     const mediaQuery = useMediaQuery(...args);
     return <Component fullScreen={mediaQuery} {...props} />;
 };

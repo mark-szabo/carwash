@@ -1,9 +1,13 @@
 {
-  "files.exclude": {
-    "**/.vs": true,
-    "**/bin": true,
-    "**/obj": true
-  },
-  "azureFunctions.projectLanguage": "C#",
-  "azureFunctions.projectRuntime": "~4"
+    "files.exclude": {
+        "**/.vs": true,
+        "**/bin": true,
+        "**/obj": true
+    },
+    "azureFunctions.projectLanguage": "C#",
+    "azureFunctions.projectRuntime": "~4",
+    "sonarlint.connectedMode.project": {
+        "connectionId": "mark-szabo-github",
+        "projectKey": "mark-szabo_carwash"
+    }
 }

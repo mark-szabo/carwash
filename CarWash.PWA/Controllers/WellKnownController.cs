@@ -1,10 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using CarWash.ClassLibrary.Models;
-using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Options;
+using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.FeatureManagement;
 
 namespace CarWash.PWA.Controllers
 {
@@ -16,7 +20,7 @@ namespace CarWash.PWA.Controllers
     [Route("api/.well-known")]
     [ApiController]
     [AllowAnonymous]
-    public class WellKnownController(IOptionsMonitor<CarWashConfiguration> configuration, ApplicationDbContext context, IPushService pushService) : ControllerBase
+    public class WellKnownController(IOptionsMonitor<CarWashConfiguration> configuration, ApplicationDbContext context, IPushService pushService, IFeatureManager featureManager) : ControllerBase
     {
         // GET: api/.well-known/configuration
         /// <summary>
@@ -34,6 +38,10 @@ namespace CarWash.PWA.Controllers
                 Garages = configuration.CurrentValue.Garages,
                 Services = configuration.CurrentValue.Services,
                 ReservationSettings = configuration.CurrentValue.Reservation,
+                ActiveSystemMessages = await context.SystemMessage
+                    .Where(m => m.StartDateTime <= DateTime.UtcNow && m.EndDateTime >= DateTime.UtcNow)
+                    .ToListAsync(),
+                FeatureFlags = await GetEnabledFeaturesAsync(),
                 BuildNumber = configuration.CurrentValue.BuildNumber,
                 Version = configuration.CurrentValue.Version
             };
@@ -51,6 +59,21 @@ namespace CarWash.PWA.Controllers
         public ActionResult<string> GetVapidPublicKey()
         {
             return Ok(pushService.GetVapidPublicKey());
+        }
+
+        private async Task<List<string>> GetEnabledFeaturesAsync()
+        {
+            var enabledFeatures = new List<string>();
+
+            await foreach (var feature in featureManager.GetFeatureNamesAsync())
+            {
+                if (await featureManager.IsEnabledAsync(feature))
+                {
+                    enabledFeatures.Add(feature);
+                }
+            }
+
+            return enabledFeatures;
         }
     }
 }

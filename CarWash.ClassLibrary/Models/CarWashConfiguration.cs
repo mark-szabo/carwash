@@ -77,11 +77,13 @@ namespace CarWash.ClassLibrary.Models
         /// [
         ///   {
         ///     "Building": "A",
-        ///     "Floors": [ "-1", "-2", "-2.5", "-3", "-3.5" ]
+        ///     "Floors": [ "-1", "-2", "-2.5", "-3", "-3.5" ],
+        ///     "KeyLockerId": "LOCKER-A1"
         ///   },
         ///   {
         ///     "Building": "B",
-        ///     "Floors": [ "-1", "-2", "-3", "outdoor" ]
+        ///     "Floors": [ "-1", "-2", "-3", "outdoor" ],
+        ///     "KeyLockerId": "LOCKER-B1"
         ///   },
         /// ]
         /// </example>
@@ -149,6 +151,11 @@ namespace CarWash.ClassLibrary.Models
         /// Configuration for the Calendar Service (meeting request sender).
         /// </summary>
         public CalendarServiceConfiguration CalendarService { get; set; } = new CalendarServiceConfiguration();
+
+        /// <summary>
+        /// Configuration for the IoT Key Locker boxes.
+        /// </summary>
+        public KeyLockerConfiguration KeyLocker { get; set; } = new KeyLockerConfiguration();
 
         /// <summary>
         /// Generated build number during CI/CD.
@@ -267,6 +274,24 @@ namespace CarWash.ClassLibrary.Models
             /// Key: ConnectionStrings--StorageAccount
             /// </remarks>
             public string StorageAccount { get; set; }
+
+            /// <summary>
+            /// Azure IoT Hub connection string.
+            /// </summary>
+            /// <remarks>
+            /// Location: Azure Key Vault (DO NOT store secrets in Application Settings!)
+            /// Key: ConnectionStrings--IotHub
+            /// </remarks>
+            public string? IotHub { get; set; }
+
+            /// <summary>
+            /// Azure IoT Hub Event Hub compatible connection string.
+            /// </summary>
+            /// <remarks>
+            /// Location: Azure Key Vault (DO NOT store secrets in Application Settings!)
+            /// Key: ConnectionStrings--IotEventHub
+            /// </remarks>
+            public string? IotEventHub { get; set; }
         }
 
         /// <summary>
@@ -409,6 +434,22 @@ namespace CarWash.ClassLibrary.Models
             /// Key: CalendarService:LogicAppUrl
             /// </remarks>
             public string LogicAppUrl { get; set; }
+        }
+
+        /// <summary>
+        /// Configuration for the IoT Key Locker boxes.
+        /// </summary>
+        public class KeyLockerConfiguration
+        {
+            /// <summary>
+            /// Prefix for the IoT Hub Direct method name of each box.
+            /// </summary>
+            /// <remarks>
+            /// Location: Application Settings
+            /// Key: KeyLocker:BoxIotIdPrefix
+            /// Default value: "Relay"
+            /// </remarks>
+            public string BoxIotIdPrefix { get; set; } = "Relay";
         }
     }
 }

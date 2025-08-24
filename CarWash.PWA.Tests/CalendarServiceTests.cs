@@ -168,6 +168,9 @@ namespace CarWash.PWA.Tests
         {
             User = new User
             {
+                FirstName = "Test",
+                LastName = "User",
+                Company = "TestCompany",
                 Email = "test@test.com",
             },
             VehiclePlateNumber = "TEST01",

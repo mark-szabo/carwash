@@ -223,7 +223,7 @@ class ServiceDetailsTable extends React.Component {
                         <ExpandMoreIcon />
                     </IconButton>
                     <div className={classNames(classes.titleText, { [classes.expanded]: expanded })}>
-                        <Typography variant="subtitle1">Service pricing details</Typography>
+                        <Typography variant="subtitle1">Service details and pricing</Typography>
                     </div>
                 </ButtonBase>
 

@@ -1,15 +1,16 @@
 {
-  "IsEncrypted": false,
-  "Values": {
-    "Environment": "Production",
-    "AzureWebJobsStorage": "",
-    "AzureWebJobsDashboard": "",
-    "ConnectionStrings:SqlDatabase": "",
-    "ConnectionStrings:StorageAccount": "",
-    "Vapid:Subject": "https://carwashu.azurewebsites.net/",
-    "Vapid:PublicKey": "",
-    "Vapid:PrivateKey": "",
-    "WEBSITE_TIME_ZONE": "Central Europe Standard Time",
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated"
-  }
+    "IsEncrypted": false,
+    "Values": {
+        "Environment": "Production",
+        "AzureWebJobsStorage": "",
+        "AzureWebJobsDashboard": "",
+        "ConnectionStrings:SqlDatabase": "",
+        "ConnectionStrings:StorageAccount": "",
+        "ConnectionStrings:KeyLockerServiceBus": "",
+        "Vapid:Subject": "https://carwashu.azurewebsites.net/",
+        "Vapid:PublicKey": "",
+        "Vapid:PrivateKey": "",
+        "WEBSITE_TIME_ZONE": "Central Europe Standard Time",
+        "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated"
+    }
 }

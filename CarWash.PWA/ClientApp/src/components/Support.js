@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import TrackedComponent from './TrackedComponent';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
@@ -31,7 +31,8 @@ class Support extends TrackedComponent {
                         Contact the Car Wash service provider
                     </Typography>
                     <Typography component="p">
-                        If you have any question, request or need to modify your reservation, contact the Car Wash service provider!
+                        If you have any question, request or need to modify your reservation, contact the Car Wash
+                        service provider!
                     </Typography>
                     <Typography component="p">
                         Call us (

@@ -13,7 +13,6 @@ export default class Admin extends TrackedComponent {
             reservationsLoading,
             removeReservation,
             updateReservation,
-            invokeBacklogHub,
             openSnackbar,
             lastSettings,
         } = this.props;
@@ -25,7 +24,6 @@ export default class Admin extends TrackedComponent {
                 reservationsLoading={reservationsLoading}
                 removeReservation={removeReservation}
                 updateReservation={updateReservation}
-                invokeBacklogHub={invokeBacklogHub}
                 lastSettings={lastSettings}
                 openSnackbar={openSnackbar}
                 admin
@@ -40,7 +38,6 @@ Admin.propTypes = {
     reservationsLoading: PropTypes.bool.isRequired,
     removeReservation: PropTypes.func.isRequired,
     updateReservation: PropTypes.func.isRequired,
-    invokeBacklogHub: PropTypes.func.isRequired,
     lastSettings: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
 };

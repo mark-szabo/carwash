@@ -1,12 +1,12 @@
 ﻿using System;
+using CarWash.ClassLibrary.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Debug;
-using CarWash.ClassLibrary.Models;
 
 namespace CarWash.Functions
 {
-    internal class FunctionsDbContext : DbContext, IPushDbContext
+    public class FunctionsDbContext : DbContext, IPushDbContext
     {
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -25,5 +25,6 @@ namespace CarWash.Functions
         public DbSet<User> Users { get; set; }
         public DbSet<Reservation> Reservation { get; set; }
         public DbSet<PushSubscription> PushSubscription { get; set; }
+        public DbSet<KeyLockerBox> KeyLockerBox { get; set; }
     }
 }

@@ -1,20 +1,22 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using CarWash.ClassLibrary.Enums;
-using CarWash.ClassLibrary.Models;
-using CarWash.ClassLibrary.Services;
-using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.ApplicationInsights;
-using CarWash.PWA.Attributes;
 using CarWash.ClassLibrary;
+using CarWash.ClassLibrary.Enums;
+using CarWash.ClassLibrary.Models;
+using CarWash.ClassLibrary.Services;
+using CarWash.PWA.Attributes;
+using CarWash.PWA.Hubs;
+using Microsoft.ApplicationInsights;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using OfficeOpenXml;
 
 namespace CarWash.PWA.Controllers
 {
@@ -25,29 +27,26 @@ namespace CarWash.PWA.Controllers
     [Authorize]
     [Route("api/reservations")]
     [ApiController]
-    public class ReservationsController : ControllerBase
+    public class ReservationsController(
+        IOptionsMonitor<CarWashConfiguration> configuration,
+        ApplicationDbContext context,
+        IUserService userService,
+        IEmailService emailService,
+        ICalendarService calendarService,
+        IPushService pushService,
+        IBotService botService,
+        IHubContext<BacklogHub> backlogHub,
+        TelemetryClient telemetryClient) : ControllerBase
     {
-        private readonly IOptionsMonitor<CarWashConfiguration> _configuration;
-        private readonly ApplicationDbContext _context;
-        private readonly User _user;
-        private readonly IEmailService _emailService;
-        private readonly ICalendarService _calendarService;
-        private readonly IPushService _pushService;
-        private readonly IBotService _botService;
-        private readonly TelemetryClient _telemetryClient;
-
-        /// <inheritdoc />
-        public ReservationsController(IOptionsMonitor<CarWashConfiguration> configuration, ApplicationDbContext context, IUserService userService, IEmailService emailService, ICalendarService calendarService, IPushService pushService, IBotService botService, TelemetryClient telemetryClient)
-        {
-            _configuration = configuration;
-            _context = context;
-            _user = userService.CurrentUser;
-            _emailService = emailService;
-            _calendarService = calendarService;
-            _pushService = pushService;
-            _botService = botService;
-            _telemetryClient = telemetryClient;
-        }
+        private readonly IOptionsMonitor<CarWashConfiguration> _configuration = configuration;
+        private readonly ApplicationDbContext _context = context;
+        private readonly User _user = userService.CurrentUser;
+        private readonly IEmailService _emailService = emailService;
+        private readonly ICalendarService _calendarService = calendarService;
+        private readonly IPushService _pushService = pushService;
+        private readonly IBotService _botService = botService;
+        private readonly IHubContext<BacklogHub> _backlogHub = backlogHub;
+        private readonly TelemetryClient _telemetryClient = telemetryClient;
 
         // GET: api/reservations
         /// <summary>
@@ -61,6 +60,7 @@ namespace CarWash.PWA.Controllers
         public IEnumerable<ReservationViewModel> GetReservations()
         {
             return _context.Reservation
+                .Include(r => r.KeyLockerBox)
                 .Where(r => r.UserId == _user.Id)
                 .OrderByDescending(r => r.StartDate)
                 .Select(reservation => new ReservationViewModel(reservation));
@@ -223,6 +223,9 @@ namespace CarWash.PWA.Controllers
                 }
             }
 
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, dbReservation.Id);
+
             // Track event with AppInsight
             _telemetryClient.TrackEvent(
                 "Reservation was updated.",
@@ -341,7 +344,7 @@ namespace CarWash.PWA.Controllers
                     if (_user.IsAdmin && reservationUser.Company != _user.Company)
                     {
                         _telemetryClient.TrackTrace(
-                            "Forbid: Admin cannot reserve in the name of compnaies' users.",
+                            "Forbid: Admin cannot reserve in the name of other companies' users.",
                             Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
                             new Dictionary<string, string>
                             {
@@ -445,6 +448,9 @@ namespace CarWash.PWA.Controllers
             _context.Reservation.Add(reservation);
             await _context.SaveChangesAsync();
 
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationCreated, reservation.Id);
+
             // Track event with AppInsight
             _telemetryClient.TrackEvent(
                 "New reservation was submitted.",
@@ -486,6 +492,9 @@ namespace CarWash.PWA.Controllers
             // Delete calendar event using Microsoft Graph
             await _calendarService.DeleteEventAsync(reservation);
 
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationDeleted, reservation.Id);
+
             // Track event with AppInsight
             _telemetryClient.TrackEvent(
                 "Reservation was deleted.",
@@ -518,29 +527,7 @@ namespace CarWash.PWA.Controllers
                 .Where(r => r.User.Company == _user.Company && r.UserId != _user.Id)
                 .OrderByDescending(r => r.StartDate)
                 .Take(100)
-                .Select(reservation => new AdminReservationViewModel
-                {
-                    Id = reservation.Id,
-                    UserId = reservation.UserId,
-                    VehiclePlateNumber = reservation.VehiclePlateNumber,
-                    Location = reservation.Location,
-                    State = reservation.State,
-                    Services = reservation.Services,
-                    Private = reservation.Private,
-                    Mpv = reservation.Mpv,
-                    StartDate = reservation.StartDate,
-                    EndDate = (DateTime)reservation.EndDate,
-                    Comments = reservation.Comments,
-                    User = new UserViewModel
-                    {
-                        Id = reservation.User.Id,
-                        FirstName = reservation.User.FirstName,
-                        LastName = reservation.User.LastName,
-                        Company = reservation.User.Company,
-                        IsAdmin = reservation.User.IsAdmin,
-                        IsCarwashAdmin = reservation.User.IsCarwashAdmin
-                    }
-                })
+                .Select(reservation => new AdminReservationViewModel(reservation, new UserViewModel(reservation.User)))
                 .ToListAsync();
 
             return Ok(reservations);
@@ -562,31 +549,10 @@ namespace CarWash.PWA.Controllers
 
             var reservations = await _context.Reservation
                 .Include(r => r.User)
+                .Include(r => r.KeyLockerBox)
                 .Where(r => r.StartDate.Date >= DateTime.Today.AddDays(-3) || r.State != State.Done)
                 .OrderBy(r => r.StartDate)
-                .Select(reservation => new AdminReservationViewModel
-                {
-                    Id = reservation.Id,
-                    UserId = reservation.UserId,
-                    VehiclePlateNumber = reservation.VehiclePlateNumber,
-                    Location = reservation.Location,
-                    State = reservation.State,
-                    Services = reservation.Services,
-                    Private = reservation.Private,
-                    Mpv = reservation.Mpv,
-                    StartDate = reservation.StartDate,
-                    EndDate = (DateTime)reservation.EndDate,
-                    Comments = reservation.Comments,
-                    User = new UserViewModel
-                    {
-                        Id = reservation.User.Id,
-                        FirstName = reservation.User.FirstName,
-                        LastName = reservation.User.LastName,
-                        Company = reservation.User.Company,
-                        IsAdmin = reservation.User.IsAdmin,
-                        IsCarwashAdmin = reservation.User.IsCarwashAdmin
-                    }
-                })
+                .Select(reservation => new AdminReservationViewModel(reservation, new UserViewModel(reservation.User)))
                 .ToListAsync();
 
             return Ok(reservations);
@@ -634,6 +600,9 @@ namespace CarWash.PWA.Controllers
                     throw;
                 }
             }
+
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationDropoffConfirmed, reservation.Id);
 
             // Track event with AppInsight
             _telemetryClient.TrackEvent(
@@ -735,6 +704,9 @@ namespace CarWash.PWA.Controllers
                 }
             }
 
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationDropoffConfirmed, reservation.Id);
+
             // Track event with AppInsight
             _telemetryClient.TrackEvent(
                 "Key dropoff was confirmed by 3rd party service.",
@@ -792,6 +764,9 @@ namespace CarWash.PWA.Controllers
                     throw;
                 }
             }
+
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
 
             // Try to send message through bot
             await _botService.SendWashStartedMessageAsync(reservation);
@@ -873,6 +848,9 @@ namespace CarWash.PWA.Controllers
                     throw new ArgumentOutOfRangeException();
             }
 
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
+
             // Try to send message through bot
             await _botService.SendWashCompletedMessageAsync(reservation);
 
@@ -921,6 +899,9 @@ namespace CarWash.PWA.Controllers
                 }
             }
 
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
+
             return NoContent();
         }
 
@@ -964,6 +945,9 @@ namespace CarWash.PWA.Controllers
                     throw;
                 }
             }
+
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
 
             return NoContent();
         }
@@ -1043,6 +1027,9 @@ namespace CarWash.PWA.Controllers
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationChatMessageSent, reservation.Id);
 
             // Try to send message through bot
             await _botService.SendCarWashCommentLeftMessageAsync(reservation);
@@ -1144,6 +1131,9 @@ namespace CarWash.PWA.Controllers
                 await _botService.SendCarWashCommentLeftMessageAsync(reservation);
             }
 
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationChatMessageSent, reservation.Id);
+
             return NoContent();
         }
 
@@ -1187,6 +1177,9 @@ namespace CarWash.PWA.Controllers
                     throw;
                 }
             }
+
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
 
             return NoContent();
         }
@@ -1233,6 +1226,9 @@ namespace CarWash.PWA.Controllers
                 }
             }
 
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
+
             return NoContent();
         }
 
@@ -1278,6 +1274,9 @@ namespace CarWash.PWA.Controllers
                 }
             }
 
+            // Broadcast backlog update to all connected clients on SignalR
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
+
             return NoContent();
         }
 
@@ -1297,14 +1296,7 @@ namespace CarWash.PWA.Controllers
                 .Where(r => r.EndDate >= DateTime.Now && r.StartDate <= DateTime.Now.AddDays(daysAhead))
                 .Include(r => r.User)
                 .OrderBy(r => r.StartDate)
-                .Select(reservation => new ObfuscatedReservationViewModel
-                {
-                    Company = reservation.User.Company,
-                    Services = reservation.Services,
-                    TimeRequirement = reservation.TimeRequirement,
-                    StartDate = reservation.StartDate,
-                    EndDate = (DateTime)reservation.EndDate,
-                });
+                .Select(reservation => new ObfuscatedReservationViewModel(reservation.User.Company, reservation.Services, reservation.TimeRequirement, reservation.StartDate, (DateTime)reservation.EndDate));
         }
 
         // GET: api/reservations/notavailabledates
@@ -1318,7 +1310,7 @@ namespace CarWash.PWA.Controllers
         [HttpGet, Route("notavailabledates")]
         public async Task<NotAvailableDatesAndTimesViewModel> GetNotAvailableDatesAndTimes(int daysAhead = 365)
         {
-            if (_user.IsCarwashAdmin) return new NotAvailableDatesAndTimesViewModel { Dates = [], Times = [] };
+            if (_user.IsCarwashAdmin) return new NotAvailableDatesAndTimesViewModel([], []);
 
             #region Get not available dates
             var notAvailableDates = new List<DateTime>();
@@ -1434,7 +1426,7 @@ namespace CarWash.PWA.Controllers
             }
             #endregion
 
-            return new NotAvailableDatesAndTimesViewModel { Dates = notAvailableDates.Distinct().Select(DateOnly.FromDateTime), Times = notAvailableTimes };
+            return new NotAvailableDatesAndTimesViewModel(Dates: notAvailableDates.Distinct().Select(DateOnly.FromDateTime), Times: notAvailableTimes);
         }
 
         // GET: api/reservations/lastsettings
@@ -1461,13 +1453,11 @@ namespace CarWash.PWA.Controllers
                 .OrderByDescending(r => r.CreatedOn)
                 .FirstOrDefaultAsync();
 
-            return Ok(new LastSettingsViewModel
-            {
-                VehiclePlateNumber = lastReservation.VehiclePlateNumber,
-                Location = lastReservation.Location,
-                Services = lastReservation.Services,
-                // add invoice details
-            });
+            return Ok(new LastSettingsViewModel(
+                VehiclePlateNumber: lastReservation.VehiclePlateNumber,
+                Location: lastReservation.Location,
+                Services: lastReservation.Services));
+            // TODO: add invoice details
         }
 
         // GET: api/reservations/reservationpercentage
@@ -1495,11 +1485,9 @@ namespace CarWash.PWA.Controllers
             {
                 var slotCapacity = _configuration.CurrentValue.Slots.Find(s => s.StartTime == a.DateTime.Hour)?.Capacity;
                 if (slotCapacity == null) continue;
-                slotReservationPercentage.Add(new ReservationPercentageViewModel
-                {
-                    StartTime = a.DateTime,
-                    Percentage = a.TimeSum == 0 ? 0 : Math.Round(a.TimeSum / (double)(slotCapacity * _configuration.CurrentValue.Reservation.TimeUnit), 2)
-                });
+                slotReservationPercentage.Add(new ReservationPercentageViewModel(
+                    StartTime: a.DateTime,
+                    Percentage: a.TimeSum == 0 ? 0 : Math.Round(a.TimeSum / (double)(slotCapacity * _configuration.CurrentValue.Reservation.TimeUnit), 2)));
             }
 
             return Ok(slotReservationPercentage);
@@ -1530,11 +1518,9 @@ namespace CarWash.PWA.Controllers
                 var slotCapacity = _configuration.CurrentValue.Slots.Find(s => s.StartTime == a.DateTime.Hour)?.Capacity;
                 if (slotCapacity == null) continue;
                 var reservedCapacity = (int)Math.Ceiling((double)a.TimeSum / _configuration.CurrentValue.Reservation.TimeUnit);
-                slotFreeCapacity.Add(new ReservationCapacityViewModel
-                {
-                    StartTime = a.DateTime,
-                    FreeCapacity = (int)slotCapacity - reservedCapacity
-                });
+                slotFreeCapacity.Add(new ReservationCapacityViewModel(
+                    StartTime: a.DateTime,
+                    FreeCapacity: (int)slotCapacity - reservedCapacity));
             }
 
             // Add slots with no reservations yet
@@ -1542,11 +1528,9 @@ namespace CarWash.PWA.Controllers
             {
                 // ReSharper disable SimplifyLinqExpression
                 if (!slotFreeCapacity.Any(s => s.StartTime.Hour == slot.StartTime))
-                    slotFreeCapacity.Add(new ReservationCapacityViewModel
-                    {
-                        StartTime = new DateTime(date.Year, date.Month, date.Day, slot.StartTime, 0, 0),
-                        FreeCapacity = slot.Capacity
-                    });
+                    slotFreeCapacity.Add(new ReservationCapacityViewModel(
+                        StartTime: new DateTime(date.Year, date.Month, date.Day, slot.StartTime, 0, 0),
+                        FreeCapacity: slot.Capacity));
                 // ReSharper restore SimplifyLinqExpression
             }
 
@@ -2021,93 +2005,83 @@ namespace CarWash.PWA.Controllers
     }
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public class ReservationViewModel
+    public record ReservationViewModel(
+        string Id,
+        string UserId,
+        string VehiclePlateNumber,
+        string Location,
+        KeyLockerBoxViewModel? KeyLockerBox,
+        State State,
+        List<int> Services,
+        bool Private,
+        bool Mpv,
+        DateTime StartDate,
+        DateTime? EndDate,
+        List<Comment> Comments)
     {
-        public ReservationViewModel() { }
-
-        public ReservationViewModel(Reservation reservation)
-        {
-            Id = reservation.Id;
-            UserId = reservation.UserId;
-            VehiclePlateNumber = reservation.VehiclePlateNumber;
-            Location = reservation.Location;
-            State = reservation.State;
-            Services = reservation.Services;
-            Private = reservation.Private;
-            Mpv = reservation.Mpv;
-            StartDate = reservation.StartDate;
-            if (reservation.EndDate != null) EndDate = (DateTime)reservation.EndDate;
-            Comments = reservation.Comments;
-        }
-
-        public string Id { get; set; }
-        public string UserId { get; set; }
-        public string VehiclePlateNumber { get; set; }
-        public string Location { get; set; }
-        public State State { get; set; }
-        public List<int> Services { get; set; }
-        public bool Private { get; set; }
-        public bool Mpv { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
-        public List<Comment> Comments { get; set; }
+        public ReservationViewModel(Reservation reservation) : this(
+                reservation.Id,
+                reservation.UserId,
+                reservation.VehiclePlateNumber,
+                reservation.Location,
+                reservation.KeyLockerBox != null ? new KeyLockerBoxViewModel(reservation.KeyLockerBox) : null,
+                reservation.State,
+                reservation.Services,
+                reservation.Private,
+                reservation.Mpv,
+                reservation.StartDate,
+                reservation.EndDate,
+                reservation.Comments)
+        { }
     }
 
-    public class AdminReservationViewModel
+    public record AdminReservationViewModel(
+        string Id,
+        string UserId,
+        UserViewModel User,
+        string VehiclePlateNumber,
+        string Location,
+        KeyLockerBoxViewModel? KeyLockerBox,
+        State State,
+        List<int> Services,
+        bool? Private,
+        bool? Mpv,
+        DateTime StartDate,
+        DateTime? EndDate,
+        List<Comment> Comments)
     {
-        public string Id { get; set; }
-        public string UserId { get; set; }
-        public UserViewModel User { get; set; }
-        public string VehiclePlateNumber { get; set; }
-        public string Location { get; set; }
-        public State State { get; set; }
-        public List<int> Services { get; set; }
-        public bool? Private { get; set; }
-        public bool? Mpv { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
-        public List<Comment> Comments { get; set; }
+        public AdminReservationViewModel(Reservation reservation, UserViewModel user) : this(
+                reservation.Id,
+                reservation.UserId,
+                user,
+                reservation.VehiclePlateNumber,
+                reservation.Location,
+                reservation.KeyLockerBox != null ? new KeyLockerBoxViewModel(reservation.KeyLockerBox) : null,
+                reservation.State,
+                reservation.Services,
+                reservation.Private,
+                reservation.Mpv,
+                reservation.StartDate,
+                reservation.EndDate,
+                reservation.Comments)
+        { }
     }
 
-    public class ObfuscatedReservationViewModel
-    {
-        public string Company { get; set; }
-        public List<int> Services { get; set; }
-        public int? TimeRequirement { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
-    }
+    public record ObfuscatedReservationViewModel(
+    string Company,
+    List<int> Services,
+    int? TimeRequirement,
+    DateTime StartDate,
+    DateTime EndDate);
 
-    public class NotAvailableDatesAndTimesViewModel
-    {
-        public IEnumerable<DateOnly> Dates { get; set; }
-        public IEnumerable<DateTime> Times { get; set; }
-    }
+    public record NotAvailableDatesAndTimesViewModel(IEnumerable<DateOnly> Dates, IEnumerable<DateTime> Times);
 
-    public class LastSettingsViewModel
-    {
-        public string VehiclePlateNumber { get; set; }
-        public string Location { get; set; }
-        public List<int> Services { get; set; }
-    }
+    public record LastSettingsViewModel(string VehiclePlateNumber, string Location, List<int> Services);
 
-    public class ReservationPercentageViewModel
-    {
-        public DateTime StartTime { get; set; }
-        public double Percentage { get; set; }
-    }
+    public record ReservationPercentageViewModel(DateTime StartTime, double Percentage);
 
-    public class ReservationCapacityViewModel
-    {
-        public DateTime StartTime { get; set; }
-        public int FreeCapacity { get; set; }
-    }
+    public record ReservationCapacityViewModel(DateTime StartTime, int FreeCapacity);
 
-    public class ConfirmDropoffByEmailViewModel
-    {
-        public string Email { get; set; }
-        public string Location { get; set; }
-        public string VehiclePlateNumber { get; set; }
-    }
+    public record ConfirmDropoffByEmailViewModel(string Email, string Location, string VehiclePlateNumber);
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

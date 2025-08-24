@@ -1,6 +1,7 @@
 {
   /* See all the pre-defined configs here: https://www.npmjs.com/package/eslint-config-defaults */
   "extends": [
+    "react-app",
     "eslint:recommended",
     "plugin:react/recommended",
     "prettier"
@@ -14,7 +15,7 @@
       "jsx": true
     }
   },
-  "plugins": ["react", "import", "jsx"],
+  "plugins": ["react", "react-hooks", "import", "jsx"],
   "env": {
     "amd": true,
     "browser": true,

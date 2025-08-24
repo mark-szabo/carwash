@@ -3,10 +3,12 @@ using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Controllers;
+using CarWash.PWA.Hubs;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -1074,10 +1076,7 @@ namespace CarWash.PWA.Tests
         {
             var dbContext = CreateInMemoryDbContext();
             const string LOCATION = "M/-3/180";
-            var model = new ConfirmDropoffByEmailViewModel
-            {
-                Location = LOCATION,
-            };
+            var model = new ConfirmDropoffByEmailViewModel(Email: default, Location: LOCATION, VehiclePlateNumber: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1089,10 +1088,7 @@ namespace CarWash.PWA.Tests
         public async Task ConfirmDropoffByEmail_WithNoLocation_ReturnsBadRequest()
         {
             var dbContext = CreateInMemoryDbContext();
-            var model = new ConfirmDropoffByEmailViewModel
-            {
-                Email = JOHN_EMAIL,
-            };
+            var model = new ConfirmDropoffByEmailViewModel(Email: JOHN_EMAIL, Location: default, VehiclePlateNumber: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1105,11 +1101,7 @@ namespace CarWash.PWA.Tests
         {
             var dbContext = CreateInMemoryDbContext();
             const string LOCATION = "M/-3/180";
-            var model = new ConfirmDropoffByEmailViewModel
-            {
-                Email = "invalid email",
-                Location = LOCATION,
-            };
+            var model = new ConfirmDropoffByEmailViewModel(Email: "invalid email", Location: LOCATION, VehiclePlateNumber: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1123,11 +1115,7 @@ namespace CarWash.PWA.Tests
             var dbContext = CreateInMemoryDbContext();
             const string LOCATION = "M/-3/180";
             // Jane does not have any reservations.
-            var model = new ConfirmDropoffByEmailViewModel
-            {
-                Email = JANE_EMAIL,
-                Location = LOCATION,
-            };
+            var model = new ConfirmDropoffByEmailViewModel(Email: JANE_EMAIL, Location: LOCATION, VehiclePlateNumber: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1143,11 +1131,7 @@ namespace CarWash.PWA.Tests
             dbContext.ChangeTracker.Clear();
             const string LOCATION = "M/-3/180";
             // John has exactly one active reservation.
-            var model = new ConfirmDropoffByEmailViewModel
-            {
-                Email = JOHN_EMAIL,
-                Location = LOCATION,
-            };
+            var model = new ConfirmDropoffByEmailViewModel(Email: JOHN_EMAIL, Location: LOCATION, VehiclePlateNumber: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1178,11 +1162,7 @@ namespace CarWash.PWA.Tests
             dbContext.ChangeTracker.Clear();
             const string LOCATION = "M/-3/180";
             // John has exactly one reservation waiting for key.
-            var model = new ConfirmDropoffByEmailViewModel
-            {
-                Email = JOHN_EMAIL,
-                Location = LOCATION,
-            };
+            var model = new ConfirmDropoffByEmailViewModel(Email: JOHN_EMAIL, Location: LOCATION, VehiclePlateNumber: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1213,11 +1193,7 @@ namespace CarWash.PWA.Tests
             dbContext.ChangeTracker.Clear();
             const string LOCATION = "M/-3/180";
             // John has two reservations waiting for key, but only one of those is today.
-            var model = new ConfirmDropoffByEmailViewModel
-            {
-                Email = JOHN_EMAIL,
-                Location = LOCATION,
-            };
+            var model = new ConfirmDropoffByEmailViewModel(Email: JOHN_EMAIL, Location: LOCATION, VehiclePlateNumber: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1248,11 +1224,7 @@ namespace CarWash.PWA.Tests
             dbContext.ChangeTracker.Clear();
             const string LOCATION = "M/-3/180";
             // Admin has two reservations scheduled, but only one of those is today.
-            var model = new ConfirmDropoffByEmailViewModel
-            {
-                Email = ADMIN_EMAIL,
-                Location = LOCATION,
-            };
+            var model = new ConfirmDropoffByEmailViewModel(Email: ADMIN_EMAIL, Location: LOCATION, VehiclePlateNumber: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1283,12 +1255,7 @@ namespace CarWash.PWA.Tests
             dbContext.ChangeTracker.Clear();
             const string LOCATION = "M/-3/180";
             // Admin has two reservations scheduled, both in the future. But we specify the vehicle plate number which is unique among the active reservations of Admin.
-            var model = new ConfirmDropoffByEmailViewModel
-            {
-                Email = ADMIN_EMAIL,
-                Location = LOCATION,
-                VehiclePlateNumber = PLATE,
-            };
+            var model = new ConfirmDropoffByEmailViewModel(Email: ADMIN_EMAIL, Location: LOCATION, VehiclePlateNumber: PLATE);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1318,11 +1285,7 @@ namespace CarWash.PWA.Tests
             await dbContext.SaveChangesAsync();
             const string LOCATION = "M/-3/180";
             // Admin has two reservations scheduled, both in the future. And we do not specify the vehicle plate number.
-            var model = new ConfirmDropoffByEmailViewModel
-            {
-                Email = ADMIN_EMAIL,
-                Location = LOCATION,
-            };
+            var model = new ConfirmDropoffByEmailViewModel(Email: ADMIN_EMAIL, Location: LOCATION, VehiclePlateNumber: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1351,12 +1314,7 @@ namespace CarWash.PWA.Tests
             await dbContext.SaveChangesAsync();
             const string LOCATION = "M/-3/180";
             // Admin has two reservations scheduled, both in the future. We do specify the vehicle plate number, but both of the active reservations have the same plate.
-            var model = new ConfirmDropoffByEmailViewModel
-            {
-                Email = ADMIN_EMAIL,
-                Location = LOCATION,
-                VehiclePlateNumber = PLATE,
-            };
+            var model = new ConfirmDropoffByEmailViewModel(Email: ADMIN_EMAIL, Location: LOCATION, VehiclePlateNumber: PLATE); ;
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1490,7 +1448,14 @@ namespace CarWash.PWA.Tests
             emailServiceMock.Setup(m => m.Send(It.IsAny<Email>(), It.IsAny<TimeSpan?>()));
             var pushServiceMock = new Mock<IPushService>();
             pushServiceMock.Setup(m => m.Send(It.IsAny<string>(), It.IsAny<Notification>()));
-            var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
+            var botServiceMock = new Mock<IBotService>();
+            botServiceMock.Setup(m => m.SendWashCompletedMessageAsync(It.IsAny<Reservation>())).Returns(Task.CompletedTask);
+            var calendarServiceStub = new Mock<ICalendarService>();
+            var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
+            var userServiceStub = new Mock<IUserService>();
+            userServiceStub.Setup(s => s.CurrentUser).Returns(user);
+            var hubContextStub = CreateHubContextStub();
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, hubContextStub, CreateTelemetryClientStub());
 
             var result = await controller.CompleteWash(reservation.Id);
 
@@ -1517,7 +1482,8 @@ namespace CarWash.PWA.Tests
             var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
             var userServiceStub = new Mock<IUserService>();
             userServiceStub.Setup(s => s.CurrentUser).Returns(user);
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
+            var hubContextStub = CreateHubContextStub();
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, hubContextStub, CreateTelemetryClientStub());
 
             var result = await controller.CompleteWash(reservation.Id);
 
@@ -1545,7 +1511,8 @@ namespace CarWash.PWA.Tests
             var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
             var userServiceStub = new Mock<IUserService>();
             userServiceStub.Setup(s => s.CurrentUser).Returns(user);
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
+            var hubContextStub = CreateHubContextStub();
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, hubContextStub, CreateTelemetryClientStub());
 
             var result = await controller.CompleteWash(reservation.Id);
 
@@ -1573,7 +1540,8 @@ namespace CarWash.PWA.Tests
             var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
             var userServiceStub = new Mock<IUserService>();
             userServiceStub.Setup(s => s.CurrentUser).Returns(user);
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
+            var hubContextStub = CreateHubContextStub();
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object,   hubContextStub, CreateTelemetryClientStub());
 
             var result = await controller.CompleteWash(reservation.Id);
 
@@ -1765,7 +1733,8 @@ namespace CarWash.PWA.Tests
             var user = dbContext.Users.Single(u => u.Email == CARWASH_ADMIN_EMAIL);
             var userServiceStub = new Mock<IUserService>();
             userServiceStub.Setup(s => s.CurrentUser).Returns(user);
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
+            var hubContextStub = CreateHubContextStub();
+            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, hubContextStub, CreateTelemetryClientStub());
             const string COMMENT = "test";
 
             var result = await controller.AddCarwashComment(reservation.Id, COMMENT);
@@ -2310,6 +2279,15 @@ namespace CarWash.PWA.Tests
             return configurationStub.Object;
         }
 
+        private static IHubContext<BacklogHub> CreateHubContextStub()
+        {
+            var clientProxyMock = new Mock<IClientProxy>();
+            var hubContextStub = new Mock<IHubContext<BacklogHub>>();
+            hubContextStub.Setup(h => h.Clients.All).Returns(clientProxyMock.Object);
+
+            return hubContextStub.Object;
+        }
+
         private static ReservationsController CreateControllerStub(ApplicationDbContext dbContext, string email = JOHN_EMAIL)
         {
             var configurationStub = CreateConfigurationStub();
@@ -2317,6 +2295,7 @@ namespace CarWash.PWA.Tests
             var calendarServiceStub = new Mock<ICalendarService>();
             var pushServiceStub = new Mock<IPushService>();
             var botServiceStub = new Mock<IBotService>();
+            var hubContextStub = CreateHubContextStub();
             var user = dbContext.Users.Single(u => u.Email == email);
             var userServiceStub = new Mock<IUserService>();
             userServiceStub.Setup(s => s.CurrentUser).Returns(user);
@@ -2329,6 +2308,7 @@ namespace CarWash.PWA.Tests
                 calendarServiceStub.Object,
                 pushServiceStub.Object,
                 botServiceStub.Object,
+                hubContextStub,
                 CreateTelemetryClientStub());
         }
 
@@ -2339,6 +2319,7 @@ namespace CarWash.PWA.Tests
             var calendarServiceStub = new Mock<ICalendarService>();
             var pushServiceStub = new Mock<IPushService>();
             var botServiceStub = new Mock<IBotService>();
+            var hubContextStub = CreateHubContextStub();
             var userServiceStub = new Mock<IUserService>();
             userServiceStub.Setup(s => s.CurrentUser).Returns(() => null);
 
@@ -2350,6 +2331,7 @@ namespace CarWash.PWA.Tests
                 calendarServiceStub.Object,
                 pushServiceStub.Object,
                 botServiceStub.Object,
+                hubContextStub,
                 CreateTelemetryClientStub());
         }
 

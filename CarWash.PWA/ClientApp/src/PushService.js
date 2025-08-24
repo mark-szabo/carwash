@@ -28,13 +28,9 @@ export function askPermission() {
     return new Promise((resolve, reject) => {
         if (!('Notification' in window)) reject();
 
-        const permissionResult = Notification.requestPermission(result => {
+        Notification.requestPermission(result => {
             resolve(result);
-        });
-
-        if (permissionResult) {
-            permissionResult.then(resolve, reject);
-        }
+        })?.then(resolve, reject);
     });
 }
 
