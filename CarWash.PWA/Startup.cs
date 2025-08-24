@@ -84,6 +84,7 @@ namespace CarWash.PWA
 
             // Add application services
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddSingleton<IBlobStorageService, BlobStorageService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ICalendarService, CalendarService>();
@@ -155,33 +156,6 @@ namespace CarWash.PWA
 
                                 return;
                             }
-                            /*
-                            // Graph API
-                            var tokenAcquisition = context.HttpContext.RequestServices.GetRequiredService<ITokenAcquisition>();
-
-                            var graphClient = new GraphServiceClient(
-                                new BaseBearerTokenAuthenticationProvider(
-                                    new TokenAcquisitionTokenProvider(
-                                        tokenAcquisition,
-                                        ["User.Read"],
-                                        context.Principal)));
-
-                            // Get user information from Graph
-                            var graphUser = await graphClient.Me.GetAsync((requestConfiguration) =>
-                            {
-                                requestConfiguration.QueryParameters.Select = ["mobilePhone", "businessPhones"];
-                            });
-                            var phoneNumber = graphUser?.MobilePhone ?? (graphUser?.BusinessPhones?.Count != 0 ? graphUser?.BusinessPhones?[0] : null);
-
-                            var branding = await graphClient.Organization[context.Principal?.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid")]
-                                .Branding
-                                .GetAsync((requestConfiguration) =>
-                                {
-                                    requestConfiguration.Headers.Add("Accept-Language", "0");
-                                    requestConfiguration.QueryParameters.Select = ["backgroundColor", "bannerLogoRelativeUrl", "CdnList"];
-                                });
-                            var companyColor = branding?.BackgroundColor;
-                            var companyLogo = branding?.BannerLogoRelativeUrl != null ? $"https://{branding.CdnList?[0]}/{branding.BannerLogoRelativeUrl}" : null;*/
 
                             // Get EF context
                             var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
@@ -247,6 +221,68 @@ namespace CarWash.PWA
                                             .ForEach(e => e.State = EntityState.Detached);
                                     }
                                     else throw;
+                                }
+                            }
+
+                            if (company.Color == null || user.PhoneNumber == null)
+                            {
+                                try
+                                {
+                                    // Graph API
+                                    var tokenAcquisition = context.HttpContext.RequestServices.GetRequiredService<ITokenAcquisition>();
+
+                                    var graphClient = new GraphServiceClient(
+                                        new BaseBearerTokenAuthenticationProvider(
+                                            new TokenAcquisitionTokenProvider(
+                                                tokenAcquisition,
+                                                ["User.Read"],
+                                                context.Principal)));
+
+                                    if (user.PhoneNumber == null)
+                                    {
+                                        // Get user information from Graph
+                                        var graphUser = await graphClient.Me.GetAsync((requestConfiguration) =>
+                                        {
+                                            requestConfiguration.QueryParameters.Select = ["mobilePhone", "businessPhones"];
+                                        });
+                                        var phoneNumber = graphUser?.MobilePhone ?? (graphUser?.BusinessPhones?.Count != 0 ? graphUser?.BusinessPhones?[0] : null);
+                                        if (phoneNumber != null)
+                                        {
+                                            user.PhoneNumber = phoneNumber;
+                                            dbContext.Update(user);
+                                        }
+                                    }
+
+                                    if (company.Color == null)
+                                    {
+                                        // Get company information from Graph
+                                        var branding = await graphClient.Organization[entraTenantId]
+                                        .Branding
+                                        .GetAsync((requestConfiguration) =>
+                                        {
+                                            requestConfiguration.Headers.Add("Accept-Language", "0");
+                                            requestConfiguration.QueryParameters.Select = ["backgroundColor", "bannerLogoRelativeUrl", "CdnList"];
+                                        });
+                                        if (branding?.BackgroundColor != null)
+                                        {
+                                            company.Color = branding?.BackgroundColor;
+                                            company.UpdatedOn = DateTime.UtcNow;
+                                            dbContext.Update(company);
+                                        }
+                                        if (branding?.BannerLogoRelativeUrl != null)
+                                        {
+                                            var companyLogo = $"https://{branding.CdnList?[0]}/{branding.BannerLogoRelativeUrl}";
+
+                                            var blobStorageService = context.HttpContext.RequestServices.GetRequiredService<IBlobStorageService>();
+                                            await blobStorageService.UploadCompanyLogoFromUrlAsync(companyLogo, company.Name);
+                                        }
+                                    }
+
+                                    await dbContext.SaveChangesAsync();
+                                }
+                                catch (Exception ex)
+                                {
+                                    Debug.WriteLine(ex.Message);
                                 }
                             }
 
