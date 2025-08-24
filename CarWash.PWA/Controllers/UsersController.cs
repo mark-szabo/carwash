@@ -1,39 +1,30 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using CarWash.ClassLibrary.Enums;
-using CarWash.ClassLibrary.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using User = CarWash.ClassLibrary.Models.User;
-using CarWash.PWA.Attributes;
+using CarWash.ClassLibrary.Enums;
+using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
+using CarWash.PWA.Attributes;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using User = CarWash.ClassLibrary.Models.User;
 
 namespace CarWash.PWA.Controllers
 {
     /// <summary>
     /// Managing users
     /// </summary>
+    /// <inheritdoc />
     [Produces("application/json")]
     [Authorize]
     [UserAction]
     [Route("api/users")]
     [ApiController]
-    public class UsersController : ControllerBase
+    public class UsersController(ApplicationDbContext context, IUserService userService, IEmailService emailService) : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
-        private readonly User _user;
-        private readonly IEmailService _emailService;
-
-        /// <inheritdoc />
-        public UsersController(ApplicationDbContext context, IUserService userService, IEmailService emailService)
-        {
-            _context = context;
-            _emailService = emailService;
-            _user = userService.CurrentUser;
-        }
+        private readonly User _user = userService.CurrentUser;
 
         // GET: api/users
         /// <summary>
@@ -47,7 +38,7 @@ namespace CarWash.PWA.Controllers
         public ActionResult<IEnumerable<UserViewModel>> GetUsers()
         {
             if (!_user.IsAdmin) return Forbid();
-            return Ok(_context.Users
+            return Ok(context.Users
             .Where(u => u.Company == _user.Company && u.FirstName != "[deleted user]")
             .AsEnumerable()
             .OrderBy(u => u.FullName)
@@ -67,7 +58,7 @@ namespace CarWash.PWA.Controllers
         {
             if (_user.IsAdmin)
             {
-                var dictionary = (await _context.Users
+                var dictionary = (await context.Users
                 .Where(u => u.Company == _user.Company && u.FirstName != "[deleted user]")
                     .ToListAsync())
                 .Select(u => new { u.Id, u.FullName })
@@ -79,7 +70,7 @@ namespace CarWash.PWA.Controllers
 
             if (_user.IsCarwashAdmin)
             {
-                var dictionary = (await _context.Users
+                var dictionary = (await context.Users
                     .Where(u => u.FirstName != "[deleted user]")
                     .ToListAsync())
                     .Select(u => new { u.Id, FullName = $"{u.FullName} ({u.Company})" })
@@ -114,7 +105,7 @@ namespace CarWash.PWA.Controllers
                 return Forbid();
             }
 
-            var user = await _context.Users.FindAsync(id);
+            var user = await context.Users.FindAsync(id);
             if (user == null) return NotFound();
 
             if (user.Company != _user.Company) return Forbid();
@@ -129,13 +120,62 @@ namespace CarWash.PWA.Controllers
         /// <returns><see cref="UserViewModel"/></returns>
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
-        /// <response code="404">NotFound if user not found.</response>
+        /// <response code="404">NotFound if user is not found.</response>
         [HttpGet, Route("me")]
         public ActionResult<UserViewModel> GetMe()
         {
             if (_user == null) return NotFound();
 
             return Ok(new UserViewModel(_user));
+        }
+
+        // PUT: api/users/me
+        /// <summary>
+        /// Update user's phone number and billing details
+        /// </summary>
+        /// <param name="request">Request containing phone number and billing details</param>
+        /// <returns>No content</returns>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if phone number or billing details are null.</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="404">NotFound if user is not found.</response>
+        [HttpPut("me")]
+        public async Task<IActionResult> PutMe([FromBody] UserInfoUpdateRequest request)
+        {
+            if (_user == null) return NotFound();
+
+            if (string.IsNullOrWhiteSpace(request.PhoneNumber) && (string.IsNullOrWhiteSpace(request.BillingName) || string.IsNullOrWhiteSpace(request.BillingAddress)))
+            {
+                return BadRequest("Invalid request.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.PhoneNumber)) _user.PhoneNumber = request.PhoneNumber;
+            if (!string.IsNullOrWhiteSpace(request.BillingName) && !string.IsNullOrWhiteSpace(request.BillingAddress))
+            {
+                _user.BillingName = request.BillingName;
+                _user.BillingAddress = request.BillingAddress;
+                _user.PaymentMethod = request.PaymentMethod;
+            }
+
+            context.Users.Update(_user);
+
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!context.Users.Any(e => e.Id == _user.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
         }
 
         // PUT: api/users/settings/{key}
@@ -174,15 +214,15 @@ namespace CarWash.PWA.Controllers
                 return BadRequest("Value not accepted.");
             }
 
-            _context.Users.Update(_user);
+            context.Users.Update(_user);
 
             try
             {
-                await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Users.Any(e => e.Id == _user.Id))
+                if (!context.Users.Any(e => e.Id == _user.Id))
                 {
                     return NotFound();
                 }
@@ -219,7 +259,7 @@ namespace CarWash.PWA.Controllers
                 _user.IsCarwashAdmin
             };
 
-            var reservations = await _context.Reservation
+            var reservations = await context.Reservation
                 .Where(r => r.UserId == _user.Id)
                 .OrderByDescending(r => r.StartDate)
                 .Select(reservation => new ReservationViewModel(reservation))
@@ -249,7 +289,7 @@ namespace CarWash.PWA.Controllers
 
             if (!_user.IsAdmin && _user.Id != id) return Forbid();
 
-            var user = await _context.Users.FindAsync(id);
+            var user = await context.Users.FindAsync(id);
             if (user == null) return NotFound();
 
             if (user.Company != _user.Company) return Forbid();
@@ -272,12 +312,12 @@ Please keep in mind, that we are required to continue storing your previous rese
 
             try
             {
-                await _context.SaveChangesAsync();
-                await _emailService.Send(email);
+                await context.SaveChangesAsync();
+                await emailService.Send(email);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Users.Any(e => e.Id == id))
+                if (!context.Users.Any(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -291,6 +331,20 @@ Please keep in mind, that we are required to continue storing your previous rese
         }
     }
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
+    /// <summary>
+    /// Request model for updating user's contact details.
+    /// </summary>
+    /// <param name="PhoneNumber">The new phone number of the user.</param>
+    /// <param name="BillingName">The new billing name of the user.</param>
+    /// <param name="BillingAddress">The new billing address of the user.</param>
+    /// <param name="PaymentMethod">The new payment method of the user.</param>
+    public record UserInfoUpdateRequest(
+        string PhoneNumber,
+        string BillingName,
+        string BillingAddress,
+        PaymentMethod PaymentMethod);
+
     public record UserViewModel(
         string Id,
         string FirstName,
