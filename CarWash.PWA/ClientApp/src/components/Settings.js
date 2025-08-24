@@ -177,7 +177,11 @@ class Settings extends TrackedComponent {
     };
 
     handleExportClick = () => {
-        apiFetch(`api/reservations/export?startDate=${this.state.exportStartDate}&endDate=${this.state.exportEndDate}`, null, true).then(
+        apiFetch(
+            `api/reservations/export?startDate=${this.state.exportStartDate}&endDate=${this.state.exportEndDate}`,
+            null,
+            true
+        ).then(
             () => {},
             error => {
                 this.props.openSnackbar(error);
@@ -233,7 +237,9 @@ class Settings extends TrackedComponent {
                     <Typography variant="h5" component="h3">
                         Notifications
                     </Typography>
-                    <Typography component="p">How do you want us to remind you to drop off the keys or notify when your car is ready?</Typography>
+                    <Typography component="p">
+                        How do you want us to remind you to drop off the keys or notify when your car is ready?
+                    </Typography>
                     <FormControl component="fieldset">
                         <RadioGroup
                             aria-label="Channel"
@@ -252,7 +258,10 @@ class Settings extends TrackedComponent {
                     <Typography variant="h5" component="h3">
                         Calendar integration
                     </Typography>
-                    <Typography component="p">Do you want us to automatically create a (non-blocker) event in your calendar for your reservations?</Typography>
+                    <Typography component="p">
+                        Do you want us to automatically create a (non-blocker) event in your calendar for your
+                        reservations?
+                    </Typography>
                     <FormControlLabel
                         control={
                             <Switch
@@ -271,7 +280,8 @@ class Settings extends TrackedComponent {
                             Export reservations to Excel
                         </Typography>
                         <Typography component="p">
-                            You can export reservations from the database to an Excel file for accounting and auditing pourposes.
+                            You can export reservations from the database to an Excel file for accounting and auditing
+                            pourposes.
                         </Typography>
                         <div className={classes.formControl}>
                             <TextField
@@ -298,7 +308,12 @@ class Settings extends TrackedComponent {
                             />
                         </div>
                         <div className={classes.formControl}>
-                            <Button variant="contained" color="primary" className={classes.primaryButtonContained} onClick={this.handleExportClick}>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                className={classes.primaryButtonContained}
+                                onClick={this.handleExportClick}
+                            >
                                 Export
                             </Button>
                         </div>
@@ -309,33 +324,44 @@ class Settings extends TrackedComponent {
                         We take your privacy seriously!
                     </Typography>
                     <Typography component="p">
-                        By using this app, you agree to Microsoft's{' '}
-                        <a href="https://go.microsoft.com/fwlink/?LinkID=206977" className={classes.link}>
+                        By using this app, you agree to our{' '}
+                        <a href="https://mimosonk.hu/terms-of-service" className={classes.link}>
                             Terms of use
                         </a>{' '}
-                        and that you have read Microsoft's{' '}
-                        <a href="https://go.microsoft.com/fwlink/?LinkId=521839" className={classes.link}>
+                        and that you have read our{' '}
+                        <a href="https://mimosonk.hu/privacy" className={classes.link}>
                             Privacy & cookies policy
                         </a>
                         .
                     </Typography>
                     <Typography component="p">
-                        Your account contains personal data that you have given us. You can download or delete that data below.
+                        Your account contains personal data that you have given us. You can download or delete that data
+                        below.
                     </Typography>
                     <Typography variant="subtitle1" gutterBottom className={classes.title}>
                         Download your data
                     </Typography>
-                    <Button variant="contained" color="primary" className={classes.primaryButtonContained} onClick={this.handleDownloadDataClick}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        className={classes.primaryButtonContained}
+                        onClick={this.handleDownloadDataClick}
+                    >
                         Download
                     </Button>
                     <Typography variant="subtitle1" className={classes.title}>
                         Delete your account and your personal data
                     </Typography>
                     <Typography component="p" gutterBottom>
-                        Please keep in mind, that we are required to continue storing your previous reservations including their vehicle registration plates for
-                        accounting and auditing purposes.
+                        Please keep in mind, that we are required to continue storing your previous reservations
+                        including their vehicle registration plates for accounting and auditing purposes.
                     </Typography>
-                    <Button variant="contained" color="primary" className={classes.dangerButtonContained} onClick={this.handleDeleteDialogOpen}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        className={classes.dangerButtonContained}
+                        onClick={this.handleDeleteDialogOpen}
+                    >
                         Delete
                     </Button>
                 </Paper>
@@ -355,7 +381,12 @@ class Settings extends TrackedComponent {
                         <Button onClick={this.handleDeleteDialogClose} color="primary">
                             Cancel
                         </Button>
-                        <Button onClick={this.handleDeleteConfirmed} color="primary" className={classes.dangerButton} autoFocus>
+                        <Button
+                            onClick={this.handleDeleteConfirmed}
+                            color="primary"
+                            className={classes.dangerButton}
+                            autoFocus
+                        >
                             Delete
                         </Button>
                     </DialogActions>
