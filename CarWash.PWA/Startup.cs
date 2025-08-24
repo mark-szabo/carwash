@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
@@ -34,18 +35,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.FeatureManagement;
+using Microsoft.Graph;
 using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Kiota.Abstractions.Authentication;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
-using System.Text.Json;
-using Microsoft.Data.SqlClient;
-using Microsoft.Graph;
-using Microsoft.Kiota.Abstractions.Authentication;
-using Microsoft.Identity.Web;
 using static CarWash.ClassLibrary.Constants;
-using Microsoft.AspNetCore.Mvc.Authorization;
-using Microsoft.IdentityModel.Logging;
 
 namespace CarWash.PWA
 {
@@ -78,6 +75,7 @@ namespace CarWash.PWA
 
                 config.BuildNumber = configuration.GetValue<string>("BUILD_NUMBER") ?? "0.0.0";
             });
+            var config = configuration.Get<CarWashConfiguration>();
 
             var iotHubServiceClient = ServiceClient.CreateFromConnectionString(configuration.GetConnectionString("IotHub"), Microsoft.Azure.Devices.TransportType.Amqp, new ServiceClientOptions { SdkAssignsMessageId = Microsoft.Azure.Devices.Shared.SdkAssignsMessageId.WhenUnset });
             services.AddSingleton(iotHubServiceClient);
@@ -116,23 +114,12 @@ namespace CarWash.PWA
                     options.Authority = configuration["AzureAd:Instance"];
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidateAudience = false,
-                        ValidateIssuer = false,
-                        ValidateIssuerSigningKey = false,
-                        ValidateLifetime = false,
-                        RequireExpirationTime = false,
-                        RequireSignedTokens = false,
-                        RequireAudience = false,
-                        ValidateActor = false,
-                        ValidateTokenReplay = false,
-                        /*IssuerValidator = (issuer, token, tvp) =>
-                        {
-                            issuer = issuer.Substring(24, 36); // Get the tenant id out of the issuer string (eg. https://sts.windows.net/72f988bf-86f1-41af-91ab-2d7cd011db47/)
-                            if (config.Companies.Select(i => i.TenantId).Contains(issuer))
-                                return issuer;
-                            else
-                                throw new SecurityTokenInvalidIssuerException("Invalid issuer");
-                        },*/
+                        ValidateAudience = true,
+                        ValidateIssuer = true,
+                        ValidateLifetime = true,
+                        RequireExpirationTime = true,
+                        RequireSignedTokens = true,
+                        RequireAudience = true,
                     };
                     options.Events = new JwtBearerEvents
                     {
@@ -293,10 +280,12 @@ namespace CarWash.PWA
                                 identity.AddClaim(new Claim("admin", user.IsAdmin.ToString()));
                                 identity.AddClaim(new Claim("carwashadmin", user.IsCarwashAdmin.ToString()));
                             }
+                            context.HttpContext.User = context.Principal;
                             context.HttpContext.Items["CurrentUser"] = user;
                         },
                         OnAuthenticationFailed = context =>
                         {
+                            Debug.WriteLine($"Authentication failed: {context.Exception.Message}");
                             context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                             context.Response.ContentType = "application/json";
                             return Task.CompletedTask;
