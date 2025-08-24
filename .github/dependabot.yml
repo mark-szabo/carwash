@@ -1,0 +1,27 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/CarWash/CarWash.PWA/ClientApp"
+    schedule:
+      interval: "weekly"
+    target-branch: "develop"
+  - package-ecosystem: "nuget"
+    directory: "/CarWash/CarWash.PWA"
+    schedule:
+      interval: "weekly"
+    target-branch: "develop"
+  - package-ecosystem: "nuget"
+    directory: "/CarWash/CarWash.Functions"
+    schedule:
+      interval: "weekly"
+    target-branch: "develop"
+  - package-ecosystem: "nuget"
+    directory: "/CarWash/CarWash.ClassLibrary"
+    schedule:
+      interval: "weekly"
+    target-branch: "develop"
+  - package-ecosystem: "nuget"
+    directory: "/CarWash/CarWash.PWA.Tests"
+    schedule:
+      interval: "weekly"
+    target-branch: "develop"
