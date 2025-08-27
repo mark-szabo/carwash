@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
+using CarWash.ClassLibrary;
 using CarWash.ClassLibrary.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.EntityFrameworkCore;
@@ -25,13 +26,15 @@ namespace CarWash.Functions
 
                 // Parse the message body
                 var messageBody = System.Text.Encoding.UTF8.GetString(message.Body);
-                var deviceMessage = JsonSerializer.Deserialize<KeyLockerDeviceMessage>(messageBody);
+                var deviceMessage = JsonSerializer.Deserialize<KeyLockerDeviceMessage>(messageBody, Constants.DefaultJsonSerializerOptions);
 
                 if (deviceMessage == null)
                 {
                     logger.LogError("Failed to deserialize message body.");
                     return;
                 }
+
+                logger.LogInformation("Received message for {LockerId}: {OriginalMessage} > {MessageBinary}\n{Visualization}", lockerId, messageBody, Convert.ToString(deviceMessage.Inputs, 2), deviceMessage.ToString());
 
                 // Update database
                 var lockerBoxes = await context.KeyLockerBox
