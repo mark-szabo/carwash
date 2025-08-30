@@ -23,6 +23,13 @@
 		<DocumentationFile>bin\Debug\netcoreapp2.1\CarWash.PWA.xml</DocumentationFile>
 	</PropertyGroup>
 	<ItemGroup>
+		<PackageReference Include="AspNetCore.HealthChecks.Azure.IoTHub" Version="9.0.0" />
+		<PackageReference Include="AspNetCore.HealthChecks.Azure.Storage.Blobs" Version="9.0.0" />
+		<PackageReference Include="AspNetCore.HealthChecks.Azure.Storage.Queues" Version="9.0.0" />
+		<PackageReference Include="AspNetCore.HealthChecks.AzureApplicationInsights" Version="9.0.0" />
+		<PackageReference Include="AspNetCore.HealthChecks.AzureServiceBus" Version="9.0.0" />
+		<PackageReference Include="AspNetCore.HealthChecks.Publisher.ApplicationInsights" Version="9.0.0" />
+		<PackageReference Include="AspNetCore.HealthChecks.SignalR" Version="9.0.0" />
 		<PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.4.0" />
 		<PackageReference Include="Azure.Identity" Version="1.15.0" />
 		<PackageReference Include="Azure.Messaging.ServiceBus" Version="7.20.1" />
@@ -44,6 +51,7 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.19" />
 		<PackageReference Include="Microsoft.FeatureManagement.AspNetCore" Version="4.1.0" />
 		<PackageReference Include="Microsoft.Graph" Version="5.91.0" />
 		<PackageReference Include="Microsoft.Identity.Client" Version="4.76.0" />

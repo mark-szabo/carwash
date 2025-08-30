@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Net.Mime;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text.Json;
@@ -22,6 +23,7 @@ using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.SnapshotCollector;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -34,6 +36,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.FeatureManagement;
@@ -467,7 +470,16 @@ namespace CarWash.PWA
                 });
             }
 
-            services.AddHealthChecks();
+            services.AddHealthChecks()
+                .AddDbContextCheck<ApplicationDbContext>(name: "azure_sql_db_context")
+                //.AddSignalRHub($"{config.ConnectionStrings.BaseUrl}/hub/backlog", "signalr_hub_backlog") - needs authentication
+                //.AddSignalRHub($"{config.ConnectionStrings.BaseUrl}/hub/keylocker", "signalr_hub_keylocker")
+                .AddAzureBlobStorage()
+                .AddAzureQueueStorage()
+                .AddAzureIoTHubServiceClient()
+                .AddAzureServiceBusQueue(config.ConnectionStrings.KeyLockerServiceBus, KeyLockerServiceBusQueueName, name: "azure_servicebus_keylocker")
+                .AddAzureApplicationInsights(configuration.GetValue<string>("APPLICATIONINSIGHTS_CONNECTION_STRING")?.Split(';')?[0][19..], name: "azure_appinsights")
+                .AddApplicationInsightsPublisher();
 
             services.AddControllers(options => { options.Filters.Add(new AuthorizeFilter(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())); }).AddJsonOptions(options =>
             {
@@ -479,6 +491,21 @@ namespace CarWash.PWA
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider serviceProvider)
         {
+            app.UseHealthChecks("/api/healthcheck", new HealthCheckOptions
+            {
+                ResponseWriter = async (context, report) =>
+                {
+                    var result = JsonSerializer.Serialize(
+                        new
+                        {
+                            status = report.Status.ToString(),
+                            errors = report.Entries.Select(e => new { key = e.Key, value = Enum.GetName(typeof(HealthStatus), e.Value.Status) })
+                        });
+                    context.Response.ContentType = MediaTypeNames.Application.Json;
+                    await context.Response.WriteAsync(result);
+                }
+            });
+
             app.UseAzureAppConfiguration();
             var config = configuration.Get<CarWashConfiguration>();
 
@@ -547,7 +574,6 @@ namespace CarWash.PWA
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHealthChecks("/api/healthcheck");
                 endpoints.MapHub<BacklogHub>("/hub/backlog");
                 endpoints.MapHub<KeyLockerHub>("/hub/keylocker");
                 endpoints.MapControllerRoute("default", "{controller}/{action=Index}/{id?}");
