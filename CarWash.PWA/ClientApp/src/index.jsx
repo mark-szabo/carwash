@@ -1,5 +1,5 @@
 import './index.css';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { runWithAdal } from './Auth';
@@ -8,7 +8,6 @@ import { runWithAdal } from './Auth';
 //    window.location = `https://www.${window.location.host}${window.location.pathname}`;
 // }
 
-const baseUrl = document.getElementsByTagName('base')[0].getAttribute('href');
 const rootElement = document.getElementById('root');
 
 let configuration;
@@ -24,10 +23,10 @@ try {
 }
 
 runWithAdal(configuration, () => {
-    ReactDOM.render(
-        <BrowserRouter basename={baseUrl}>
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(
+        <BrowserRouter>
             <App configuration={configuration} />
-        </BrowserRouter>,
-        rootElement
+        </BrowserRouter>
     );
 });

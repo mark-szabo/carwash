@@ -1,12 +1,16 @@
 {
   /* See all the pre-defined configs here: https://www.npmjs.com/package/eslint-config-defaults */
   "extends": [
+    "react-app",
     "eslint:recommended",
     "plugin:react/recommended",
     "prettier"
   ],
   "parser": "@babel/eslint-parser",
   "parserOptions": {
+    "babelOptions": {
+       "presets": ["@babel/preset-react"]
+    },
     "requireConfigFile": false,
     "ecmaVersion": 2020,
     "sourceType": "module",
@@ -14,7 +18,7 @@
       "jsx": true
     }
   },
-  "plugins": ["react", "react-hooks", "import", "jsx"],
+  "plugins": ["react", "import", "jsx"],
   "env": {
     "amd": true,
     "browser": true,
