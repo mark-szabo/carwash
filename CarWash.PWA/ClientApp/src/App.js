@@ -30,6 +30,7 @@ import Blockers from './components/Blockers';
 import Analytics from './components/Analytics';
 import ErrorBoundary from './components/ErrorBoundary';
 import NotFound from './components/NotFound';
+import PhoneNumberDialog from './components/PhoneNumberDialog';
 
 // A theme with custom primary and secondary color.
 const lightTheme = createTheme(
@@ -115,6 +116,7 @@ export default class App extends Component {
         snackbarMessage: '',
         snackbarAction: null,
         notificationDialogOpen: false,
+        phoneNumberDialogOpen: false,
         theme: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? darkTheme : lightTheme,
         searchTerm: '',
         closedKeyLockerBoxIds: [],
@@ -130,6 +132,11 @@ export default class App extends Component {
         apiFetch('api/users/me').then(
             data => {
                 this.setState({ user: data });
+
+                // Show phone number dialog if missing
+                if (!data.phoneNumber) {
+                    this.setState({ phoneNumberDialogOpen: true });
+                }
 
                 this.loadReservations(false);
 
@@ -282,6 +289,10 @@ export default class App extends Component {
         this.setState({
             notificationDialogOpen: false,
         });
+    };
+
+    handlePhoneNumberDialogClose = () => {
+        this.setState({ phoneNumberDialogOpen: false });
     };
 
     addReservation = reservation => {
@@ -632,6 +643,7 @@ export default class App extends Component {
                                                     addReservation={this.addReservation}
                                                     lastSettings={lastSettings}
                                                     loadLastSettings={this.loadLastSettings}
+                                                    updateUser={this.updateUser}
                                                     openSnackbar={this.openSnackbar}
                                                     openNotificationDialog={this.openNotificationDialog}
                                                     {...props}
@@ -655,6 +667,7 @@ export default class App extends Component {
                                                     addReservation={this.addReservation}
                                                     removeReservation={this.removeReservation}
                                                     loadLastSettings={this.loadLastSettings}
+                                                    updateUser={this.updateUser}
                                                     openSnackbar={this.openSnackbar}
                                                     openNotificationDialog={this.openNotificationDialog}
                                                     {...props}
@@ -803,6 +816,12 @@ export default class App extends Component {
                             openSnackbar={this.openSnackbar}
                             updateUser={this.updateUser}
                         />
+                        <PhoneNumberDialog
+                            open={this.state.phoneNumberDialogOpen}
+                            handleClose={this.handlePhoneNumberDialogClose}
+                            openSnackbar={this.openSnackbar}
+                            updateUser={this.updateUser}
+                        />
                     </ErrorBoundary>
                 </ThemeProvider>
             </StyledEngineProvider>
@@ -813,37 +832,3 @@ export default class App extends Component {
 App.propTypes = {
     configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
 };
-
-/**
-<!-- Messenger Chat Plugin Code -->
-<div id="fb-root"></div>
-
-<!-- Your Chat Plugin code -->
-<div id="fb-customer-chat" class="fb-customerchat"></div>
-
-<script>
-    var chatbox = document.getElementById("fb-customer-chat");
-    chatbox.setAttribute("page_id", "268972003778293");
-    chatbox.setAttribute("attribution", "biz_inbox");
-</script>
-
-<!-- Your SDK code -->
-<script>
-    window.fbAsyncInit = function () {
-        FB.init({
-            xfbml: true,
-            version: "v16.0",
-        });
-    };
-
-    (function (d, s, id) {
-        var js,
-            fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) return;
-        js = d.createElement(s);
-        js.id = id;
-        js.src = "https://connect.facebook.net/hu_HU/sdk/xfbml.customerchat.js";
-        fjs.parentNode.insertBefore(js, fjs);
-    })(document, "script", "facebook-jssdk");
-</script>
- */

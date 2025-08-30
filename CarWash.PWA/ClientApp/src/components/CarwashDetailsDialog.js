@@ -660,7 +660,8 @@ class CarwashDetailsDialog extends React.Component {
                         </div>
                         <Typography color="textSecondary" component="span" style={{ margin: '8px 0 32px 0' }}>
                             {getAdminStateName(reservation.state)} • {formatDate(reservation)} •{' '}
-                            {reservation.user.firstName} {reservation.user.lastName} • {reservation.user.company}
+                            {reservation.user.firstName} {reservation.user.lastName} • {reservation.user.phoneNumber} •{' '}
+                            {reservation.user.company}
                         </Typography>
                         <br />
                         {!editLocation ? (

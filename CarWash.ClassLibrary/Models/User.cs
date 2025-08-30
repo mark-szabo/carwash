@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
-using CarWash.ClassLibrary.Enums;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using CarWash.ClassLibrary.Enums;
+using Microsoft.AspNetCore.Identity;
 
 namespace CarWash.ClassLibrary.Models
 {
@@ -83,6 +83,6 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Gets or sets the payment method for the user.
         /// </summary>
-        public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.WireTransfer;
+        public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.NotSet;
     }
 }

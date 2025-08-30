@@ -78,3 +78,14 @@ export function getSeverityName(severity) {
             return 'info';
     }
 }
+
+export function validatePhoneNumber(value) {
+    // Allow spaces, hyphens, parentheses, and must contain at least 8 digits
+    if (typeof value !== 'string') return false;
+    // Remove common formatting characters
+    const digits = value.replace(/[^\d]/g, '');
+    if (digits.length < 8) return false;
+    // Basic format check: starts with optional +, then digits, spaces, hyphens, parentheses
+    const regex = /^\+?[\d\s\-()]{8,}$/;
+    return regex.test(value);
+}

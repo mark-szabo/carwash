@@ -1448,16 +1448,10 @@ namespace CarWash.PWA.Controllers
 
             if (lastReservation == null) return NoContent();
 
-            var lastPrivateReservation = await _context.Reservation
-                .Where(r => r.UserId == _user.Id && r.Private)
-                .OrderByDescending(r => r.CreatedOn)
-                .FirstOrDefaultAsync();
-
             return Ok(new LastSettingsViewModel(
                 VehiclePlateNumber: lastReservation.VehiclePlateNumber,
                 Location: lastReservation.Location,
                 Services: lastReservation.Services));
-            // TODO: add invoice details
         }
 
         // GET: api/reservations/reservationpercentage
@@ -1570,90 +1564,98 @@ namespace CarWash.PWA.Controllers
             else return Forbid();
 
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-            using (var package = new ExcelPackage())
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the empty workbook
+            var worksheet = package.Workbook.Worksheets.Add($"{startDateNonNull.Year}-{startDateNonNull.Month}");
+
+            // Add the headers
+            worksheet.Cells[1, 1].Value = "Date";
+            worksheet.Cells[1, 2].Value = "Start time";
+            worksheet.Cells[1, 3].Value = "End time";
+            worksheet.Cells[1, 4].Value = "Company";
+            worksheet.Cells[1, 5].Value = "Name";
+            worksheet.Cells[1, 6].Value = "Email";
+            worksheet.Cells[1, 7].Value = "PhoneNumber";
+            worksheet.Cells[1, 8].Value = "BillingName";
+            worksheet.Cells[1, 9].Value = "BillingAddress";
+            worksheet.Cells[1, 10].Value = "PaymentMethod";
+            worksheet.Cells[1, 11].Value = "Vehicle plate number";
+            worksheet.Cells[1, 12].Value = "MPV";
+            worksheet.Cells[1, 13].Value = "Private";
+            worksheet.Cells[1, 14].Value = "Services";
+            worksheet.Cells[1, 15].Value = "Comment";
+            worksheet.Cells[1, 16].Value = "Carwash comment";
+            worksheet.Cells[1, 17].Value = "Price (computed)";
+
+            // Add values
+            var i = 2;
+            foreach (var reservation in reservations)
             {
-                // Add a new worksheet to the empty workbook
-                var worksheet = package.Workbook.Worksheets.Add($"{startDateNonNull.Year}-{startDateNonNull.Month}");
+                worksheet.Cells[i, 1].Style.Numberformat.Format = "yyyy-mm-dd";
+                worksheet.Cells[i, 1].Value = reservation.StartDate.Date;
 
-                // Add the headers
-                worksheet.Cells[1, 1].Value = "Date";
-                worksheet.Cells[1, 2].Value = "Start time";
-                worksheet.Cells[1, 3].Value = "End time";
-                worksheet.Cells[1, 4].Value = "Company";
-                worksheet.Cells[1, 5].Value = "Name";
-                worksheet.Cells[1, 6].Value = "Vehicle plate number";
-                worksheet.Cells[1, 7].Value = "MPV";
-                worksheet.Cells[1, 8].Value = "Private";
-                worksheet.Cells[1, 9].Value = "Services";
-                worksheet.Cells[1, 10].Value = "Comment";
-                worksheet.Cells[1, 11].Value = "Carwash comment";
-                worksheet.Cells[1, 12].Value = "Price (computed)";
+                worksheet.Cells[i, 2].Style.Numberformat.Format = "hh:mm";
+                worksheet.Cells[i, 2].Value = reservation.StartDate.TimeOfDay;
 
-                // Add values
-                var i = 2;
-                foreach (var reservation in reservations)
-                {
-                    worksheet.Cells[i, 1].Style.Numberformat.Format = "yyyy-mm-dd";
-                    worksheet.Cells[i, 1].Value = reservation.StartDate.Date;
+                worksheet.Cells[i, 3].Style.Numberformat.Format = "hh:mm";
+                worksheet.Cells[i, 3].Value = reservation.EndDate?.TimeOfDay;
 
-                    worksheet.Cells[i, 2].Style.Numberformat.Format = "hh:mm";
-                    worksheet.Cells[i, 2].Value = reservation.StartDate.TimeOfDay;
+                worksheet.Cells[i, 4].Value = reservation.User.Company;
+                worksheet.Cells[i, 5].Value = reservation.User.FullName;
 
-                    worksheet.Cells[i, 3].Style.Numberformat.Format = "hh:mm";
-                    worksheet.Cells[i, 3].Value = reservation.EndDate?.TimeOfDay;
+                worksheet.Cells[i, 6].Value = reservation.Private ? reservation.User.Email : "";
+                worksheet.Cells[i, 7].Value = reservation.Private ? reservation.User.PhoneNumber : "";
+                worksheet.Cells[i, 8].Value = reservation.Private ? reservation.User.BillingName : "";
+                worksheet.Cells[i, 9].Value = reservation.Private ? reservation.User.BillingAddress : "";
+                worksheet.Cells[i, 10].Value = reservation.Private ? reservation.User.PaymentMethod : "";
 
-                    worksheet.Cells[i, 4].Value = reservation.User.Company;
+                worksheet.Cells[i, 11].Value = reservation.VehiclePlateNumber;
+                worksheet.Cells[i, 12].Value = reservation.Mpv;
+                worksheet.Cells[i, 13].Value = reservation.Private;
+                worksheet.Cells[i, 14].Value = reservation.GetServiceNames(_configuration.CurrentValue);
+                worksheet.Cells[i, 15].Value = reservation.CommentsJson;
+                worksheet.Cells[i, 17].Value = reservation.GetPrice(_configuration.CurrentValue);
 
-                    worksheet.Cells[i, 5].Value = reservation.User.FullName;
-
-                    worksheet.Cells[i, 6].Value = reservation.VehiclePlateNumber;
-
-                    worksheet.Cells[i, 7].Value = reservation.Mpv;
-
-                    worksheet.Cells[i, 8].Value = reservation.Private;
-
-                    worksheet.Cells[i, 9].Value = reservation.GetServiceNames(_configuration.CurrentValue);
-
-                    worksheet.Cells[i, 10].Value = reservation.CommentsJson;
-
-                    worksheet.Cells[i, 12].Value = reservation.GetPrice(_configuration.CurrentValue);
-
-                    i++;
-                }
-
-                // Format as table
-                var dataRange = worksheet.Cells[1, 1, i == 2 ? i : i - 1, 12]; //cannot create table with only one row
-                var table = worksheet.Tables.Add(dataRange, $"reservations_{startDateNonNull.Year}_{startDateNonNull.Month}");
-                table.ShowTotal = false;
-                table.ShowHeader = true;
-                table.ShowFilter = true;
-
-                // Column auto-width
-                worksheet.Column(1).AutoFit();
-                worksheet.Column(2).AutoFit();
-                worksheet.Column(3).AutoFit();
-                worksheet.Column(4).AutoFit();
-                worksheet.Column(5).AutoFit();
-                worksheet.Column(6).AutoFit();
-                worksheet.Column(7).AutoFit();
-                worksheet.Column(8).AutoFit();
-                // worksheet.Column(9).AutoFit(); //services
-                // don't do it for comment fields
-                worksheet.Column(12).AutoFit();
-
-                // Pivot table
-                var pivotSheet = package.Workbook.Worksheets.Add($"{startDateNonNull.Year}-{startDateNonNull.Month} pivot");
-                var pivot = pivotSheet.PivotTables.Add(pivotSheet.Cells[1, 1], dataRange, "Employee pivot");
-                if (_user.IsCarwashAdmin) pivot.RowFields.Add(pivot.Fields["Company"]);
-                pivot.RowFields.Add(pivot.Fields["Name"]);
-                pivot.DataFields.Add(pivot.Fields["Price (computed)"]);
-                pivot.DataOnRows = true;
-
-                // Convert to stream
-                var stream = new MemoryStream(package.GetAsByteArray());
-
-                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"carwash-export-{startDateNonNull.Year}-{startDateNonNull.Month}-{startDateNonNull.Day}.xlsx");
+                i++;
             }
+
+            // Format as table
+            var dataRange = worksheet.Cells[1, 1, i == 2 ? i : i - 1, 17]; //cannot create table with only one row
+            var table = worksheet.Tables.Add(dataRange, $"reservations_{startDateNonNull.Year}_{startDateNonNull.Month}");
+            table.ShowTotal = false;
+            table.ShowHeader = true;
+            table.ShowFilter = true;
+
+            // Column auto-width
+            worksheet.Column(1).AutoFit();
+            worksheet.Column(2).AutoFit();
+            worksheet.Column(3).AutoFit();
+            worksheet.Column(4).AutoFit();
+            worksheet.Column(5).AutoFit();
+            worksheet.Column(6).AutoFit();
+            worksheet.Column(7).AutoFit();
+            worksheet.Column(8).AutoFit();
+            worksheet.Column(9).AutoFit();
+            worksheet.Column(10).AutoFit();
+            worksheet.Column(11).AutoFit();
+            worksheet.Column(12).AutoFit();
+            worksheet.Column(13).AutoFit();
+            // worksheet.Column(14).AutoFit(); //services
+            // don't do it for comment fields
+            worksheet.Column(17).AutoFit();
+
+            // Pivot table
+            var pivotSheet = package.Workbook.Worksheets.Add($"{startDateNonNull.Year}-{startDateNonNull.Month} pivot");
+            var pivot = pivotSheet.PivotTables.Add(pivotSheet.Cells[1, 1], dataRange, "Employee pivot");
+            if (_user.IsCarwashAdmin) pivot.RowFields.Add(pivot.Fields["Company"]);
+            pivot.RowFields.Add(pivot.Fields["Name"]);
+            pivot.DataFields.Add(pivot.Fields["Price (computed)"]);
+            pivot.DataOnRows = true;
+
+            // Convert to stream
+            var stream = new MemoryStream(await package.GetAsByteArrayAsync());
+
+            return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"carwash-export-{startDateNonNull.Year}-{startDateNonNull.Month}-{startDateNonNull.Day}.xlsx");
         }
 
         /// <summary>

@@ -1,7 +1,6 @@
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -13,6 +12,7 @@ using System.Threading.Tasks;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Hubs;
+using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.AspNetCore;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
@@ -34,8 +35,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.FeatureManagement;
+using Microsoft.Graph;
 using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Kiota.Abstractions.Authentication;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using static CarWash.ClassLibrary.Constants;
@@ -71,12 +75,14 @@ namespace CarWash.PWA
 
                 config.BuildNumber = configuration.GetValue<string>("BUILD_NUMBER") ?? "0.0.0";
             });
+            var config = configuration.Get<CarWashConfiguration>();
 
             var iotHubServiceClient = ServiceClient.CreateFromConnectionString(configuration.GetConnectionString("IotHub"), Microsoft.Azure.Devices.TransportType.Amqp, new ServiceClientOptions { SdkAssignsMessageId = Microsoft.Azure.Devices.Shared.SdkAssignsMessageId.WhenUnset });
             services.AddSingleton(iotHubServiceClient);
 
             // Add application services
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddSingleton<IBlobStorageService, BlobStorageService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ICalendarService, CalendarService>();
@@ -101,26 +107,26 @@ namespace CarWash.PWA
                 {
                     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
                 })
-                .AddJwtBearer(options =>
+                .AddMicrosoftIdentityWebApi(options =>
                 {
+                    options.IncludeErrorDetails = true;
                     options.Audience = configuration["AzureAd:ClientId"];
                     options.Authority = configuration["AzureAd:Instance"];
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidateIssuer = false,
-                        /*IssuerValidator = (issuer, token, tvp) =>
-                        {
-                            issuer = issuer.Substring(24, 36); // Get the tenant id out of the issuer string (eg. https://sts.windows.net/72f988bf-86f1-41af-91ab-2d7cd011db47/)
-                            if (config.Companies.Select(i => i.TenantId).Contains(issuer))
-                                return issuer;
-                            else
-                                throw new SecurityTokenInvalidIssuerException("Invalid issuer");
-                        },*/
+                        ValidateAudience = true,
+                        ValidateIssuer = true,
+                        ValidateLifetime = true,
+                        RequireExpirationTime = true,
+                        RequireSignedTokens = true,
+                        RequireAudience = true,
                     };
                     options.Events = new JwtBearerEvents
                     {
                         OnTokenValidated = async context =>
                         {
+                            var telemetryClient = context.HttpContext.RequestServices.GetService<TelemetryClient>();
+
                             // Check if request is coming from an authorized service application.
                             var serviceAppId = context.Principal?.FindFirstValue("appid");
                             if (serviceAppId != null && serviceAppId != configuration["AzureAd:ClientId"])
@@ -132,7 +138,12 @@ namespace CarWash.PWA
                                     return;
                                 }
 
-                                Debug.WriteLine($"Application ({serviceAppId}) is not authorized.");
+                                telemetryClient?.TrackEvent("UnauthorizedServiceApp", new Dictionary<string, string?>
+                                {
+                                    ["AppId"] = serviceAppId,
+                                    ["TenantId"] = context.Principal?.FindFirstValue(ClaimConstants.Tid) ?? context.Principal?.FindFirstValue(ClaimConstants.TenantId),
+                                    ["UserId"] = context.Principal?.FindFirstValue(ClaimConstants.Oid) ?? context.Principal?.FindFirstValue(ClaimConstants.ObjectId),
+                                });
                                 context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
                                 context.Response.ContentType = "application/json";
                                 context.Response.Headers.Append("WWW-Authenticate", "Bearer error=\"invalid_token\", error_description=\"The access token is not authorized\"");
@@ -193,8 +204,12 @@ namespace CarWash.PWA
 
                                     if (user != null)
                                     {
-                                        Debug.WriteLine(
-                                            "User already exists. Most likely the user was just created and the exception was thrown by the concurrently firing requests at the first load.");
+                                        telemetryClient?.TrackException(ex, new Dictionary<string, string?>
+                                        {
+                                            ["UserId"] = user.Id,
+                                            ["Email"] = user.Email,
+                                            ["Message"] = "User already exists. Most likely the user was just created and the exception was thrown by the concurrently firing requests at the first load.",
+                                        });
 
                                         // Remove above added user from the EF Change Tracker.
                                         // It would re-throw the exception as it would try to insert it again into the db at the next SaveChanges()
@@ -207,6 +222,74 @@ namespace CarWash.PWA
                                 }
                             }
 
+                            if (company.Color == null || user.PhoneNumber == null)
+                            {
+                                try
+                                {
+                                    // Graph API
+                                    var tokenAcquisition = context.HttpContext.RequestServices.GetRequiredService<ITokenAcquisition>();
+
+                                    var graphClient = new GraphServiceClient(
+                                        new BaseBearerTokenAuthenticationProvider(
+                                            new TokenAcquisitionTokenProvider(
+                                                tokenAcquisition,
+                                                ["User.Read"],
+                                                context.Principal)));
+
+                                    if (user.PhoneNumber == null)
+                                    {
+                                        // Get user information from Graph
+                                        var graphUser = await graphClient.Me.GetAsync((requestConfiguration) =>
+                                        {
+                                            requestConfiguration.QueryParameters.Select = ["mobilePhone", "businessPhones"];
+                                        });
+                                        var phoneNumber = graphUser?.MobilePhone ?? (graphUser?.BusinessPhones?.Count > 0 ? graphUser.BusinessPhones[0] : null);
+                                        if (phoneNumber != null)
+                                        {
+                                            user.PhoneNumber = phoneNumber;
+                                            dbContext.Update(user);
+                                        }
+                                    }
+
+                                    if (company.Color == null)
+                                    {
+                                        // Get company information from Graph
+                                        var branding = await graphClient.Organization[entraTenantId]
+                                        .Branding
+                                        .GetAsync((requestConfiguration) =>
+                                        {
+                                            requestConfiguration.Headers.Add("Accept-Language", "0");
+                                            requestConfiguration.QueryParameters.Select = ["backgroundColor", "bannerLogoRelativeUrl", "CdnList"];
+                                        });
+                                        if (branding?.BackgroundColor != null)
+                                        {
+                                            company.Color = branding?.BackgroundColor;
+                                            company.UpdatedOn = DateTime.UtcNow;
+                                            dbContext.Update(company);
+                                        }
+                                        if (branding?.BannerLogoRelativeUrl != null)
+                                        {
+                                            var companyLogo = $"https://{branding.CdnList?[0]}/{branding.BannerLogoRelativeUrl}";
+
+                                            var blobStorageService = context.HttpContext.RequestServices.GetRequiredService<IBlobStorageService>();
+                                            await blobStorageService.UploadCompanyLogoFromUrlAsync(companyLogo, company.Name);
+                                        }
+                                    }
+
+                                    await dbContext.SaveChangesAsync();
+                                }
+                                catch (Exception ex)
+                                {
+                                    telemetryClient?.TrackException(ex, new Dictionary<string, string?>
+                                    {
+                                        ["UserId"] = user.Id,
+                                        ["Email"] = user.Email,
+                                        ["Company"] = company.Name,
+                                        ["Message"] = "Error getting user or company information from Graph.",
+                                    });
+                                }
+                            }
+
                             // Add claims directly to the existing identity
                             if (context.Principal.Identity is ClaimsIdentity identity)
                             {
@@ -214,10 +297,14 @@ namespace CarWash.PWA
                                 identity.AddClaim(new Claim("admin", user.IsAdmin.ToString()));
                                 identity.AddClaim(new Claim("carwashadmin", user.IsCarwashAdmin.ToString()));
                             }
+                            context.HttpContext.User = context.Principal;
                             context.HttpContext.Items["CurrentUser"] = user;
                         },
                         OnAuthenticationFailed = context =>
                         {
+                            var telemetryClient = context.HttpContext.RequestServices.GetService<TelemetryClient>();
+                            telemetryClient?.TrackException(context.Exception);
+
                             context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                             context.Response.ContentType = "application/json";
                             return Task.CompletedTask;
@@ -248,7 +335,22 @@ namespace CarWash.PWA
                             return Task.CompletedTask;
                         }
                     };
-                });
+                }, options =>
+                {
+                    if (currentEnvironment.IsDevelopment())
+                    {
+                        IdentityModelEventSource.ShowPII = true;
+                    }
+                    configuration.Bind("AzureAd", options);
+                })
+                .EnableTokenAcquisitionToCallDownstreamApi(
+                    options =>
+                    {
+                        configuration.Bind("AzureAd", options);
+                    })
+                .AddInMemoryTokenCaches();
+
+            services.AddAuthorization();
 
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
@@ -359,7 +461,7 @@ namespace CarWash.PWA
 
             services.AddHealthChecks();
 
-            services.AddControllers().AddJsonOptions(options =>
+            services.AddControllers(options => { options.Filters.Add(new AuthorizeFilter(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())); }).AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
                 options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
@@ -384,8 +486,6 @@ namespace CarWash.PWA
             }
 
             app.UseHttpsRedirection();
-
-            app.UseAuthentication();
 
             app.Use(async (context, next) =>
             {
@@ -432,6 +532,8 @@ namespace CarWash.PWA
             });
 
             app.UseRouting();
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 
