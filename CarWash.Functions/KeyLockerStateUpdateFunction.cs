@@ -48,7 +48,7 @@ namespace CarWash.Functions
                 {
                     box.IsConnected = true;
                     box.LastActivity = DateTime.UtcNow;
-                    
+
                     if (boxStates.Count < box.BoxSerial)
                     {
                         logger.LogWarning("Box serial {BoxSerial} is out of range for locker {LockerId}.", box.BoxSerial, lockerId);
@@ -80,6 +80,7 @@ namespace CarWash.Functions
             try
             {
                 var tenMinutesAgo = DateTime.UtcNow.AddMinutes(-10);
+                var fiveMinutesAgo = DateTime.UtcNow.AddMinutes(-5);
 
                 var disconnectedLockerBoxes = await context.KeyLockerBox
                     .Where(box => box.LastActivity < tenMinutesAgo)
@@ -90,9 +91,21 @@ namespace CarWash.Functions
                     box.IsConnected = false;
                 }
 
+                // Free up boxes that are used, have no reservation, and were modified more than 5 minutes ago
+                var usedBoxesToFree = await context.KeyLockerBox
+                    .Where(box => box.State == KeyLockerBoxState.Used && box.LastModifiedAt < fiveMinutesAgo &&
+                        !context.Reservation.Any(r => r.KeyLockerBoxId == box.Id))
+                    .ToListAsync();
+
+                foreach (var box in usedBoxesToFree)
+                {
+                    box.State = KeyLockerBoxState.Empty;
+                }
+
                 await context.SaveChangesAsync();
 
                 logger.LogInformation("Updated availability for {NumberOfDisconnectedBoxes} disconnected locker boxes at {Time}", disconnectedLockerBoxes.Count, DateTime.UtcNow);
+                logger.LogInformation("Freed up {NumberOfFreedBoxes} used locker boxes with no active reservation at {Time}", usedBoxesToFree.Count, DateTime.UtcNow);
             }
             catch (Exception ex)
             {
