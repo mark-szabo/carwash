@@ -42,30 +42,6 @@ namespace CarWash.ClassLibrary.Models
         /// </example>
         public List<Slot> Slots { get; set; } = new List<Slot>();
 
-        ///// <summary>
-        ///// List of companies whose users can use the CarWash app.
-        ///// </summary>
-        ///// <remarks>
-        ///// You MUST include the CarWash as a company!
-        ///// Location: Database
-        ///// Key: Companies
-        ///// </remarks>
-        ///// <example>
-        ///// [
-        /////   {
-        /////     "Name": "carwash",
-        /////     "TenantId": "86cf3673-fa54-46ac-8a6c-164633955f8e",
-        /////     "DailyLimit": 0
-        /////   },
-        /////   {
-        /////     "Name": "contoso",
-        /////     "TenantId": "d31a1195-d2ed-4a04-820c-3e1e455e380b",
-        /////     "DailyLimit": 15
-        /////   }
-        ///// ]
-        ///// </example>
-        //public List<Company> Companies { get; set; } = new List<Company>();
-
         /// <summary>
         /// List of parking garages where cars are allowed to be left.
         /// </summary>
@@ -160,11 +136,21 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Generated build number during CI/CD.
         /// </summary>
+        /// <remarks>
+        /// Location: Application Settings
+        /// Key: BuildNumber
+        /// Default value: ""
+        /// </remarks>
         public string BuildNumber { get; set; } = "";
 
         /// <summary>
         /// Application version number.
         /// </summary>
+        /// <remarks>
+        /// Location: Application Settings
+        /// Key: Version
+        /// Default value: ""
+        /// </remarks>
         public string Version { get; set; } = "";
 
         /// <summary>
@@ -244,18 +230,27 @@ namespace CarWash.ClassLibrary.Models
             /// <remarks>
             /// Location: Application Settings
             /// Key: ConnectionStrings:BaseUrl
-            /// Default value: 2
+            /// Default value: ""
             /// </remarks>
-            public string BaseUrl { get; set; }
+            public string BaseUrl { get; set; } = "";
 
             /// <summary>
-            /// Azure Service Bus connection string.
+            /// Azure Service Bus connection string for Bot communication.
             /// </summary>
             /// <remarks>
             /// Location: Azure Key Vault (DO NOT store secrets in Application Settings!)
             /// Key: ConnectionStrings--ServiceBus
             /// </remarks>
             public string ServiceBus { get; set; }
+
+            /// <summary>
+            /// Azure Service Bus connection string for Key Locker messages.
+            /// </summary>
+            /// <remarks>
+            /// Location: Azure Key Vault (DO NOT store secrets in Application Settings!)
+            /// Key: ConnectionStrings--KeyLockerServiceBus
+            /// </remarks>
+            public string KeyLockerServiceBus { get; set; }
 
             /// <summary>
             /// Azure SQL database connection string.

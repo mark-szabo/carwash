@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using CarWash.ClassLibrary;
+using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +15,7 @@ namespace CarWash.Functions
     public class KeyLockerStateUpdateFunction(ILogger<KeyLockerStateUpdateFunction> logger, FunctionsDbContext context)
     {
         [Function(nameof(ServiceBusListenerFunction))]
-        public async Task ServiceBusListenerFunction([ServiceBusTrigger("sbq-carwash-keylocker", Connection = "ConnectionStrings:KeyLockerServiceBus", AutoCompleteMessages = true)] ServiceBusReceivedMessage message)
+        public async Task ServiceBusListenerFunction([ServiceBusTrigger(Constants.KeyLockerServiceBusQueueName, Connection = "ConnectionStrings:KeyLockerServiceBus", AutoCompleteMessages = true)] ServiceBusReceivedMessage message)
         {
             try
             {

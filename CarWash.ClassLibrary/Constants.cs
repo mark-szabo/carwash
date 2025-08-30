@@ -101,6 +101,11 @@ namespace CarWash.ClassLibrary
         }
 
         /// <summary>
+        /// The name of the Azure Service Bus queue used for the Key Locker service.
+        /// </summary>
+        public const string KeyLockerServiceBusQueueName = "sbq-carwash-keylocker";
+
+        /// <summary>
         /// Default <see cref="JsonSerializerOptions"/> used for serialization.
         /// </summary>
         public static JsonSerializerOptions DefaultJsonSerializerOptions = new()
