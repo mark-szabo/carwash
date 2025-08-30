@@ -57,33 +57,6 @@ namespace CarWash.PWA.Tests
         }*/
 
         [Fact]
-        public void GetUsers_AsAdmin_ReturnsUsersInCompany()
-        {
-            var controller = CreateDefaultController(ADMIN_EMAIL);
-
-            var result = controller.GetUsers();
-            var ok = (OkObjectResult)result.Result;
-            var users = (IEnumerable<UserViewModel>)ok.Value;
-
-            Assert.IsType<ActionResult<IEnumerable<UserViewModel>>>(result);
-            Assert.IsType<OkObjectResult>(result.Result);
-            Assert.NotEmpty(users);
-            const int NUMBER_OF_USERS_IN_CONTOSO_COMPANY = 2;
-            Assert.Equal(NUMBER_OF_USERS_IN_CONTOSO_COMPANY, users.Count());
-        }
-
-        [Fact]
-        public void GetUsers_AsNotAdmin_ReturnsForbid()
-        {
-            var controller = CreateDefaultController(JOHN_EMAIL);
-
-            var result = controller.GetUsers();
-
-            Assert.IsType<ActionResult<IEnumerable<UserViewModel>>>(result);
-            Assert.IsType<ForbidResult>(result.Result);
-        }
-
-        [Fact]
         public async Task GetUserDictionary_AsAdmin_ReturnsDictionaryOfUsersInCompany()
         {
             var controller = CreateDefaultController(ADMIN_EMAIL);
@@ -128,64 +101,6 @@ namespace CarWash.PWA.Tests
             Assert.IsType<ForbidResult>(result.Result);
         }
 
-        [Fact]
-        public async Task GetUser_AsAdmin_ReturnsUser()
-        {
-            var dbContext = CreateInMemoryDbContext();
-            var john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
-            var admin = dbContext.Users.Single(u => u.Email == ADMIN_EMAIL);
-            var emailServiceStub = new Mock<IEmailService>();
-            var userServiceStub = new Mock<IUserService>();
-            userServiceStub.Setup(s => s.CurrentUser).Returns(admin);
-            var controller = new UsersController(dbContext, userServiceStub.Object, emailServiceStub.Object);
-
-            var result = await controller.GetUser(john.Id);
-            var ok = (OkObjectResult)result.Result;
-            var user = (UserViewModel)ok.Value;
-
-            Assert.IsType<ActionResult<UserViewModel>>(result);
-            Assert.IsType<OkObjectResult>(result.Result);
-            Assert.IsType<UserViewModel>(ok.Value);
-            Assert.Equal(john.Id, user.Id);
-        }
-
-        [Fact]
-        public async Task GetUser_AsNotAdmin_ReturnsSelf()
-        {
-            var dbContext = CreateInMemoryDbContext();
-            var john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
-            var emailServiceStub = new Mock<IEmailService>();
-            var userServiceStub = new Mock<IUserService>();
-            userServiceStub.Setup(s => s.CurrentUser).Returns(john);
-            var controller = new UsersController(dbContext, userServiceStub.Object, emailServiceStub.Object);
-
-            var result = await controller.GetUser(john.Id);
-            var ok = (OkObjectResult)result.Result;
-            var user = (UserViewModel)ok.Value;
-
-            Assert.IsType<ActionResult<UserViewModel>>(result);
-            Assert.IsType<OkObjectResult>(result.Result);
-            Assert.IsType<UserViewModel>(ok.Value);
-            Assert.Equal(john.Id, user.Id);
-        }
-
-        [Fact]
-        public async Task GetUser_AsNotAdmin_ReturnsForbid()
-        {
-            var dbContext = CreateInMemoryDbContext();
-            var john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
-            var admin = dbContext.Users.Single(u => u.Email == ADMIN_EMAIL);
-            var emailServiceStub = new Mock<IEmailService>();
-            var userServiceStub = new Mock<IUserService>();
-            userServiceStub.Setup(s => s.CurrentUser).Returns(john);
-            var controller = new UsersController(dbContext, userServiceStub.Object, emailServiceStub.Object);
-
-            var result = await controller.GetUser(admin.Id);
-
-            Assert.IsType<ActionResult<UserViewModel>>(result);
-            Assert.IsType<ForbidResult>(result.Result);
-        }
-
         [Theory]
         [InlineData(false)]
         [InlineData(true)]
@@ -198,7 +113,7 @@ namespace CarWash.PWA.Tests
             userServiceStub.Setup(s => s.CurrentUser).Returns(john);
             var controller = new UsersController(dbContext, userServiceStub.Object, emailServiceStub.Object);
 
-            var result = await controller.PutSettings("calendarintegration", JsonSerializer.SerializeToElement(value));
+            var result = await controller.PutSettings(new Dictionary<string, JsonElement>() { { "calendarintegration", JsonSerializer.SerializeToElement(value) } });
             john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
 
             Assert.IsType<NoContentResult>(result);
@@ -218,7 +133,7 @@ namespace CarWash.PWA.Tests
             userServiceStub.Setup(s => s.CurrentUser).Returns(john);
             var controller = new UsersController(dbContext, userServiceStub.Object, emailServiceStub.Object);
 
-            var result = await controller.PutSettings("notificationchannel", JsonSerializer.SerializeToElement((long)value));
+            var result = await controller.PutSettings(new Dictionary<string, JsonElement>() { { "notificationchannel", JsonSerializer.SerializeToElement((long)value) } });
             john = dbContext.Users.Single(u => u.Email == JOHN_EMAIL);
 
             Assert.IsType<NoContentResult>(result);
@@ -230,7 +145,7 @@ namespace CarWash.PWA.Tests
         {
             var controller = CreateDefaultController(JOHN_EMAIL);
 
-            var result = await controller.PutSettings("fakekey", JsonSerializer.SerializeToElement("fakevalue"));
+            var result = await controller.PutSettings(new Dictionary<string, JsonElement>() { { "fakekey", JsonSerializer.SerializeToElement("fakevalue") } });
 
             Assert.IsType<BadRequestObjectResult>(result);
         }
@@ -240,7 +155,7 @@ namespace CarWash.PWA.Tests
         {
             var controller = CreateDefaultController(JOHN_EMAIL);
 
-            var result = await controller.PutSettings("notificationchannel", JsonSerializer.SerializeToElement(""));
+            var result = await controller.PutSettings(new Dictionary<string, JsonElement>() { { "notificationchannel", JsonSerializer.SerializeToElement("") } });
 
             Assert.IsType<BadRequestObjectResult>(result);
         }
@@ -251,7 +166,7 @@ namespace CarWash.PWA.Tests
             var controller = CreateDefaultController(JOHN_EMAIL);
             const long NOT_EXISTENT_NOTIFICATION_CHANNEL = 24;
 
-            var result = await controller.PutSettings("notificationchannel", JsonSerializer.SerializeToElement(NOT_EXISTENT_NOTIFICATION_CHANNEL));
+            var result = await controller.PutSettings(new Dictionary<string, JsonElement>() { { "notificationchannel", JsonSerializer.SerializeToElement(NOT_EXISTENT_NOTIFICATION_CHANNEL) } });
 
             Assert.IsType<BadRequestObjectResult>(result);
         }

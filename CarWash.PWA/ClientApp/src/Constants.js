@@ -35,14 +35,10 @@ export const Severity = Object.freeze({
     Success: 3,
 });
 
-/**
- * @deprecated
- */
-export const Garages = Object.freeze({
-    M: ['-1', '-2', '-2.5', '-3', '-3.5', 'outdoor'],
-    S1: ['-1', '-2', '-3'],
-    GS: ['-1', 'outdoor'],
-    HX: ['-3'],
+export const PaymentMethod = Object.freeze({
+    NotSet: 0,
+    CreditCard: 1,
+    WireTransfer: 2,
 });
 
 export const BacklogHubMethods = Object.freeze({

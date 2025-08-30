@@ -31,6 +31,7 @@ import './Reserve.css';
 import ServiceDetailsTable from './ServiceDetailsTable';
 import Spinner from './Spinner';
 import LocationSelector from './LocationSelector';
+import BillingDetailsDialog from './BillingDetailsDialog';
 
 const styles = theme => ({
     stepper: {
@@ -160,6 +161,7 @@ class Reserve extends TrackedComponent {
             dropoffPreConfirmed: false,
             dateSelected: false,
             timeSelected: false,
+            showBillingDialog: false,
         };
     }
 
@@ -445,9 +447,26 @@ class Reserve extends TrackedComponent {
     };
 
     handlePrivateChange = () => {
+        const willBePrivate = !this.state.private;
+        if (willBePrivate) {
+            const { user } = this.props;
+            if (!user.billingName || !user.billingAddress || !user.paymentMethod || user.paymentMethod === 0) {
+                this.setState({ showBillingDialog: true });
+                return;
+            }
+        }
         this.setState(state => ({
             private: !state.private,
         }));
+    };
+
+    handleBillingDialogClose = saved => {
+        if (!saved) {
+            this.setState({ private: false });
+        } else {
+            this.setState({ private: true });
+        }
+        this.setState({ showBillingDialog: false });
     };
 
     handleCommentChange = event => {
@@ -717,271 +736,283 @@ class Reserve extends TrackedComponent {
         }
 
         return (
-            <Stepper activeStep={activeStep} orientation="vertical" className={classes.stepper}>
-                <Step>
-                    <StepLabel>{servicesStepLabel}</StepLabel>
-                    <StepContent>
-                        {loadingReservation ? (
-                            <Spinner />
-                        ) : (
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} md={6}>
-                                    {this.getServiceListComponent(configuration.services, selectedServices, classes)}
+            <>
+                <Stepper activeStep={activeStep} orientation="vertical" className={classes.stepper}>
+                    <Step>
+                        <StepLabel>{servicesStepLabel}</StepLabel>
+                        <StepContent>
+                            {loadingReservation ? (
+                                <Spinner />
+                            ) : (
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} md={6}>
+                                        {this.getServiceListComponent(
+                                            configuration.services,
+                                            selectedServices,
+                                            classes
+                                        )}
+                                        <div className={classes.actionsContainer}>
+                                            <div>
+                                                <Button disabled className={classes.button}>
+                                                    Back
+                                                </Button>
+                                                <Button
+                                                    variant="contained"
+                                                    color="primary"
+                                                    onClick={this.handleServiceSelectionComplete}
+                                                    className={classes.button}
+                                                    disabled={selectedServices.length <= 0}
+                                                    id="reserve-services-next-button"
+                                                >
+                                                    Next
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </Grid>
+                                    <Grid item xs={12} md={6}>
+                                        <ServiceDetailsTable configuration={configuration} />
+                                    </Grid>
+                                </Grid>
+                            )}
+                        </StepContent>
+                    </Step>
+                    <Step>
+                        <StepLabel>{dateStepLabel}</StepLabel>
+                        <StepContent>
+                            <LocalizationProvider dateAdapter={AdapterMoment}>
+                                <DateCalendar
+                                    onChange={date => this.handleDateSelectionComplete(date)}
+                                    value={selectedDate}
+                                    referenceDate={today}
+                                    loading={loading}
+                                    shouldDisableDate={shouldDisableDate}
+                                    disablePast
+                                    maxDate={yearFromToday}
+                                    views={['day']}
+                                    className={classes.calendar}
+                                />
+                            </LocalizationProvider>
+                            <div className={classes.actionsContainer}>
+                                <div>
+                                    <Button onClick={this.handleBack} className={classes.button}>
+                                        Back
+                                    </Button>
+                                    <Button
+                                        disabled={!dateSelected}
+                                        onClick={this.handleNextFromDateSelection}
+                                        variant="contained"
+                                        color="primary"
+                                        className={classes.button}
+                                        id="reserve-date-next-button"
+                                    >
+                                        Next
+                                    </Button>
+                                </div>
+                            </div>
+                        </StepContent>
+                    </Step>
+                    <Step>
+                        <StepLabel>{timeStepLabel}</StepLabel>
+                        <StepContent>
+                            <Alert variant="outlined" severity="info" className={classes.infoAlert}>
+                                Drop the car key before your slot starts to ensure timely completion. Ending times are
+                                indicative. For special requests, use the comment field.
+                            </Alert>
+                            <FormControl component="fieldset">
+                                <RadioGroup
+                                    aria-label="Time"
+                                    name="time"
+                                    className={classes.radioGroup}
+                                    value={`${timeSelected && selectedDate.hour()}`}
+                                    onChange={this.handleTimeSelectionComplete}
+                                >
+                                    {this.getSlotsComponent(configuration.slots, disabledSlots)}
+                                </RadioGroup>
+                            </FormControl>
+                            <div className={classes.actionsContainer}>
+                                <div>
+                                    <Button onClick={this.handleBackFromTimeSelection} className={classes.button}>
+                                        Back
+                                    </Button>
+                                    <Button
+                                        disabled={!timeSelected}
+                                        onClick={this.handleNext}
+                                        variant="contained"
+                                        color="primary"
+                                        className={classes.button}
+                                        id="reserve-time-next-button"
+                                    >
+                                        Next
+                                    </Button>
+                                </div>
+                            </div>
+                        </StepContent>
+                    </Step>
+                    <Step>
+                        <StepLabel>Reserve</StepLabel>
+                        <StepContent>
+                            {loading ? (
+                                <Spinner />
+                            ) : (
+                                <div>
+                                    <Alert variant="outlined" severity="warning" className={classes.infoAlert}>
+                                        Failure to specify a private reservation will result in the associated company
+                                        being billed. Users will be charged for overhead accounting costs incurred to
+                                        correct errors.
+                                    </Alert>
+                                    <div>
+                                        <FormGroup className={classes.checkbox}>
+                                            <FormControlLabel
+                                                control={
+                                                    <Checkbox
+                                                        checked={this.state.private}
+                                                        onChange={this.handlePrivateChange}
+                                                        value="private"
+                                                    />
+                                                }
+                                                label="Private (car is not company-owned)"
+                                            />
+                                        </FormGroup>
+                                    </div>
+                                    {(user.isAdmin || user.isCarwashAdmin) && (
+                                        <FormControl className={classes.formControl}>
+                                            <Autocomplete
+                                                required
+                                                value={userId}
+                                                onChange={this.handleUserChange}
+                                                disablePortal
+                                                selectOnFocus
+                                                clearOnBlur
+                                                handleHomeEndKeys
+                                                id="user"
+                                                options={Object.keys(users)}
+                                                getOptionLabel={option => users[option]}
+                                                renderOption={(props, option) => {
+                                                    const { key, ...optionProps } = props;
+                                                    return (
+                                                        <li key={option} {...optionProps}>
+                                                            {users[option]}
+                                                        </li>
+                                                    );
+                                                }}
+                                                renderInput={params => <TextField {...params} label="User" />}
+                                            />
+                                        </FormControl>
+                                    )}
+                                    <div>
+                                        <TextField
+                                            required
+                                            error={validationErrors.vehiclePlateNumber}
+                                            id="reserve-vehiclePlateNumber"
+                                            label="Plate number"
+                                            value={vehiclePlateNumber}
+                                            className={classes.textField}
+                                            margin="normal"
+                                            onChange={this.handlePlateNumberChange}
+                                            inputProps={{ maxLength: 8 }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <FormGroup className={classes.checkbox} style={{ marginTop: 8 }}>
+                                            <FormControlLabel
+                                                control={
+                                                    <Checkbox
+                                                        checked={locationKnown}
+                                                        onChange={this.handleLocationKnown}
+                                                        value="locationKnown"
+                                                        color="primary"
+                                                    />
+                                                }
+                                                label="I have already parked the car"
+                                            />
+                                        </FormGroup>
+                                    </div>
+                                    {locationKnown && (
+                                        <>
+                                            <div style={{ marginLeft: 8 }}>
+                                                <LocationSelector
+                                                    configuration={configuration}
+                                                    garage={garage}
+                                                    floor={floor}
+                                                    spot={seat}
+                                                    validationErrors={validationErrors}
+                                                    onGarageChange={this.handleGarageChange}
+                                                    onFloorChange={this.handleFloorChange}
+                                                    onSpotChange={this.handleSeatChange}
+                                                    textFieldWidth={200}
+                                                />
+                                            </div>
+                                            {isDateToday && (
+                                                <>
+                                                    <FormGroup className={classes.checkbox} style={{ marginTop: 8 }}>
+                                                        <FormControlLabel
+                                                            control={
+                                                                <Checkbox
+                                                                    checked={dropoffPreConfirmed}
+                                                                    onChange={this.handleDropoffPreConfirmed}
+                                                                    value="dropoffPreConfirmed"
+                                                                    color="primary"
+                                                                />
+                                                            }
+                                                            label="I have already left the key at the reception"
+                                                        />
+                                                    </FormGroup>
+                                                    {dropoffPreConfirmed && (
+                                                        <Alert
+                                                            variant="outlined"
+                                                            severity="warning"
+                                                            className={classes.infoAlert}
+                                                        >
+                                                            You won't be able to modify your reservation after you click
+                                                            Reserve!
+                                                        </Alert>
+                                                    )}
+                                                </>
+                                            )}
+                                        </>
+                                    )}
+                                    {!this.isUpdate && (
+                                        <div>
+                                            <TextField
+                                                id="reserve-comment"
+                                                label="Comment"
+                                                multiline
+                                                maxRows="4"
+                                                value={comment}
+                                                onChange={this.handleCommentChange}
+                                                className={classes.textField}
+                                                margin="normal"
+                                            />
+                                        </div>
+                                    )}
                                     <div className={classes.actionsContainer}>
                                         <div>
-                                            <Button disabled className={classes.button}>
+                                            <Button onClick={this.handleBack} className={classes.button}>
                                                 Back
                                             </Button>
                                             <Button
                                                 variant="contained"
                                                 color="primary"
-                                                onClick={this.handleServiceSelectionComplete}
+                                                onClick={this.handleReserve}
                                                 className={classes.button}
-                                                disabled={selectedServices.length <= 0}
-                                                id="reserve-services-next-button"
+                                                id="reserve-submit-button"
                                             >
-                                                Next
+                                                {!this.isUpdate ? 'Reserve' : 'Update'}
                                             </Button>
                                         </div>
                                     </div>
-                                </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <ServiceDetailsTable configuration={configuration} />
-                                </Grid>
-                            </Grid>
-                        )}
-                    </StepContent>
-                </Step>
-                <Step>
-                    <StepLabel>{dateStepLabel}</StepLabel>
-                    <StepContent>
-                        <LocalizationProvider dateAdapter={AdapterMoment}>
-                            <DateCalendar
-                                onChange={date => this.handleDateSelectionComplete(date)}
-                                value={selectedDate}
-                                referenceDate={today}
-                                loading={loading}
-                                shouldDisableDate={shouldDisableDate}
-                                disablePast
-                                maxDate={yearFromToday}
-                                views={['day']}
-                                className={classes.calendar}
-                            />
-                        </LocalizationProvider>
-                        <div className={classes.actionsContainer}>
-                            <div>
-                                <Button onClick={this.handleBack} className={classes.button}>
-                                    Back
-                                </Button>
-                                <Button
-                                    disabled={!dateSelected}
-                                    onClick={this.handleNextFromDateSelection}
-                                    variant="contained"
-                                    color="primary"
-                                    className={classes.button}
-                                    id="reserve-date-next-button"
-                                >
-                                    Next
-                                </Button>
-                            </div>
-                        </div>
-                    </StepContent>
-                </Step>
-                <Step>
-                    <StepLabel>{timeStepLabel}</StepLabel>
-                    <StepContent>
-                        <Alert variant="outlined" severity="info" className={classes.infoAlert}>
-                            Drop the car key before your slot starts to ensure timely completion. Ending times are
-                            indicative. For special requests, use the comment field.
-                        </Alert>
-                        <FormControl component="fieldset">
-                            <RadioGroup
-                                aria-label="Time"
-                                name="time"
-                                className={classes.radioGroup}
-                                value={`${timeSelected && selectedDate.hour()}`}
-                                onChange={this.handleTimeSelectionComplete}
-                            >
-                                {this.getSlotsComponent(configuration.slots, disabledSlots)}
-                            </RadioGroup>
-                        </FormControl>
-                        <div className={classes.actionsContainer}>
-                            <div>
-                                <Button onClick={this.handleBackFromTimeSelection} className={classes.button}>
-                                    Back
-                                </Button>
-                                <Button
-                                    disabled={!timeSelected}
-                                    onClick={this.handleNext}
-                                    variant="contained"
-                                    color="primary"
-                                    className={classes.button}
-                                    id="reserve-time-next-button"
-                                >
-                                    Next
-                                </Button>
-                            </div>
-                        </div>
-                    </StepContent>
-                </Step>
-                <Step>
-                    <StepLabel>Reserve</StepLabel>
-                    <StepContent>
-                        {loading ? (
-                            <Spinner />
-                        ) : (
-                            <div>
-                                <Alert variant="outlined" severity="warning" className={classes.infoAlert}>
-                                    Failure to specify a private reservation will result in the associated company being
-                                    billed. Users will be charged for overhead accounting costs incurred to correct
-                                    errors.
-                                </Alert>
-                                <div>
-                                    <FormGroup className={classes.checkbox}>
-                                        <FormControlLabel
-                                            control={
-                                                <Checkbox
-                                                    checked={this.state.private}
-                                                    onChange={this.handlePrivateChange}
-                                                    value="private"
-                                                />
-                                            }
-                                            label="Private (car is not company-owned)"
-                                        />
-                                    </FormGroup>
                                 </div>
-                                {(user.isAdmin || user.isCarwashAdmin) && (
-                                    <FormControl className={classes.formControl}>
-                                        <Autocomplete
-                                            required
-                                            value={userId}
-                                            onChange={this.handleUserChange}
-                                            disablePortal
-                                            selectOnFocus
-                                            clearOnBlur
-                                            handleHomeEndKeys
-                                            id="user"
-                                            options={Object.keys(users)}
-                                            getOptionLabel={option => users[option]}
-                                            renderOption={(props, option) => {
-                                                const { key, ...optionProps } = props;
-                                                return (
-                                                    <li key={option} {...optionProps}>
-                                                        {users[option]}
-                                                    </li>
-                                                );
-                                            }}
-                                            renderInput={params => <TextField {...params} label="User" />}
-                                        />
-                                    </FormControl>
-                                )}
-                                <div>
-                                    <TextField
-                                        required
-                                        error={validationErrors.vehiclePlateNumber}
-                                        id="reserve-vehiclePlateNumber"
-                                        label="Plate number"
-                                        value={vehiclePlateNumber}
-                                        className={classes.textField}
-                                        margin="normal"
-                                        onChange={this.handlePlateNumberChange}
-                                        inputProps={{ maxLength: 8 }}
-                                    />
-                                </div>
-                                <div>
-                                    <FormGroup className={classes.checkbox} style={{ marginTop: 8 }}>
-                                        <FormControlLabel
-                                            control={
-                                                <Checkbox
-                                                    checked={locationKnown}
-                                                    onChange={this.handleLocationKnown}
-                                                    value="locationKnown"
-                                                    color="primary"
-                                                />
-                                            }
-                                            label="I have already parked the car"
-                                        />
-                                    </FormGroup>
-                                </div>
-                                {locationKnown && (
-                                    <>
-                                        <div style={{ marginLeft: 8 }}>
-                                            <LocationSelector
-                                                configuration={configuration}
-                                                garage={garage}
-                                                floor={floor}
-                                                spot={seat}
-                                                validationErrors={validationErrors}
-                                                onGarageChange={this.handleGarageChange}
-                                                onFloorChange={this.handleFloorChange}
-                                                onSpotChange={this.handleSeatChange}
-                                                textFieldWidth={200}
-                                            />
-                                        </div>
-                                        {isDateToday && (
-                                            <>
-                                                <FormGroup className={classes.checkbox} style={{ marginTop: 8 }}>
-                                                    <FormControlLabel
-                                                        control={
-                                                            <Checkbox
-                                                                checked={dropoffPreConfirmed}
-                                                                onChange={this.handleDropoffPreConfirmed}
-                                                                value="dropoffPreConfirmed"
-                                                                color="primary"
-                                                            />
-                                                        }
-                                                        label="I have already left the key at the reception"
-                                                    />
-                                                </FormGroup>
-                                                {dropoffPreConfirmed && (
-                                                    <Alert
-                                                        variant="outlined"
-                                                        severity="warning"
-                                                        className={classes.infoAlert}
-                                                    >
-                                                        You won't be able to modify your reservation after you click
-                                                        Reserve!
-                                                    </Alert>
-                                                )}
-                                            </>
-                                        )}
-                                    </>
-                                )}
-                                {!this.isUpdate && (
-                                    <div>
-                                        <TextField
-                                            id="reserve-comment"
-                                            label="Comment"
-                                            multiline
-                                            maxRows="4"
-                                            value={comment}
-                                            onChange={this.handleCommentChange}
-                                            className={classes.textField}
-                                            margin="normal"
-                                        />
-                                    </div>
-                                )}
-                                <div className={classes.actionsContainer}>
-                                    <div>
-                                        <Button onClick={this.handleBack} className={classes.button}>
-                                            Back
-                                        </Button>
-                                        <Button
-                                            variant="contained"
-                                            color="primary"
-                                            onClick={this.handleReserve}
-                                            className={classes.button}
-                                            id="reserve-submit-button"
-                                        >
-                                            {!this.isUpdate ? 'Reserve' : 'Update'}
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </StepContent>
-                </Step>
-            </Stepper>
+                            )}
+                        </StepContent>
+                    </Step>
+                </Stepper>
+                <BillingDetailsDialog
+                    open={this.state.showBillingDialog}
+                    handleClose={this.handleBillingDialogClose}
+                    openSnackbar={this.props.openSnackbar}
+                    updateUser={this.props.updateUser}
+                />
+            </>
         );
     }
 }
@@ -997,6 +1028,7 @@ Reserve.propTypes = {
     loadLastSettings: PropTypes.func.isRequired,
     openSnackbar: PropTypes.func.isRequired,
     openNotificationDialog: PropTypes.func.isRequired,
+    updateUser: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(Reserve);

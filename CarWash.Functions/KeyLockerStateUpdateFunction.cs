@@ -3,6 +3,8 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
+using CarWash.ClassLibrary;
+using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +15,7 @@ namespace CarWash.Functions
     public class KeyLockerStateUpdateFunction(ILogger<KeyLockerStateUpdateFunction> logger, FunctionsDbContext context)
     {
         [Function(nameof(ServiceBusListenerFunction))]
-        public async Task ServiceBusListenerFunction([ServiceBusTrigger("sbq-carwash-keylocker", Connection = "ConnectionStrings:KeyLockerServiceBus", AutoCompleteMessages = true)] ServiceBusReceivedMessage message)
+        public async Task ServiceBusListenerFunction([ServiceBusTrigger(Constants.KeyLockerServiceBusQueueName, Connection = "ConnectionStrings:KeyLockerServiceBus", AutoCompleteMessages = true)] ServiceBusReceivedMessage message)
         {
             try
             {
@@ -25,13 +27,15 @@ namespace CarWash.Functions
 
                 // Parse the message body
                 var messageBody = System.Text.Encoding.UTF8.GetString(message.Body);
-                var deviceMessage = JsonSerializer.Deserialize<KeyLockerDeviceMessage>(messageBody);
+                var deviceMessage = JsonSerializer.Deserialize<KeyLockerDeviceMessage>(messageBody, Constants.DefaultJsonSerializerOptions);
 
                 if (deviceMessage == null)
                 {
                     logger.LogError("Failed to deserialize message body.");
                     return;
                 }
+
+                logger.LogInformation("Received message for {LockerId}: {OriginalMessage} > {MessageBinary}\n{Visualization}", lockerId, messageBody, Convert.ToString(deviceMessage.Inputs, 2), deviceMessage.ToString());
 
                 // Update database
                 var lockerBoxes = await context.KeyLockerBox
@@ -44,7 +48,7 @@ namespace CarWash.Functions
                 {
                     box.IsConnected = true;
                     box.LastActivity = DateTime.UtcNow;
-                    
+
                     if (boxStates.Count < box.BoxSerial)
                     {
                         logger.LogWarning("Box serial {BoxSerial} is out of range for locker {LockerId}.", box.BoxSerial, lockerId);
@@ -76,9 +80,10 @@ namespace CarWash.Functions
             try
             {
                 var tenMinutesAgo = DateTime.UtcNow.AddMinutes(-10);
+                var fiveMinutesAgo = DateTime.UtcNow.AddMinutes(-5);
 
                 var disconnectedLockerBoxes = await context.KeyLockerBox
-                    .Where(box => box.LastModifiedAt < tenMinutesAgo)
+                    .Where(box => box.LastActivity < tenMinutesAgo)
                     .ToListAsync();
 
                 foreach (var box in disconnectedLockerBoxes)
@@ -86,9 +91,21 @@ namespace CarWash.Functions
                     box.IsConnected = false;
                 }
 
+                // Free up boxes that are used, have no reservation, and were modified more than 5 minutes ago
+                var usedBoxesToFree = await context.KeyLockerBox
+                    .Where(box => box.State == KeyLockerBoxState.Used && box.LastModifiedAt < fiveMinutesAgo &&
+                        !context.Reservation.Any(r => r.KeyLockerBoxId == box.Id))
+                    .ToListAsync();
+
+                foreach (var box in usedBoxesToFree)
+                {
+                    box.State = KeyLockerBoxState.Empty;
+                }
+
                 await context.SaveChangesAsync();
 
                 logger.LogInformation("Updated availability for {NumberOfDisconnectedBoxes} disconnected locker boxes at {Time}", disconnectedLockerBoxes.Count, DateTime.UtcNow);
+                logger.LogInformation("Freed up {NumberOfFreedBoxes} used locker boxes with no active reservation at {Time}", usedBoxesToFree.Count, DateTime.UtcNow);
             }
             catch (Exception ex)
             {

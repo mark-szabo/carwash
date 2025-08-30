@@ -6,13 +6,18 @@
     public enum PaymentMethod
     {
         /// <summary>
+        /// Payment method not set.
+        /// </summary>
+        NotSet = 0,
+
+        /// <summary>
         /// Payment via credit card.
         /// </summary>
-        CreditCard = 0,
+        CreditCard = 1,
 
         /// <summary>
         /// Payment via wire transfer.
         /// </summary>
-        WireTransfer = 1,
+        WireTransfer = 2,
     }
 }

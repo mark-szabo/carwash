@@ -38,7 +38,7 @@ The project is implemented to utilize only Azure PaaS (platform-as-a-service) se
 
 ## Contributors
 
-- [Mark Szabo](mailto:a-marks@microsoft.com)
+- [Mark Szabo](https://www.linkedin.com/in/mark-szabo/)
 - Jozsef Vadkerti
 - Akos Szego
 - Tamas Veiland
@@ -53,4 +53,4 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 ## Copyright
 
-Copyright (c) 2018-25 EU Motorsport Service Kft. All rights reserved.
+Copyright (c) 2018-25 Laszlo Halasi. All rights reserved.

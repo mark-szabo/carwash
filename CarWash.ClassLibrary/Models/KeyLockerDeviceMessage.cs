@@ -45,5 +45,23 @@ namespace CarWash.ClassLibrary.Models
 
             return states;
         }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            var states = GetBoxStates();
+            var visualization = new System.Text.StringBuilder(states.Count + states.Count / 8);
+
+            for (int i = 0; i < states.Count; i++)
+            {
+                visualization.Append(states[i] ? "[x]" : "[ ]");
+                if ((i + 1) % 8 == 0 && i != states.Count - 1)
+                {
+                    visualization.Append(' ');
+                }
+            }
+
+            return visualization.ToString();
+        }
     }
 }

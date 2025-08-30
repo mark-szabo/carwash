@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,6 +7,7 @@ using CarWash.ClassLibrary.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.FeatureManagement;
 
 namespace CarWash.PWA.Controllers
@@ -18,6 +19,7 @@ namespace CarWash.PWA.Controllers
     [Produces("application/json")]
     [Route("api/.well-known")]
     [ApiController]
+    [AllowAnonymous]
     public class WellKnownController(IOptionsMonitor<CarWashConfiguration> configuration, ApplicationDbContext context, IPushService pushService, IFeatureManager featureManager) : ControllerBase
     {
         // GET: api/.well-known/configuration

@@ -35,13 +35,7 @@ jobs:
             - name: Build
               run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
             - name: Test
-              run: dotnet test "CarWash.PWA.Tests" --collect:"XPlat Code Coverage"
-            - name: Report code coverage
-              uses: codecov/codecov-action@v2
-              with:
-                  files: ./CarWash.PWA.Tests/TestResults/**/*.xml
-                  flags: unittests
-                  name: codecov-umbrella
+              run: dotnet test "CarWash.PWA.Tests"
             - name: Publish
               run: dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
             - name: Publish Artifacts
@@ -67,7 +61,8 @@ jobs:
             - name: Azure service principal login
               uses: azure/login@v2
               with:
-                  creds: ${{ secrets.AZURE_CREDENTIALS }}
+                  client-id: ${{ secrets.AZURE_CLIENT_ID }}
+                  tenant-id: ${{ secrets.AZURE_TENANT_ID }}
                   subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
             - name: Update app configuration VERSION
               run: |

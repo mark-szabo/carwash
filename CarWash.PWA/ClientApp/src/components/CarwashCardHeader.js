@@ -39,7 +39,12 @@ export const styles = theme => ({
 });
 
 function CarwashCardHeader(props) {
-    const { company, classes, subheader, subheaderSecondLine, title, private: priv, ...other } = props;
+    const { company, classes, subheader, subheaderSecondLine, title, private: priv, configuration, ...other } = props;
+
+    // Determine logo path based on feature flag
+    const logoSrc = configuration?.featureFlags?.includes('DynamicCompanyLogos')
+        ? `/static-assets/logos/${company}.jpg`
+        : `/images/${company}.svg`;
 
     return (
         <div className={classes.root} {...other}>
@@ -54,7 +59,7 @@ function CarwashCardHeader(props) {
                         )}
                     </Typography>
                     <div className={classes.logo}>
-                        <img src={`/images/${company}.svg`} alt={company} height="20px" />
+                        <img src={logoSrc} alt={company} height="20px" />
                     </div>
                 </div>
                 <div>
@@ -79,6 +84,7 @@ CarwashCardHeader.propTypes = {
     subheaderSecondLine: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,
     private: PropTypes.bool,
+    configuration: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
 };
 
 export default withStyles(styles)(CarwashCardHeader);
