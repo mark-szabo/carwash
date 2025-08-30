@@ -173,9 +173,20 @@ class CarwashCard extends Component {
                                             gutterBottom
                                             style={{ marginTop: '8px' }}
                                         >
-                                            Phone number
+                                            Name
                                         </Typography>
-                                        <Typography gutterBottom>{reservation.user.phoneNumber}</Typography>
+                                        <Typography gutterBottom>
+                                            {reservation.user.firstName} {reservation.user.lastName}
+                                        </Typography>
+                                        <Typography
+                                            variant="caption"
+                                            color="textSecondary"
+                                            gutterBottom
+                                            style={{ marginTop: '8px' }}
+                                        >
+                                            Company
+                                        </Typography>
+                                        <Typography gutterBottom>{reservation.user.company}</Typography>
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
                                         <Typography variant="caption" color="textSecondary" gutterBottom>
@@ -192,20 +203,9 @@ class CarwashCard extends Component {
                                             gutterBottom
                                             style={{ marginTop: '8px' }}
                                         >
-                                            Name
+                                            Phone number
                                         </Typography>
-                                        <Typography gutterBottom>
-                                            {reservation.user.firstName} {reservation.user.lastName}
-                                        </Typography>
-                                        <Typography
-                                            variant="caption"
-                                            color="textSecondary"
-                                            gutterBottom
-                                            style={{ marginTop: '8px' }}
-                                        >
-                                            Company
-                                        </Typography>
-                                        <Typography gutterBottom>{reservation.user.company}</Typography>
+                                        <Typography gutterBottom>{reservation.user.phoneNumber}</Typography>
                                     </Grid>
                                 </Grid>
                                 <Chat

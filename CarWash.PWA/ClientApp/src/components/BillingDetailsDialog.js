@@ -8,6 +8,9 @@ import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
 import apiFetch from '../Auth';
 import { PaymentMethod } from '../Constants';
 
@@ -60,7 +63,7 @@ function BillingDetailsDialog({ open, handleClose, openSnackbar, updateUser }) {
         <Dialog open={open} onClose={() => handleClose(false)} aria-labelledby="billing-dialog-title">
             <DialogTitle id="billing-dialog-title">Enter your billing details</DialogTitle>
             <DialogContent>
-                <DialogContentText>
+                <DialogContentText gutterBottom>
                     Please provide your billing name, address, and payment method to continue with a private
                     reservation.
                 </DialogContentText>
@@ -85,24 +88,23 @@ function BillingDetailsDialog({ open, handleClose, openSnackbar, updateUser }) {
                     onChange={e => setBillingAddress(e.target.value)}
                     disabled={submitting}
                 />
-                <TextField
-                    margin="dense"
-                    id="paymentMethod"
-                    label="Payment Method"
-                    select
-                    fullWidth
-                    value={paymentMethod}
-                    onChange={e => setPaymentMethod(e.target.value)}
-                    disabled={submitting}
-                >
-                    {Object.entries(PaymentMethod)
-                        .filter(([key, value]) => typeof value === 'number' && value !== PaymentMethod.NotSet)
-                        .map(([key, value]) => (
-                            <MenuItem key={value} value={value}>
-                                {key}
-                            </MenuItem>
-                        ))}
-                </TextField>
+                <FormControl margin="dense" fullWidth disabled={submitting}>
+                    <InputLabel id="payment-method-label">Payment Method</InputLabel>
+                    <Select
+                        labelId="payment-method-label"
+                        id="paymentMethod"
+                        value={paymentMethod}
+                        label="Payment Method"
+                        onChange={e => setPaymentMethod(e.target.value)}
+                    >
+                        <MenuItem key={PaymentMethod.CreditCard} value={PaymentMethod.CreditCard}>
+                            Credit card
+                        </MenuItem>
+                        <MenuItem key={PaymentMethod.WireTransfer} value={PaymentMethod.WireTransfer}>
+                            Wire transfer
+                        </MenuItem>
+                    </Select>
+                </FormControl>
                 {error && <DialogContentText style={{ color: 'red' }}>{error}</DialogContentText>}
             </DialogContent>
             <DialogActions>

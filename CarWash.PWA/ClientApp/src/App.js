@@ -643,6 +643,7 @@ export default class App extends Component {
                                                     addReservation={this.addReservation}
                                                     lastSettings={lastSettings}
                                                     loadLastSettings={this.loadLastSettings}
+                                                    updateUser={this.updateUser}
                                                     openSnackbar={this.openSnackbar}
                                                     openNotificationDialog={this.openNotificationDialog}
                                                     {...props}
@@ -666,6 +667,7 @@ export default class App extends Component {
                                                     addReservation={this.addReservation}
                                                     removeReservation={this.removeReservation}
                                                     loadLastSettings={this.loadLastSettings}
+                                                    updateUser={this.updateUser}
                                                     openSnackbar={this.openSnackbar}
                                                     openNotificationDialog={this.openNotificationDialog}
                                                     {...props}
