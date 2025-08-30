@@ -2,23 +2,20 @@
 using System.Threading.Tasks;
 using Azure.Storage.Queues;
 using CarWash.ClassLibrary.Models;
-using Microsoft.Extensions.Options;
 using System.Text.Json;
 
 namespace CarWash.ClassLibrary.Services
 {
     /// <inheritdoc />
-    public class EmailService(IOptionsMonitor<CarWashConfiguration> configuration) : IEmailService
+    public class EmailService(QueueServiceClient queueServiceClient) : IEmailService
     {
-        private readonly QueueServiceClient _storage = new(configuration.CurrentValue.ConnectionStrings.StorageAccount);
-
         /// <inheritdoc />
         public async Task Send(Email email, TimeSpan? delay = null)
         {
             ArgumentNullException.ThrowIfNull(email);
 
             // Retrieve a reference to a container.
-            var queue = _storage.GetQueueClient("email");
+            var queue = queueServiceClient.GetQueueClient("email");
 
             // Create the queue if it doesn't already exist
             await queue.CreateIfNotExistsAsync();

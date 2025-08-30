@@ -1,13 +1,11 @@
 ﻿using Azure.Storage.Blobs;
-using CarWash.ClassLibrary.Models;
-using Microsoft.Extensions.Options;
 using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace CarWash.ClassLibrary.Services
 {
     /// <inheritdoc />
-    public class BlobStorageService(IOptionsMonitor<CarWashConfiguration> configuration, IHttpClientFactory httpClientFactory) : IBlobStorageService
+    public class BlobStorageService(BlobServiceClient blobServiceClient, IHttpClientFactory httpClientFactory) : IBlobStorageService
     {
         private const string CONTAINER_NAME = "static-assets";
         private const string FOLDER_NAME = "logos";
@@ -22,7 +20,6 @@ namespace CarWash.ClassLibrary.Services
 
             using var fileStream = await response.Content.ReadAsStreamAsync();
 
-            var blobServiceClient = new BlobServiceClient(configuration.CurrentValue.ConnectionStrings.StorageAccount);
             var containerClient = blobServiceClient.GetBlobContainerClient(CONTAINER_NAME);
             await containerClient.CreateIfNotExistsAsync();
 

@@ -9,6 +9,8 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
+using Azure.Storage.Queues;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Hubs;
@@ -76,6 +78,12 @@ namespace CarWash.PWA
                 config.BuildNumber = configuration.GetValue<string>("BUILD_NUMBER") ?? "0.0.0";
             });
             var config = configuration.Get<CarWashConfiguration>();
+
+            var blobServiceClient = new BlobServiceClient(config.ConnectionStrings.StorageAccount);
+            services.AddSingleton(blobServiceClient);
+
+            var queueServiceClient = new QueueServiceClient(config.ConnectionStrings.StorageAccount);
+            services.AddSingleton(queueServiceClient);
 
             var iotHubServiceClient = ServiceClient.CreateFromConnectionString(configuration.GetConnectionString("IotHub"), Microsoft.Azure.Devices.TransportType.Amqp, new ServiceClientOptions { SdkAssignsMessageId = Microsoft.Azure.Devices.Shared.SdkAssignsMessageId.WhenUnset });
             services.AddSingleton(iotHubServiceClient);
