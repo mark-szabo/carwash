@@ -150,6 +150,7 @@ class CarwashCard extends Component {
                         >
                             <CardMedia className={classes.media} image={`/images/state${reservation.state}.png`} />
                             <CarwashCardHeader
+                                configuration={configuration}
                                 company={reservation.user.company}
                                 title={reservation.vehiclePlateNumber}
                                 private={reservation.private}
