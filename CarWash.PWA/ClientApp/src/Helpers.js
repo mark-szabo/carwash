@@ -78,3 +78,9 @@ export function getSeverityName(severity) {
             return 'info';
     }
 }
+
+export function validatePhoneNumber(value) {
+    // Simple validation: must be at least 8 digits, only numbers, can start with +
+    const regex = /^\+?[0-9]{8,}$/;
+    return regex.test(value);
+}

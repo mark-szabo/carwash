@@ -74,6 +74,7 @@ function BillingDetailsDialog({ open, handleClose, openSnackbar, updateUser }) {
                     label="Billing Name"
                     type="text"
                     fullWidth
+                    required
                     value={billingName}
                     onChange={e => setBillingName(e.target.value)}
                     disabled={submitting}
@@ -84,11 +85,12 @@ function BillingDetailsDialog({ open, handleClose, openSnackbar, updateUser }) {
                     label="Billing Address"
                     type="text"
                     fullWidth
+                    required
                     value={billingAddress}
                     onChange={e => setBillingAddress(e.target.value)}
                     disabled={submitting}
                 />
-                <FormControl margin="dense" fullWidth disabled={submitting}>
+                <FormControl margin="dense" fullWidth required disabled={submitting}>
                     <InputLabel id="payment-method-label">Payment Method</InputLabel>
                     <Select
                         labelId="payment-method-label"

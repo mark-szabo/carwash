@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -8,17 +8,12 @@ import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import apiFetch from '../Auth';
+import { validatePhoneNumber } from '../Helpers';
 
 function PhoneNumberDialog({ open, handleClose, openSnackbar, updateUser }) {
     const [phoneNumber, setPhoneNumber] = useState('');
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
-
-    const validatePhoneNumber = value => {
-        // Simple validation: must be at least 8 digits, only numbers, can start with +
-        const regex = /^\+?[0-9]{8,}$/;
-        return regex.test(value);
-    };
 
     const handleChange = event => {
         setPhoneNumber(event.target.value);
@@ -51,12 +46,12 @@ function PhoneNumberDialog({ open, handleClose, openSnackbar, updateUser }) {
     };
 
     return (
-        <Dialog open={open} onClose={handleClose} aria-labelledby="phone-dialog-title">
+        <Dialog open={open} aria-labelledby="phone-dialog-title">
             <DialogTitle id="phone-dialog-title">Enter your phone number</DialogTitle>
             <DialogContent>
-                <DialogContentText>
-                    Please provide a valid phone number to continue using the app. This is required for notifications
-                    and account recovery.
+                <DialogContentText gutterBottom>
+                    Please provide a valid phone number to continue using the app. This is necessary for sending
+                    notifications and for contacting you regarding your reservations.
                 </DialogContentText>
                 <TextField
                     autoFocus
@@ -65,17 +60,21 @@ function PhoneNumberDialog({ open, handleClose, openSnackbar, updateUser }) {
                     label="Phone Number"
                     type="tel"
                     fullWidth
+                    required
                     value={phoneNumber}
                     onChange={handleChange}
                     error={!!error}
                     helperText={error}
                     disabled={submitting}
+                    onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleSubmit();
+                        }
+                    }}
                 />
             </DialogContent>
             <DialogActions>
-                <Button onClick={handleClose} color="primary" disabled={submitting}>
-                    Cancel
-                </Button>
                 <Button onClick={handleSubmit} color="primary" disabled={submitting}>
                     Save
                 </Button>

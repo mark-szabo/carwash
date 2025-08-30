@@ -21,9 +21,13 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import red from '@mui/material/colors/red';
 import * as download from 'downloadjs';
 import * as moment from 'moment';
-import { NotificationChannel } from '../Constants';
+import { NotificationChannel, PaymentMethod } from '../Constants';
+import { validatePhoneNumber } from '../Helpers';
 import registerPush, { askPermission } from '../PushService';
 import Spinner from './Spinner';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 
 const styles = theme => ({
     dangerButton: {
@@ -92,6 +96,12 @@ class Settings extends TrackedComponent {
         deleteDialogOpen: false,
         exportStartDate: '',
         exportEndDate: '',
+        billingName: this.props.user.billingName || '',
+        billingAddress: this.props.user.billingAddress || '',
+        paymentMethod: this.props.user.paymentMethod !== undefined ? `${this.props.user.paymentMethod}` : '',
+        phoneNumber: this.props.user.phoneNumber || '',
+        billingError: '',
+        billingSubmitting: false,
     };
 
     handleDeleteDialogOpen = () => {
@@ -177,10 +187,63 @@ class Settings extends TrackedComponent {
     };
 
     handleExportClick = () => {
-        apiFetch(`api/reservations/export?startDate=${this.state.exportStartDate}&endDate=${this.state.exportEndDate}`, null, true).then(
+        apiFetch(
+            `api/reservations/export?startDate=${this.state.exportStartDate}&endDate=${this.state.exportEndDate}`,
+            null,
+            true
+        ).then(
             () => {},
             error => {
                 this.props.openSnackbar(error);
+            }
+        );
+    };
+
+    handleBillingFieldChange = field => event => {
+        this.setState({ [field]: event.target.value });
+    };
+
+    validateBilling = () => {
+        const { billingName, billingAddress, paymentMethod, phoneNumber } = this.state;
+        if (
+            !billingName.trim() ||
+            !billingAddress.trim() ||
+            paymentMethod === '' ||
+            !validatePhoneNumber(phoneNumber.trim())
+        ) {
+            this.setState({ billingError: 'All fields are required and phone number must be valid.' });
+            return false;
+        }
+        this.setState({ billingError: '' });
+        return true;
+    };
+
+    handleBillingSave = () => {
+        if (!this.validateBilling()) return;
+        this.setState({ billingSubmitting: true });
+        const settings = {
+            billingName: this.state.billingName,
+            billingAddress: this.state.billingAddress,
+            paymentMethod: parseInt(this.state.paymentMethod, 10),
+            phoneNumber: this.state.phoneNumber,
+        };
+        apiFetch('api/users/settings', {
+            method: 'PUT',
+            body: JSON.stringify(settings),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(
+            () => {
+                this.props.openSnackbar('Billing details updated.');
+                this.props.updateUser('billingName', settings.billingName);
+                this.props.updateUser('billingAddress', settings.billingAddress);
+                this.props.updateUser('paymentMethod', settings.paymentMethod);
+                this.props.updateUser('phoneNumber', settings.phoneNumber);
+                this.setState({ billingSubmitting: false });
+            },
+            error => {
+                this.setState({ billingError: error, billingSubmitting: false });
             }
         );
     };
@@ -231,9 +294,92 @@ class Settings extends TrackedComponent {
             <React.Fragment>
                 <Paper className={classes.paper} elevation={1}>
                     <Typography variant="h5" component="h3">
+                        Billing details
+                    </Typography>
+                    <Typography component="p">
+                        Update your phone number, billing name, address, and payment method for private reservations.
+                    </Typography>
+                    <div className={classes.formControl}>
+                        <TextField
+                            id="phoneNumber"
+                            label="Phone number"
+                            type="tel"
+                            fullWidth
+                            required
+                            value={this.state.phoneNumber}
+                            onChange={this.handleBillingFieldChange('phoneNumber')}
+                            disabled={this.state.billingSubmitting}
+                        />
+                    </div>
+                    <div className={classes.formControl}>
+                        <TextField
+                            id="billingName"
+                            label="Billing name"
+                            type="text"
+                            fullWidth
+                            required
+                            value={this.state.billingName}
+                            onChange={this.handleBillingFieldChange('billingName')}
+                            disabled={this.state.billingSubmitting}
+                        />
+                    </div>
+                    <div className={classes.formControl}>
+                        <TextField
+                            id="billingAddress"
+                            label="Billing address"
+                            type="text"
+                            fullWidth
+                            required
+                            value={this.state.billingAddress}
+                            onChange={this.handleBillingFieldChange('billingAddress')}
+                            disabled={this.state.billingSubmitting}
+                        />
+                    </div>
+                    <FormControl
+                        margin="dense"
+                        fullWidth
+                        required
+                        disabled={this.state.billingSubmitting}
+                        sx={{ marginTop: 0 }}
+                    >
+                        <InputLabel id="payment-method-label">Payment method</InputLabel>
+                        <Select
+                            labelId="payment-method-label"
+                            id="paymentMethod"
+                            value={this.state.paymentMethod}
+                            label="Payment Method"
+                            onChange={this.handleBillingFieldChange('paymentMethod')}
+                        >
+                            <MenuItem key={PaymentMethod.CreditCard} value={PaymentMethod.CreditCard}>
+                                Credit card
+                            </MenuItem>
+                            <MenuItem key={PaymentMethod.WireTransfer} value={PaymentMethod.WireTransfer}>
+                                Wire transfer
+                            </MenuItem>
+                        </Select>
+                    </FormControl>
+                    {this.state.billingError && (
+                        <Typography style={{ color: 'red' }}>{this.state.billingError}</Typography>
+                    )}
+                    <div className={classes.formControl}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            className={classes.primaryButtonContained}
+                            onClick={this.handleBillingSave}
+                            disabled={this.state.billingSubmitting}
+                        >
+                            Save
+                        </Button>
+                    </div>
+                </Paper>
+                <Paper className={classes.paper} elevation={1}>
+                    <Typography variant="h5" component="h3">
                         Notifications
                     </Typography>
-                    <Typography component="p">How do you want us to remind you to drop off the keys or notify when your car is ready?</Typography>
+                    <Typography component="p">
+                        How do you want us to remind you to drop off the keys or notify when your car is ready?
+                    </Typography>
                     <FormControl component="fieldset">
                         <RadioGroup
                             aria-label="Channel"
@@ -242,9 +388,17 @@ class Settings extends TrackedComponent {
                             value={`${user.notificationChannel}`}
                             onChange={this.handleNotificationChannelChange}
                         >
-                            <FormControlLabel value="1" control={<Radio />} label="Disable" />
-                            <FormControlLabel value="2" control={<Radio />} label="Email" />
-                            <FormControlLabel value="3" control={<Radio />} label="Push notification" />
+                            <FormControlLabel
+                                value={NotificationChannel.Disabled}
+                                control={<Radio />}
+                                label="Disable"
+                            />
+                            <FormControlLabel value={NotificationChannel.Email} control={<Radio />} label="Email" />
+                            <FormControlLabel
+                                value={NotificationChannel.Push}
+                                control={<Radio />}
+                                label="Push notification"
+                            />
                         </RadioGroup>
                     </FormControl>
                 </Paper>
@@ -252,7 +406,10 @@ class Settings extends TrackedComponent {
                     <Typography variant="h5" component="h3">
                         Calendar integration
                     </Typography>
-                    <Typography component="p">Do you want us to automatically create a (non-blocker) event in your calendar for your reservations?</Typography>
+                    <Typography component="p">
+                        Do you want us to automatically create a (non-blocker) event in your calendar for your
+                        reservations?
+                    </Typography>
                     <FormControlLabel
                         control={
                             <Switch
@@ -271,7 +428,8 @@ class Settings extends TrackedComponent {
                             Export reservations to Excel
                         </Typography>
                         <Typography component="p">
-                            You can export reservations from the database to an Excel file for accounting and auditing pourposes.
+                            You can export reservations from the database to an Excel file for accounting and auditing
+                            pourposes.
                         </Typography>
                         <div className={classes.formControl}>
                             <TextField
@@ -298,7 +456,12 @@ class Settings extends TrackedComponent {
                             />
                         </div>
                         <div className={classes.formControl}>
-                            <Button variant="contained" color="primary" className={classes.primaryButtonContained} onClick={this.handleExportClick}>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                className={classes.primaryButtonContained}
+                                onClick={this.handleExportClick}
+                            >
                                 Export
                             </Button>
                         </div>
@@ -320,22 +483,33 @@ class Settings extends TrackedComponent {
                         .
                     </Typography>
                     <Typography component="p">
-                        Your account contains personal data that you have given us. You can download or delete that data below.
+                        Your account contains personal data that you have given us. You can download or delete that data
+                        below.
                     </Typography>
                     <Typography variant="subtitle1" gutterBottom className={classes.title}>
                         Download your data
                     </Typography>
-                    <Button variant="contained" color="primary" className={classes.primaryButtonContained} onClick={this.handleDownloadDataClick}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        className={classes.primaryButtonContained}
+                        onClick={this.handleDownloadDataClick}
+                    >
                         Download
                     </Button>
                     <Typography variant="subtitle1" className={classes.title}>
                         Delete your account and your personal data
                     </Typography>
                     <Typography component="p" gutterBottom>
-                        Please keep in mind, that we are required to continue storing your previous reservations including their vehicle registration plates for
-                        accounting and auditing purposes.
+                        Please keep in mind, that we are required to continue storing your previous reservations
+                        including their vehicle registration plates for accounting and auditing purposes.
                     </Typography>
-                    <Button variant="contained" color="primary" className={classes.dangerButtonContained} onClick={this.handleDeleteDialogOpen}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        className={classes.dangerButtonContained}
+                        onClick={this.handleDeleteDialogOpen}
+                    >
                         Delete
                     </Button>
                 </Paper>
@@ -355,7 +529,12 @@ class Settings extends TrackedComponent {
                         <Button onClick={this.handleDeleteDialogClose} color="primary">
                             Cancel
                         </Button>
-                        <Button onClick={this.handleDeleteConfirmed} color="primary" className={classes.dangerButton} autoFocus>
+                        <Button
+                            onClick={this.handleDeleteConfirmed}
+                            color="primary"
+                            className={classes.dangerButton}
+                            autoFocus
+                        >
                             Delete
                         </Button>
                     </DialogActions>
