@@ -9,6 +9,7 @@ using CarWash.PWA.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Extensions;
 using User = CarWash.ClassLibrary.Models.User;
 
 namespace CarWash.PWA.Controllers
@@ -25,25 +26,6 @@ namespace CarWash.PWA.Controllers
     public class UsersController(ApplicationDbContext context, IUserService userService, IEmailService emailService) : ControllerBase
     {
         private readonly User _user = userService.CurrentUser;
-
-        // GET: api/users
-        /// <summary>
-        /// Get users from my company
-        /// </summary>
-        /// <returns>List of <see cref="UserViewModel"/></returns>
-        /// <response code="200">OK</response>
-        /// <response code="401">Unauthorized</response>
-        /// <response code="403">Forbidden if user is not admin.</response>
-        [HttpGet]
-        public ActionResult<IEnumerable<UserViewModel>> GetUsers()
-        {
-            if (!_user.IsAdmin) return Forbid();
-            return Ok(context.Users
-            .Where(u => u.Company == _user.Company && u.FirstName != "[deleted user]")
-            .AsEnumerable()
-            .OrderBy(u => u.FullName)
-            .Select(u => new UserViewModel(u)));
-        }
 
         // GET: api/users/dictionary
         /// <summary>
@@ -81,36 +63,6 @@ namespace CarWash.PWA.Controllers
             }
 
             return Forbid();
-        }
-
-        // GET: api/users/{id}
-        /// <summary>
-        /// Get a specific user by id
-        /// </summary>
-        /// <param name="id">user id</param>
-        /// <returns><see cref="UserViewModel"/></returns>
-        /// <response code="200">OK</response>
-        /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formated.</response>
-        /// <response code="401">Unauthorized</response>
-        /// <response code="403">Forbidden if user is not admin but tries to get another user's information or user is admin but tries to get a user from another company.</response>
-        /// <response code="404">NotFound if user not found.</response>
-        [HttpGet("{id}")]
-        public async Task<ActionResult<UserViewModel>> GetUser([FromRoute] string id)
-        {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            if (!_user.IsAdmin)
-            {
-                if (id == _user.Id) return Ok(new UserViewModel(_user));
-                return Forbid();
-            }
-
-            var user = await context.Users.FindAsync(id);
-            if (user == null) return NotFound();
-
-            if (user.Company != _user.Company) return Forbid();
-
-            return Ok(new UserViewModel(user));
         }
 
         // GET: api/users/me
@@ -251,12 +203,15 @@ namespace CarWash.PWA.Controllers
             var user = new
             {
                 _user.Id,
+                _user.Oid,
                 _user.FirstName,
                 _user.LastName,
-                _user.Email,
                 _user.Company,
-                _user.IsAdmin,
-                _user.IsCarwashAdmin
+                _user.Email,
+                _user.PhoneNumber,
+                _user.BillingName,
+                _user.BillingAddress,
+                PaymentMethod = _user.PaymentMethod.GetDisplayName(),
             };
 
             var reservations = await context.Reservation
@@ -307,6 +262,10 @@ Please keep in mind, that we are required to continue storing your previous rese
             user.FirstName = "[deleted user]";
             user.LastName = null;
             user.Email = $"[deleted on {DateTime.Now}]";
+            user.PhoneNumber = null;
+            user.BillingName = null;
+            user.BillingAddress = null;
+            user.PaymentMethod = PaymentMethod.NotSet;
             user.IsAdmin = false;
             user.IsCarwashAdmin = false;
 
@@ -350,6 +309,11 @@ Please keep in mind, that we are required to continue storing your previous rese
         string FirstName,
         string LastName,
         string Company,
+        string Email,
+        string PhoneNumber,
+        string BillingName,
+        string BillingAddress,
+        PaymentMethod PaymentMethod,
         bool IsAdmin,
         bool IsCarwashAdmin,
         bool CalendarIntegration,
@@ -360,6 +324,11 @@ Please keep in mind, that we are required to continue storing your previous rese
             user.FirstName,
             user.LastName,
             user.Company,
+            user.Email,
+            user.PhoneNumber,
+            user.BillingName,
+            user.BillingAddress,
+            user.PaymentMethod,
             user.IsAdmin,
             user.IsCarwashAdmin,
             user.CalendarIntegration,
