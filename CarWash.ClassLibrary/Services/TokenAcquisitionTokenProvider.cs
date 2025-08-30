@@ -58,7 +58,7 @@ namespace CarWash.ClassLibrary.Services
             }
 
             var token = await tokenAcquisition.GetAccessTokenForUserAsync(scopes, tenantId: user.GetTenantId(), user: user);
-            Debug.WriteLine(token);
+
             return token;
         }
     }

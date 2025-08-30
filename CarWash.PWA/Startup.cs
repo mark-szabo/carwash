@@ -232,7 +232,7 @@ namespace CarWash.PWA
                                         {
                                             requestConfiguration.QueryParameters.Select = ["mobilePhone", "businessPhones"];
                                         });
-                                        var phoneNumber = graphUser?.MobilePhone ?? (graphUser?.BusinessPhones?.Count != 0 ? graphUser?.BusinessPhones?[0] : null);
+                                        var phoneNumber = graphUser?.MobilePhone ?? (graphUser?.BusinessPhones?.Count > 0 ? graphUser.BusinessPhones[0] : null);
                                         if (phoneNumber != null)
                                         {
                                             user.PhoneNumber = phoneNumber;
@@ -318,7 +318,10 @@ namespace CarWash.PWA
                     };
                 }, options =>
                 {
-                    IdentityModelEventSource.ShowPII = true;
+                    if (currentEnvironment.IsDevelopment())
+                    {
+                        IdentityModelEventSource.ShowPII = true;
+                    }
                     configuration.Bind("AzureAd", options);
                 })
                 .EnableTokenAcquisitionToCallDownstreamApi(
