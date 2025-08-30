@@ -80,7 +80,7 @@ namespace CarWash.PWA
 
                 config.BuildNumber = configuration.GetValue<string>("BUILD_NUMBER") ?? "0.0.0";
             });
-            var config = configuration.Get<CarWashConfiguration>();
+            var config = configuration.Get<CarWashConfiguration>() ?? throw new Exception("Failed to parse configuration to CarWashConfiguration.");
 
             var blobServiceClient = new BlobServiceClient(config.ConnectionStrings.StorageAccount);
             services.AddSingleton(blobServiceClient);

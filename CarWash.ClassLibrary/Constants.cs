@@ -6,12 +6,12 @@ namespace CarWash.ClassLibrary
     /// <summary>
     /// Class containing constants.
     /// </summary>
-    public class Constants
+    public static class Constants
     {
         /// <summary>
         /// Named <see cref="Service"/>s used for special business logic.
         /// </summary>
-        public class ServiceType
+        public static class ServiceType
         {
             /// <summary>
             /// Exterior wash.
@@ -36,7 +36,7 @@ namespace CarWash.ClassLibrary
         /// This class contains predefined method names that represent specific SignalR actions. These 
         /// constants can be used to ensure consistency when referencing method names in the hub communication.
         /// </remarks>
-        public class BacklogHubMethods
+        public static class BacklogHubMethods
         {
             /// <summary>
             /// Method name for when a reservation is created.
@@ -71,7 +71,7 @@ namespace CarWash.ClassLibrary
         /// This class contains predefined method names that represent specific SignalR actions. These 
         /// constants can be used to ensure consistency when referencing method names in the hub communication.
         /// </remarks>
-        public class KeyLockerHubMethods
+        public static class KeyLockerHubMethods
         {
             /// <summary>
             /// Method name for when a key locker box is opened.
@@ -87,7 +87,7 @@ namespace CarWash.ClassLibrary
         /// <summary>
         /// Key locker box door states.
         /// </summary>
-        public class KeyLockerBoxDoorState
+        public static class KeyLockerBoxDoorState
         {
             /// <summary>
             /// Door is closed.
@@ -108,7 +108,7 @@ namespace CarWash.ClassLibrary
         /// <summary>
         /// Default <see cref="JsonSerializerOptions"/> used for serialization.
         /// </summary>
-        public static JsonSerializerOptions DefaultJsonSerializerOptions = new()
+        public static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             PropertyNameCaseInsensitive = true
