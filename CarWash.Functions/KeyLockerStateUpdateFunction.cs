@@ -82,7 +82,7 @@ namespace CarWash.Functions
                 var tenMinutesAgo = DateTime.UtcNow.AddMinutes(-10);
 
                 var disconnectedLockerBoxes = await context.KeyLockerBox
-                    .Where(box => box.LastModifiedAt < tenMinutesAgo)
+                    .Where(box => box.LastActivity < tenMinutesAgo)
                     .ToListAsync();
 
                 foreach (var box in disconnectedLockerBoxes)
