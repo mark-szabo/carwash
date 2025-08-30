@@ -1885,8 +1885,6 @@ namespace CarWash.PWA.Controllers
                     .Where(r => r.StartDate.Date == date.Date && r.User.Company == _user.Company)
                     .SumAsync(r => r.TimeRequirement);
 
-
-
                 if (reservedTimeOnDate + timeRequirement > userCompanyLimit * _configuration.CurrentValue.Reservation.TimeUnit)
                 {
                     _telemetryClient.TrackTrace(

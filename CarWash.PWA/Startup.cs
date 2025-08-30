@@ -1,7 +1,6 @@
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -13,6 +12,7 @@ using System.Threading.Tasks;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Hubs;
+using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.AspNetCore;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
@@ -125,6 +125,8 @@ namespace CarWash.PWA
                     {
                         OnTokenValidated = async context =>
                         {
+                            var telemetryClient = context.HttpContext.RequestServices.GetService<TelemetryClient>();
+
                             // Check if request is coming from an authorized service application.
                             var serviceAppId = context.Principal?.FindFirstValue("appid");
                             if (serviceAppId != null && serviceAppId != configuration["AzureAd:ClientId"])
@@ -136,7 +138,12 @@ namespace CarWash.PWA
                                     return;
                                 }
 
-                                Debug.WriteLine($"Application ({serviceAppId}) is not authorized.");
+                                telemetryClient?.TrackEvent("UnauthorizedServiceApp", new Dictionary<string, string?>
+                                {
+                                    ["AppId"] = serviceAppId,
+                                    ["TenantId"] = context.Principal?.FindFirstValue(ClaimConstants.Tid) ?? context.Principal?.FindFirstValue(ClaimConstants.TenantId),
+                                    ["UserId"] = context.Principal?.FindFirstValue(ClaimConstants.Oid) ?? context.Principal?.FindFirstValue(ClaimConstants.ObjectId),
+                                });
                                 context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
                                 context.Response.ContentType = "application/json";
                                 context.Response.Headers.Append("WWW-Authenticate", "Bearer error=\"invalid_token\", error_description=\"The access token is not authorized\"");
@@ -197,8 +204,12 @@ namespace CarWash.PWA
 
                                     if (user != null)
                                     {
-                                        Debug.WriteLine(
-                                            "User already exists. Most likely the user was just created and the exception was thrown by the concurrently firing requests at the first load.");
+                                        telemetryClient?.TrackException(ex, new Dictionary<string, string?>
+                                        {
+                                            ["UserId"] = user.Id,
+                                            ["Email"] = user.Email,
+                                            ["Message"] = "User already exists. Most likely the user was just created and the exception was thrown by the concurrently firing requests at the first load.",
+                                        });
 
                                         // Remove above added user from the EF Change Tracker.
                                         // It would re-throw the exception as it would try to insert it again into the db at the next SaveChanges()
@@ -269,7 +280,13 @@ namespace CarWash.PWA
                                 }
                                 catch (Exception ex)
                                 {
-                                    Debug.WriteLine(ex.Message);
+                                    telemetryClient?.TrackException(ex, new Dictionary<string, string?>
+                                    {
+                                        ["UserId"] = user.Id,
+                                        ["Email"] = user.Email,
+                                        ["Company"] = company.Name,
+                                        ["Message"] = "Error getting user or company information from Graph.",
+                                    });
                                 }
                             }
 
@@ -285,7 +302,9 @@ namespace CarWash.PWA
                         },
                         OnAuthenticationFailed = context =>
                         {
-                            Debug.WriteLine($"Authentication failed: {context.Exception.Message}");
+                            var telemetryClient = context.HttpContext.RequestServices.GetService<TelemetryClient>();
+                            telemetryClient?.TrackException(context.Exception);
+
                             context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                             context.Response.ContentType = "application/json";
                             return Task.CompletedTask;
