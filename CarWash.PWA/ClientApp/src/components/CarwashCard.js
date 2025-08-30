@@ -22,6 +22,7 @@ import { getAdminStateName, getServiceName } from '../Constants';
 import { formatLocation, formatDate } from '../Helpers';
 import Chat from './Chat';
 import ErrorBoundary from './ErrorBoundary';
+import Grid from '@mui/material/Grid';
 
 const styles = theme => ({
     chip: {
@@ -158,38 +159,55 @@ class CarwashCard extends Component {
                                 subheaderSecondLine={formatDate(reservation)}
                             />
                             <CardContent>
-                                <Typography variant="caption" color="textSecondary" gutterBottom>
-                                    Location
-                                </Typography>
-                                <Typography gutterBottom>
-                                    {reservation.location ? formatLocation(reservation.location) : 'Not set'}
-                                </Typography>
-                                <Typography variant="caption" color="textSecondary" gutterBottom>
-                                    Key locker
-                                </Typography>
-                                <Typography gutterBottom>
-                                    {reservation.keyLockerBox ? reservation.keyLockerBox.name : 'Not dropped off'}
-                                </Typography>
-                                <Typography
-                                    variant="caption"
-                                    color="textSecondary"
-                                    gutterBottom
-                                    style={{ marginTop: '8px' }}
-                                >
-                                    Name
-                                </Typography>
-                                <Typography gutterBottom>
-                                    {reservation.user.firstName} {reservation.user.lastName}
-                                </Typography>
-                                <Typography
-                                    variant="caption"
-                                    color="textSecondary"
-                                    gutterBottom
-                                    style={{ marginTop: '8px' }}
-                                >
-                                    Company
-                                </Typography>
-                                <Typography gutterBottom>{reservation.user.company}</Typography>
+                                <Grid container spacing={4}>
+                                    <Grid item xs={12} sm={6}>
+                                        <Typography variant="caption" color="textSecondary" gutterBottom>
+                                            Location
+                                        </Typography>
+                                        <Typography gutterBottom>
+                                            {reservation.location ? formatLocation(reservation.location) : 'Not set'}
+                                        </Typography>
+                                        <Typography
+                                            variant="caption"
+                                            color="textSecondary"
+                                            gutterBottom
+                                            style={{ marginTop: '8px' }}
+                                        >
+                                            Phone number
+                                        </Typography>
+                                        <Typography gutterBottom>{reservation.user.phoneNumber}</Typography>
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <Typography variant="caption" color="textSecondary" gutterBottom>
+                                            Key locker
+                                        </Typography>
+                                        <Typography gutterBottom>
+                                            {reservation.keyLockerBox
+                                                ? reservation.keyLockerBox.name
+                                                : 'Not dropped off'}
+                                        </Typography>
+                                        <Typography
+                                            variant="caption"
+                                            color="textSecondary"
+                                            gutterBottom
+                                            style={{ marginTop: '8px' }}
+                                        >
+                                            Name
+                                        </Typography>
+                                        <Typography gutterBottom>
+                                            {reservation.user.firstName} {reservation.user.lastName}
+                                        </Typography>
+                                        <Typography
+                                            variant="caption"
+                                            color="textSecondary"
+                                            gutterBottom
+                                            style={{ marginTop: '8px' }}
+                                        >
+                                            Company
+                                        </Typography>
+                                        <Typography gutterBottom>{reservation.user.company}</Typography>
+                                    </Grid>
+                                </Grid>
                                 <Chat
                                     carWashChat
                                     hideInput
