@@ -157,6 +157,11 @@ namespace CarWash.PWA.Controllers
                         if (!Enum.IsDefined(notificationChannel)) return BadRequest("Notification channel is not valid.");
                         _user.NotificationChannel = notificationChannel;
                         break;
+                    case "phonenumber":
+                        var phoneNumber = value.GetString();
+                        if (string.IsNullOrWhiteSpace(phoneNumber)) return BadRequest("Phone number cannot be empty.");
+                        _user.PhoneNumber = phoneNumber;
+                        break;
                     default:
                         return BadRequest("Setting key is not valid.");
                 }
