@@ -20,13 +20,6 @@ export default [
       },
     },
     languageOptions: {
-      parserOptions: {
-        ecmaVersion: 2020,
-        sourceType: 'module',
-        ecmaFeatures: { jsx: true },
-      },
-    },
-    languageOptions: {
       parser: babelParser,
       parserOptions: {
         requireConfigFile: false,
