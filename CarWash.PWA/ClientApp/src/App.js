@@ -258,6 +258,7 @@ export default class App extends Component {
             }
         } else {
             // Internet Explorer 6-11
+            // eslint-disable-next-line no-constant-binary-expression
             const isIE = /* @cc_on!@*/ false || !!document.documentMode;
             const surpassIEBlock = window.location.href.search('surpassieblock') !== -1;
 

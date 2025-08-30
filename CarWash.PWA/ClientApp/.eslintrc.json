@@ -1,7 +1,6 @@
 {
   /* See all the pre-defined configs here: https://www.npmjs.com/package/eslint-config-defaults */
   "extends": [
-    "react-app",
     "eslint:recommended",
     "plugin:react/recommended",
     "prettier"

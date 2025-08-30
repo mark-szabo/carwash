@@ -149,6 +149,7 @@ class CarwashDetailsDialog extends React.Component {
             (!prevProps.closedKeyLockerBoxIds || !prevProps.closedKeyLockerBoxIds.includes(this.state.lockerBoxId))
         ) {
             // Door just closed
+            // eslint-disable-next-line react/no-did-update-set-state
             this.setState({ waitingForClosure: false });
         }
     }
