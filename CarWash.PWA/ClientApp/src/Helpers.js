@@ -80,7 +80,12 @@ export function getSeverityName(severity) {
 }
 
 export function validatePhoneNumber(value) {
-    // Simple validation: must be at least 8 digits, only numbers, can start with +
-    const regex = /^\+?[0-9]{8,}$/;
+    // Allow spaces, hyphens, parentheses, and must contain at least 8 digits
+    if (typeof value !== 'string') return false;
+    // Remove common formatting characters
+    const digits = value.replace(/[^\d]/g, '');
+    if (digits.length < 8) return false;
+    // Basic format check: starts with optional +, then digits, spaces, hyphens, parentheses
+    const regex = /^\+?[\d\s\-()]{8,}$/;
     return regex.test(value);
 }
