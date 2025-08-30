@@ -81,89 +81,83 @@ namespace CarWash.PWA.Controllers
             return Ok(new UserViewModel(_user));
         }
 
-        // PUT: api/users/me
-        /// <summary>
-        /// Update user's phone number and billing details
-        /// </summary>
-        /// <param name="request">Request containing phone number and billing details</param>
-        /// <returns>No content</returns>
-        /// <response code="204">NoContent</response>
-        /// <response code="400">BadRequest if phone number or billing details are null.</response>
-        /// <response code="401">Unauthorized</response>
-        /// <response code="404">NotFound if user is not found.</response>
-        [HttpPut("me")]
-        public async Task<IActionResult> PutMe([FromBody] UserInfoUpdateRequest request)
-        {
-            if (_user == null) return NotFound();
-
-            if (string.IsNullOrWhiteSpace(request.PhoneNumber) && (string.IsNullOrWhiteSpace(request.BillingName) || string.IsNullOrWhiteSpace(request.BillingAddress)))
-            {
-                return BadRequest("Invalid request.");
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.PhoneNumber)) _user.PhoneNumber = request.PhoneNumber;
-            if (!string.IsNullOrWhiteSpace(request.BillingName) && !string.IsNullOrWhiteSpace(request.BillingAddress))
-            {
-                _user.BillingName = request.BillingName;
-                _user.BillingAddress = request.BillingAddress;
-                _user.PaymentMethod = request.PaymentMethod;
-            }
-
-            context.Users.Update(_user);
-
-            try
-            {
-                await context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!context.Users.Any(e => e.Id == _user.Id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
         // PUT: api/users/settings/{key}
         /// <summary>
-        /// Update a setting
+        /// [Deprecated] Update a single user setting. For backwards compatibility only.
         /// </summary>
         /// <param name="key">Setting key</param>
         /// <param name="value">New setting value</param>
         /// <returns>No content</returns>
         /// <response code="204">NoContent</response>
-        /// <response code="400">BadRequest if setting key is not valid or value param is null.</response>
+        /// <response code="400">BadRequest if setting key or value is invalid.</response>
         /// <response code="401">Unauthorized</response>
+        /// <response code="404">NotFound if user is not found.</response>
         [HttpPut("settings/{key}")]
-        public async Task<IActionResult> PutSettings([FromRoute] string key, [FromBody] System.Text.Json.JsonElement value)
+        [Obsolete("Update a single user setting. For backwards compatibility only. Use PutSettings instead.")]
+        public async Task<IActionResult> PutSingleSetting([FromRoute] string key, [FromBody] System.Text.Json.JsonElement value)
         {
-            if (value.GetRawText() == null) return BadRequest("Setting value cannot be null.");
+            var settings = new Dictionary<string, System.Text.Json.JsonElement>
+            {
+                { key, value }
+            };
+            return await PutSettings(settings);
+        }
+
+        // PUT: api/users/settings
+        /// <summary>
+        /// Update multiple user settings and billing details
+        /// </summary>
+        /// <param name="settings">A valid JSON object with keys and values representing settings to update. Example: { "phoneNumber": "123456789", "billingName": "John Doe" }</param>
+        /// <returns>No content</returns>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if any setting key or value is invalid.</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="404">NotFound if user is not found.</response>
+        [HttpPut("settings")]
+        public async Task<IActionResult> PutSettings([FromBody] Dictionary<string, System.Text.Json.JsonElement> settings)
+        {
+            if (_user == null) return NotFound();
+            if (settings == null || settings.Count == 0) return BadRequest("No settings provided.");
 
             try
             {
-                switch (key.ToLower())
+                foreach (var kvp in settings)
                 {
-                    case "calendarintegration":
-                        _user.CalendarIntegration = value.GetBoolean();
-                        break;
-                    case "notificationchannel":
-                        var notificationChannel = (NotificationChannel)value.GetInt32();
-                        if (!Enum.IsDefined(notificationChannel)) return BadRequest("Notification channel is not valid.");
-                        _user.NotificationChannel = notificationChannel;
-                        break;
-                    case "phonenumber":
-                        var phoneNumber = value.GetString();
-                        if (string.IsNullOrWhiteSpace(phoneNumber)) return BadRequest("Phone number cannot be empty.");
-                        _user.PhoneNumber = phoneNumber;
-                        break;
-                    default:
-                        return BadRequest("Setting key is not valid.");
+                    var key = kvp.Key.ToLower();
+                    var value = kvp.Value;
+                    switch (key)
+                    {
+                        case "calendarintegration":
+                            _user.CalendarIntegration = value.GetBoolean();
+                            break;
+                        case "notificationchannel":
+                            var notificationChannel = (NotificationChannel)value.GetInt32();
+                            if (!Enum.IsDefined(notificationChannel)) return BadRequest("Notification channel is not valid.");
+                            _user.NotificationChannel = notificationChannel;
+                            break;
+                        case "phonenumber":
+                            var phoneNumber = value.GetString();
+                            if (string.IsNullOrWhiteSpace(phoneNumber)) return BadRequest("Phone number cannot be empty.");
+                            _user.PhoneNumber = phoneNumber;
+                            break;
+                        case "billingname":
+                            var billingName = value.GetString();
+                            if (string.IsNullOrWhiteSpace(billingName)) return BadRequest("Billing name cannot be empty.");
+                            _user.BillingName = billingName;
+                            break;
+                        case "billingaddress":
+                            var billingAddress = value.GetString();
+                            if (string.IsNullOrWhiteSpace(billingAddress)) return BadRequest("Billing address cannot be empty.");
+                            _user.BillingAddress = billingAddress;
+                            break;
+                        case "paymentmethod":
+                            var paymentMethod = (PaymentMethod)value.GetInt32();
+                            if (!Enum.IsDefined(paymentMethod)) return BadRequest("Payment method is not valid.");
+                            _user.PaymentMethod = paymentMethod;
+                            break;
+                        default:
+                            return BadRequest($"Setting key '{key}' is not valid.");
+                    }
                 }
             }
             catch (Exception)

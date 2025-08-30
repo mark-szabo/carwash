@@ -1448,16 +1448,10 @@ namespace CarWash.PWA.Controllers
 
             if (lastReservation == null) return NoContent();
 
-            var lastPrivateReservation = await _context.Reservation
-                .Where(r => r.UserId == _user.Id && r.Private)
-                .OrderByDescending(r => r.CreatedOn)
-                .FirstOrDefaultAsync();
-
             return Ok(new LastSettingsViewModel(
                 VehiclePlateNumber: lastReservation.VehiclePlateNumber,
                 Location: lastReservation.Location,
                 Services: lastReservation.Services));
-            // TODO: add invoice details
         }
 
         // GET: api/reservations/reservationpercentage
