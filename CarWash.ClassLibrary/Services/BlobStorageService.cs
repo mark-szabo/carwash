@@ -7,15 +7,16 @@ using System.Threading.Tasks;
 namespace CarWash.ClassLibrary.Services
 {
     /// <inheritdoc />
-    public class BlobStorageService(IOptionsMonitor<CarWashConfiguration> configuration) : IBlobStorageService
+    public class BlobStorageService(IOptionsMonitor<CarWashConfiguration> configuration, IHttpClientFactory httpClientFactory) : IBlobStorageService
     {
         private const string CONTAINER_NAME = "static-assets";
         private const string FOLDER_NAME = "logos";
-        private readonly HttpClient httpClient = new();
+        private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
         /// <inheritdoc />
         public async Task UploadCompanyLogoFromUrlAsync(string fileUrl, string fileName)
         {
+            using var httpClient = _httpClientFactory.CreateClient();
             using var response = await httpClient.GetAsync(fileUrl, HttpCompletionOption.ResponseHeadersRead);
             response.EnsureSuccessStatusCode();
 
