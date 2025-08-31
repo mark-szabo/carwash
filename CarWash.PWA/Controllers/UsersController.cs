@@ -260,7 +260,7 @@ Please keep in mind, that we are required to continue storing your previous rese
 
             user.FirstName = "[deleted user]";
             user.LastName = null;
-            user.Email = $"[deleted on {DateTime.Now}]";
+            user.Email = $"[deleted on {DateTime.UtcNow}]";
             user.PhoneNumber = null;
             user.BillingName = null;
             user.BillingAddress = null;

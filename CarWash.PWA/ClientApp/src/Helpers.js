@@ -22,9 +22,9 @@ export function formatLocation(location) {
  * @returns {string} date in the format like '2:00 PM - 5:00 PM • September 21'
  */
 export function formatDate(reservation) {
-    const startTime = moment(reservation.startDate).format('h:mm A');
-    const endTime = moment(reservation.endDate).format('h:mm A');
-    const date = moment(reservation.startDate).format('MMMM D');
+    const startTime = moment.utc(reservation.startDate).local().format('h:mm A');
+    const endTime = moment.utc(reservation.endDate).local().format('h:mm A');
+    const date = moment.utc(reservation.startDate).local().format('MMMM D');
 
     return `${startTime} - ${endTime} • ${date}`;
 }
@@ -35,8 +35,8 @@ export function formatDate(reservation) {
  * @returns {string} date in the format like 'September 21, 2:00 PM - 5:00 PM'
  */
 export function formatDate2(reservation) {
-    const startTime = moment(reservation.startDate).format('MMMM D, h:mm A');
-    const endTime = moment(reservation.endDate).format('h:mm A');
+    const startTime = moment.utc(reservation.startDate).local().format('MMMM D, h:mm A');
+    const endTime = moment.utc(reservation.endDate).local().format('h:mm A');
 
     return `${startTime} - ${endTime}`;
 }
@@ -48,8 +48,8 @@ export function formatDate2(reservation) {
  * @returns {string} date in the format like '2018 September 21, 2:00 PM - September 22, 5:00 PM'
  */
 export function format2Dates(date1, date2) {
-    const startTime = moment(date1).format('YYYY MMMM D, h:mm A');
-    const endTime = moment(date2).format('MMMM D, h:mm A');
+    const startTime = moment.utc(date1).local().format('YYYY MMMM D, h:mm A');
+    const endTime = moment.utc(date2).local().format('MMMM D, h:mm A');
 
     return `${startTime} - ${endTime}`;
 }

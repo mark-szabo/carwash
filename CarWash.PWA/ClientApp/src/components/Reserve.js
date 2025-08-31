@@ -186,7 +186,7 @@ class Reserve extends TrackedComponent {
                     floor = floor || '';
                     seat = seat || '';
 
-                    const date = moment(data.startDate);
+                    const date = moment.utc(data.startDate).local();
                     this.setState({
                         selectedServices: data.services,
                         selectedDate: date,

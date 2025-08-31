@@ -378,7 +378,8 @@ export default class App extends Component {
             data => {
                 const backlog = data;
                 for (let i = 0; i < backlog.length; i++) {
-                    backlog[i].startDate = moment(backlog[i].startDate);
+                        // Treat incoming date as UTC, then convert to local time for display
+                        backlog[i].startDate = moment.utc(backlog[i].startDate).local();
                 }
                 this.setState({ backlog, backlogLoading: false });
                 if (refresh) this.openSnackbar('Refreshed.');

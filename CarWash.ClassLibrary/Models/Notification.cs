@@ -67,10 +67,10 @@ namespace CarWash.ClassLibrary.Models
         public string Badge { get; set; }
 
         /// <summary>
-        /// Gets or sets the timestamp of the notification. Defaults to <see cref="DateTime.Now"/>.
+        /// Gets or sets the timestamp of the notification. Defaults to <see cref="DateTime.UtcNow"/>.
         /// </summary>
         [JsonPropertyName("timestamp")]
-        public DateTime Timestamp { get; set; } = DateTime.Now;
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// Gets or sets a value indicating whether the notification requires interaction. Defaults to false.

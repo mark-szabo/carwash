@@ -133,7 +133,7 @@ class Settings extends TrackedComponent {
             data => {
                 const dataString = JSON.stringify(data);
                 const name = this.props.user.firstName.toLowerCase() + this.props.user.lastName.toLowerCase();
-                const date = moment().format('YYYY-MM-DD'); // get the current date in this format: yyyy-mm-dd
+                const date = moment.utc().format('YYYY-MM-DD'); // get the current date in UTC
                 download(dataString, `carwash_${name}_${date}.json`, 'text/json');
             },
             error => {

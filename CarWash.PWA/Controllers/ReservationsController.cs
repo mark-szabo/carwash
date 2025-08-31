@@ -262,14 +262,14 @@ namespace CarWash.PWA.Controllers
             reservation.Mpv = false;
             reservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty).Replace(" ", string.Empty);
             reservation.CreatedById = _user.Id;
-            reservation.CreatedOn = DateTime.Now;
+            reservation.CreatedOn = DateTime.UtcNow;
             reservation.StartDate = reservation.StartDate.ToLocalTime();
             reservation.StartDate = reservation.StartDate.Date + new TimeSpan(reservation.StartDate.Hour, minutes: 0, seconds: 0);
 
             if (reservation.Comments.Count == 1)
             {
                 reservation.Comments[0].UserId = _user.Id;
-                reservation.Comments[0].Timestamp = DateTime.Now;
+                reservation.Comments[0].Timestamp = DateTime.UtcNow;
                 reservation.Comments[0].Role = CommentRole.User;
             }
             if (reservation.Comments.Count > 1)
@@ -429,17 +429,17 @@ namespace CarWash.PWA.Controllers
                 var user = await _context.Users.FindAsync(reservation.UserId);
                 if (user.CalendarIntegration)
                 {
-                    var timer = DateTime.Now;
+                    var timer = DateTime.UtcNow;
                     try
                     {
                         reservation.User = user;
                         reservation.OutlookEventId = await _calendarService.CreateEventAsync(reservation);
-                        _telemetryClient.TrackDependency("CalendarService", "CreateEvent", new { ReservationId = reservation.Id, UserId = user.Id }.ToString(), timer, DateTime.Now - timer, success: true);
+                        _telemetryClient.TrackDependency("CalendarService", "CreateEvent", new { ReservationId = reservation.Id, UserId = user.Id }.ToString(), timer, DateTime.UtcNow - timer, success: true);
 
                     }
                     catch (Exception e)
                     {
-                        _telemetryClient.TrackDependency("CalendarService", "CreateEvent", new { ReservationId = reservation.Id, UserId = user.Id }.ToString(), timer, DateTime.Now - timer, success: false);
+                        _telemetryClient.TrackDependency("CalendarService", "CreateEvent", new { ReservationId = reservation.Id, UserId = user.Id }.ToString(), timer, DateTime.UtcNow - timer, success: false);
                         _telemetryClient.TrackException(e);
                     }
                 }
@@ -982,7 +982,7 @@ namespace CarWash.PWA.Controllers
             {
                 UserId = _user.Id,
                 Role = CommentRole.Carwash,
-                Timestamp = DateTime.Now,
+                Timestamp = DateTime.UtcNow,
                 Message = comment
             });
 
@@ -1070,7 +1070,7 @@ namespace CarWash.PWA.Controllers
             {
                 UserId = _user.Id,
                 Role = reservation.UserId != _user.Id && _user.IsCarwashAdmin ? CommentRole.Carwash : CommentRole.User,
-                Timestamp = DateTime.Now,
+                Timestamp = DateTime.UtcNow,
                 Message = comment
             });
 
@@ -1293,7 +1293,7 @@ namespace CarWash.PWA.Controllers
         public IEnumerable<ObfuscatedReservationViewModel> GetObfuscatedReservations(int daysAhead = 365)
         {
             return _context.Reservation
-                .Where(r => r.EndDate >= DateTime.Now && r.StartDate <= DateTime.Now.AddDays(daysAhead))
+                .Where(r => r.EndDate >= DateTime.UtcNow && r.StartDate <= DateTime.UtcNow.AddDays(daysAhead))
                 .Include(r => r.User)
                 .OrderBy(r => r.StartDate)
                 .Select(reservation => new ObfuscatedReservationViewModel(reservation.User.Company, reservation.Services, reservation.TimeRequirement, reservation.StartDate, (DateTime)reservation.EndDate));
@@ -1318,7 +1318,7 @@ namespace CarWash.PWA.Controllers
             var userCompanyLimit = (await _context.Company.SingleAsync(c => c.Name == _user.Company)).DailyLimit;
 
             notAvailableDates.AddRange(await _context.Reservation
-                .Where(r => r.EndDate >= DateTime.Now && r.StartDate <= DateTime.Now.AddDays(daysAhead))
+                .Where(r => r.EndDate >= DateTime.UtcNow && r.StartDate <= DateTime.UtcNow.AddDays(daysAhead))
                 .GroupBy(r => r.StartDate.Date)
                 .Select(g => new
                 {
@@ -1329,20 +1329,20 @@ namespace CarWash.PWA.Controllers
                 .Select(d => d.Date)
                 .ToListAsync());
 
-            if (!notAvailableDates.Contains(DateTime.Today))
+            if (!notAvailableDates.Contains(DateTime.UtcNow.Date))
             {
                 var toBeDoneTodayTime = await _context.Reservation
-                    .Where(r => r.StartDate >= DateTime.Now && r.StartDate.Date == DateTime.Today)
+                    .Where(r => r.StartDate >= DateTime.UtcNow && r.StartDate.Date == DateTime.UtcNow.Date)
                     .SumAsync(r => r.TimeRequirement);
 
-                if (toBeDoneTodayTime >= GetRemainingSlotCapacityToday() * _configuration.CurrentValue.Reservation.TimeUnit) notAvailableDates.Add(DateTime.Today.Date);
+                if (toBeDoneTodayTime >= GetRemainingSlotCapacityToday() * _configuration.CurrentValue.Reservation.TimeUnit) notAvailableDates.Add(DateTime.UtcNow.Date);
             }
 
             // If the company has set up limits.
             if (userCompanyLimit > 0)
             {
                 notAvailableDates.AddRange(await _context.Reservation
-                    .Where(r => r.EndDate >= DateTime.Now && r.StartDate <= DateTime.Now.AddDays(daysAhead))
+                    .Where(r => r.EndDate >= DateTime.UtcNow && r.StartDate <= DateTime.UtcNow.AddDays(daysAhead))
                     .Where(r => r.User.Company == _user.Company)
                     .GroupBy(r => r.StartDate.Date)
                     .Select(g => new
@@ -1358,7 +1358,7 @@ namespace CarWash.PWA.Controllers
 
             #region Get not available times
             var slotReservationAggregate = await _context.Reservation
-                .Where(r => r.EndDate >= DateTime.Now && r.StartDate <= DateTime.Now.AddDays(daysAhead))
+                .Where(r => r.EndDate >= DateTime.UtcNow && r.StartDate <= DateTime.UtcNow.AddDays(daysAhead))
                 .GroupBy(r => r.StartDate)
                 .Select(g => new
                 {
@@ -1375,8 +1375,9 @@ namespace CarWash.PWA.Controllers
             // Check if a slot has already started today
             foreach (var slot in _configuration.CurrentValue.Slots)
             {
-                var slotStartTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, slot.StartTime, 0, 0);
-                if (!notAvailableTimes.Contains(slotStartTime) && slotStartTime.AddMinutes(_configuration.CurrentValue.Reservation.MinutesToAllowReserveInPast) < DateTime.Now)
+                var now = DateTime.UtcNow;
+                var slotStartTime = new DateTime(now.Year, now.Month, now.Day, slot.StartTime, 0, 0);
+                if (!notAvailableTimes.Contains(slotStartTime) && slotStartTime.AddMinutes(_configuration.CurrentValue.Reservation.MinutesToAllowReserveInPast) < DateTime.UtcNow)
                 {
                     notAvailableTimes.Add(slotStartTime);
                 }
@@ -1385,7 +1386,7 @@ namespace CarWash.PWA.Controllers
 
             #region Check blockers
             var blockers = await _context.Blocker
-                .Where(b => b.EndDate >= DateTime.Now)
+                .Where(b => b.EndDate >= DateTime.UtcNow)
                 .ToListAsync();
 
             foreach (var blocker in blockers)
@@ -1675,12 +1676,13 @@ namespace CarWash.PWA.Controllers
 
             foreach (var slot in _configuration.CurrentValue.Slots)
             {
-                if (DateTime.Now.Hour < slot.StartTime) capacity += slot.Capacity;
+                var now = DateTime.UtcNow;
+                if (now.Hour < slot.StartTime) capacity += slot.Capacity;
 
-                if (DateTime.Now.Hour >= slot.StartTime && DateTime.Now.Hour < slot.EndTime)
+                if (now.Hour >= slot.StartTime && now.Hour < slot.EndTime)
                 {
-                    var endTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, slot.EndTime, 0, 0);
-                    var timeDifference = endTime - DateTime.Now;
+                    var endTime = new DateTime(now.Year, now.Month, now.Day, slot.EndTime, 0, 0);
+                    var timeDifference = endTime - now;
                     var slotTimeSpan = (slot.EndTime - slot.StartTime) * 60;
                     var slotCapacity = timeDifference.TotalMinutes / slotTimeSpan * slot.Capacity;
                     capacity += (int)Math.Floor(slotCapacity);
@@ -1766,7 +1768,7 @@ namespace CarWash.PWA.Controllers
             if (_user.IsCarwashAdmin) return false;
 
             if (endTime == null) throw new ArgumentNullException(nameof(endTime));
-            var earliestTimeAllowed = DateTime.Now.AddMinutes(_configuration.CurrentValue.Reservation.MinutesToAllowReserveInPast * -1);
+            var earliestTimeAllowed = DateTime.UtcNow.AddMinutes(_configuration.CurrentValue.Reservation.MinutesToAllowReserveInPast * -1);
 
             if (startTime < earliestTimeAllowed || endTime < earliestTimeAllowed)
             {
@@ -1853,7 +1855,7 @@ namespace CarWash.PWA.Controllers
 
             // Do not validate against company limit after {HoursAfterCompanyLimitIsNotChecked} for today
             // or if company limit is 0 (meaning unlimited)
-            if ((date.Date == DateTime.Today && DateTime.Now.Hour >= _configuration.CurrentValue.Reservation.HoursAfterCompanyLimitIsNotChecked)
+            if ((date.Date == DateTime.UtcNow.Date && DateTime.UtcNow.Hour >= _configuration.CurrentValue.Reservation.HoursAfterCompanyLimitIsNotChecked)
                 || userCompanyLimit == 0)
             {
                 var allSlotCapacity = _configuration.CurrentValue.Slots.Sum(s => s.Capacity);
@@ -1903,10 +1905,10 @@ namespace CarWash.PWA.Controllers
                 }
             }
 
-            if (date.Date == DateTime.Today)
+            if (date.Date == DateTime.UtcNow.Date)
             {
                 var toBeDoneTodayTime = await _context.Reservation
-                    .Where(r => r.StartDate >= DateTime.Now && r.StartDate.Date == DateTime.Today)
+                    .Where(r => r.StartDate >= DateTime.UtcNow && r.StartDate.Date == DateTime.UtcNow.Date)
                     .SumAsync(r => r.TimeRequirement);
 
                 var remainingSlotCapacityToday = GetRemainingSlotCapacityToday();
