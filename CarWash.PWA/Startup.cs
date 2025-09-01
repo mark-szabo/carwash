@@ -248,44 +248,70 @@ namespace CarWash.PWA
                                                 context.Principal)));
 
                                     if (user.PhoneNumber == null)
-                                    {
-                                        // Get user information from Graph
-                                        var graphUser = await graphClient.Me.GetAsync((requestConfiguration) =>
+                                        try
                                         {
-                                            requestConfiguration.QueryParameters.Select = ["mobilePhone", "businessPhones"];
-                                        });
-                                        var phoneNumber = graphUser?.MobilePhone ?? (graphUser?.BusinessPhones?.Count > 0 ? graphUser.BusinessPhones[0] : null);
-                                        if (phoneNumber != null)
-                                        {
-                                            user.PhoneNumber = phoneNumber;
-                                            dbContext.Update(user);
+                                            // Get user information from Graph
+                                            var graphUser = await graphClient.Me.GetAsync((requestConfiguration) =>
+                                            {
+                                                requestConfiguration.QueryParameters.Select = ["mobilePhone", "businessPhones"];
+                                            });
+                                            var phoneNumber = graphUser?.MobilePhone ?? (graphUser?.BusinessPhones?.Count > 0 ? graphUser.BusinessPhones[0] : null);
+                                            if (phoneNumber != null)
+                                            {
+                                                user.PhoneNumber = phoneNumber;
+                                                dbContext.Update(user);
+                                            }
                                         }
-                                    }
+                                        catch (Exception ex)
+                                        {
+                                            telemetryClient?.TrackException(ex, new Dictionary<string, string?>
+                                            {
+                                                ["UserId"] = user.Id,
+                                                ["Email"] = user.Email,
+                                                ["Company"] = company.Name,
+                                                ["Message"] = "Error getting user from Graph.",
+                                            });
+                                        }
 
                                     if (company.Color == null)
-                                    {
-                                        // Get company information from Graph
-                                        var branding = await graphClient.Organization[entraTenantId]
-                                        .Branding
-                                        .GetAsync((requestConfiguration) =>
+                                        try
                                         {
-                                            requestConfiguration.Headers.Add("Accept-Language", "0");
-                                            requestConfiguration.QueryParameters.Select = ["backgroundColor", "bannerLogoRelativeUrl", "CdnList"];
-                                        });
-                                        if (branding?.BackgroundColor != null)
+                                            // Get company information from Graph
+                                            var branding = await graphClient.Organization[entraTenantId]
+                                            .Branding
+                                            .GetAsync((requestConfiguration) =>
+                                            {
+                                                requestConfiguration.Headers.Add("Accept-Language", "0");
+                                                requestConfiguration.QueryParameters.Select = ["backgroundColor", "bannerLogoRelativeUrl", "CdnList"];
+                                            });
+                                            if (branding?.BackgroundColor != null)
+                                            {
+                                                company.Color = branding?.BackgroundColor;
+                                                company.UpdatedOn = DateTime.UtcNow;
+                                                dbContext.Update(company);
+                                            }
+                                            if (branding?.BannerLogoRelativeUrl != null)
+                                            {
+                                                var companyLogo = $"https://{branding.CdnList?[0]}/{branding.BannerLogoRelativeUrl}";
+
+                                                var blobStorageService = context.HttpContext.RequestServices.GetRequiredService<IBlobStorageService>();
+                                                await blobStorageService.UploadCompanyLogoFromUrlAsync(companyLogo, company.Name);
+                                            }
+                                        }
+                                        catch (Microsoft.Graph.Models.ODataErrors.ODataError ex)
                                         {
-                                            company.Color = branding?.BackgroundColor;
+                                            telemetryClient?.TrackException(ex, new Dictionary<string, string?>
+                                            {
+                                                ["UserId"] = user.Id,
+                                                ["Email"] = user.Email,
+                                                ["Company"] = company.Name,
+                                                ["Message"] = "Error getting company branding information from Graph.",
+                                            });
+
+                                            company.Color = "#80d8ff"; // default to carwash blue
                                             company.UpdatedOn = DateTime.UtcNow;
                                             dbContext.Update(company);
                                         }
-                                        if (branding?.BannerLogoRelativeUrl != null)
-                                        {
-                                            var companyLogo = $"https://{branding.CdnList?[0]}/{branding.BannerLogoRelativeUrl}";
-
-                                            var blobStorageService = context.HttpContext.RequestServices.GetRequiredService<IBlobStorageService>();
-                                            await blobStorageService.UploadCompanyLogoFromUrlAsync(companyLogo, company.Name);
-                                        }
-                                    }
 
                                     await dbContext.SaveChangesAsync();
                                 }
@@ -296,7 +322,7 @@ namespace CarWash.PWA
                                         ["UserId"] = user.Id,
                                         ["Email"] = user.Email,
                                         ["Company"] = company.Name,
-                                        ["Message"] = "Error getting user or company information from Graph.",
+                                        ["Message"] = "Error connecting to Microsoft Graph.",
                                     });
                                 }
                             }
