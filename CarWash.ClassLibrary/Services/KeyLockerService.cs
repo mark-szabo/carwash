@@ -131,23 +131,42 @@ namespace CarWash.ClassLibrary.Services
             };
             methodInvocation.SetPayloadJson("1");
 
-            var response = await iotHubClient.InvokeDeviceMethodAsync(lockerId, methodInvocation);
-
-            if (response.Status == 200)
+            try
             {
-                await UpdateBoxStateAsync(lockerId, boxSerial, KeyLockerBoxState.Used, userId);
+                var response = await iotHubClient.InvokeDeviceMethodAsync(lockerId, methodInvocation);
 
-                telemetryClient.TrackEvent("KeyLockerBoxOpened", new Dictionary<string, string> {
+                if (response.Status == 200)
+                {
+                    await UpdateBoxStateAsync(lockerId, boxSerial, KeyLockerBoxState.Used, userId);
+
+                    telemetryClient.TrackEvent("KeyLockerBoxOpened", new Dictionary<string, string> {
+                        { "LockerId", lockerId },
+                        { "BoxSerial", boxSerial.ToString() },
+                        { "UserId", userId ?? "" },
+                    });
+
+                    if (box != null) _ = ListenForBoxClosureAsync(box, userId, onBoxClosedCallback);
+                }
+                else
+                {
+                    telemetryClient.TrackException(new InvalidOperationException($"Failed to open box {boxSerial} in locker {lockerId}. Status: {response.Status}."), new Dictionary<string, string> {
+                        { "LockerId", lockerId },
+                        { "BoxSerial", boxSerial.ToString() },
+                        { "UserId", userId ?? "" },
+                    });
+
+                    throw new InvalidOperationException($"Failed to open box {boxSerial} in locker {lockerId}.");
+                }
+            }
+            catch (Microsoft.Azure.Devices.Common.Exceptions.IotHubException ex)
+            {
+                telemetryClient.TrackException(ex, new Dictionary<string, string> {
                     { "LockerId", lockerId },
                     { "BoxSerial", boxSerial.ToString() },
                     { "UserId", userId ?? "" },
                 });
 
-                if (box != null) _ = ListenForBoxClosureAsync(box, userId, onBoxClosedCallback);
-            }
-            else
-            {
-                throw new InvalidOperationException($"Failed to open box {boxSerial}. Status: {response.Status}");
+                throw new InvalidOperationException($"Failed to open box {boxSerial} in locker {lockerId}.", ex);
             }
         }
 

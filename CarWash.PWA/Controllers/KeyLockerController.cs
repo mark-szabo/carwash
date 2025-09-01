@@ -197,12 +197,16 @@ namespace CarWash.PWA.Controllers
             }
             catch (InvalidOperationException ex)
             {
+                reservation.KeyLockerBoxId = null;
+
                 await context.SaveChangesAsync();
 
                 return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
+                reservation.KeyLockerBoxId = null;
+
                 await context.SaveChangesAsync();
 
                 // Log the exception and return a 500 Internal Server Error
