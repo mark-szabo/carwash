@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
+import Login from './Login';
 import { runWithAdal } from './Auth';
 
 // if (!window.location.host.startsWith('www') && !window.location.host.startsWith('localhost')) {
@@ -12,23 +13,20 @@ import { runWithAdal } from './Auth';
 const baseUrl = document.getElementsByTagName('base')[0].getAttribute('href');
 const rootElement = document.getElementById('root');
 
-let configuration;
-try {
-    const o = {};
-    o.headers = new Headers();
-    o.headers.append('Content-Type', 'application/json');
+async function main() {
+    let configuration;
+    try {
+        const o = {};
+        o.headers = new Headers();
+        o.headers.append('Content-Type', 'application/json');
+        const response = await window.fetch('api/.well-known/configuration', o);
+        configuration = await response.json();
+    } catch (e) {
+        console.error(`NETWORK ERROR: ${e.message}`);
+    }
 
-    const response = await window.fetch('api/.well-known/configuration', o);
-    configuration = await response.json();
-} catch (e) {
-    console.error(`NETWORK ERROR: ${e.message}`);
+    // If not authenticated, show Login chooser
+    ReactDOM.render(<Login configuration={configuration} />, rootElement);
 }
 
-runWithAdal(configuration, () => {
-    ReactDOM.render(
-        <BrowserRouter basename={baseUrl}>
-            <App configuration={configuration} />
-        </BrowserRouter>,
-        rootElement
-    );
-});
+main();

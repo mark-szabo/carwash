@@ -54,12 +54,12 @@ namespace CarWash.PWA
     public class Startup(IConfiguration configuration, IWebHostEnvironment currentEnvironment)
     {
         private const string ContentSecurityPolicy = @"default-src 'self'; " +
-                    "script-src 'self' 'unsafe-inline' 'unsafe-eval' *.msecnd.net storage.googleapis.com static.cloudflareinsights.com; " +
-                    "style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com; " +
+                    "script-src 'self' 'unsafe-inline' 'unsafe-eval' *.msecnd.net storage.googleapis.com accounts.google.com static.cloudflareinsights.com; " +
+                    "style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com accounts.google.com; " +
                     "img-src 'self' data:; " +
                     "connect-src https: wss: 'self' fonts.googleapis.com fonts.gstatic.com; " +
                     "font-src 'self' data: fonts.googleapis.com fonts.gstatic.com; " +
-                    "frame-src 'self' login.microsoftonline.com *.powerbi.com; " +
+                    "frame-src 'self' login.microsoftonline.com *.powerbi.com accounts.google.com; " +
                     "form-action 'self'; " +
                     "upgrade-insecure-requests; " +
                     "report-uri https://markszabo.report-uri.com/r/d/csp/enforce";
@@ -118,6 +118,33 @@ namespace CarWash.PWA
                 {
                     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
                 })
+                .AddGoogle(options =>
+                {
+                    options.ClientId = configuration["Authentication:Google:ClientId"];
+                    options.ClientSecret = configuration["Authentication:Google:ClientSecret"];
+                    options.CallbackPath = "/signin-google";
+                    options.Events = new Microsoft.AspNetCore.Authentication.OAuth.OAuthEvents
+                    {
+                        OnCreatingTicket = context =>
+                        {
+                            context.Identity.AddClaim(new Claim("AuthenticationType", "Google"));
+                            return Task.CompletedTask;
+                        },
+                        OnTicketReceived = context =>
+                        {
+                            return Task.CompletedTask;
+                        },
+                        OnRemoteFailure = context =>
+                        {
+                            var telemetryClient = context.HttpContext.RequestServices.GetService<TelemetryClient>();
+                            telemetryClient?.TrackException(context.Failure);
+                            context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                            context.Response.ContentType = "application/json";
+                            context.HandleResponse();
+                            return context.Response.WriteAsync("Authentication failed, please try again.");
+                        }
+                    };
+                });/*
                 .AddMicrosoftIdentityWebApi(options =>
                 {
                     options.IncludeErrorDetails = true;
@@ -165,28 +192,51 @@ namespace CarWash.PWA
                             // Get EF context
                             var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
 
-                            var entraTenantId = context.Principal?.FindFirstValue(ClaimConstants.Tid) ??
-                                context.Principal?.FindFirstValue(ClaimConstants.TenantId) ??
-                                throw new SecurityTokenInvalidIssuerException("Tenant ('tid' or 'tenantid') cannot be found in auth token.");
+                            // Determine if this is a Google or Microsoft token
+                            var isGoogle = context.Principal.Identity?.AuthenticationType == "Google" || context.Principal.HasClaim(c => c.Issuer.Contains("accounts.google.com"));
+                            string oid = null;
+                            string email = null;
+                            string firstName = null;
+                            string lastName = null;
+                            Company company = null;
+                            string entraTenantId = null;
 
-                            var entraOid = context.Principal.FindFirstValue(ClaimConstants.Oid) ??
-                                context.Principal.FindFirstValue(ClaimConstants.ObjectId);
+                            if (isGoogle)
+                            {
+                                // For Google, use 'sub' as Oid, and get claims
+                                oid = context.Principal.FindFirstValue("sub");
+                                email = context.Principal.FindFirstValue(ClaimTypes.Email)?.ToLower();
+                                firstName = context.Principal.FindFirstValue(ClaimTypes.GivenName) ?? "User";
+                                lastName = context.Principal.FindFirstValue(ClaimTypes.Surname);
+                            }
+                            else
+                            {
+                                // Entra ID authentication
+                                entraTenantId = context.Principal?.FindFirstValue(ClaimConstants.Tid) ??
+                                    context.Principal?.FindFirstValue(ClaimConstants.TenantId) ??
+                                    throw new SecurityTokenInvalidIssuerException("Tenant ('tid' or 'tenantid') cannot be found in auth token.");
 
-                            var company = (await dbContext.Company.SingleOrDefaultAsync(t => t.TenantId == entraTenantId)) ??
-                                throw new SecurityTokenInvalidIssuerException("Tenant ('tenantid') cannot be found in auth token.");
-                            var email = context.Principal.FindFirstValue(ClaimTypes.Upn)?.ToLower();
-                            if (email == null && company.Name == Company.Carwash) email = context.Principal.FindFirstValue(ClaimTypes.Email)?.ToLower() ??
-                                context.Principal.FindFirstValue(ClaimTypes.Name)?.ToLower().Replace("live.com#", "");
-                            if (email == null) throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
+                                oid = context.Principal.FindFirstValue(ClaimConstants.Oid) ??
+                                    context.Principal.FindFirstValue(ClaimConstants.ObjectId);
 
-                            var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Oid == entraOid);
+                                company = (await dbContext.Company.SingleOrDefaultAsync(t => t.TenantId == entraTenantId)) ??
+                                    throw new SecurityTokenInvalidIssuerException("Tenant ('tenantid') cannot be found in auth token.");
+                                email = context.Principal.FindFirstValue(ClaimTypes.Upn)?.ToLower();
+                                if (email == null && company.Name == Company.Carwash) email = context.Principal.FindFirstValue(ClaimTypes.Email)?.ToLower() ??
+                                    context.Principal.FindFirstValue(ClaimTypes.Name)?.ToLower().Replace("live.com#", "");
+                                if (email == null) throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
+                                firstName = context.Principal.FindFirstValue(ClaimTypes.GivenName) ?? "User";
+                                lastName = context.Principal.FindFirstValue(ClaimTypes.Surname);
+                            }
+
+                            var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Oid == oid);
 
                             if (user == null)
                             {
                                 user = await dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
                                 if (user != null)
                                 {
-                                    user.Oid = entraOid;
+                                    user.Oid = oid;
                                     dbContext.Update(user);
                                     await dbContext.SaveChangesAsync();
                                 }
@@ -196,8 +246,8 @@ namespace CarWash.PWA
                             {
                                 user = new User
                                 {
-                                    FirstName = context.Principal.FindFirstValue(ClaimTypes.GivenName) ?? "User", // throw new Exception("First name ('givenname') cannot be found in auth token."),
-                                    LastName = context.Principal.FindFirstValue(ClaimTypes.Surname),
+                                    FirstName = firstName,
+                                    LastName = lastName,
                                     Email = email,
                                     Company = company.Name,
                                     IsCarwashAdmin = company.Name == Company.Carwash
@@ -359,7 +409,7 @@ namespace CarWash.PWA
                     {
                         configuration.Bind("AzureAd", options);
                     })
-                .AddInMemoryTokenCaches();
+                .AddInMemoryTokenCaches();*/
 
             services.AddAuthorization();
 

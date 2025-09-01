@@ -35,6 +35,7 @@
         "@mui/material": "^5.16.7",
         "@mui/styles": "^5.16.7",
         "@mui/x-date-pickers": "^7.23.6",
+        "@react-oauth/google": "^0.12.2",
         "adal-angular": "^1.0.17",
         "ajv": "^8.17.1",
         "classnames": "^2.5.1",
