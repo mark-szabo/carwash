@@ -44,7 +44,8 @@ namespace CarWash.ClassLibrary.Services
                     g.Key.LockerId,
                     g.Key.Building,
                     g.Key.Floor,
-                    g.Select(b =>
+                    g.OrderBy(b => b.BoxSerial)
+                    .Select(b =>
                     {
                         var reservation = reservations.FirstOrDefault(r => r.KeyLockerBoxId == b.Id);
                         return new KeyLockerBoxStatusMessage
