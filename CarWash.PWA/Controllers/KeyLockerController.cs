@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using CarWash.ClassLibrary;
 using CarWash.ClassLibrary.Enums;
@@ -35,7 +36,24 @@ namespace CarWash.PWA.Controllers
         private readonly User _user = userService.CurrentUser ?? throw new Exception("User is not authenticated.");
         private const int MAX_BOXES_TO_GENERATE = 100;
 
-        // GET: api/keylocker/generate
+        // GET: api/keylocker/state
+        /// <summary>
+        /// Get the state of all lockers and their boxes, including reservation info if connected.
+        /// Only accessible by carwash admins.
+        /// </summary>
+        /// <returns>200 OK with the state of all lockers and boxes.</returns>
+        /// <response code="200">OK</response>
+        /// <response code="403">Forbidden if the user is not a carwash admin.</response>
+        [HttpGet("state")]
+        public async Task<IActionResult> GetAllLockersState()
+        {
+            if (!_user.IsCarwashAdmin) return Forbid();
+            var lockers = await keyLockerService.ListBoxes();
+
+            return Ok(lockers);
+        }
+
+        // POST: api/keylocker/generate
         /// <summary>
         /// Generate boxes for a locker.
         /// </summary>
@@ -197,12 +215,16 @@ namespace CarWash.PWA.Controllers
             }
             catch (InvalidOperationException ex)
             {
+                reservation.KeyLockerBoxId = null;
+
                 await context.SaveChangesAsync();
 
                 return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
+                reservation.KeyLockerBoxId = null;
+
                 await context.SaveChangesAsync();
 
                 // Log the exception and return a 500 Internal Server Error
@@ -250,9 +272,9 @@ namespace CarWash.PWA.Controllers
             try
             {
                 var box = await keyLockerService.OpenBoxByIdAsync(
-                reservation.KeyLockerBoxId,
-                _user.Id,
-                async id => await keyLockerHub.Clients.User(_user.Id).SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxClosed, id));
+                    reservation.KeyLockerBoxId,
+                    _user.Id,
+                    async id => await keyLockerHub.Clients.User(_user.Id).SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxClosed, id));
             }
             catch (InvalidOperationException ex)
             {
@@ -307,9 +329,9 @@ namespace CarWash.PWA.Controllers
             try
             {
                 var box = await keyLockerService.OpenBoxByIdAsync(
-                reservation.KeyLockerBoxId,
-                _user.Id,
-                async id => await keyLockerHub.Clients.User(_user.Id).SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxClosed, id));
+                    reservation.KeyLockerBoxId,
+                    _user.Id,
+                    async id => await keyLockerHub.Clients.User(_user.Id).SendAsync(Constants.KeyLockerHubMethods.KeyLockerBoxClosed, id));
 
                 // Free up the box after opening
                 await keyLockerService.FreeUpBoxAsync(box.Id, _user.Id);

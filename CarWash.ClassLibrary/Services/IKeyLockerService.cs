@@ -1,6 +1,8 @@
-﻿using CarWash.ClassLibrary.Models;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using CarWash.ClassLibrary.Models;
+using static CarWash.ClassLibrary.Services.KeyLockerService;
 
 namespace CarWash.ClassLibrary.Services
 {
@@ -10,6 +12,12 @@ namespace CarWash.ClassLibrary.Services
     /// </summary>
     public interface IKeyLockerService
     {
+        /// <summary>
+        /// Lists the state of all lockers and their boxes, including reservation info if connected.
+        /// </summary>
+        /// <returns></returns>
+        Task<List<KeyLockerStatusMessage>> ListBoxes();
+
         /// <summary>
         /// Generates a number of boxes in the database with the specified prefix.
         /// The boxes are assigned to the specified lockerId, building, and floor.

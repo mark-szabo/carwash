@@ -1,17 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Azure.Messaging.EventHubs.Consumer;
+﻿using Azure.Messaging.EventHubs.Consumer;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using Microsoft.ApplicationInsights;
 using Microsoft.Azure.Devices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.Graph.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace CarWash.ClassLibrary.Services
 {
@@ -25,6 +26,61 @@ namespace CarWash.ClassLibrary.Services
     /// <param name="telemetryClient"></param>
     public class KeyLockerService(ApplicationDbContext context, IOptionsMonitor<CarWashConfiguration> configuration, ServiceClient iotHubClient, TelemetryClient telemetryClient) : IKeyLockerService
     {
+        /// <inheritdoc />
+        public async Task<List<KeyLockerStatusMessage>> ListBoxes()
+        {
+            var boxes = await context.KeyLockerBox
+                .AsNoTracking()
+                .ToListAsync();
+
+            var reservations = await context.Reservation
+                .AsNoTracking()
+                .Where(r => r.KeyLockerBoxId != null)
+                .ToListAsync();
+
+            var lockers = boxes
+                .GroupBy(b => new { b.LockerId, b.Building, b.Floor })
+                .Select(g => new KeyLockerStatusMessage
+                (
+                    g.Key.LockerId,
+                    g.Key.Building,
+                    g.Key.Floor,
+                    g.OrderBy(b => b.BoxSerial)
+                    .Select(b =>
+                    {
+                        var reservation = reservations.FirstOrDefault(r => r.KeyLockerBoxId == b.Id);
+                        return new KeyLockerBoxStatusMessage
+                        (
+                            b.Id,
+                            b.BoxSerial,
+                            b.Name,
+                            b.State,
+                            b.IsDoorClosed,
+                            b.IsConnected,
+                            b.LastModifiedAt,
+                            b.LastActivity,
+                            reservation == null ? null : new KeyLockerBoxReservationStatusMessage
+                            (
+                                reservation.Id,
+                                reservation.UserId,
+                                reservation.VehiclePlateNumber,
+                                reservation.Location,
+                                reservation.State,
+                                reservation.Services,
+                                reservation.Private,
+                                reservation.Mpv,
+                                reservation.StartDate,
+                                reservation.EndDate,
+                                reservation.Comments
+                            )
+                        );
+                    }).ToList()
+                ))
+                .ToList();
+
+            return lockers;
+        }
+
         /// <inheritdoc />
         public async Task GenerateBoxesToLocker(string namePrefix, int numberOfBoxes, string building, string floor, string? lockerId = null)
         {
@@ -113,6 +169,13 @@ namespace CarWash.ClassLibrary.Services
             await UpdateBoxStateAsync(boxId, KeyLockerBoxState.Empty, userId);
         }
 
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+        public record KeyLockerStatusMessage(string LockerId, string Building, string Floor, List<KeyLockerBoxStatusMessage> Boxes);
+        public record KeyLockerBoxStatusMessage(string BoxId, int BoxSerial, string Name, KeyLockerBoxState State, bool IsDoorClosed, bool IsConnected, DateTime LastModifiedAt, DateTime LastActivity, KeyLockerBoxReservationStatusMessage? Reservation);
+        public record KeyLockerBoxReservationStatusMessage(string Id, string? UserId, string VehiclePlateNumber, string? Location, State State, List<int>? Services, bool Private, bool Mpv, DateTime StartDate, DateTime? EndDate, List<Comment>? Comments);
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
         private async Task OpenBoxAsync(string lockerId, int boxSerial, string? userId = null, Func<string, Task>? onBoxClosedCallback = null)
         {
             KeyLockerBox? box = null;
@@ -131,23 +194,44 @@ namespace CarWash.ClassLibrary.Services
             };
             methodInvocation.SetPayloadJson("1");
 
-            var response = await iotHubClient.InvokeDeviceMethodAsync(lockerId, methodInvocation);
-
-            if (response.Status == 200)
+            try
             {
-                await UpdateBoxStateAsync(lockerId, boxSerial, KeyLockerBoxState.Used, userId);
+                var response = await iotHubClient.InvokeDeviceMethodAsync(lockerId, methodInvocation);
 
-                telemetryClient.TrackEvent("KeyLockerBoxOpened", new Dictionary<string, string> {
+                if (response.Status == 200)
+                {
+                    await UpdateBoxStateAsync(lockerId, boxSerial, KeyLockerBoxState.Used, userId);
+
+                    telemetryClient.TrackEvent("KeyLockerBoxOpened", new Dictionary<string, string> {
+                        { "LockerId", lockerId },
+                        { "BoxSerial", boxSerial.ToString() },
+                        { "UserId", userId ?? "" },
+                    });
+
+                    if (box != null) _ = ListenForBoxClosureAsync(box, userId, onBoxClosedCallback);
+                }
+                else
+                {
+                    var ex = new InvalidOperationException($"Failed to open box {boxSerial} in locker {lockerId}.");
+                    telemetryClient.TrackException(ex, new Dictionary<string, string> {
+                        { "Status", response.Status.ToString() },
+                        { "LockerId", lockerId },
+                        { "BoxSerial", boxSerial.ToString() },
+                        { "UserId", userId ?? "" },
+                    });
+
+                    throw ex;
+                }
+            }
+            catch (Microsoft.Azure.Devices.Common.Exceptions.IotHubException ex)
+            {
+                telemetryClient.TrackException(ex, new Dictionary<string, string> {
                     { "LockerId", lockerId },
                     { "BoxSerial", boxSerial.ToString() },
                     { "UserId", userId ?? "" },
                 });
 
-                if (box != null) _ = ListenForBoxClosureAsync(box, userId, onBoxClosedCallback);
-            }
-            else
-            {
-                throw new InvalidOperationException($"Failed to open box {boxSerial}. Status: {response.Status}");
+                throw new InvalidOperationException($"Failed to open box {boxSerial} in locker {lockerId}.", ex);
             }
         }
 
