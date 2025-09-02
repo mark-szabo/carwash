@@ -182,7 +182,7 @@ function KeyLockerAdmin({ user, openSnackbar, closedKeyLockerBoxIds }) {
 }
 
 KeyLockerAdmin.propTypes = {
-    user: PropTypes.object.isRequired,
+    user: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
     openSnackbar: PropTypes.func.isRequired,
     closedKeyLockerBoxIds: PropTypes.arrayOf(PropTypes.string).isRequired,
 };

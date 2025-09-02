@@ -1,17 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Azure.Messaging.EventHubs.Consumer;
+﻿using Azure.Messaging.EventHubs.Consumer;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 using Microsoft.ApplicationInsights;
 using Microsoft.Azure.Devices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.Graph.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace CarWash.ClassLibrary.Services
 {
@@ -211,13 +212,15 @@ namespace CarWash.ClassLibrary.Services
                 }
                 else
                 {
-                    telemetryClient.TrackException(new InvalidOperationException($"Failed to open box {boxSerial} in locker {lockerId}. Status: {response.Status}."), new Dictionary<string, string> {
+                    var ex = new InvalidOperationException($"Failed to open box {boxSerial} in locker {lockerId}.");
+                    telemetryClient.TrackException(ex, new Dictionary<string, string> {
+                        { "Status", response.Status.ToString() },
                         { "LockerId", lockerId },
                         { "BoxSerial", boxSerial.ToString() },
                         { "UserId", userId ?? "" },
                     });
 
-                    throw new InvalidOperationException($"Failed to open box {boxSerial} in locker {lockerId}.");
+                    throw ex;
                 }
             }
             catch (Microsoft.Azure.Devices.Common.Exceptions.IotHubException ex)
