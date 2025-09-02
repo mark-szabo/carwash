@@ -3,6 +3,9 @@ on:
     push:
         branches:
             - main
+permissions:
+    id-token: write
+    contents: read
 env:
     AZURE_WEBAPP_NAME: mimosonk
     AZURE_WEBAPP_PACKAGE_PATH: CarWash.PWA\publish
