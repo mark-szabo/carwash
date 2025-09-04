@@ -9,15 +9,16 @@ permissions:
 env:
     AZURE_WEBAPP_NAME: mimosonk
     AZURE_WEBAPP_PACKAGE_PATH: CarWash.PWA\publish
+    AZURE_FUNCTIONAPP_PACKAGE_PATH: "./CarWash.Functions"
     AZURE_RESOURCE_GROUP: rg-carwash-mimosonk-prod
     AZURE_APPCONFIG_NAME: appcs-carwash-mimosonk-prod
     AZURE_APPCONFIG_ENDPOINT: https://appcs-carwash-mimosonk-prod.azconfig.io
     CLOUDFLARE_PURGE_URLS: '["https://mimosonk.hu/", "https://mimosonk.hu/sw.js", "https://mimosonk.hu/api/.well-known/configuration", "https://www.mimosonk.hu/", "https://www.mimosonk.hu/sw.js", "https://www.mimosonk.hu/api/.well-known/configuration"]'
     CONFIGURATION: Release
-    DOTNET_CORE_VERSION: 8.0.x
+    DOTNET_VERSION: 8.0.x
     WORKING_DIRECTORY: CarWash.PWA
 jobs:
-    build:
+    build-web:
         runs-on: windows-latest
         outputs:
             build_number: ${{ steps.build_number.outputs.VERSION }}
@@ -27,7 +28,7 @@ jobs:
             - name: Setup .NET SDK
               uses: actions/setup-dotnet@v3
               with:
-                  dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+                  dotnet-version: ${{ env.DOTNET_VERSION }}
             - name: Read version number from package.json
               id: build_number
               run: echo "VERSION=$(cat ${{ env.WORKING_DIRECTORY }}/ClientApp/package.json | jq '.version')" >> $env:GITHUB_OUTPUT
@@ -46,9 +47,9 @@ jobs:
               with:
                   name: webapp
                   path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-    deploy:
+    deploy-web:
         runs-on: windows-latest
-        needs: build
+        needs: build-web
         steps:
             - name: Download artifact from build job
               uses: actions/download-artifact@v4
@@ -83,3 +84,26 @@ jobs:
                   PURGE_URLS: ${{ env.CLOUDFLARE_PURGE_URLS }}
             - name: Azure service principal logout
               run: az logout
+    build-and-deploy-functions:
+        runs-on: windows-latest
+        steps:
+            - name: "Checkout GitHub Action"
+              uses: actions/checkout@v4
+            - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
+              uses: actions/setup-dotnet@v1
+              with:
+                  dotnet-version: ${{ env.DOTNET_VERSION }}
+            - name: "Resolve Project Dependencies Using Dotnet"
+              shell: pwsh
+              run: |
+                  pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+                  dotnet build --configuration Release --output ./output
+                  popd
+            - name: "Run Azure Functions Action"
+              uses: Azure/functions-action@v1
+              id: fa
+              with:
+                  app-name: "func-carwash-mimosonk-prod"
+                  slot-name: "Production"
+                  package: "${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output"
+                  publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_9E8EB567DBA94EEFBA63CFD8C9B84482 }}
