@@ -5,8 +5,9 @@ on:
             - main
 env:
     AZURE_WEBAPP_PACKAGE_PATH: CarWash.PWA\publish
+    AZURE_FUNCTIONAPP_PACKAGE_PATH: "CarWash.Functions"
     CONFIGURATION: Release
-    DOTNET_CORE_VERSION: 8.0.x
+    DOTNET_VERSION: 8.0.x
     WORKING_DIRECTORY_PWA: CarWash.PWA
     WORKING_DIRECTORY_FUNCTIONS: CarWash.Functions
     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -16,37 +17,37 @@ jobs:
         steps:
             - uses: actions/checkout@v4
               with:
-                fetch-depth: 0
+                  fetch-depth: 0
             - name: Setup .NET SDK
               uses: actions/setup-dotnet@v3
               with:
-                  dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+                  dotnet-version: ${{ env.DOTNET_VERSION }}
             - name: .NET Tool Restore
               run: dotnet tool restore
             - name: Set up JDK 17
               uses: actions/setup-java@v4
               with:
-                java-version: 17
-                distribution: 'zulu'            
+                  java-version: 17
+                  distribution: "zulu"
             - name: Cache SonarQube Cloud packages
               uses: actions/cache@v4
               with:
-                path: ~\sonar\cache
-                key: ${{ runner.os }}-sonar
-                restore-keys: ${{ runner.os }}-sonar
+                  path: ~\sonar\cache
+                  key: ${{ runner.os }}-sonar
+                  restore-keys: ${{ runner.os }}-sonar
             - name: Cache SonarQube Cloud scanner
               id: cache-sonar-scanner
               uses: actions/cache@v4
               with:
-                path: .\.sonar\scanner
-                key: ${{ runner.os }}-sonar-scanner
-                restore-keys: ${{ runner.os }}-sonar-scanner
+                  path: .\.sonar\scanner
+                  key: ${{ runner.os }}-sonar-scanner
+                  restore-keys: ${{ runner.os }}-sonar-scanner
             - name: Install SonarQube Cloud scanner
               if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
               shell: powershell
               run: |
-                New-Item -Path .\.sonar\scanner -ItemType Directory
-                dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
+                  New-Item -Path .\.sonar\scanner -ItemType Directory
+                  dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
             - name: Restore PWA
               run: dotnet restore "${{ env.WORKING_DIRECTORY_PWA }}"
             - name: Restore Functions
@@ -54,12 +55,10 @@ jobs:
             - name: Build and analyze
               shell: powershell
               run: |
-                .\.sonar\scanner\dotnet-sonarscanner begin /k:"mark-szabo_carwash" /o:"mark-szabo-github" /d:sonar.token="${{ env.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
-                dotnet build "${{ env.WORKING_DIRECTORY_PWA }}" --configuration ${{ env.CONFIGURATION }} --no-restore
-                dotnet build "${{ env.WORKING_DIRECTORY_FUNCTIONS }}" --configuration ${{ env.CONFIGURATION }} --no-restore
-                dotnet dotnet-coverage collect "dotnet test CarWash.PWA.Tests" -f xml -o "coverage.xml"
-                .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ env.SONAR_TOKEN }}"
-            - name: Test PWA
-              run: dotnet test "CarWash.PWA.Tests" --collect:"XPlat Code Coverage"
+                  .\.sonar\scanner\dotnet-sonarscanner begin /k:"mark-szabo_carwash" /o:"mark-szabo-github" /d:sonar.token="${{ env.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
+                  dotnet build "${{ env.WORKING_DIRECTORY_PWA }}" --configuration ${{ env.CONFIGURATION }} --no-restore
+                  dotnet build "${{ env.WORKING_DIRECTORY_FUNCTIONS }}" --configuration ${{ env.CONFIGURATION }} --no-restore
+                  dotnet dotnet-coverage collect "dotnet test CarWash.PWA.Tests" -f xml -o "coverage.xml"
+                  .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ env.SONAR_TOKEN }}"
             - name: Publish
               run: dotnet publish "${{ env.WORKING_DIRECTORY_PWA }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
