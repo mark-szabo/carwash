@@ -139,9 +139,9 @@ function KeyLockerAdmin({ user, openSnackbar, closedKeyLockerBoxIds }) {
                         <br />
                         Door Closed: {selectedBox?.isDoorClosed ? 'Yes' : 'No'}
                         <br />
-                        Last Modified: {moment(selectedBox?.lastModifiedAt).fromNow()}
+                        Last Modified: {moment.utc(selectedBox?.lastModifiedAt).local().fromNow()}
                         <br />
-                        Last Activity: {moment(selectedBox?.lastActivity).fromNow()}
+                        Last Activity: {moment.utc(selectedBox?.lastActivity).local().fromNow()}
                     </Typography>
                     {selectedBox?.reservation ? (
                         <Box sx={{ mt: 2 }}>
@@ -153,7 +153,7 @@ function KeyLockerAdmin({ user, openSnackbar, closedKeyLockerBoxIds }) {
                                 <br />
                                 Start:{' '}
                                 {selectedBox.reservation.startDate
-                                    ? moment(selectedBox.reservation.startDate).fromNow()
+                                    ? moment.utc(selectedBox.reservation.startDate).local().fromNow()
                                     : '-'}
                             </Typography>
                         </Box>
