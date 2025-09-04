@@ -1,10 +1,10 @@
 import './index.css';
-import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import Login from './Login';
 import { runWithAdal } from './Auth';
+import { AuthProvider } from './components/AuthProvider';
 
 // if (!window.location.host.startsWith('www') && !window.location.host.startsWith('localhost')) {
 //    window.location = `https://www.${window.location.host}${window.location.pathname}`;
@@ -25,8 +25,17 @@ async function main() {
         console.error(`NETWORK ERROR: ${e.message}`);
     }
 
-    // If not authenticated, show Login chooser
-    ReactDOM.render(<Login configuration={configuration} />, rootElement);
+    runWithAdal(configuration, () => {
+        ReactDOM.render(
+            <AuthProvider value={configuration}>
+                <Login configuration={configuration} />
+                <BrowserRouter basename={baseUrl}>
+                    <App configuration={configuration} />
+                </BrowserRouter>
+            </AuthProvider>,
+            rootElement
+        );
+    });
 }
 
 main();

@@ -1,10 +1,6 @@
-import React, { useEffect } from 'react';
-import { GoogleOAuthProvider, GoogleLogin, useGoogleOneTapLogin } from '@react-oauth/google';
+import React, { useEffect, useState } from 'react';
+import { GoogleOAuthProvider, GoogleLogin, useGoogleLogin } from '@react-oauth/google';
 import { runWithAdal } from './Auth';
-
-const GOOGLE_CLIENT_ID =
-    process.env.REACT_APP_GOOGLE_CLIENT_ID ||
-    '671648737845-v6mijdiaui34trt49mf4hsf34ins6obq.apps.googleusercontent.com';
 
 function handleMicrosoftLogin(configuration) {
     localStorage.setItem('authProvider', 'microsoft');
@@ -26,6 +22,18 @@ function handleGoogleLoginError() {
 }
 
 export default function Login({ configuration }) {
+    const [codeResponse, setCodeResponse] = useState('');
+
+    const googleLogin = useGoogleLogin({
+        flow: 'auth-code',
+        ux_mode: 'redirect',
+        redirect_uri: window.location.origin + '/api/auth/google-login',
+        onSuccess: async codeResponse => {
+            setCodeResponse(codeResponse);
+        },
+        onError: errorResponse => console.log(errorResponse),
+    });
+
     useEffect(() => {
         // If user already chose a provider, auto-redirect
         const provider = localStorage.getItem('authProvider');
@@ -37,24 +45,18 @@ export default function Login({ configuration }) {
     }, [configuration]);
 
     return (
-        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '10vh' }}>
-                <h2>Sign in to CarWash</h2>
-                <button
-                    onClick={() => handleMicrosoftLogin(configuration)}
-                    style={{ margin: '1em', padding: '1em 2em', fontSize: '1.1em' }}
-                >
-                    Sign in with Microsoft Entra ID
-                </button>
-                <GoogleLogin
-                    onSuccess={handleGoogleLoginSuccess}
-                    onError={handleGoogleLoginError}
-                    useOneTap
-                    width="300px"
-                    shape="pill"
-                    text="Sign in with Google Workspace"
-                />
-            </div>
-        </GoogleOAuthProvider>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '10vh' }}>
+            <h2>Sign in to CarWash</h2>
+            <button
+                onClick={() => handleMicrosoftLogin(configuration)}
+                style={{ margin: '1em', padding: '1em 2em', fontSize: '1.1em' }}
+            >
+                Sign in with Microsoft Entra ID
+            </button>
+            <button onClick={() => googleLogin()} style={{ margin: '1em', padding: '1em 2em', fontSize: '1.1em' }}>
+                Sign in with Google
+            </button>
+            <p>{JSON.stringify(codeResponse)}</p>
+        </div>
     );
 }

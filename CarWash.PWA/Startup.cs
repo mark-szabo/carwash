@@ -118,30 +118,238 @@ namespace CarWash.PWA
                 {
                     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
                 })
-                .AddGoogle(options =>
+                .AddJwtBearer(options =>
                 {
-                    options.ClientId = configuration["Authentication:Google:ClientId"];
-                    options.ClientSecret = configuration["Authentication:Google:ClientSecret"];
-                    options.CallbackPath = "/signin-google";
-                    options.Events = new Microsoft.AspNetCore.Authentication.OAuth.OAuthEvents
+                    options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        OnCreatingTicket = context =>
-                        {
-                            context.Identity.AddClaim(new Claim("AuthenticationType", "Google"));
-                            return Task.CompletedTask;
-                        },
-                        OnTicketReceived = context =>
-                        {
-                            return Task.CompletedTask;
-                        },
-                        OnRemoteFailure = context =>
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        SignatureValidator = (token, parameters) => new Microsoft.IdentityModel.JsonWebTokens.JsonWebToken(token),
+                    };
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnTokenValidated = async context =>
                         {
                             var telemetryClient = context.HttpContext.RequestServices.GetService<TelemetryClient>();
-                            telemetryClient?.TrackException(context.Failure);
+
+                            // Check if request is coming from an authorized service application.
+                            var serviceAppId = context.Principal?.FindFirstValue("appid");
+                            if (serviceAppId != null && serviceAppId != configuration["AzureAd:ClientId"])
+                            {
+                                if (configuration["AzureAd:AuthorizedApplications"]?.Contains(serviceAppId) == true)
+                                {
+                                    context.Principal?.AddIdentity(new ClaimsIdentity([new("appId", serviceAppId)]));
+
+                                    return;
+                                }
+
+                                telemetryClient?.TrackEvent("UnauthorizedServiceApp", new Dictionary<string, string?>
+                                {
+                                    ["AppId"] = serviceAppId,
+                                    ["TenantId"] = context.Principal?.FindFirstValue(ClaimConstants.Tid) ?? context.Principal?.FindFirstValue(ClaimConstants.TenantId),
+                                    ["UserId"] = context.Principal?.FindFirstValue(ClaimConstants.Oid) ?? context.Principal?.FindFirstValue(ClaimConstants.ObjectId),
+                                });
+                                context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                                context.Response.ContentType = "application/json";
+                                context.Response.Headers.Append("WWW-Authenticate", "Bearer error=\"invalid_token\", error_description=\"The access token is not authorized\"");
+
+                                return;
+                            }
+
+                            // Get EF context
+                            var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
+
+                            // Determine if this is a Google or Microsoft token
+                            var isGoogle = context.Principal.Identity?.AuthenticationType == "Google" || context.Principal.HasClaim(c => c.Issuer.Contains("accounts.google.com"));
+                            string oid = null;
+                            string email = null;
+                            string firstName = null;
+                            string lastName = null;
+                            Company company = null;
+                            string entraTenantId = null;
+
+                            if (isGoogle)
+                            {
+                                // For Google, use 'sub' as Oid, and get claims
+                                oid = context.Principal.FindFirstValue("sub");
+                                email = context.Principal.FindFirstValue(ClaimTypes.Email)?.ToLower();
+                                firstName = context.Principal.FindFirstValue(ClaimTypes.GivenName) ?? "User";
+                                lastName = context.Principal.FindFirstValue(ClaimTypes.Surname);
+                            }
+                            else
+                            {
+                                // Entra ID authentication
+                                entraTenantId = context.Principal?.FindFirstValue(ClaimConstants.Tid) ??
+                                    context.Principal?.FindFirstValue(ClaimConstants.TenantId) ??
+                                    throw new SecurityTokenInvalidIssuerException("Tenant ('tid' or 'tenantid') cannot be found in auth token.");
+
+                                oid = context.Principal.FindFirstValue(ClaimConstants.Oid) ??
+                                    context.Principal.FindFirstValue(ClaimConstants.ObjectId);
+
+                                company = (await dbContext.Company.SingleOrDefaultAsync(t => t.TenantId == entraTenantId)) ??
+                                    throw new SecurityTokenInvalidIssuerException("Tenant ('tenantid') cannot be found in auth token.");
+                                email = context.Principal.FindFirstValue(ClaimTypes.Upn)?.ToLower();
+                                if (email == null && company.Name == Company.Carwash) email = context.Principal.FindFirstValue(ClaimTypes.Email)?.ToLower() ??
+                                    context.Principal.FindFirstValue(ClaimTypes.Name)?.ToLower().Replace("live.com#", "");
+                                if (email == null) throw new Exception("Email ('upn' or 'email') cannot be found in auth token.");
+                                firstName = context.Principal.FindFirstValue(ClaimTypes.GivenName) ?? "User";
+                                lastName = context.Principal.FindFirstValue(ClaimTypes.Surname);
+                            }
+
+                            var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Oid == oid);
+
+                            if (user == null)
+                            {
+                                user = await dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
+                                if (user != null)
+                                {
+                                    user.Oid = oid;
+                                    dbContext.Update(user);
+                                    await dbContext.SaveChangesAsync();
+                                }
+                            }
+
+                            if (user == null)
+                            {
+                                user = new User
+                                {
+                                    FirstName = firstName,
+                                    LastName = lastName,
+                                    Email = email,
+                                    Company = company.Name,
+                                    IsCarwashAdmin = company.Name == Company.Carwash
+                                };
+
+                                await dbContext.Users.AddAsync(user);
+
+                                try
+                                {
+                                    await dbContext.SaveChangesAsync();
+                                }
+                                catch (Exception ex) when (ex is DbUpdateException || ex is SqlException)
+                                {
+                                    user = dbContext.Users.SingleOrDefault(u => u.Email == email);
+
+                                    if (user != null)
+                                    {
+                                        telemetryClient?.TrackException(ex, new Dictionary<string, string?>
+                                        {
+                                            ["UserId"] = user.Id,
+                                            ["Email"] = user.Email,
+                                            ["Message"] = "User already exists. Most likely the user was just created and the exception was thrown by the concurrently firing requests at the first load.",
+                                        });
+
+                                        // Remove above added user from the EF Change Tracker.
+                                        // It would re-throw the exception as it would try to insert it again into the db at the next SaveChanges()
+                                        dbContext.ChangeTracker.Entries()
+                                            .Where(e => e.Entity != null && e.State == EntityState.Added)
+                                            .ToList()
+                                            .ForEach(e => e.State = EntityState.Detached);
+                                    }
+                                    else throw;
+                                }
+                            }
+
+                            if (company.Color == null || user.PhoneNumber == null)
+                            {
+                                try
+                                {
+                                    // Graph API
+                                    var tokenAcquisition = context.HttpContext.RequestServices.GetRequiredService<ITokenAcquisition>();
+
+                                    var graphClient = new GraphServiceClient(
+                                        new BaseBearerTokenAuthenticationProvider(
+                                            new TokenAcquisitionTokenProvider(
+                                                tokenAcquisition,
+                                                ["User.Read"],
+                                                context.Principal)));
+
+                                    if (user.PhoneNumber == null)
+                                    {
+                                        // Get user information from Graph
+                                        var graphUser = await graphClient.Me.GetAsync((requestConfiguration) =>
+                                        {
+                                            requestConfiguration.QueryParameters.Select = ["mobilePhone", "businessPhones"];
+                                        });
+                                        var phoneNumber = graphUser?.MobilePhone ?? (graphUser?.BusinessPhones?.Count > 0 ? graphUser.BusinessPhones[0] : null);
+                                        if (phoneNumber != null)
+                                        {
+                                            user.PhoneNumber = phoneNumber;
+                                            dbContext.Update(user);
+                                        }
+                                    }
+
+                                    if (company.Color == null)
+                                    {
+                                        // Get company information from Graph
+                                        var branding = await graphClient.Organization[entraTenantId]
+                                        .Branding
+                                        .GetAsync((requestConfiguration) =>
+                                        {
+                                            requestConfiguration.Headers.Add("Accept-Language", "0");
+                                            requestConfiguration.QueryParameters.Select = ["backgroundColor", "bannerLogoRelativeUrl", "CdnList"];
+                                        });
+                                        if (branding?.BackgroundColor != null)
+                                        {
+                                            company.Color = branding?.BackgroundColor;
+                                            company.UpdatedOn = DateTime.UtcNow;
+                                            dbContext.Update(company);
+                                        }
+                                        if (branding?.BannerLogoRelativeUrl != null)
+                                        {
+                                            var companyLogo = $"https://{branding.CdnList?[0]}/{branding.BannerLogoRelativeUrl}";
+
+                                            var blobStorageService = context.HttpContext.RequestServices.GetRequiredService<IBlobStorageService>();
+                                            await blobStorageService.UploadCompanyLogoFromUrlAsync(companyLogo, company.Name);
+                                        }
+                                    }
+
+                                    await dbContext.SaveChangesAsync();
+                                }
+                                catch (Exception ex)
+                                {
+                                    telemetryClient?.TrackException(ex, new Dictionary<string, string?>
+                                    {
+                                        ["UserId"] = user.Id,
+                                        ["Email"] = user.Email,
+                                        ["Company"] = company.Name,
+                                        ["Message"] = "Error getting user or company information from Graph.",
+                                    });
+                                }
+                            }
+
+                            // Add claims directly to the existing identity
+                            if (context.Principal.Identity is ClaimsIdentity identity)
+                            {
+                                identity.AddClaim(new Claim("userid", user.Id));
+                                identity.AddClaim(new Claim("admin", user.IsAdmin.ToString()));
+                                identity.AddClaim(new Claim("carwashadmin", user.IsCarwashAdmin.ToString()));
+                            }
+                            context.HttpContext.User = context.Principal;
+                            context.HttpContext.Items["CurrentUser"] = user;
+                        },
+                        OnAuthenticationFailed = context =>
+                        {
+                            var telemetryClient = context.HttpContext.RequestServices.GetService<TelemetryClient>();
+                            telemetryClient?.TrackException(context.Exception);
+
                             context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                             context.Response.ContentType = "application/json";
-                            context.HandleResponse();
-                            return context.Response.WriteAsync("Authentication failed, please try again.");
+                            return Task.CompletedTask;
+                        },
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+
+                            // If the request is for our hub...
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) &&
+                                (path.StartsWithSegments("/hub")))
+                            {
+                                // Read the token out of the query string
+                                context.Token = accessToken;
+                            }
+                            return Task.CompletedTask;
                         }
                     };
                 });/*
