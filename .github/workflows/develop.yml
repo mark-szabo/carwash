@@ -1,27 +1,22 @@
-name: Build and deploy to PROD
+name: Build and deploy to TEST
 on:
     push:
         branches:
-            - main
+            - develop
 permissions:
     id-token: write
     contents: read
 env:
-    AZURE_WEBAPP_NAME: mimosonk
+    AZURE_WEBAPP_NAME: as-carwash-dev
     AZURE_WEBAPP_PACKAGE_PATH: CarWash.PWA\publish
-    AZURE_FUNCTIONS_NAME: func-carwash-mimosonk-prod
     AZURE_FUNCTIONS_PACKAGE_PATH: CarWash.Functions\output
-    AZURE_RESOURCE_GROUP: rg-carwash-mimosonk-prod
-    AZURE_APPCONFIG_NAME: appcs-carwash-mimosonk-prod
-    AZURE_APPCONFIG_ENDPOINT: https://appcs-carwash-mimosonk-prod.azconfig.io
-    AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.mimosonk_E838 }}
-    AZURE_FUNCTIONS_PUBLISH_PROFILE: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_9E8EB567DBA94EEFBA63CFD8C9B84482 }}
+    AZURE_RESOURCE_GROUP: rg-carwash-dev
+    AZURE_APPCONFIG_NAME: appcs-carwash-dev
+    AZURE_APPCONFIG_ENDPOINT: https://appcs-carwash-dev.azconfig.io
+    AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_DEV_PUBLISH_PROFILE }}
     AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
     AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
     AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-    CLOUDFLARE_PURGE_URLS: '["https://mimosonk.hu/", "https://mimosonk.hu/sw.js", "https://mimosonk.hu/api/.well-known/configuration", "https://www.mimosonk.hu/", "https://www.mimosonk.hu/sw.js", "https://www.mimosonk.hu/api/.well-known/configuration"]'
-    CLOUDFLARE_ZONE: ${{ secrets.CLOUDFLARE_ZONE }}
-    CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
     CONFIGURATION: Release
     DOTNET_VERSION: 8.0.x
     WORKING_DIRECTORY_PWA: CarWash.PWA
@@ -117,12 +112,6 @@ jobs:
                   --key VERSION `
                   --value ${{ needs.build-web.outputs.build_number }} `
                   --yes
-            - name: Purge Cloudflare Cache
-              uses: jakejarvis/cloudflare-purge-action@v0.3.0
-              env:
-                  CLOUDFLARE_ZONE: ${{ env.CLOUDFLARE_ZONE }}
-                  CLOUDFLARE_TOKEN: ${{ env.CLOUDFLARE_TOKEN }}
-                  PURGE_URLS: ${{ env.CLOUDFLARE_PURGE_URLS }}
             - name: Azure service principal logout
               run: az logout
     build-and-deploy-functions:
@@ -168,11 +157,3 @@ jobs:
                   .\.sonar\scanner\dotnet-sonarscanner begin /k:"mark-szabo_carwash" /o:"mark-szabo-github" /d:sonar.token="${{ env.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
                   dotnet build "${{ env.WORKING_DIRECTORY_FUNCTIONS }}" --configuration ${{ env.CONFIGURATION }} --no-restore --output ${{ env.AZURE_FUNCTIONS_PACKAGE_PATH }}
                   .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ env.SONAR_TOKEN }}"
-            - name: "Run Azure Functions Action"
-              uses: Azure/functions-action@v1
-              id: fa
-              with:
-                  app-name: ${{ env.AZURE_FUNCTIONS_NAME }}
-                  slot-name: "Production"
-                  package: ${{ env.AZURE_FUNCTIONS_PACKAGE_PATH }}
-                  publish-profile: ${{ env.AZURE_FUNCTIONS_PUBLISH_PROFILE }}
