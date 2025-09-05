@@ -114,6 +114,7 @@ jobs:
                   az appconfig kv set `
                   --name ${{ env.AZURE_APPCONFIG_NAME }} `
                   --endpoint ${{ env.AZURE_APPCONFIG_ENDPOINT }} `
+                  --auth-mode login `
                   --key VERSION `
                   --value ${{ needs.build-web.outputs.build_number }} `
                   --yes

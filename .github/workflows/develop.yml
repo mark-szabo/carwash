@@ -109,12 +109,13 @@ jobs:
                   az appconfig kv set `
                   --name ${{ env.AZURE_APPCONFIG_NAME }} `
                   --endpoint ${{ env.AZURE_APPCONFIG_ENDPOINT }} `
+                  --auth-mode login `
                   --key VERSION `
                   --value ${{ needs.build-web.outputs.build_number }} `
                   --yes
             - name: Azure service principal logout
               run: az logout
-    build-and-deploy-functions:
+    build-functions:
         runs-on: windows-latest
         steps:
             - name: Checkout code
