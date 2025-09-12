@@ -144,7 +144,7 @@ namespace CarWash.PWA
                             {
                                 if (configuration["AzureAd:AuthorizedApplications"]?.Contains(serviceAppId) == true)
                                 {
-                                    context.Principal?.AddIdentity(new ClaimsIdentity([new("appId", serviceAppId)]));
+                                    context.Principal?.AddIdentity(new ClaimsIdentity(new[] { new Claim("appId", serviceAppId) }));
 
                                     return;
                                 }
