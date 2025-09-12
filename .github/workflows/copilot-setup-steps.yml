@@ -1,0 +1,60 @@
+name: "Copilot Setup Steps"
+
+# Automatically run the setup steps when they are changed to allow for easy validation, and
+# allow manual testing through the repository's "Actions" tab
+on:
+    workflow_dispatch:
+    push:
+        paths:
+            - .github/workflows/copilot-setup-steps.yml
+    pull_request:
+        paths:
+            - .github/workflows/copilot-setup-steps.yml
+
+env:
+    AZURE_WEBAPP_PACKAGE_PATH: CarWash.PWA\publish
+    AZURE_FUNCTIONAPP_PACKAGE_PATH: "CarWash.Functions"
+    CONFIGURATION: Release
+    DOTNET_VERSION: 8.0.x
+    WORKING_DIRECTORY_PWA: CarWash.PWA
+    WORKING_DIRECTORY_FUNCTIONS: CarWash.Functions
+
+jobs:
+    # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
+    copilot-setup-steps:
+        runs-on: windows-latest
+
+        # Copilot will be given its own token for its operations.
+        permissions:
+            contents: read
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v5
+              with:
+                  ref: develop
+                  fetch-depth: 0
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+
+            - name: Install PWA npm dependencies
+              run: npm ci
+              working-directory: ${{ env.WORKING_DIRECTORY_PWA }}/ClientApp
+
+            - name: Setup .NET SDK
+              uses: actions/setup-dotnet@v3
+              with:
+                  dotnet-version: ${{ env.DOTNET_VERSION }}
+
+            - name: .NET Tool Restore
+              run: dotnet tool restore
+
+            - name: Restore PWA
+              run: dotnet restore "${{ env.WORKING_DIRECTORY_PWA }}"
+
+            - name: Restore Functions
+              run: dotnet restore "${{ env.WORKING_DIRECTORY_FUNCTIONS }}"
