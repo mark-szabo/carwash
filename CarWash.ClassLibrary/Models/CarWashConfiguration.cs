@@ -287,6 +287,24 @@ namespace CarWash.ClassLibrary.Models
             /// Key: ConnectionStrings--IotEventHub
             /// </remarks>
             public string? IotEventHub { get; set; }
+
+            /// <summary>
+            /// Cloudflare API key for cache purging.
+            /// </summary>
+            /// <remarks>
+            /// Location: Azure Key Vault (DO NOT store secrets in Application Settings!)
+            /// Key: ConnectionStrings--CloudflareApiKey
+            /// </remarks>
+            public string CloudflareApiKey { get; set; }
+
+            /// <summary>
+            /// Cloudflare Zone ID for cache purging.
+            /// </summary>
+            /// <remarks>
+            /// Location: Azure Key Vault (DO NOT store secrets in Application Settings!)
+            /// Key: ConnectionStrings--CloudflareZoneId
+            /// </remarks>
+            public string CloudflareZoneId { get; set; }
         }
 
         /// <summary>

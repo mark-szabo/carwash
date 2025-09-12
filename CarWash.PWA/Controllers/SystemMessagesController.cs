@@ -20,7 +20,7 @@ namespace CarWash.PWA.Controllers
     [Produces("application/json")]
     [Route("api/systemmessages")]
     [ApiController]
-    public class SystemMessagesController(ApplicationDbContext context, IUserService userService) : ControllerBase
+    public class SystemMessagesController(ApplicationDbContext context, IUserService userService, ICloudflareService cloudflareService) : ControllerBase
     {
         private readonly User _user = userService.CurrentUser ?? throw new Exception("User is not authenticated.");
 
@@ -49,6 +49,9 @@ namespace CarWash.PWA.Controllers
             context.SystemMessage.Add(systemMessage);
             await context.SaveChangesAsync();
 
+            // Purge Cloudflare cache after system message creation
+            await cloudflareService.PurgeConfigurationCacheAsync();
+
             return CreatedAtAction(nameof(GetSystemMessages), new { id = systemMessage.Id }, systemMessage);
         }
 
@@ -73,6 +76,9 @@ namespace CarWash.PWA.Controllers
             try
             {
                 await context.SaveChangesAsync();
+                
+                // Purge Cloudflare cache after system message update
+                await cloudflareService.PurgeConfigurationCacheAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -107,6 +113,9 @@ namespace CarWash.PWA.Controllers
 
             context.SystemMessage.Remove(systemMessage);
             await context.SaveChangesAsync();
+
+            // Purge Cloudflare cache after system message deletion
+            await cloudflareService.PurgeConfigurationCacheAsync();
 
             return NoContent();
         }
