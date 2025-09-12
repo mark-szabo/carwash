@@ -40,7 +40,7 @@ namespace CarWash.ClassLibrary.Models
         ///   }
         /// ]
         /// </example>
-        public List<Slot> Slots { get; set; } = new List<Slot>();
+        public List<Slot> Slots { get; set; } = [];
 
         /// <summary>
         /// List of parking garages where cars are allowed to be left.
@@ -63,7 +63,7 @@ namespace CarWash.ClassLibrary.Models
         ///   },
         /// ]
         /// </example>
-        public List<Garage> Garages { get; set; } = new List<Garage>();
+        public List<Garage> Garages { get; set; } = [];
 
         /// <summary>
         /// List of services provided by the CarWash.
@@ -96,7 +96,7 @@ namespace CarWash.ClassLibrary.Models
         ///   }
         /// ]
         /// </example>
-        public List<Service> Services { get; set; } = new List<Service>();
+        public List<Service> Services { get; set; } = [];
 
         /// <summary>
         /// CarWash app settings referring to reservations.
@@ -241,7 +241,7 @@ namespace CarWash.ClassLibrary.Models
             /// Location: Azure Key Vault (DO NOT store secrets in Application Settings!)
             /// Key: ConnectionStrings--ServiceBus
             /// </remarks>
-            public string ServiceBus { get; set; }
+            public string? ServiceBus { get; set; }
 
             /// <summary>
             /// Azure Service Bus connection string for Key Locker messages.
@@ -250,7 +250,7 @@ namespace CarWash.ClassLibrary.Models
             /// Location: Azure Key Vault (DO NOT store secrets in Application Settings!)
             /// Key: ConnectionStrings--KeyLockerServiceBus
             /// </remarks>
-            public string KeyLockerServiceBus { get; set; }
+            public string? KeyLockerServiceBus { get; set; }
 
             /// <summary>
             /// Azure SQL database connection string.
@@ -258,8 +258,9 @@ namespace CarWash.ClassLibrary.Models
             /// <remarks>
             /// Location: Azure Key Vault (DO NOT store secrets in Application Settings!)
             /// Key: ConnectionStrings--SqlDatabase
+            /// Default value: ""
             /// </remarks>
-            public string SqlDatabase { get; set; }
+            public string SqlDatabase { get; set; } = "";
 
             /// <summary>
             /// Azure Storage Account connection string.
@@ -267,8 +268,9 @@ namespace CarWash.ClassLibrary.Models
             /// <remarks>
             /// Location: Azure Key Vault (DO NOT store secrets in Application Settings!)
             /// Key: ConnectionStrings--StorageAccount
+            /// Default value: ""
             /// </remarks>
-            public string StorageAccount { get; set; }
+            public string StorageAccount { get; set; } = "";
 
             /// <summary>
             /// Azure IoT Hub connection string.
@@ -301,7 +303,7 @@ namespace CarWash.ClassLibrary.Models
             /// Location: Application Settings
             /// Key: ServiceBusQueues:BotDropoffReminderQueue
             /// </remarks>
-            public string BotDropoffReminderQueue { get; set; }
+            public string? BotDropoffReminderQueue { get; set; }
 
             /// <summary>
             /// Service Bus queue name for the chat bot's wash-started messages.
@@ -310,7 +312,7 @@ namespace CarWash.ClassLibrary.Models
             /// Location: Application Settings
             /// Key: ServiceBusQueues:BotWashStartedQueue
             /// </remarks>
-            public string BotWashStartedQueue { get; set; }
+            public string? BotWashStartedQueue { get; set; }
 
             /// <summary>
             /// Service Bus queue name for the chat bot's wash-completed messages.
@@ -319,7 +321,7 @@ namespace CarWash.ClassLibrary.Models
             /// Location: Application Settings
             /// Key: ServiceBusQueues:BotWashCompletedQueue
             /// </remarks>
-            public string BotWashCompletedQueue { get; set; }
+            public string? BotWashCompletedQueue { get; set; }
 
             /// <summary>
             /// Service Bus queue name for the chat bot's carwash-comment-left messages.
@@ -328,7 +330,7 @@ namespace CarWash.ClassLibrary.Models
             /// Location: Application Settings
             /// Key: ServiceBusQueues:BotCarWashCommentLeftQueue
             /// </remarks>
-            public string BotCarWashCommentLeftQueue { get; set; }
+            public string? BotCarWashCommentLeftQueue { get; set; }
 
             /// <summary>
             /// Service Bus queue name for the chat bot's vehicle-arrived notifications.
@@ -337,7 +339,7 @@ namespace CarWash.ClassLibrary.Models
             /// Location: Application Settings
             /// Key: ServiceBusQueues:BotVehicleArrivedNotificationQueue
             /// </remarks>
-            public string BotVehicleArrivedNotificationQueue { get; set; }
+            public string? BotVehicleArrivedNotificationQueue { get; set; }
         }
 
         /// <summary>
@@ -363,8 +365,9 @@ namespace CarWash.ClassLibrary.Models
             /// <remarks>
             /// Location: Application Settings
             /// Key: AzureAd:ClientId
+            /// Default value: ""
             /// </remarks>
-            public string ClientId { get; set; }
+            public string ClientId { get; set; } = "";
 
             /// <summary>
             /// Azure Active Directory Client Secret.
@@ -372,13 +375,14 @@ namespace CarWash.ClassLibrary.Models
             /// <remarks>
             /// Location: Azure Key Vault (DO NOT store secrets in Application Settings!)
             /// Key: AzureAd--ClientSecret
+            /// Default value: ""
             /// </remarks>
-            public string ClientSecret { get; set; }
+            public string ClientSecret { get; set; } = "";
 
             /// <summary>
             /// List of ids of authorized service application which can use the CarWash app programmatically.
             /// </summary>
-            public List<string> AuthorizedApplications { get; set; } = new List<string>();
+            public List<string> AuthorizedApplications { get; set; } = [];
         }
 
         /// <summary>
@@ -393,7 +397,7 @@ namespace CarWash.ClassLibrary.Models
             /// Location: Application Settings
             /// Key: Vapid:Subject
             /// </remarks>
-            public string Subject { get; set; }
+            public string? Subject { get; set; }
 
             /// <summary>
             /// VAPID public key.
@@ -404,7 +408,7 @@ namespace CarWash.ClassLibrary.Models
             /// Location: Application Settings
             /// Key: Vapid:PublicKey
             /// </remarks>
-            public string PublicKey { get; set; }
+            public string? PublicKey { get; set; }
 
             /// <summary>
             /// VAPID private key.
@@ -413,7 +417,7 @@ namespace CarWash.ClassLibrary.Models
             /// Location: Azure Key Vault (DO NOT store secrets in Application Settings!)
             /// Key: Vapid--PrivateKey
             /// </remarks>
-            public string PrivateKey { get; set; }
+            public string? PrivateKey { get; set; }
         }
 
         /// <summary>
@@ -428,7 +432,7 @@ namespace CarWash.ClassLibrary.Models
             /// Location: Application Settings
             /// Key: CalendarService:LogicAppUrl
             /// </remarks>
-            public string LogicAppUrl { get; set; }
+            public string? LogicAppUrl { get; set; }
         }
 
         /// <summary>

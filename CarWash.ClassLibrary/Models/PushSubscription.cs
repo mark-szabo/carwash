@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CarWash.ClassLibrary.Models
@@ -33,19 +34,19 @@ namespace CarWash.ClassLibrary.Models
         /// <inheritdoc />
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string Id { get; set; }
+        public string Id { get; set; } = Guid.NewGuid().ToString();
 
         /// <summary>
         /// Gets or sets the user id associated with the push subscription.
         /// </summary>
         [Required]
         [ForeignKey("User")]
-        public string UserId { get; set; }
+        public required string UserId { get; set; }
 
         /// <summary>
         /// Gets or sets a virtual user object populated from the database by <see cref="UserId"/>.
         /// </summary>
-        public virtual User User { get; set; }
+        public virtual User? User { get; set; }
 
         /// <summary>
         /// Gets or sets the device id for later use.
@@ -56,7 +57,7 @@ namespace CarWash.ClassLibrary.Models
         /// Gets or sets the endpoint associated with the push subscription.
         /// </summary>
         [Required]
-        public string Endpoint { get; set; }
+        public required string Endpoint { get; set; }
 
         /// <summary>
         /// Gets or sets the subscription expiration time associated with the push subscription, if there is one, or null otherwise.
@@ -71,14 +72,14 @@ namespace CarWash.ClassLibrary.Models
         /// </summary>
         [Required]
         [Key]
-        public string P256Dh { get; set; }
+        public required string P256Dh { get; set; }
 
         /// <summary>
         /// Gets or sets an authentication secret, as described in
         /// <see href="https://tools.ietf.org/html/draft-ietf-webpush-encryption-08">Message Encryption for Web Push</see>.
         /// </summary>
         [Required]
-        public string Auth { get; set; }
+        public required string Auth { get; set; }
 
         /// <summary>
         /// Converts the push subscription to the format of the WebPush library.

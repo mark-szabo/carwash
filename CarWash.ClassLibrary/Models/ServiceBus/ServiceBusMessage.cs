@@ -8,6 +8,6 @@
         /// <summary>
         /// Gets or sets the user id whom the message should be sent.
         /// </summary>
-        public string UserId { get; set; }
+        public required string UserId { get; set; }
     }
 }

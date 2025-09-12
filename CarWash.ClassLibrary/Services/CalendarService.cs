@@ -11,12 +11,12 @@ using Microsoft.Extensions.Options;
 namespace CarWash.ClassLibrary.Services
 {
     /// <inheritdoc />
-    public class CalendarService(IOptionsMonitor<CarWashConfiguration> configuration, TelemetryClient telemetryClient, HttpClient httpClient = null) : ICalendarService
+    public class CalendarService(IOptionsMonitor<CarWashConfiguration> configuration, TelemetryClient telemetryClient, HttpClient? httpClient = null) : ICalendarService
     {
         private readonly HttpClient _client = httpClient ?? new HttpClient();
 
         /// <inheritdoc />
-        public async Task<string> CreateEventAsync(Reservation reservation)
+        public async Task<string?> CreateEventAsync(Reservation reservation)
         {
             var calendarEvent = GetCalendarEventFromReservation(reservation);
 
@@ -33,7 +33,7 @@ namespace CarWash.ClassLibrary.Services
         }
 
         /// <inheritdoc />
-        public async Task<string> UpdateEventAsync(Reservation reservation)
+        public async Task<string?> UpdateEventAsync(Reservation reservation)
         {
             if (reservation.OutlookEventId == null) return await CreateEventAsync(reservation);
 
@@ -109,28 +109,28 @@ namespace CarWash.ClassLibrary.Services
     internal class Event
     {
         [JsonPropertyName("id")]
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
         [JsonPropertyName("subject")]
-        public string Subject { get; set; }
+        public string? Subject { get; set; }
 
         [JsonPropertyName("isCancelled")]
         public bool IsCancelled { get; set; }
 
         [JsonPropertyName("to")]
-        public string To { get; set; }
+        public string? To { get; set; }
 
         [JsonPropertyName("startTime")]
-        public string StartTime { get; set; }
+        public string? StartTime { get; set; }
 
         [JsonPropertyName("endTime")]
-        public string EndTime { get; set; }
+        public string? EndTime { get; set; }
 
         [JsonPropertyName("location")]
-        public string Location { get; set; }
+        public string? Location { get; set; }
 
         [JsonPropertyName("body")]
-        public string Body { get; set; }
+        public string? Body { get; set; }
     }
 }
 
