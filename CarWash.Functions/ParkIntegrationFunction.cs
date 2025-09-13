@@ -89,13 +89,13 @@ namespace CarWash.Functions
 
                 var email = new Email
                 {
-                    To = reservation.User.Email,
+                    To = reservation.User.Email!,
                     Subject = "Welcome in the office! Don't forget to drop off your key!",
                     Body = $@"Welcome {reservation.User.FirstName}, 
 I just noticed that you've arrived! 👀 
-Don't forget to leave the key at the reception and <a href='https://www.mimosonk.hu/#dropoffkey'>confirm drop-off & vehicle location by clicking here</a>!
+Don't forget to <a href='https://www.mimosonk.hu/#dropoffkey'>drop-off your keys and confirm vehicle location by clicking here</a>!
 
-If don't want to get email reminders in the future, you can <a href='https://www.mimosonk.hu/settings'>disable it in the settings</a>."
+If you don't want to get email reminders in the future, you can <a href='https://www.mimosonk.hu/settings'>disable them in the settings</a>."
                 };
 
                 switch (reservation.User.NotificationChannel)
@@ -114,7 +114,7 @@ If don't want to get email reminders in the future, you can <a href='https://www
                             var notification = new Notification
                             {
                                 Title = "Welcome! 🙋‍",
-                                Body = "I just noticed that you've arrived! 👀 Don't forget to leave the key at the reception and confirm vehicle location!",
+                                Body = "I just noticed that you've arrived! 👀 Don't forget to drop-off your keys and confirm vehicle location!",
                                 Tag = NotificationTag.Reminder,
                                 RequireInteraction = true,
                                 Actions = new List<NotificationAction>

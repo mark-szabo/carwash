@@ -792,7 +792,10 @@ namespace CarWash.PWA.Controllers
 
             if (id == null) return BadRequest("Reservation id cannot be null.");
 
-            var reservation = await _context.Reservation.Include(r => r.User).SingleOrDefaultAsync(r => r.Id == id);
+            var reservation = await _context.Reservation
+                .Include(r => r.User)
+                .Include(r => r.KeyLockerBox)
+                .SingleOrDefaultAsync(r => r.Id == id);
 
             if (reservation == null) return NotFound();
 
@@ -824,7 +827,7 @@ namespace CarWash.PWA.Controllers
                     {
                         To = reservation.User.Email,
                         Subject = reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!",
-                        Body = $"You can find it here: {reservation.Location}",
+                        Body = $"You can find it here: {reservation.Location} (Locker: {reservation.KeyLockerBox.Name})",
                     };
                     await _emailService.Send(email, TimeSpan.FromMinutes(1));
                     break;
@@ -832,7 +835,7 @@ namespace CarWash.PWA.Controllers
                     var notification = new Notification
                     {
                         Title = reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!",
-                        Body = $"You can find it here: {reservation.Location}",
+                        Body = $"You can find it here: {reservation.Location} (Locker: {reservation.KeyLockerBox.Name})",
                         Tag = NotificationTag.Done
                     };
                     try
@@ -1102,7 +1105,7 @@ namespace CarWash.PWA.Controllers
                         var email = new Email
                         {
                             To = reservation.User.Email,
-                            Subject = "CarWash has left a comment on your reservation.",
+                            Subject = "CarWash has left a comment on your reservation. Please do not reply to this email, messages to service providers can only be sent within the app. Kindly log in to your account and communicate directly through the in-app messaging feature.",
                             Body = comment,
                         };
                         await _emailService.Send(email, TimeSpan.FromMinutes(1));

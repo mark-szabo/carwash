@@ -1,11 +1,11 @@
-﻿using Microsoft.ApplicationInsights;
-using CarWash.ClassLibrary.Models;
-using System;
+﻿using System;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using CarWash.ClassLibrary.Models;
+using Microsoft.ApplicationInsights;
 using Microsoft.Extensions.Options;
 
 namespace CarWash.ClassLibrary.Services
@@ -101,7 +101,7 @@ namespace CarWash.ClassLibrary.Services
                 EndTime = reservation.EndDate.ToString(),
                 Location = reservation.Location,
                 Body =
-                    $"Please don't forget to leave the key at the reception and <a href=\"{configuration.CurrentValue.ConnectionStrings.BaseUrl}\">confirm drop-off & vehicle location by clicking here</a>!"
+                    $"Please don't forget to <a href=\"{configuration.CurrentValue.ConnectionStrings.BaseUrl}/#dropoffkey\">drop-off your keys and confirm vehicle location by clicking here</a>!"
             };
         }
     }
