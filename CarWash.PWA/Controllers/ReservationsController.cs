@@ -827,7 +827,7 @@ namespace CarWash.PWA.Controllers
                     {
                         To = reservation.User.Email,
                         Subject = reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!",
-                        Body = $"You can find it here: {reservation.Location} (Locker: {reservation.KeyLockerBox.Name})",
+                        Body = $"You can find it here: {reservation.Location}" + (reservation.KeyLockerBox != null ? $" (Locker: {reservation.KeyLockerBox.Name})" : ""),
                     };
                     await _emailService.Send(email, TimeSpan.FromMinutes(1));
                     break;
@@ -835,7 +835,7 @@ namespace CarWash.PWA.Controllers
                     var notification = new Notification
                     {
                         Title = reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!",
-                        Body = $"You can find it here: {reservation.Location} (Locker: {reservation.KeyLockerBox.Name})",
+                        Body = $"You can find it here: {reservation.Location}" + (reservation.KeyLockerBox != null ? $" (Locker: {reservation.KeyLockerBox.Name})" : ""),
                         Tag = NotificationTag.Done
                     };
                     try
