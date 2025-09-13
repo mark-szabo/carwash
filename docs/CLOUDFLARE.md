@@ -13,7 +13,7 @@ The Cloudflare integration requires two environment variables to be configured i
 
 ### Obtaining Cloudflare Credentials
 
-1. **API Key**: 
+1. **API Key**:
    - Go to [Cloudflare Dashboard](https://dash.cloudflare.com/profile/api-tokens)
    - Create a new API token with `Zone:Cache Purge` permissions for your domain
 
@@ -28,11 +28,13 @@ The Cloudflare integration requires two environment variables to be configured i
 Cache is automatically purged when:
 
 #### Company Operations
+
 - Company is created (`POST /api/companies`)
 - Company daily limit is updated (`PUT /api/companies/{id}/limit`)
 - Company is deleted (`DELETE /api/companies/{id}`)
 
 #### System Message Operations
+
 - System message is created (`POST /api/systemmessages`)
 - System message is updated (`PUT /api/systemmessages/{id}`)
 - System message is deleted (`DELETE /api/systemmessages/{id}`)
@@ -40,6 +42,7 @@ Cache is automatically purged when:
 ### Purged URLs
 
 The following URLs are purged from Cloudflare cache:
+
 - `https://mimosonk.hu/api/.well-known/configuration`
 - `https://www.mimosonk.hu/api/.well-known/configuration`
 
@@ -61,6 +64,7 @@ The following URLs are purged from Cloudflare cache:
 ### Testing
 
 Comprehensive unit tests verify:
+
 - Cloudflare API calls are made with correct parameters
 - Cache purge is called after each CRUD operation
 - Proper error handling when credentials are missing
