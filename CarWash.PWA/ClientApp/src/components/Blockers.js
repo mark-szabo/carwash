@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import * as moment from 'moment';
 import { withStyles } from '@mui/styles';
@@ -13,10 +13,10 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
+import Paper from '@mui/material/Paper';
+import Alert from '@mui/material/Alert';
 import Spinner from './Spinner';
-import TrackedComponent from './TrackedComponent';
 import { format2Dates } from '../Helpers';
-import { Typography } from '@mui/material';
 
 const styles = theme => ({
     list: {
@@ -27,61 +27,55 @@ const styles = theme => ({
             width: 600,
         },
         backgroundColor: theme.palette.background.paper,
-        marginTop: 48,
     },
     primaryButtonContained: {
         marginTop: theme.spacing(1),
     },
     formControl: {
         marginTop: theme.spacing(2),
-        marginBottom: theme.spacing(2),
+        marginBottom: theme.spacing(3),
     },
     inputField: {
         minWidth: 220,
     },
+    paper: {
+        ...theme.mixins.gutters(),
+        paddingTop: theme.spacing(2),
+        paddingBottom: theme.spacing(1),
+        marginBottom: theme.spacing(3),
+        maxWidth: 600,
+    },
 });
 
-class Blockers extends TrackedComponent {
-    displayName = 'Blockers';
+function Blockers(props) {
+    const { classes, openSnackbar, user } = props;
 
-    state = {
-        loading: true,
-        blockers: [],
-        newBlockerStartDate: null,
-        newBlockerEndDate: null,
-        newBlockerComment: '',
-    };
+    const [loading, setLoading] = useState(true);
+    const [blockers, setBlockers] = useState([]);
+    const [newBlockerStartDate, setNewBlockerStartDate] = useState(null);
+    const [newBlockerEndDate, setNewBlockerEndDate] = useState(null);
+    const [newBlockerComment, setNewBlockerComment] = useState('');
 
-    componentDidMount() {
-        super.componentDidMount();
-
+    useEffect(() => {
         apiFetch('api/blockers').then(
             data => {
-                this.setState({
-                    blockers: data,
-                    loading: false,
-                });
+                setBlockers(data);
+                setLoading(false);
             },
             error => {
-                this.setState({ loading: false });
-                this.props.openSnackbar(error);
+                setLoading(false);
+                openSnackbar(error);
             }
         );
-    }
+    }, [openSnackbar]);
 
-    handleChange = name => event => {
-        this.setState({
-            [name]: event.target.value,
-        });
-    };
-
-    handleAddNewBlockerClick = () => {
-        this.setState({ loading: true });
+    const handleAddNewBlockerClick = () => {
+        setLoading(true);
 
         const payload = {
-            startDate: this.state.newBlockerStartDate,
-            endDate: this.state.newBlockerEndDate,
-            comment: this.state.newBlockerComment,
+            startDate: moment(newBlockerStartDate).utc().format(),
+            endDate: moment(newBlockerEndDate).utc().format(),
+            comment: newBlockerComment,
         };
 
         apiFetch('api/blockers', {
@@ -92,110 +86,121 @@ class Blockers extends TrackedComponent {
             },
         }).then(
             data => {
-                this.setState(state => {
-                    const blockers = [...state.blockers];
-                    blockers.unshift(data);
-
-                    return { blockers };
+                setBlockers(prev => {
+                    const copy = [...prev];
+                    copy.unshift(data);
+                    return copy;
                 });
 
-                this.props.openSnackbar('Blocker successfully saved.');
-                this.setState({ loading: false });
+                openSnackbar('Blocker successfully saved.');
+                setLoading(false);
+                // reset inputs (optional)
+                setNewBlockerComment('');
+                setNewBlockerStartDate(null);
+                setNewBlockerEndDate(null);
             },
             error => {
-                this.setState({ loading: false });
-                this.props.openSnackbar(error);
+                setLoading(false);
+                openSnackbar(error);
             }
         );
     };
 
-    handleDelete = blockerId => {
+    const handleDelete = blockerId => {
         apiFetch(`api/blockers/${blockerId}`, {
             method: 'DELETE',
         }).then(
             () => {
-                this.setState(state => {
-                    let blockers = [...state.blockers];
-                    blockers = blockers.filter(b => b.id !== blockerId);
-
-                    return { blockers };
-                });
-
-                this.props.openSnackbar('Blocker successfully deleted.');
-                this.setState({ loading: false });
+                setBlockers(prev => prev.filter(b => b.id !== blockerId));
+                openSnackbar('Blocker successfully deleted.');
+                setLoading(false);
             },
             error => {
-                this.props.openSnackbar(error);
+                openSnackbar(error);
             }
         );
     };
 
-    render() {
-        const { classes, openSnackbar, user } = this.props;
-        const { loading, blockers } = this.state;
-
-        if (loading) {
-            return <Spinner />;
-        }
-
-        return (
-            <React.Fragment>
-                {user.isCarwashAdmin && (
-                    <div>
-                        <div className={classes.formControl}>
-                            <TextField
-                                required
-                                id="newBlockerStartDate"
-                                label="Start date"
-                                type="datetime-local"
-                                InputLabelProps={{
-                                    shrink: true,
-                                }}
-                                onChange={this.handleChange('newBlockerStartDate')}
-                                className={classes.inputField}
-                            />
-                        </div>
-                        <div className={classes.formControl}>
-                            <TextField
-                                id="newBlockerEndDate"
-                                label="End date"
-                                type="datetime-local"
-                                InputLabelProps={{
-                                    shrink: true,
-                                }}
-                                onChange={this.handleChange('newBlockerEndDate')}
-                                className={classes.inputField}
-                            />
-                        </div>
-                        <div className={classes.formControl}>
-                            <TextField
-                                required
-                                id="newBlockerComment"
-                                label="Comment (for CarWash)"
-                                margin="normal"
-                                onChange={this.handleChange('newBlockerComment')}
-                                className={classes.inputField}
-                            />
-                        </div>
-                        <div className={classes.formControl}>
-                            <Button variant="contained" color="primary" className={classes.primaryButtonContained} onClick={this.handleAddNewBlockerClick}>
-                                Save
-                            </Button>
-                        </div>
-                    </div>
-                )}
-                {blockers.length > 0 ? (
-                    <List className={classes.list}>
-                        {blockers.map(blocker => (
-                            <BlockerListItem key={blocker.id} blocker={blocker} user={user} handleDelete={this.handleDelete} openSnackbar={openSnackbar} />
-                        ))}
-                    </List>
-                ) : (
-                    <Typography>No blockers.</Typography>
-                )}
-            </React.Fragment>
-        );
+    if (loading) {
+        return <Spinner />;
     }
+
+    return (
+        <>
+            {user.isCarwashAdmin && (
+                <Paper className={classes.paper} elevation={1}>
+                    <div>
+                        <TextField
+                            fullWidth
+                            required
+                            id="newBlockerComment"
+                            label="Comment (for CarWash)"
+                            margin="normal"
+                            value={newBlockerComment}
+                            onChange={e => setNewBlockerComment(e.target.value)}
+                            className={classes.inputField}
+                        />
+                    </div>
+                    <div className={classes.formControl}>
+                        <TextField
+                            fullWidth
+                            required
+                            id="newBlockerStartDate"
+                            label="Start date"
+                            type="datetime-local"
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                            value={newBlockerStartDate || ''}
+                            onChange={e => setNewBlockerStartDate(e.target.value)}
+                            className={classes.inputField}
+                        />
+                    </div>
+                    <div className={classes.formControl}>
+                        <TextField
+                            fullWidth
+                            id="newBlockerEndDate"
+                            label="End date"
+                            type="datetime-local"
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                            value={newBlockerEndDate || ''}
+                            onChange={e => setNewBlockerEndDate(e.target.value)}
+                            className={classes.inputField}
+                        />
+                    </div>
+                    <div className={classes.formControl}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            className={classes.primaryButtonContained}
+                            onClick={handleAddNewBlockerClick}
+                        >
+                            Save
+                        </Button>
+                    </div>
+                </Paper>
+            )}
+            {blockers.length > 0 ? (
+                <List className={classes.list}>
+                    {blockers.map(blocker => (
+                        <BlockerListItem
+                            key={blocker.id}
+                            blocker={blocker}
+                            user={user}
+                            handleDelete={handleDelete}
+                            openSnackbar={openSnackbar}
+                        />
+                    ))}
+                </List>
+            ) : (
+                <Alert severity="info" sx={{ maxWidth: 600 }}>
+                    No system messages.
+                </Alert>
+            )}
+        </>
+    );
 }
 
 Blockers.propTypes = {
