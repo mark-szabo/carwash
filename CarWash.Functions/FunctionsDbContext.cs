@@ -12,7 +12,7 @@ namespace CarWash.Functions
         {
             var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings:SqlDatabase", EnvironmentVariableTarget.Process);
             if (string.IsNullOrEmpty(connectionString)) throw new Exception("Application setting 'ConnectionStrings:SqlDatabase' was not found. Add it on the Azure portal!");
-            optionsBuilder.UseSqlServer(connectionString);
+            optionsBuilder.UseSqlServer(connectionString, o => o.EnableRetryOnFailure());
             var isDevelopment = Environment.GetEnvironmentVariable("Environment", EnvironmentVariableTarget.Process) == "Development";
             if (isDevelopment) optionsBuilder.UseLoggerFactory(new LoggerFactory(new[] { new DebugLoggerProvider() }));
         }
