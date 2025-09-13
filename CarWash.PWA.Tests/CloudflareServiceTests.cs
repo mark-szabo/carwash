@@ -41,7 +41,7 @@ namespace CarWash.PWA.Tests
                 }
             });
 
-            var service = new CloudflareService(httpClient, loggerMock.Object, configurationMock.Object);
+            var service = new CloudflareService(httpClient, configurationMock.Object, loggerMock.Object, null);
 
             // Act
             await service.PurgeConfigurationCacheAsync();
@@ -75,7 +75,7 @@ namespace CarWash.PWA.Tests
                 }
             });
 
-            var service = new CloudflareService(httpClient, loggerMock.Object, configurationMock.Object);
+            var service = new CloudflareService(httpClient, configurationMock.Object, loggerMock.Object, null);
 
             // Act
             await service.PurgeConfigurationCacheAsync();
