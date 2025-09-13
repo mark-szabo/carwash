@@ -65,7 +65,7 @@ namespace CarWash.Functions
             var reservations = await _context.Reservation
                 .Include(r => r.User)
                 .Where(r =>
-                    r.StartDate.Date == DateTime.Today &&
+                    r.StartDate.Date == DateTime.UtcNow.Date &&
                     r.State == State.SubmittedNotActual &&
                     licensePlates.Contains(r.VehiclePlateNumber))
                 .ToListAsync();
