@@ -297,7 +297,7 @@ namespace CarWash.ClassLibrary.Models
             /// Location: Azure Key Vault (DO NOT store secrets in Application Settings!)
             /// Key: ConnectionStrings--CloudflareApiKey
             /// </remarks>
-            public string CloudflareApiKey { get; set; }
+            public string? CloudflareApiKey { get; set; }
 
             /// <summary>
             /// Cloudflare Zone ID for cache purging.
@@ -306,7 +306,7 @@ namespace CarWash.ClassLibrary.Models
             /// Location: Azure Key Vault (DO NOT store secrets in Application Settings!)
             /// Key: ConnectionStrings--CloudflareZoneId
             /// </remarks>
-            public string CloudflareZoneId { get; set; }
+            public string? CloudflareZoneId { get; set; }
         }
 
         /// <summary>

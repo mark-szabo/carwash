@@ -17,10 +17,10 @@ namespace CarWash.Functions
             if (isDevelopment) optionsBuilder.UseLoggerFactory(new LoggerFactory(new[] { new DebugLoggerProvider() }));
         }
 
-        protected override void OnModelCreating(ModelBuilder builder)
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(builder);
-            builder.Entity<User>().ToTable("AspNetUsers");
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<User>().ToTable("AspNetUsers");
         }
         public DbSet<User> Users { get; set; }
         public DbSet<Reservation> Reservation { get; set; }

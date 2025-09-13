@@ -65,7 +65,7 @@ namespace CarWash.ClassLibrary.Models
         /// </remarks>
         public override EntityEntry<TEntity> Update<TEntity>(TEntity entity)
         {
-            if (entity == null) throw new ArgumentNullException(nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             try
             {

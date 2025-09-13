@@ -107,7 +107,7 @@ namespace CarWash.ClassLibrary.Models
     /// <summary>
     /// Possible tags for CarWash notifications.
     /// </summary>
-    public class NotificationTag
+    public static class NotificationTag
     {
         /// <summary>
         /// The notification is a reminder to drop-off the keys.

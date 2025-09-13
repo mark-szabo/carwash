@@ -99,7 +99,7 @@ namespace CarWash.ClassLibrary.Services
             foreach (var subscription in subscriptions)
                 try
                 {
-                    _client.SendNotification(subscription.ToWebPushSubscription(), JsonSerializer.Serialize(notification, Constants.DefaultJsonSerializerOptions), _vapidDetails);
+                    await _client.SendNotificationAsync(subscription.ToWebPushSubscription(), JsonSerializer.Serialize(notification, Constants.DefaultJsonSerializerOptions), _vapidDetails);
                     notificationSentSuccessfully = true;
                 }
                 catch (WebPushException e)
