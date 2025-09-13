@@ -1,6 +1,6 @@
 # CarWash app
 
-[![License](https://img.shields.io/:license-mit-blue.svg)](http://microsoft.mit-license.org) [![CodeQL Advanced](https://github.com/mark-szabo/carwash/actions/workflows/codeql.yml/badge.svg)](https://github.com/mark-szabo/carwash/actions/workflows/codeql.yml) [![PROD](https://github.com/mark-szabo/carwash/actions/workflows/mimosonk.yml/badge.svg)](https://github.com/mark-szabo/carwash/actions/workflows/mimosonk.yml) [![Functions](https://github.com/mark-szabo/carwash/actions/workflows/main_func-carwash-mimosonk-prod.yml/badge.svg)](https://github.com/mark-szabo/carwash/actions/workflows/main_func-carwash-mimosonk-prod.yml)
+[![License](https://img.shields.io/:license-mit-blue.svg)](http://microsoft.mit-license.org) [![CodeQL Advanced](https://github.com/mark-szabo/carwash/actions/workflows/codeql.yml/badge.svg)](https://github.com/mark-szabo/carwash/actions/workflows/codeql.yml) [![Build and deploy to PROD](https://github.com/mark-szabo/carwash/actions/workflows/main.yml/badge.svg)](https://github.com/mark-szabo/carwash/actions/workflows/main.yml)
 
 The CarWash app is a demo app running in production, demonstrating Microsoft Hungary's digital transformation and the benefits of using Azure platform services.
 

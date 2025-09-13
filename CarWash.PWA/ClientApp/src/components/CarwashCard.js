@@ -160,7 +160,7 @@ class CarwashCard extends Component {
                             />
                             <CardContent>
                                 <Grid container spacing={4}>
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid item xs={6}>
                                         <Typography variant="caption" color="textSecondary" gutterBottom>
                                             Location
                                         </Typography>
@@ -188,7 +188,7 @@ class CarwashCard extends Component {
                                         </Typography>
                                         <Typography gutterBottom>{reservation.user.company}</Typography>
                                     </Grid>
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid item xs={6}>
                                         <Typography variant="caption" color="textSecondary" gutterBottom>
                                             Key locker
                                         </Typography>

@@ -15,7 +15,7 @@ namespace CarWash.ClassLibrary.Extensions
         public static string ToFriendlyString(this State state) => state switch
         {
             State.SubmittedNotActual => "Scheduled",
-            State.ReminderSentWaitingForKey => "Leave the key at reception",
+            State.ReminderSentWaitingForKey => "Drop-off the key",
             State.DropoffAndLocationConfirmed => "All set, ready to wash",
             State.WashInProgress => "Wash in progress",
             State.NotYetPaid => "You need to pay",

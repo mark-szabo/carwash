@@ -11,6 +11,7 @@ import BuildIcon from '@mui/icons-material/Build';
 import SettingsIcon from '@mui/icons-material/SettingsRounded';
 import HelpIcon from '@mui/icons-material/Help';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import CarRentalIcon from '@mui/icons-material/CarRental';
 import BlockIcon from '@mui/icons-material/Block';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import AnnouncementIcon from '@mui/icons-material/Announcement';
@@ -82,6 +83,15 @@ export function drawerItems(closeDrawer, user) {
                     title="System messages"
                     closeDrawer={closeDrawer}
                     id="draweritems-systemmessages"
+                />
+            )}
+            {(user.isAdmin || user.isCarwashAdmin) && (
+                <DrawerItem
+                    path="/keylockers"
+                    icon={<CarRentalIcon />}
+                    title="Key Lockers"
+                    closeDrawer={closeDrawer}
+                    id="draweritems-keylockers"
                 />
             )}
             {(user.isAdmin || user.isCarwashAdmin) && (

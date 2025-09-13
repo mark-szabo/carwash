@@ -13,14 +13,14 @@ namespace CarWash.ClassLibrary.Services
         /// </summary>
         /// <param name="reservation">Reservation to get the details from</param>
         /// <returns>Outlook event id</returns>
-        Task<string> CreateEventAsync(Reservation reservation);
+        Task<string?> CreateEventAsync(Reservation reservation);
 
         /// <summary>
         /// Update an Outlook event based on a reservation
         /// </summary>
         /// <param name="reservation">Reservation to get the details from</param>
         /// <returns>Outlook event id</returns>
-        Task<string> UpdateEventAsync(Reservation reservation);
+        Task<string?> UpdateEventAsync(Reservation reservation);
 
         /// <summary>
         /// Delete an Outlook event by id

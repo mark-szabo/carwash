@@ -11,10 +11,10 @@ namespace CarWash.ClassLibrary.Services
         /// <summary>
         /// Checks VAPID info and if invalid generates new keys and throws exception
         /// </summary>
-        /// <param name="subject">This should be a URL or a 'mailto:' email address</param>
+        /// <param name="vapidSubject">This should be a URL or a 'mailto:' email address</param>
         /// <param name="vapidPublicKey">The VAPID public key as a base64 encoded string</param>
         /// <param name="vapidPrivateKey">The VAPID private key as a base64 encoded string</param>
-        void CheckOrGenerateVapidDetails(string subject, string vapidPublicKey, string vapidPrivateKey);
+        void CheckOrGenerateVapidDetails(string vapidSubject, string vapidPublicKey, string vapidPrivateKey);
 
         /// <summary>
         /// Get the server's saved VAPID public key

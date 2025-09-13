@@ -19,6 +19,7 @@ using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.AspNetCore;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.ApplicationInsights.DependencyCollector;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.SnapshotCollector;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -100,11 +101,14 @@ namespace CarWash.PWA
             services.AddScoped<IPushService, PushService>();
             services.AddScoped<IBotService, BotService>();
             services.AddScoped<IKeyLockerService, KeyLockerService>();
+            services.AddHttpClient<ICloudflareService, CloudflareService>();
 
             // Add framework services
             services.AddApplicationInsightsTelemetry(configuration);
             services.AddApplicationInsightsTelemetryProcessor<SignalrTelemetryFilter>();
             // services.AddApplicationInsightsTelemetryProcessor<ForbiddenTelemetryFilter>();
+
+            services.ConfigureTelemetryModule<DependencyTrackingTelemetryModule>((module, o) => { module.EnableSqlCommandTextInstrumentation = true; });
 
             // Configure SnapshotCollector from application settings
             services.Configure<SnapshotCollectorConfiguration>(configuration.GetSection(nameof(SnapshotCollectorConfiguration)));
@@ -144,7 +148,7 @@ namespace CarWash.PWA
                             {
                                 if (configuration["AzureAd:AuthorizedApplications"]?.Contains(serviceAppId) == true)
                                 {
-                                    context.Principal?.AddIdentity(new ClaimsIdentity([new("appId", serviceAppId)]));
+                                    context.Principal?.AddIdentity(new ClaimsIdentity(new[] { new Claim("appId", serviceAppId) }));
 
                                     return;
                                 }
@@ -187,7 +191,6 @@ namespace CarWash.PWA
                                 if (user != null)
                                 {
                                     user.Oid = entraOid;
-                                    dbContext.Update(user);
                                     await dbContext.SaveChangesAsync();
                                 }
                             }
@@ -248,44 +251,67 @@ namespace CarWash.PWA
                                                 context.Principal)));
 
                                     if (user.PhoneNumber == null)
-                                    {
-                                        // Get user information from Graph
-                                        var graphUser = await graphClient.Me.GetAsync((requestConfiguration) =>
+                                        try
                                         {
-                                            requestConfiguration.QueryParameters.Select = ["mobilePhone", "businessPhones"];
-                                        });
-                                        var phoneNumber = graphUser?.MobilePhone ?? (graphUser?.BusinessPhones?.Count > 0 ? graphUser.BusinessPhones[0] : null);
-                                        if (phoneNumber != null)
-                                        {
-                                            user.PhoneNumber = phoneNumber;
-                                            dbContext.Update(user);
+                                            // Get user information from Graph
+                                            var graphUser = await graphClient.Me.GetAsync((requestConfiguration) =>
+                                            {
+                                                requestConfiguration.QueryParameters.Select = ["mobilePhone", "businessPhones"];
+                                            });
+                                            var phoneNumber = graphUser?.MobilePhone ?? (graphUser?.BusinessPhones?.Count > 0 ? graphUser.BusinessPhones[0] : null);
+                                            if (phoneNumber != null)
+                                            {
+                                                user.PhoneNumber = phoneNumber;
+                                            }
                                         }
-                                    }
+                                        catch (Exception ex)
+                                        {
+                                            telemetryClient?.TrackException(ex, new Dictionary<string, string?>
+                                            {
+                                                ["UserId"] = user.Id,
+                                                ["Email"] = user.Email,
+                                                ["Company"] = company.Name,
+                                                ["Message"] = "Error getting user from Graph.",
+                                            });
+                                        }
 
                                     if (company.Color == null)
-                                    {
-                                        // Get company information from Graph
-                                        var branding = await graphClient.Organization[entraTenantId]
-                                        .Branding
-                                        .GetAsync((requestConfiguration) =>
+                                        try
                                         {
-                                            requestConfiguration.Headers.Add("Accept-Language", "0");
-                                            requestConfiguration.QueryParameters.Select = ["backgroundColor", "bannerLogoRelativeUrl", "CdnList"];
-                                        });
-                                        if (branding?.BackgroundColor != null)
-                                        {
-                                            company.Color = branding?.BackgroundColor;
-                                            company.UpdatedOn = DateTime.UtcNow;
-                                            dbContext.Update(company);
-                                        }
-                                        if (branding?.BannerLogoRelativeUrl != null)
-                                        {
-                                            var companyLogo = $"https://{branding.CdnList?[0]}/{branding.BannerLogoRelativeUrl}";
+                                            // Get company information from Graph
+                                            var branding = await graphClient.Organization[entraTenantId]
+                                            .Branding
+                                            .GetAsync((requestConfiguration) =>
+                                            {
+                                                requestConfiguration.Headers.Add("Accept-Language", "0");
+                                                requestConfiguration.QueryParameters.Select = ["backgroundColor", "bannerLogoRelativeUrl", "CdnList"];
+                                            });
+                                            if (branding?.BackgroundColor != null)
+                                            {
+                                                company.Color = branding?.BackgroundColor;
+                                                company.UpdatedOn = DateTime.UtcNow;
+                                            }
+                                            if (branding?.BannerLogoRelativeUrl != null)
+                                            {
+                                                var companyLogo = $"https://{branding.CdnList?[0]}/{branding.BannerLogoRelativeUrl}";
 
-                                            var blobStorageService = context.HttpContext.RequestServices.GetRequiredService<IBlobStorageService>();
-                                            await blobStorageService.UploadCompanyLogoFromUrlAsync(companyLogo, company.Name);
+                                                var blobStorageService = context.HttpContext.RequestServices.GetRequiredService<IBlobStorageService>();
+                                                await blobStorageService.UploadCompanyLogoFromUrlAsync(companyLogo, company.Name);
+                                            }
                                         }
-                                    }
+                                        catch (Microsoft.Graph.Models.ODataErrors.ODataError ex)
+                                        {
+                                            telemetryClient?.TrackException(ex, new Dictionary<string, string?>
+                                            {
+                                                ["UserId"] = user.Id,
+                                                ["Email"] = user.Email,
+                                                ["Company"] = company.Name,
+                                                ["Message"] = "Error getting company branding information from Graph.",
+                                            });
+
+                                            company.Color = "#80d8ff"; // default to carwash blue
+                                            company.UpdatedOn = DateTime.UtcNow;
+                                        }
 
                                     await dbContext.SaveChangesAsync();
                                 }
@@ -296,7 +322,7 @@ namespace CarWash.PWA
                                         ["UserId"] = user.Id,
                                         ["Email"] = user.Email,
                                         ["Company"] = company.Name,
-                                        ["Message"] = "Error getting user or company information from Graph.",
+                                        ["Message"] = "Error connecting to Microsoft Graph.",
                                     });
                                 }
                             }
@@ -499,7 +525,7 @@ namespace CarWash.PWA
                         new
                         {
                             status = report.Status.ToString(),
-                            errors = report.Entries.Select(e => new { key = e.Key, value = Enum.GetName(typeof(HealthStatus), e.Value.Status) })
+                            services = report.Entries.Select(e => new { key = e.Key, value = Enum.GetName(typeof(HealthStatus), e.Value.Status) })
                         });
                     context.Response.ContentType = MediaTypeNames.Application.Json;
                     await context.Response.WriteAsync(result);

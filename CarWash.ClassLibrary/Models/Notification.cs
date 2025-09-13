@@ -40,31 +40,31 @@ namespace CarWash.ClassLibrary.Models
         /// Gets or sets the text (body) of the notification.
         /// </summary>
         [JsonPropertyName("body")]
-        public string Body { get; set; }
+        public string? Body { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="NotificationTag"/> of the notification.
         /// </summary>
         [JsonPropertyName("tag")]
-        public string Tag { get; set; }
+        public string? Tag { get; set; }
 
         /// <summary>
         /// Gets or sets the url of an image to be displayed in the notification.
         /// </summary>
         [JsonPropertyName("image")]
-        public string Image { get; set; }
+        public string? Image { get; set; }
 
         /// <summary>
         /// Gets or sets the url of an icon to be displayed in the notification.
         /// </summary>
         [JsonPropertyName("icon")]
-        public string Icon { get; set; }
+        public string? Icon { get; set; }
 
         /// <summary>
         /// Gets or sets the url of a badge icon to be displayed in the notification.
         /// </summary>
         [JsonPropertyName("badge")]
-        public string Badge { get; set; }
+        public string? Badge { get; set; }
 
         /// <summary>
         /// Gets or sets the timestamp of the notification. Defaults to <see cref="DateTime.UtcNow"/>.
@@ -82,7 +82,7 @@ namespace CarWash.ClassLibrary.Models
         /// Gets or sets a list of <see cref="NotificationAction"/>s to be displayed in the notification.
         /// </summary>
         [JsonPropertyName("actions")]
-        public List<NotificationAction> Actions { get; set; } = new List<NotificationAction>();
+        public List<NotificationAction> Actions { get; set; } = [];
     }
 
     /// <summary>
@@ -95,19 +95,19 @@ namespace CarWash.ClassLibrary.Models
         /// Gets or sets the tag of the action.
         /// </summary>
         [JsonPropertyName("action")]
-        public string Action { get; set; }
+        public string? Action { get; set; }
 
         /// <summary>
         /// Gets or sets the title (button text) of the action.
         /// </summary>
         [JsonPropertyName("title")]
-        public string Title { get; set; }
+        public string? Title { get; set; }
     }
 
     /// <summary>
     /// Possible tags for CarWash notifications.
     /// </summary>
-    public class NotificationTag
+    public static class NotificationTag
     {
         /// <summary>
         /// The notification is a reminder to drop-off the keys.
