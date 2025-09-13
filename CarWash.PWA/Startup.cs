@@ -19,6 +19,7 @@ using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.AspNetCore;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.ApplicationInsights.DependencyCollector;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.SnapshotCollector;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -100,11 +101,14 @@ namespace CarWash.PWA
             services.AddScoped<IPushService, PushService>();
             services.AddScoped<IBotService, BotService>();
             services.AddScoped<IKeyLockerService, KeyLockerService>();
+            services.AddHttpClient<ICloudflareService, CloudflareService>();
 
             // Add framework services
             services.AddApplicationInsightsTelemetry(configuration);
             services.AddApplicationInsightsTelemetryProcessor<SignalrTelemetryFilter>();
             // services.AddApplicationInsightsTelemetryProcessor<ForbiddenTelemetryFilter>();
+
+            services.ConfigureTelemetryModule<DependencyTrackingTelemetryModule>((module, o) => { module.EnableSqlCommandTextInstrumentation = true; });
 
             // Configure SnapshotCollector from application settings
             services.Configure<SnapshotCollectorConfiguration>(configuration.GetSection(nameof(SnapshotCollectorConfiguration)));
@@ -144,7 +148,7 @@ namespace CarWash.PWA
                             {
                                 if (configuration["AzureAd:AuthorizedApplications"]?.Contains(serviceAppId) == true)
                                 {
-                                    context.Principal?.AddIdentity(new ClaimsIdentity([new("appId", serviceAppId)]));
+                                    context.Principal?.AddIdentity(new ClaimsIdentity(new[] { new Claim("appId", serviceAppId) }));
 
                                     return;
                                 }
@@ -187,7 +191,6 @@ namespace CarWash.PWA
                                 if (user != null)
                                 {
                                     user.Oid = entraOid;
-                                    dbContext.Update(user);
                                     await dbContext.SaveChangesAsync();
                                 }
                             }
@@ -259,7 +262,6 @@ namespace CarWash.PWA
                                             if (phoneNumber != null)
                                             {
                                                 user.PhoneNumber = phoneNumber;
-                                                dbContext.Update(user);
                                             }
                                         }
                                         catch (Exception ex)
@@ -288,7 +290,6 @@ namespace CarWash.PWA
                                             {
                                                 company.Color = branding?.BackgroundColor;
                                                 company.UpdatedOn = DateTime.UtcNow;
-                                                dbContext.Update(company);
                                             }
                                             if (branding?.BannerLogoRelativeUrl != null)
                                             {
@@ -310,7 +311,6 @@ namespace CarWash.PWA
 
                                             company.Color = "#80d8ff"; // default to carwash blue
                                             company.UpdatedOn = DateTime.UtcNow;
-                                            dbContext.Update(company);
                                         }
 
                                     await dbContext.SaveChangesAsync();

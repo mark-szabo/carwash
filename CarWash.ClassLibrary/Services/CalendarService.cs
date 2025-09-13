@@ -1,22 +1,22 @@
-﻿using Microsoft.ApplicationInsights;
-using CarWash.ClassLibrary.Models;
-using System;
+﻿using System;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using CarWash.ClassLibrary.Models;
+using Microsoft.ApplicationInsights;
 using Microsoft.Extensions.Options;
 
 namespace CarWash.ClassLibrary.Services
 {
     /// <inheritdoc />
-    public class CalendarService(IOptionsMonitor<CarWashConfiguration> configuration, TelemetryClient telemetryClient, HttpClient httpClient = null) : ICalendarService
+    public class CalendarService(IOptionsMonitor<CarWashConfiguration> configuration, TelemetryClient telemetryClient, HttpClient? httpClient = null) : ICalendarService
     {
         private readonly HttpClient _client = httpClient ?? new HttpClient();
 
         /// <inheritdoc />
-        public async Task<string> CreateEventAsync(Reservation reservation)
+        public async Task<string?> CreateEventAsync(Reservation reservation)
         {
             var calendarEvent = GetCalendarEventFromReservation(reservation);
 
@@ -33,7 +33,7 @@ namespace CarWash.ClassLibrary.Services
         }
 
         /// <inheritdoc />
-        public async Task<string> UpdateEventAsync(Reservation reservation)
+        public async Task<string?> UpdateEventAsync(Reservation reservation)
         {
             if (reservation.OutlookEventId == null) return await CreateEventAsync(reservation);
 
@@ -101,7 +101,7 @@ namespace CarWash.ClassLibrary.Services
                 EndTime = reservation.EndDate.ToString(),
                 Location = reservation.Location,
                 Body =
-                    $"Please don't forget to leave the key at the reception and <a href=\"{configuration.CurrentValue.ConnectionStrings.BaseUrl}\">confirm drop-off & vehicle location by clicking here</a>!"
+                    $"Please don't forget to <a href=\"{configuration.CurrentValue.ConnectionStrings.BaseUrl}/#dropoffkey\">drop-off your keys and confirm vehicle location by clicking here</a>!"
             };
         }
     }
@@ -109,28 +109,28 @@ namespace CarWash.ClassLibrary.Services
     internal class Event
     {
         [JsonPropertyName("id")]
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
         [JsonPropertyName("subject")]
-        public string Subject { get; set; }
+        public string? Subject { get; set; }
 
         [JsonPropertyName("isCancelled")]
         public bool IsCancelled { get; set; }
 
         [JsonPropertyName("to")]
-        public string To { get; set; }
+        public string? To { get; set; }
 
         [JsonPropertyName("startTime")]
-        public string StartTime { get; set; }
+        public string? StartTime { get; set; }
 
         [JsonPropertyName("endTime")]
-        public string EndTime { get; set; }
+        public string? EndTime { get; set; }
 
         [JsonPropertyName("location")]
-        public string Location { get; set; }
+        public string? Location { get; set; }
 
         [JsonPropertyName("body")]
-        public string Body { get; set; }
+        public string? Body { get; set; }
     }
 }
 

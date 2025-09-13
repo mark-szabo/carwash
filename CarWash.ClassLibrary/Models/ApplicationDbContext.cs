@@ -65,7 +65,7 @@ namespace CarWash.ClassLibrary.Models
         /// </remarks>
         public override EntityEntry<TEntity> Update<TEntity>(TEntity entity)
         {
-            if (entity == null) throw new ArgumentNullException(nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             try
             {
@@ -78,10 +78,10 @@ namespace CarWash.ClassLibrary.Models
                 var originalEntity = Find(entity.GetType(), ((IEntity)entity).Id);
 
                 // Set the updated values
-                Entry(originalEntity).CurrentValues.SetValues(entity);
+                Entry(originalEntity!).CurrentValues.SetValues(entity);
 
                 // Return the expected return object of Update()
-                return Entry((TEntity)originalEntity);
+                return Entry((TEntity)originalEntity!);
             }
         }
 

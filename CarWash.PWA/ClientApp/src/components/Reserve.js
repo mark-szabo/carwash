@@ -158,7 +158,6 @@ class Reserve extends TrackedComponent {
             dateStepLabel: 'Choose date',
             timeStepLabel: 'Choose time',
             locationKnown: false,
-            dropoffPreConfirmed: false,
             dateSelected: false,
             timeSelected: false,
             showBillingDialog: false,
@@ -481,12 +480,6 @@ class Reserve extends TrackedComponent {
         }));
     };
 
-    handleDropoffPreConfirmed = () => {
-        this.setState(state => ({
-            dropoffPreConfirmed: !state.dropoffPreConfirmed,
-        }));
-    };
-
     handleGarageChange = event => {
         this.setState({
             garage: event.target.value,
@@ -548,8 +541,6 @@ class Reserve extends TrackedComponent {
             apiUrl = `api/reservations/${payload.id}`;
             apiMethod = 'PUT';
         }
-
-        if (this.state.dropoffPreConfirmed) apiUrl += '?dropoffconfirmed=true';
 
         apiFetch(apiUrl, {
             method: apiMethod,
@@ -684,7 +675,6 @@ class Reserve extends TrackedComponent {
             floor,
             seat,
             locationKnown,
-            dropoffPreConfirmed,
             dateSelected,
             timeSelected,
         } = this.state;
@@ -942,33 +932,6 @@ class Reserve extends TrackedComponent {
                                                     textFieldWidth={200}
                                                 />
                                             </div>
-                                            {isDateToday && (
-                                                <>
-                                                    <FormGroup className={classes.checkbox} style={{ marginTop: 8 }}>
-                                                        <FormControlLabel
-                                                            control={
-                                                                <Checkbox
-                                                                    checked={dropoffPreConfirmed}
-                                                                    onChange={this.handleDropoffPreConfirmed}
-                                                                    value="dropoffPreConfirmed"
-                                                                    color="primary"
-                                                                />
-                                                            }
-                                                            label="I have already left the key at the reception"
-                                                        />
-                                                    </FormGroup>
-                                                    {dropoffPreConfirmed && (
-                                                        <Alert
-                                                            variant="outlined"
-                                                            severity="warning"
-                                                            className={classes.infoAlert}
-                                                        >
-                                                            You won't be able to modify your reservation after you click
-                                                            Reserve!
-                                                        </Alert>
-                                                    )}
-                                                </>
-                                            )}
                                         </>
                                     )}
                                     {!this.isUpdate && (

@@ -5,7 +5,6 @@ using Microsoft.ApplicationInsights;
 using Microsoft.Azure.Devices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Microsoft.Graph.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +23,7 @@ namespace CarWash.ClassLibrary.Services
     /// <param name="configuration"></param>
     /// <param name="iotHubClient"></param>
     /// <param name="telemetryClient"></param>
-    public class KeyLockerService(ApplicationDbContext context, IOptionsMonitor<CarWashConfiguration> configuration, ServiceClient iotHubClient, TelemetryClient telemetryClient) : IKeyLockerService
+    public class KeyLockerService(ApplicationDbContext context, IOptionsMonitor<CarWashConfiguration> configuration, ServiceClient iotHubClient, TelemetryClient? telemetryClient) : IKeyLockerService
     {
         /// <inheritdoc />
         public async Task<List<KeyLockerStatusMessage>> ListBoxes()
@@ -202,7 +201,7 @@ namespace CarWash.ClassLibrary.Services
                 {
                     await UpdateBoxStateAsync(lockerId, boxSerial, KeyLockerBoxState.Used, userId);
 
-                    telemetryClient.TrackEvent("KeyLockerBoxOpened", new Dictionary<string, string> {
+                    telemetryClient?.TrackEvent("KeyLockerBoxOpened", new Dictionary<string, string> {
                         { "LockerId", lockerId },
                         { "BoxSerial", boxSerial.ToString() },
                         { "UserId", userId ?? "" },
@@ -213,7 +212,7 @@ namespace CarWash.ClassLibrary.Services
                 else
                 {
                     var ex = new InvalidOperationException($"Failed to open box {boxSerial} in locker {lockerId}.");
-                    telemetryClient.TrackException(ex, new Dictionary<string, string> {
+                    telemetryClient?.TrackException(ex, new Dictionary<string, string> {
                         { "Status", response.Status.ToString() },
                         { "LockerId", lockerId },
                         { "BoxSerial", boxSerial.ToString() },
@@ -225,7 +224,7 @@ namespace CarWash.ClassLibrary.Services
             }
             catch (Microsoft.Azure.Devices.Common.Exceptions.IotHubException ex)
             {
-                telemetryClient.TrackException(ex, new Dictionary<string, string> {
+                telemetryClient?.TrackException(ex, new Dictionary<string, string> {
                     { "LockerId", lockerId },
                     { "BoxSerial", boxSerial.ToString() },
                     { "UserId", userId ?? "" },
@@ -275,7 +274,7 @@ namespace CarWash.ClassLibrary.Services
                             throw new InvalidOperationException($"Box serial {box.BoxSerial} is out of range for the received message. Message contains {states.Count} boxes.");
                         }
 
-                        telemetryClient.TrackEvent("IoTDeviceMessageProcessed", new Dictionary<string, string> {
+                        telemetryClient?.TrackEvent("IoTDeviceMessageProcessed", new Dictionary<string, string> {
                             { "PartitionId", partitionEvent.Partition.PartitionId},
                             { "EnqueuedTime", partitionEvent.Data.EnqueuedTime.ToString("o") },
                             { "MessageBody", data },
@@ -286,7 +285,7 @@ namespace CarWash.ClassLibrary.Services
 
                         if (states[box.BoxSerial - 1])
                         {
-                            telemetryClient.TrackEvent("KeyLockerBoxClosed", new Dictionary<string, string> {
+                            telemetryClient?.TrackEvent("KeyLockerBoxClosed", new Dictionary<string, string> {
                                 { "PartitionId", partitionEvent.Partition.PartitionId},
                                 { "EnqueuedTime", partitionEvent.Data.EnqueuedTime.ToString("o") },
                                 { "MessageBody", data },

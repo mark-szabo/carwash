@@ -12,7 +12,7 @@ namespace CarWash.ClassLibrary.Models
     {
         /// <inheritdoc />
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string Id { get; set; }
+        public string Id { get; set; } = Guid.NewGuid().ToString();
 
         /// <summary>
         /// Constant name of the CarWash "company".

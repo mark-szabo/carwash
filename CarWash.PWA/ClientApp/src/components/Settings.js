@@ -98,7 +98,8 @@ class Settings extends TrackedComponent {
         exportEndDate: '',
         billingName: this.props.user.billingName || '',
         billingAddress: this.props.user.billingAddress || '',
-        paymentMethod: this.props.user.paymentMethod !== undefined ? `${this.props.user.paymentMethod}` : '',
+        //paymentMethod: this.props.user.paymentMethod !== undefined ? `${this.props.user.paymentMethod}` : '',
+        paymentMethod: PaymentMethod.WireTransfer,
         phoneNumber: this.props.user.phoneNumber || '',
         billingError: '',
         billingSubmitting: false,
@@ -335,13 +336,7 @@ class Settings extends TrackedComponent {
                             disabled={this.state.billingSubmitting}
                         />
                     </div>
-                    <FormControl
-                        margin="dense"
-                        fullWidth
-                        required
-                        disabled={this.state.billingSubmitting}
-                        sx={{ marginTop: 0 }}
-                    >
+                    <FormControl margin="dense" fullWidth required disabled sx={{ marginTop: 0 }}>
                         <InputLabel id="payment-method-label">Payment method</InputLabel>
                         <Select
                             labelId="payment-method-label"

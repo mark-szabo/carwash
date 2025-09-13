@@ -27,7 +27,16 @@ namespace CarWash.Functions
 
                 // Parse the message body
                 var messageBody = System.Text.Encoding.UTF8.GetString(message.Body);
-                var deviceMessage = JsonSerializer.Deserialize<KeyLockerDeviceMessage>(messageBody, Constants.DefaultJsonSerializerOptions);
+                KeyLockerDeviceMessage? deviceMessage;
+                try
+                {
+                    deviceMessage = JsonSerializer.Deserialize<KeyLockerDeviceMessage>(messageBody, Constants.DefaultJsonSerializerOptions);
+                }
+                catch (Exception ex) when (ex is FormatException || ex is JsonException)
+                {
+                    logger.LogError(ex, $"Failed to deserialize message body: {messageBody}");
+                    throw;
+                }
 
                 if (deviceMessage == null)
                 {
