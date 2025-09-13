@@ -22,7 +22,7 @@ namespace CarWash.PWA.Controllers
     [UserAction]
     [Route("api/companies")]
     [ApiController]
-    public class CompanyController(ApplicationDbContext context, IUserService userService) : ControllerBase
+    public class CompanyController(ApplicationDbContext context, IUserService userService, ICloudflareService cloudflareService) : ControllerBase
     {
         private readonly User _user = userService.CurrentUser;
         private readonly HttpClient httpClient = new();
@@ -109,6 +109,9 @@ namespace CarWash.PWA.Controllers
             context.Company.Add(company);
             await context.SaveChangesAsync();
 
+            // Purge Cloudflare cache after company creation
+            await cloudflareService.PurgeConfigurationCacheAsync();
+
             return CreatedAtAction(nameof(GetCompany), new { id = company.Id }, company);
         }
 
@@ -130,6 +133,9 @@ namespace CarWash.PWA.Controllers
             context.Company.Update(company);
             await context.SaveChangesAsync();
 
+            // Purge Cloudflare cache after company update
+            await cloudflareService.PurgeConfigurationCacheAsync();
+
             return NoContent();
         }
 
@@ -148,6 +154,9 @@ namespace CarWash.PWA.Controllers
 
             context.Company.Remove(company);
             await context.SaveChangesAsync();
+
+            // Purge Cloudflare cache after company deletion
+            await cloudflareService.PurgeConfigurationCacheAsync();
 
             return NoContent();
         }

@@ -59,7 +59,23 @@ namespace CarWash.PWA.Tests
                 Company = "Contoso",
                 IsCarwashAdmin = true
             });
-            return new SystemMessagesController(dbContext, userServiceStub.Object);
+            var cloudflareServiceStub = new Mock<ICloudflareService>();
+            return new SystemMessagesController(dbContext, userServiceStub.Object, cloudflareServiceStub.Object);
+        }
+
+        private static SystemMessagesController CreateControllerStub(ApplicationDbContext dbContext, out Mock<ICloudflareService> cloudflareServiceMock)
+        {
+            var userServiceStub = new Mock<IUserService>();
+            userServiceStub.Setup(us => us.CurrentUser).Returns(new User
+            {
+                FirstName = "John",
+                LastName = "Doe",
+                Email = "john@example.com",
+                Company = "Contoso",
+                IsCarwashAdmin = true
+            });
+            cloudflareServiceMock = new Mock<ICloudflareService>();
+            return new SystemMessagesController(dbContext, userServiceStub.Object, cloudflareServiceMock.Object);
         }
 
         [Fact]
@@ -106,6 +122,27 @@ namespace CarWash.PWA.Tests
         }
 
         [Fact]
+        public async Task CreateSystemMessage_PurgesCloudflareCache()
+        {
+            // Arrange
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext, out var cloudflareServiceMock);
+            var newMessage = new SystemMessage
+            {
+                Message = "New Test Message",
+                StartDateTime = DateTime.UtcNow,
+                EndDateTime = DateTime.UtcNow.AddHours(2),
+                Severity = Severity.Success
+            };
+
+            // Act
+            await controller.CreateSystemMessage(newMessage);
+
+            // Assert
+            cloudflareServiceMock.Verify(m => m.PurgeConfigurationCacheAsync(), Times.Once());
+        }
+
+        [Fact]
         public async Task UpdateSystemMessage_UpdatesMessage()
         {
             // Arrange
@@ -124,6 +161,22 @@ namespace CarWash.PWA.Tests
         }
 
         [Fact]
+        public async Task UpdateSystemMessage_PurgesCloudflareCache()
+        {
+            // Arrange
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext, out var cloudflareServiceMock);
+            var existingMessage = dbContext.SystemMessage.First();
+            existingMessage.Message = "Updated Test Message";
+
+            // Act
+            await controller.UpdateSystemMessage(existingMessage.Id, existingMessage);
+
+            // Assert
+            cloudflareServiceMock.Verify(m => m.PurgeConfigurationCacheAsync(), Times.Once());
+        }
+
+        [Fact]
         public async Task DeleteSystemMessage_RemovesMessage()
         {
             // Arrange
@@ -137,6 +190,21 @@ namespace CarWash.PWA.Tests
             // Assert
             Assert.IsType<NoContentResult>(result);
             Assert.Null(dbContext.SystemMessage.Find(existingMessage.Id));
+        }
+
+        [Fact]
+        public async Task DeleteSystemMessage_PurgesCloudflareCache()
+        {
+            // Arrange
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext, out var cloudflareServiceMock);
+            var existingMessage = dbContext.SystemMessage.First();
+
+            // Act
+            await controller.DeleteSystemMessage(existingMessage.Id);
+
+            // Assert
+            cloudflareServiceMock.Verify(m => m.PurgeConfigurationCacheAsync(), Times.Once());
         }
     }
 }
