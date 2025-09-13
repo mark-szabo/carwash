@@ -13,7 +13,7 @@ namespace CarWash.ClassLibrary.Models
     {
         /// <inheritdoc />
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string Id { get; set; }
+        public string Id { get; set; } = Guid.NewGuid().ToString();
 
         /// <summary>
         /// Gets or sets the start date and time of the blocker.

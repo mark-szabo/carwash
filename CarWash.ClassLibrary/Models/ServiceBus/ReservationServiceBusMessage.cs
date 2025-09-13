@@ -8,6 +8,6 @@
         /// <summary>
         /// Gets or sets the reservation id which will be referenced in the message.
         /// </summary>
-        public string ReservationId { get; set; }
+        public required string ReservationId { get; set; }
     }
 }

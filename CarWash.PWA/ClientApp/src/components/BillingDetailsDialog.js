@@ -17,7 +17,7 @@ import { PaymentMethod } from '../Constants';
 function BillingDetailsDialog({ open, handleClose, openSnackbar, updateUser }) {
     const [billingName, setBillingName] = useState('');
     const [billingAddress, setBillingAddress] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState(PaymentMethod.WireTransfer);
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
@@ -90,7 +90,7 @@ function BillingDetailsDialog({ open, handleClose, openSnackbar, updateUser }) {
                     onChange={e => setBillingAddress(e.target.value)}
                     disabled={submitting}
                 />
-                <FormControl margin="dense" fullWidth required disabled={submitting}>
+                <FormControl margin="dense" fullWidth required disabled>
                     <InputLabel id="payment-method-label">Payment Method</InputLabel>
                     <Select
                         labelId="payment-method-label"

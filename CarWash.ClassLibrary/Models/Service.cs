@@ -16,17 +16,17 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Gets or sets the name of the service.
         /// </summary>
-        public string Name { get; set; }
+        public required string Name { get; set; }
 
         /// <summary>
         /// Gets or sets the group name of the service.
         /// </summary>
-        public string Group { get; set; }
+        public required string Group { get; set; }
 
         /// <summary>
         /// Gets or sets the description of the service.
         /// </summary>
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         /// <summary>
         /// Gets or sets the time needed for this service.

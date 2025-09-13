@@ -28,6 +28,7 @@ import Spinner from './components/Spinner';
 import { sleep } from './Helpers';
 import Blockers from './components/Blockers';
 import Analytics from './components/Analytics';
+import KeyLockerAdmin from './components/KeyLockerAdmin';
 import ErrorBoundary from './components/ErrorBoundary';
 import NotFound from './components/NotFound';
 import PhoneNumberDialog from './components/PhoneNumberDialog';
@@ -731,6 +732,21 @@ export default class App extends Component {
                                                 snackbarOpen={this.state.snackbarOpen}
                                                 openSnackbar={this.openSnackbar}
                                                 searchTerm={searchTerm}
+                                                closedKeyLockerBoxIds={this.state.closedKeyLockerBoxIds}
+                                                {...props}
+                                            />
+                                        </ErrorBoundary>
+                                    )}
+                                />
+                                <Route
+                                    exact
+                                    path="/keylockers"
+                                    navbarName="Key Lockers"
+                                    render={props => (
+                                        <ErrorBoundary>
+                                            <KeyLockerAdmin
+                                                user={user}
+                                                openSnackbar={this.openSnackbar}
                                                 closedKeyLockerBoxIds={this.state.closedKeyLockerBoxIds}
                                                 {...props}
                                             />
