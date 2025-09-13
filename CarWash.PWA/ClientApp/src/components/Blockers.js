@@ -196,7 +196,7 @@ function Blockers(props) {
                 </List>
             ) : (
                 <Alert severity="info" sx={{ maxWidth: 600 }}>
-                    No system messages.
+                    No blockers.
                 </Alert>
             )}
         </>

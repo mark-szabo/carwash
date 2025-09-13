@@ -1135,8 +1135,8 @@ namespace CarWash.PWA.Controllers
                         var email = new Email
                         {
                             To = reservation.User.Email,
-                            Subject = "CarWash has left a comment on your reservation. Please do not reply to this email, messages to service providers can only be sent within the app. Kindly log in to your account and communicate directly through the in-app messaging feature.",
-                            Body = comment,
+                            Subject = "CarWash has left a comment on your reservation",
+                            Body = comment + $"\n\n<a href=\"{configuration.CurrentValue.ConnectionStrings.BaseUrl}\">Reply</a>\n\nPlease do not reply to this email, messages to service providers can only be sent within the app. Kindly log in to your account and communicate directly through the in-app messaging feature.",
                         };
                         await _emailService.Send(email, TimeSpan.FromMinutes(1));
                         break;
