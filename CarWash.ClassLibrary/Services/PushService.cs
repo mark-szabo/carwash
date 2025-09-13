@@ -104,7 +104,7 @@ namespace CarWash.ClassLibrary.Services
                 }
                 catch (WebPushException e)
                 {
-                    if (e.Message == "Subscription no longer valid")
+                    if (e.Message.Contains("Subscription no longer valid"))
                     {
                         _context.PushSubscription.Remove(subscription);
                         await _context.SaveChangesAsync();
