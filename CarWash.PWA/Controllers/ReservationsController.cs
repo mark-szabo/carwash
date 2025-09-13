@@ -821,16 +821,6 @@ namespace CarWash.PWA.Controllers
             {
                 case NotificationChannel.Disabled:
                     break;
-                case NotificationChannel.NotSet:
-                case NotificationChannel.Email:
-                    var email = new Email
-                    {
-                        To = reservation.User.Email,
-                        Subject = reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!",
-                        Body = $"You can find it here: {reservation.Location}" + (reservation.KeyLockerBox != null ? $" (Locker: {reservation.KeyLockerBox.Name})" : ""),
-                    };
-                    await _emailService.Send(email, TimeSpan.FromMinutes(1));
-                    break;
                 case NotificationChannel.Push:
                     var notification = new Notification
                     {
@@ -841,11 +831,28 @@ namespace CarWash.PWA.Controllers
                     try
                     {
                         await _pushService.Send(reservation.UserId, notification);
+                        break;
+                    }
+                    catch (PushService.NoActivePushSubscriptionException)
+                    {
+                        reservation.User.NotificationChannel = NotificationChannel.Email;
+                        await _context.SaveChangesAsync();
                     }
                     catch (Exception e)
                     {
                         _telemetryClient.TrackException(e);
                     }
+                    // If push fails, fallback to email
+                    goto case NotificationChannel.Email;
+                case NotificationChannel.NotSet:
+                case NotificationChannel.Email:
+                    var email = new Email
+                    {
+                        To = reservation.User.Email,
+                        Subject = reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!",
+                        Body = $"You can find it here: {reservation.Location}" + (reservation.KeyLockerBox != null ? $" (Locker: {reservation.KeyLockerBox.Name})" : ""),
+                    };
+                    await _emailService.Send(email, TimeSpan.FromMinutes(1));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -1100,16 +1107,6 @@ namespace CarWash.PWA.Controllers
                 {
                     case NotificationChannel.Disabled:
                         break;
-                    case NotificationChannel.NotSet:
-                    case NotificationChannel.Email:
-                        var email = new Email
-                        {
-                            To = reservation.User.Email,
-                            Subject = "CarWash has left a comment on your reservation. Please do not reply to this email, messages to service providers can only be sent within the app. Kindly log in to your account and communicate directly through the in-app messaging feature.",
-                            Body = comment,
-                        };
-                        await _emailService.Send(email, TimeSpan.FromMinutes(1));
-                        break;
                     case NotificationChannel.Push:
                         var notification = new Notification
                         {
@@ -1120,11 +1117,28 @@ namespace CarWash.PWA.Controllers
                         try
                         {
                             await _pushService.Send(reservation.UserId, notification);
+                            break;
+                        }
+                        catch (PushService.NoActivePushSubscriptionException)
+                        {
+                            reservation.User.NotificationChannel = NotificationChannel.Email;
+                            await _context.SaveChangesAsync();
                         }
                         catch (Exception e)
                         {
                             _telemetryClient.TrackException(e);
                         }
+                        // If push fails, fallback to email
+                        goto case NotificationChannel.Email;
+                    case NotificationChannel.NotSet:
+                    case NotificationChannel.Email:
+                        var email = new Email
+                        {
+                            To = reservation.User.Email,
+                            Subject = "CarWash has left a comment on your reservation. Please do not reply to this email, messages to service providers can only be sent within the app. Kindly log in to your account and communicate directly through the in-app messaging feature.",
+                            Body = comment,
+                        };
+                        await _emailService.Send(email, TimeSpan.FromMinutes(1));
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();

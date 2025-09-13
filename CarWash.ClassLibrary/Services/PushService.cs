@@ -94,7 +94,7 @@ namespace CarWash.ClassLibrary.Services
             var notificationSentSuccessfully = false;
 
             var subscriptions = await GetUserSubscriptions(userId);
-            if (subscriptions.Count == 0) throw new Exception("No active subscription found for user.");
+            if (subscriptions.Count == 0) throw new NoActivePushSubscriptionException();
 
             foreach (var subscription in subscriptions)
                 try
@@ -115,7 +115,13 @@ namespace CarWash.ClassLibrary.Services
                     }
                 }
 
-            if (!notificationSentSuccessfully) throw new Exception("No push notification was sent successfully.");
+            if (!notificationSentSuccessfully)
+            {
+                subscriptions = await GetUserSubscriptions(userId);
+                if (subscriptions.Count == 0) throw new NoActivePushSubscriptionException();
+                
+                throw new Exception("No push notification was sent successfully.");
+            }
         }
 
         /// <inheritdoc />
@@ -131,5 +137,32 @@ namespace CarWash.ClassLibrary.Services
         /// <returns>List of subscriptions</returns>
         private async Task<List<PushSubscription>> GetUserSubscriptions(string userId) =>
             await _context.PushSubscription.Where(s => s.UserId == userId).ToListAsync();
+
+        /// <summary>
+        /// Exception thrown when no active push subscription is found for a user.
+        /// </summary>
+        public class NoActivePushSubscriptionException : Exception
+        {
+            /// <summary>
+            /// Initializes a new instance of the <see cref="NoActivePushSubscriptionException"/> class.
+            /// </summary>
+            public NoActivePushSubscriptionException()
+                : base("No active push subscription found for the specified user.") { }
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="NoActivePushSubscriptionException"/> class with a custom message.
+            /// </summary>
+            /// <param name="message">The custom exception message.</param>
+            public NoActivePushSubscriptionException(string message)
+                : base(message) { }
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="NoActivePushSubscriptionException"/> class with a custom message and inner exception.
+            /// </summary>
+            /// <param name="message">The custom exception message.</param>
+            /// <param name="innerException">The inner exception.</param>
+            public NoActivePushSubscriptionException(string message, Exception innerException)
+                : base(message, innerException) { }
+        }
     }
 }
