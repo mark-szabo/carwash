@@ -119,11 +119,11 @@ jobs:
                   --value ${{ needs.build-web.outputs.build_number }} `
                   --yes
             - name: Purge Cloudflare Cache
-              uses: jakejarvis/cloudflare-purge-action@v0.3.0
+              uses: aorfanos/cloudflare-purge-action@6ea4c10def01482f8a214c8e527a40918844345e
               env:
-                  CLOUDFLARE_ZONE: ${{ env.CLOUDFLARE_ZONE }}
-                  CLOUDFLARE_TOKEN: ${{ env.CLOUDFLARE_TOKEN }}
-                  PURGE_URLS: ${{ env.CLOUDFLARE_PURGE_URLS }}
+                  CF_ZONE_NAME: ${{ env.CLOUDFLARE_ZONE }}
+                  CF_TOKEN: ${{ env.CLOUDFLARE_TOKEN }}
+                  CF_PURGE_URLS: ${{ env.CLOUDFLARE_PURGE_URLS }}
             - name: Azure service principal logout
               run: az logout
     build-and-deploy-functions:
