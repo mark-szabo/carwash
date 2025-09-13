@@ -29,8 +29,8 @@ namespace CarWash.PWA.Tests
         private const string CARWASH_ADMIN_EMAIL = "carwash@test.com";
         private const int PREWASH = 13;
         private const int WHEEL_CLEANING = 9;
-        private static readonly int YEAR = DateTime.Today.AddMonths(1).Year;
-        private static readonly int MONTH = DateTime.Today.AddMonths(1).Month;
+        private static readonly int YEAR = DateTime.UtcNow.AddMonths(1).Year;
+        private static readonly int MONTH = DateTime.UtcNow.AddMonths(1).Month;
 
         [Fact]
         public void GetReservations_ByDefault_ReturnsAListOfReservations()
@@ -1178,7 +1178,7 @@ namespace CarWash.PWA.Tests
         {
             var dbContext = CreateInMemoryDbContext();
             var john = await dbContext.Users.SingleAsync(u => u.Email == JOHN_EMAIL);
-            var today = DateTime.Today;
+            var today = DateTime.UtcNow.Date;
             var reservationToBeUpdated = await dbContext.Reservation.AddAsync(new Reservation
             {
                 UserId = john.Id,
@@ -1209,7 +1209,7 @@ namespace CarWash.PWA.Tests
         {
             var dbContext = CreateInMemoryDbContext();
             var admin = await dbContext.Users.SingleAsync(u => u.Email == ADMIN_EMAIL);
-            var today = DateTime.Today;
+            var today = DateTime.UtcNow.Date;
             var reservationToBeUpdated = await dbContext.Reservation.AddAsync(new Reservation
             {
                 UserId = admin.Id,
@@ -2345,6 +2345,34 @@ namespace CarWash.PWA.Tests
             configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
 
             return new TelemetryClient(configuration);
+        }
+
+        [Fact]
+        public async Task PostReservation_WithUtcDate_StoresDateAsUtc()
+        {
+            // Arrange
+            var dbContext = CreateInMemoryDbContext();
+            var controller = CreateControllerStub(dbContext);
+            
+            var utcDate = DateTime.UtcNow.AddDays(1).Date.AddHours(8); // Tomorrow at 8 AM UTC
+            var reservation = new Reservation
+            {
+                VehiclePlateNumber = "UTC001",
+                StartDate = utcDate,
+                Services = new List<int> { WHEEL_CLEANING },
+                Private = false,
+                Comments = new List<Comment>()
+            };
+
+            // Act
+            var result = await controller.PostReservation(reservation);
+
+            // Assert
+            var created = (CreatedAtActionResult)result.Result;
+            var createdReservation = (ReservationViewModel)created.Value;
+            
+            // Verify the date is stored as UTC (no timezone conversion applied)
+            Assert.Equal(utcDate, createdReservation.StartDate);
         }
     }
 }

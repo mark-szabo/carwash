@@ -41,7 +41,7 @@ namespace CarWash.Functions
             // Get reservations from SQL database
             var reservations = await _context.Reservation
                 .Include(r => r.User)
-                .Where(r => r.State == State.SubmittedNotActual && r.StartDate.Date == DateTime.Today)
+                .Where(r => r.State == State.SubmittedNotActual && r.StartDate.Date == DateTime.UtcNow.Date)
                 .ToListAsync();
 
             // Cannot use normal LINQ as dates are not in UTC in database. TODO: refactor database to use UTC based times

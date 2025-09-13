@@ -121,9 +121,9 @@ namespace CarWash.PWA.Controllers
             dbReservation.Services = reservation.Services;
             dbReservation.Private = reservation.Private;
             var oldStartDate = dbReservation.StartDate;
-            var newStartDate = reservation.StartDate.ToLocalTime();
+            var newStartDate = reservation.StartDate; // Keep in UTC
             dbReservation.StartDate = newStartDate.Date + new TimeSpan(newStartDate.Hour, minutes: 0, seconds: 0);
-            if (reservation.EndDate != null) dbReservation.EndDate = ((DateTime)reservation.EndDate).ToLocalTime();
+            if (reservation.EndDate != null) dbReservation.EndDate = (DateTime)reservation.EndDate; // Keep in UTC
             else dbReservation.EndDate = null;
             // Comments cannot be modified when reservation is updated.
 
@@ -263,7 +263,7 @@ namespace CarWash.PWA.Controllers
             reservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty).Replace(" ", string.Empty);
             reservation.CreatedById = _user.Id;
             reservation.CreatedOn = DateTime.UtcNow;
-            reservation.StartDate = reservation.StartDate.ToLocalTime();
+            reservation.StartDate = reservation.StartDate; // Keep in UTC
             reservation.StartDate = reservation.StartDate.Date + new TimeSpan(reservation.StartDate.Hour, minutes: 0, seconds: 0);
 
             if (reservation.Comments.Count == 1)
@@ -550,7 +550,7 @@ namespace CarWash.PWA.Controllers
             var reservations = await _context.Reservation
                 .Include(r => r.User)
                 .Include(r => r.KeyLockerBox)
-                .Where(r => r.StartDate.Date >= DateTime.Today.AddDays(-3) || r.State != State.Done)
+                .Where(r => r.StartDate.Date >= DateTime.UtcNow.Date.AddDays(-3) || r.State != State.Done)
                 .OrderBy(r => r.StartDate)
                 .Select(reservation => new AdminReservationViewModel(reservation, new UserViewModel(reservation.User)))
                 .ToListAsync();
@@ -667,15 +667,15 @@ namespace CarWash.PWA.Controllers
                 reservationResolution = "Only one reservation in 'waiting for key' state.";
             }
             // One where we are waiting for the key and is today - eg. there's another one in the past where the key was not dropped off and nobody deleted it
-            else if (reservations.Count(r => r.State == State.ReminderSentWaitingForKey && r.StartDate.Date == DateTime.Today) == 1)
+            else if (reservations.Count(r => r.State == State.ReminderSentWaitingForKey && r.StartDate.Date == DateTime.UtcNow.Date) == 1)
             {
-                reservation = reservations.Single(r => r.State == State.ReminderSentWaitingForKey && r.StartDate.Date == DateTime.Today);
+                reservation = reservations.Single(r => r.State == State.ReminderSentWaitingForKey && r.StartDate.Date == DateTime.UtcNow.Date);
                 reservationResolution = "Only one reservation TODAY in 'waiting for key' state.";
             }
             // Only one active reservation today - eg. user has two reservations, one today, one in the future and on the morning drops off the keys before the reminder
-            else if (reservations.Count(r => r.StartDate.Date == DateTime.Today) == 1)
+            else if (reservations.Count(r => r.StartDate.Date == DateTime.UtcNow.Date) == 1)
             {
-                reservation = reservations.Single(r => r.StartDate.Date == DateTime.Today);
+                reservation = reservations.Single(r => r.StartDate.Date == DateTime.UtcNow.Date);
                 reservationResolution = "Only one reservation today.";
             }
             else if (model.VehiclePlateNumber == null)
@@ -1415,7 +1415,7 @@ namespace CarWash.PWA.Controllers
                 while (dateIterator <= ((DateTime)blocker.EndDate).Date)
                 {
                     // Don't bother with the past part of the blocker
-                    if (dateIterator < DateTime.Today)
+                    if (dateIterator < DateTime.UtcNow.Date)
                     {
                         dateIterator = dateIterator.AddDays(1);
                         continue;
@@ -1561,8 +1561,8 @@ namespace CarWash.PWA.Controllers
         [HttpGet, Route("export")]
         public async Task<IActionResult> Export(DateTime? startDate = null, DateTime? endDate = null)
         {
-            var startDateNonNull = startDate ?? DateTime.Today.AddMonths(-1);
-            var endDateNonNull = endDate ?? DateTime.Today;
+            var startDateNonNull = startDate ?? DateTime.UtcNow.Date.AddMonths(-1);
+            var endDateNonNull = endDate ?? DateTime.UtcNow.Date;
 
             List<Reservation> reservations;
 
@@ -1711,7 +1711,7 @@ namespace CarWash.PWA.Controllers
 
         private DateTime CalculateEndTime(DateTime startTime, DateTime? endTime)
         {
-            if (endTime != null) return ((DateTime)endTime).ToLocalTime();
+            if (endTime != null) return (DateTime)endTime; // Keep in UTC
 
             var slot = _configuration.CurrentValue.Slots.Find(s => s.StartTime == startTime.Hour);
             if (slot == null) throw new ArgumentOutOfRangeException(nameof(startTime), "Start time does not fit into any slot.");

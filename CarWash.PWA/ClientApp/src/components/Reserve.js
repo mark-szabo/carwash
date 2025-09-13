@@ -236,12 +236,12 @@ class Reserve extends TrackedComponent {
                     const { dates, times } = data;
                     for (const i in dates) {
                         if (dates.hasOwnProperty(i)) {
-                            dates[i] = moment(dates[i]).toDate();
+                            dates[i] = moment.utc(dates[i]).toDate(); // Parse as UTC
                         }
                     }
                     for (const i in times) {
                         if (times.hasOwnProperty(i)) {
-                            times[i] = moment(times[i]);
+                            times[i] = moment.utc(times[i]); // Parse as UTC
                         }
                     }
                     this.setState({
@@ -380,7 +380,7 @@ class Reserve extends TrackedComponent {
 
     handleDateSelectionComplete = date => {
         if (!date) return;
-        const selectedDate = moment(date);
+        const selectedDate = moment(date); // This is local time from the date picker
 
         this.setState({
             activeStep: 2,
@@ -410,7 +410,7 @@ class Reserve extends TrackedComponent {
 
     handleTimeSelectionComplete = event => {
         const time = event.target.value;
-        const dateTime = moment(this.state.selectedDate);
+        const dateTime = moment(this.state.selectedDate); // Work with local time
         dateTime.hours(time);
         dateTime.minutes(0);
         dateTime.seconds(0);
@@ -525,7 +525,7 @@ class Reserve extends TrackedComponent {
             location: this.state.locationKnown ? `${this.state.garage}/${this.state.floor}/${this.state.seat}` : null,
             services: this.state.selectedServices,
             private: this.state.private,
-            startDate: this.state.selectedDate,
+            startDate: this.state.selectedDate.utc().toISOString(), // Ensure UTC
         };
 
         if (this.state.comment) {
