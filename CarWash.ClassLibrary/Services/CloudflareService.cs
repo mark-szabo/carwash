@@ -47,14 +47,14 @@ public class CloudflareService(HttpClient httpClient, IOptionsMonitor<CarWashCon
                     "https://www.mimosonk.hu/api/.well-known/configuration"
                 }
             };
-
             var requestJson = JsonSerializer.Serialize(purgeRequest);
-            var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
 
-            httpClient.DefaultRequestHeaders.Clear();
-            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-
-            var response = await httpClient.PostAsync($"https://api.cloudflare.com/client/v4/zones/{zoneId}/purge_cache", content);
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"https://api.cloudflare.com/client/v4/zones/{zoneId}/purge_cache")
+            {
+                Content = new StringContent(requestJson, Encoding.UTF8, "application/json")
+            };
+            request.Headers.Add("Authorization", $"Bearer {apiKey}");
+            var response = await httpClient.SendAsync(request);
 
             if (response.IsSuccessStatusCode)
             {

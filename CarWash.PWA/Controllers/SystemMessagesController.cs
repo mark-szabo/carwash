@@ -17,6 +17,7 @@ namespace CarWash.PWA.Controllers
     /// </remarks>
     /// <param name="context">The database context.</param>
     /// <param name="userService">User provider service.</param>
+    /// <param name="cloudflareService">Cloudflare cache purging service.</param>
     [Produces("application/json")]
     [Route("api/systemmessages")]
     [ApiController]
