@@ -8,10 +8,16 @@ namespace CarWash.ClassLibrary.Models
     public class WellKnown
     {
         /// <summary>
+        /// Time zone identifier for the car wash provider (e.g., "Europe/Budapest").
+        /// </summary>
+        public string TimeZone { get; set; } = "UTC";
+
+        /// <summary>
         /// List of bookable slots and their capacity.
         /// </summary>
         /// <remarks>
         /// Capacity is in number of cars per slot, not in minutes!
+        /// StartTime and EndTime are specified as time-of-day in the provider's time zone.
         /// </remarks>
         public List<Slot> Slots { get; set; } = [];
 
