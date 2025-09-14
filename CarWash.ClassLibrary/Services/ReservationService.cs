@@ -41,7 +41,7 @@ namespace CarWash.ClassLibrary.Services
             _telemetryClient = telemetryClient;
         }
 
-        public async Task<ValidationResult> ValidateReservationAsync(Reservation reservation, bool isUpdate, User currentUser)
+        public async Task<ValidationResult> ValidateReservationAsync(Reservation reservation, bool isUpdate, User currentUser, string? excludeReservationId = null)
         {
             // Input validation
             if (reservation.Services == null || reservation.Services.Count == 0)
@@ -57,12 +57,25 @@ namespace CarWash.ClassLibrary.Services
                 return new ValidationResult { IsValid = false, ErrorMessage = "No service chosen." };
             }
 
+            // Calculate EndDate if not provided (needed for validation)
+            if (reservation.EndDate == null || reservation.EndDate == default(DateTime))
+            {
+                try
+                {
+                    reservation.EndDate = CalculateEndTime(reservation.StartDate, reservation.EndDate);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    return new ValidationResult { IsValid = false, ErrorMessage = "Reservation can be made to slots only." };
+                }
+            }
+
             // Calculate time requirement for validation
             var timeRequirement = reservation.Services.Contains(Constants.ServiceType.Carpet) ?
                 _configuration.CurrentValue.Reservation.CarpetCleaningMultiplier * _configuration.CurrentValue.Reservation.TimeUnit :
                 _configuration.CurrentValue.Reservation.TimeUnit;
 
-            // Authorization validation
+            // Authorization validation - these should throw exceptions for proper HTTP responses
             if (reservation.UserId != currentUser.Id)
             {
                 if (!currentUser.IsAdmin && !currentUser.IsCarwashAdmin)
@@ -77,7 +90,7 @@ namespace CarWash.ClassLibrary.Services
                             { "IsCarwashAdmin", currentUser.IsCarwashAdmin.ToString() },
                             { "CreatedById", currentUser.Id }
                         });
-                    return new ValidationResult { IsValid = false, ErrorMessage = "Cannot reserve for others without admin privileges." };
+                    throw new UnauthorizedAccessException("User cannot reserve in the name of others unless admin.");
                 }
 
                 if (reservation.UserId != null)
@@ -95,7 +108,7 @@ namespace CarWash.ClassLibrary.Services
                                 { "IsCarwashAdmin", currentUser.IsCarwashAdmin.ToString() },
                                 { "CreatedById", currentUser.Id }
                             });
-                        return new ValidationResult { IsValid = false, ErrorMessage = "Cannot reserve for users from other companies." };
+                        throw new UnauthorizedAccessException("Admin cannot reserve in the name of other companies' users.");
                     }
                 }
             }
@@ -119,10 +132,10 @@ namespace CarWash.ClassLibrary.Services
             if (await IsBlocked(reservation.StartDate, reservation.EndDate, currentUser))
                 return new ValidationResult { IsValid = false, ErrorMessage = "This time is blocked." };
 
-            if (!await IsEnoughTimeOnDateAsync(reservation.StartDate, timeRequirement, currentUser))
+            if (!await IsEnoughTimeOnDateAsync(reservation.StartDate, timeRequirement, currentUser, excludeReservationId))
                 return new ValidationResult { IsValid = false, ErrorMessage = "Company limit has been met for this day or there is not enough time at all." };
 
-            if (!await IsEnoughTimeInSlotAsync(reservation.StartDate, timeRequirement, currentUser))
+            if (!await IsEnoughTimeInSlotAsync(reservation.StartDate, timeRequirement, currentUser, excludeReservationId))
                 return new ValidationResult { IsValid = false, ErrorMessage = "There is not enough time in that slot." };
 
             return new ValidationResult { IsValid = true };
@@ -157,19 +170,7 @@ namespace CarWash.ClassLibrary.Services
                 throw new ArgumentException("Only one comment can be added when creating a reservation.");
             }
 
-            try
-            {
-                reservation.EndDate = CalculateEndTime(reservation.StartDate, reservation.EndDate);
-            }
-            catch (ArgumentOutOfRangeException e)
-            {
-                _telemetryClient.TrackException(e, new Dictionary<string, string>
-                {
-                    { "CreatedById", reservation.CreatedById },
-                    { "StartDate", reservation.StartDate.ToString() }
-                });
-                throw new ArgumentException("Reservation can be made to slots only.");
-            }
+            // EndDate should already be calculated during validation
 
             if (dropoffConfirmed)
             {
@@ -230,16 +231,7 @@ namespace CarWash.ClassLibrary.Services
             var newStartDate = reservation.StartDate;
             dbReservation.StartDate = reservation.StartDate;
             if (reservation.EndDate != null) dbReservation.EndDate = (DateTime)reservation.EndDate;
-            else dbReservation.EndDate = null;
-
-            try
-            {
-                dbReservation.EndDate = CalculateEndTime(dbReservation.StartDate, dbReservation.EndDate);
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                throw new ArgumentException("Reservation can be made to slots only.");
-            }
+            // EndDate should already be calculated during validation
 
             if (dropoffConfirmed)
             {
@@ -650,7 +642,7 @@ namespace CarWash.ClassLibrary.Services
             return false;
         }
 
-        private async Task<bool> IsEnoughTimeOnDateAsync(DateTime date, int timeRequirement, User currentUser)
+        private async Task<bool> IsEnoughTimeOnDateAsync(DateTime date, int timeRequirement, User currentUser, string? excludeReservationId = null)
         {
             if (currentUser.IsCarwashAdmin) return true;
 
@@ -661,9 +653,12 @@ namespace CarWash.ClassLibrary.Services
             {
                 var allSlotCapacity = _configuration.CurrentValue.Slots.Sum(s => s.Capacity);
 
-                var reservedTimeOnDate = await _context.Reservation
-                    .Where(r => r.StartDate.Date == date.Date)
-                    .SumAsync(r => r.TimeRequirement);
+                var query = _context.Reservation.Where(r => r.StartDate.Date == date.Date);
+                if (!string.IsNullOrEmpty(excludeReservationId))
+                {
+                    query = query.Where(r => r.Id != excludeReservationId);
+                }
+                var reservedTimeOnDate = await query.SumAsync(r => r.TimeRequirement);
 
                 if (reservedTimeOnDate + timeRequirement > allSlotCapacity * _configuration.CurrentValue.Reservation.TimeUnit)
                 {
@@ -684,9 +679,13 @@ namespace CarWash.ClassLibrary.Services
             }
             else
             {
-                var reservedTimeOnDate = await _context.Reservation
-                    .Where(r => r.StartDate.Date == date.Date && r.User.Company == currentUser.Company)
-                    .SumAsync(r => r.TimeRequirement);
+                var query = _context.Reservation
+                    .Where(r => r.StartDate.Date == date.Date && r.User.Company == currentUser.Company);
+                if (!string.IsNullOrEmpty(excludeReservationId))
+                {
+                    query = query.Where(r => r.Id != excludeReservationId);
+                }
+                var reservedTimeOnDate = await query.SumAsync(r => r.TimeRequirement);
 
                 if (reservedTimeOnDate + timeRequirement > userCompanyLimit * _configuration.CurrentValue.Reservation.TimeUnit)
                 {
@@ -708,9 +707,13 @@ namespace CarWash.ClassLibrary.Services
 
             if (date.Date == DateTime.UtcNow.Date)
             {
-                var toBeDoneTodayTime = await _context.Reservation
-                    .Where(r => r.StartDate >= DateTime.UtcNow && r.StartDate.Date == DateTime.UtcNow.Date)
-                    .SumAsync(r => r.TimeRequirement);
+                var query = _context.Reservation
+                    .Where(r => r.StartDate >= DateTime.UtcNow && r.StartDate.Date == DateTime.UtcNow.Date);
+                if (!string.IsNullOrEmpty(excludeReservationId))
+                {
+                    query = query.Where(r => r.Id != excludeReservationId);
+                }
+                var toBeDoneTodayTime = await query.SumAsync(r => r.TimeRequirement);
 
                 var remainingSlotCapacityToday = GetRemainingSlotCapacityToday();
                 if (toBeDoneTodayTime + timeRequirement > remainingSlotCapacityToday * _configuration.CurrentValue.Reservation.TimeUnit)
@@ -734,13 +737,19 @@ namespace CarWash.ClassLibrary.Services
             return true;
         }
 
-        private async Task<bool> IsEnoughTimeInSlotAsync(DateTime dateTime, int timeRequirement, User currentUser)
+        private async Task<bool> IsEnoughTimeInSlotAsync(DateTime dateTime, int timeRequirement, User currentUser, string? excludeReservationId = null)
         {
             if (currentUser.IsCarwashAdmin) return true;
 
-            var reservedTimeInSlot = await _context.Reservation
-                .Where(r => r.StartDate == dateTime)
-                .SumAsync(r => r.TimeRequirement);
+            var query = _context.Reservation.Where(r => r.StartDate == dateTime);
+            
+            // Exclude the current reservation if this is an update
+            if (!string.IsNullOrEmpty(excludeReservationId))
+            {
+                query = query.Where(r => r.Id != excludeReservationId);
+            }
+
+            var reservedTimeInSlot = await query.SumAsync(r => r.TimeRequirement);
 
             if (dateTime.Kind == DateTimeKind.Unspecified)
                 dateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);

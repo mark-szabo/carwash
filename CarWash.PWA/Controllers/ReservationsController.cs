@@ -112,7 +112,7 @@ namespace CarWash.PWA.Controllers
             try
             {
                 // Validate the reservation
-                var validationResult = await _reservationService.ValidateReservationAsync(reservation, true, _user);
+                var validationResult = await _reservationService.ValidateReservationAsync(reservation, true, _user, id);
                 if (!validationResult.IsValid)
                     return BadRequest(validationResult.ErrorMessage);
 

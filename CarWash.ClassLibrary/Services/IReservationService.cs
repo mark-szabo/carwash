@@ -17,8 +17,9 @@ namespace CarWash.ClassLibrary.Services
         /// <param name="reservation">The reservation to validate</param>
         /// <param name="isUpdate">Whether this is an update operation</param>
         /// <param name="currentUser">The current user performing the operation</param>
+        /// <param name="excludeReservationId">For updates, the ID of reservation to exclude from capacity calculations</param>
         /// <returns>Validation result with any error messages</returns>
-        Task<ValidationResult> ValidateReservationAsync(Reservation reservation, bool isUpdate, User currentUser);
+        Task<ValidationResult> ValidateReservationAsync(Reservation reservation, bool isUpdate, User currentUser, string? excludeReservationId = null);
 
         /// <summary>
         /// Creates a new reservation with all necessary business logic
