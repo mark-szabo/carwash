@@ -33,7 +33,6 @@ namespace CarWash.PWA.Controllers
         {
             var wellKnown = new WellKnown
             {
-                TimeZone = configuration.CurrentValue.TimeZone,
                 Slots = configuration.CurrentValue.Slots,
                 Companies = await context.Company.ToListAsync(),
                 Garages = configuration.CurrentValue.Garages,

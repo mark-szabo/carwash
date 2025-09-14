@@ -14,18 +14,6 @@ namespace CarWash.ClassLibrary.Models
     public class CarWashConfiguration
     {
         /// <summary>
-        /// Time zone identifier for the car wash provider (e.g., "Europe/Budapest").
-        /// Used to define slot schedules and handle timezone conversions.
-        /// </summary>
-        /// <remarks>
-        /// Location: Application Settings
-        /// Key: TimeZone
-        /// Default value: "UTC"
-        /// </remarks>
-        /// <example>"Europe/Budapest"</example>
-        public string TimeZone { get; init; } = "UTC";
-
-        /// <summary>
         /// List of bookable slots and their capacity.
         /// </summary>
         /// <remarks>
@@ -176,6 +164,18 @@ namespace CarWash.ClassLibrary.Models
         /// </remarks>
         public class ReservationSettings
         {
+            /// <summary>
+            /// Time zone identifier for the car wash provider (e.g., "Europe/Budapest").
+            /// Used to define slot schedules and handle timezone conversions.
+            /// </summary>
+            /// <remarks>
+            /// Location: Application Settings
+            /// Key: Reservation:TimeZone
+            /// Default value: "UTC"
+            /// </remarks>
+            /// <example>"Europe/Budapest"</example>
+            public string TimeZone { get; init; } = "UTC";
+
             /// <summary>
             /// Wash time unit in minutes.
             /// </summary>
