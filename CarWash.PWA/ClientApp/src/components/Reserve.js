@@ -26,12 +26,18 @@ import CloudOffIcon from '@mui/icons-material/CloudOff';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import Grid from '@mui/material/Grid';
 import * as moment from 'moment';
+import * as dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import { Service, NotificationChannel, getServiceName } from '../Constants';
 import './Reserve.css';
 import ServiceDetailsTable from './ServiceDetailsTable';
 import Spinner from './Spinner';
 import LocationSelector from './LocationSelector';
 import BillingDetailsDialog from './BillingDetailsDialog';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const styles = theme => ({
     stepper: {
@@ -236,7 +242,8 @@ class Reserve extends TrackedComponent {
                     const { dates, times } = data;
                     for (const i in dates) {
                         if (dates.hasOwnProperty(i)) {
-                            dates[i] = moment.utc(dates[i]).toDate(); // Parse as UTC
+                            // Workaround: treating UTC time as local, as we are talking about dates only (no time)
+                            dates[i] = moment(dates[i]).toDate();
                         }
                     }
                     for (const i in times) {
@@ -380,14 +387,14 @@ class Reserve extends TrackedComponent {
 
     handleDateSelectionComplete = date => {
         if (!date) return;
-        const selectedDate = moment(date); // This is local time from the date picker
+        const selectedDate = moment(date).startOf('day'); // This is local time from the date picker
 
         this.setState({
             activeStep: 2,
             selectedDate,
             disabledSlots: this.props.configuration.slots.map((slot, index) => {
                 const startHour = parseInt(slot.startTime.split(':')[0], 10);
-                return this.isTimeNotAvailable(selectedDate, startHour);
+                return this.isTimeNotAvailable(date, startHour);
             }),
             dateStepLabel: selectedDate.format('MMMM D, YYYY'),
             dateSelected: true,
@@ -432,10 +439,15 @@ class Reserve extends TrackedComponent {
     };
 
     isTimeNotAvailable = (date, time) => {
-        date.hours(time);
-        return (
-            this.state.notAvailableTimes.filter(notAvailableTime => notAvailableTime.isSame(date, 'hour')).length > 0
-        );
+        const utcDate = dayjs
+            .tz(date, this.props.configuration.reservationSettings.timeZone)
+            .hour(time)
+            .minute(0)
+            .second(0)
+            .millisecond(0)
+            .utc()
+            .toISOString();
+        return this.state.notAvailableTimes.some(notAvailableTime => notAvailableTime.toISOString() === utcDate);
     };
 
     handlePlateNumberChange = event => {
@@ -646,7 +658,7 @@ class Reserve extends TrackedComponent {
                     value={startHour}
                     control={<Radio />}
                     label={`${startHour}:00 - ${endHour}:00 ${freeSlotsText}`}
-                    disabled={disabledSlots[i] && freeSlots === 0}
+                    disabled={disabledSlots[i] || freeSlots === 0}
                     id={`reserve-slot-${i}`}
                 />
             );
@@ -683,7 +695,6 @@ class Reserve extends TrackedComponent {
         } = this.state;
         const today = moment();
         const yearFromToday = moment().add(1, 'year');
-        const isDateToday = selectedDate?.isSame(today, 'day');
 
         const shouldDisableDate = date => {
             const dayOfWeek = date.day();
