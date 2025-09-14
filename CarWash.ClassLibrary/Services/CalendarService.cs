@@ -92,13 +92,17 @@ namespace CarWash.ClassLibrary.Services
         {
             if (reservation.User == null) throw new Exception("User is not loaded for reservation!");
 
+            var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(configuration.CurrentValue.Reservation.TimeZone);
+
+            if (reservation.EndDate == null) throw new Exception("Reservation end date cannot be null.");
+
             return new Event
             {
                 Id = reservation.OutlookEventId,
                 To = reservation.User.Email,
                 Subject = $"🚗 Car wash ({reservation.VehiclePlateNumber})",
-                StartTime = reservation.StartDate.ToString(),
-                EndTime = reservation.EndDate.ToString(),
+                StartTime = TimeZoneInfo.ConvertTimeFromUtc(reservation.StartDate, providerTimeZone).ToString(),
+                EndTime = TimeZoneInfo.ConvertTimeFromUtc((DateTime)reservation.EndDate, providerTimeZone).ToString(),
                 Location = reservation.Location,
                 Body =
                     $"Please don't forget to <a href=\"{configuration.CurrentValue.ConnectionStrings.BaseUrl}/#dropoffkey\">drop-off your keys and confirm vehicle location by clicking here</a>!"

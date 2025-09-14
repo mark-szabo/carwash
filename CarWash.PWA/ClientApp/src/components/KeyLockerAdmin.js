@@ -6,8 +6,13 @@ import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import WifiOffIcon from '@mui/icons-material/WifiOff';
 import CloseIcon from '@mui/icons-material/Close';
-import * as moment from 'moment';
+import * as dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import { amber } from '@mui/material/colors';
+
+dayjs.extend(utc);
+dayjs.extend(relativeTime);
 
 const getBoxColor = (state, isConnected, isDoorClosed) => {
     if (!isConnected) return null;
@@ -139,9 +144,9 @@ function KeyLockerAdmin({ user, openSnackbar, closedKeyLockerBoxIds }) {
                         <br />
                         Door Closed: {selectedBox?.isDoorClosed ? 'Yes' : 'No'}
                         <br />
-                        Last Modified: {moment.utc(selectedBox?.lastModifiedAt).local().fromNow()}
+                        Last Modified: {dayjs.utc(selectedBox?.lastModifiedAt).local().fromNow()}
                         <br />
-                        Last Activity: {moment.utc(selectedBox?.lastActivity).local().fromNow()}
+                        Last Activity: {dayjs.utc(selectedBox?.lastActivity).local().fromNow()}
                     </Typography>
                     {selectedBox?.reservation ? (
                         <Box sx={{ mt: 2 }}>
@@ -153,7 +158,7 @@ function KeyLockerAdmin({ user, openSnackbar, closedKeyLockerBoxIds }) {
                                 <br />
                                 Start:{' '}
                                 {selectedBox.reservation.startDate
-                                    ? moment.utc(selectedBox.reservation.startDate).local().fromNow()
+                                    ? dayjs.utc(selectedBox.reservation.startDate).local().fromNow()
                                     : '-'}
                             </Typography>
                         </Box>

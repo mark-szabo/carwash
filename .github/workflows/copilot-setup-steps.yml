@@ -11,13 +11,7 @@ on:
         paths:
             - .github/workflows/copilot-setup-steps.yml
 
-env:
-    AZURE_WEBAPP_PACKAGE_PATH: CarWash.PWA\publish
-    AZURE_FUNCTIONAPP_PACKAGE_PATH: "CarWash.Functions"
-    CONFIGURATION: Release
-    DOTNET_VERSION: 8.0.x
-    WORKING_DIRECTORY_PWA: CarWash.PWA
-    WORKING_DIRECTORY_FUNCTIONS: CarWash.Functions
+#Environment variables set in workflow do not seem to work when run by Copilot.
 
 jobs:
     # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
@@ -32,7 +26,6 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v5
               with:
-                  ref: develop
                   fetch-depth: 0
 
             - name: Set up Node.js
@@ -40,22 +33,22 @@ jobs:
               with:
                   node-version: "20"
                   cache: "npm"
-                  cache-dependency-path: ${{ env.WORKING_DIRECTORY_PWA }}/ClientApp/package-lock.json
+                  cache-dependency-path: CarWash.PWA/ClientApp/package-lock.json
 
             - name: Install PWA npm dependencies
               run: npm ci
-              working-directory: ${{ env.WORKING_DIRECTORY_PWA }}/ClientApp
+              working-directory: CarWash.PWA/ClientApp
 
             - name: Setup .NET SDK
               uses: actions/setup-dotnet@v3
               with:
-                  dotnet-version: ${{ env.DOTNET_VERSION }}
+                  dotnet-version: 8.0.x
 
             - name: .NET Tool Restore
               run: dotnet tool restore
 
             - name: Restore PWA
-              run: dotnet restore "${{ env.WORKING_DIRECTORY_PWA }}"
+              run: dotnet restore "CarWash.PWA"
 
             - name: Restore Functions
-              run: dotnet restore "${{ env.WORKING_DIRECTORY_FUNCTIONS }}"
+              run: dotnet restore "CarWash.Functions"
