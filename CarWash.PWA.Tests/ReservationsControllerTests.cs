@@ -1,3 +1,4 @@
+using System;
 using CarWash.ClassLibrary;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
@@ -2218,11 +2219,12 @@ namespace CarWash.PWA.Tests
             var configurationStub = new Mock<IOptionsMonitor<CarWashConfiguration>>();
             configurationStub.Setup(s => s.CurrentValue).Returns(() =>  new CarWashConfiguration
             {
+                TimeZone = "UTC", // Explicitly set timezone for tests
                 Slots = new List<Slot>
             {
-                new Slot {StartTime = 8, EndTime = 11, Capacity = 1},
-                new Slot {StartTime = 11, EndTime = 14, Capacity = 1},
-                new Slot {StartTime = 14, EndTime = 17, Capacity = 1}
+                new Slot {StartTime = new TimeSpan(8, 0, 0), EndTime = new TimeSpan(11, 0, 0), Capacity = 1},
+                new Slot {StartTime = new TimeSpan(11, 0, 0), EndTime = new TimeSpan(14, 0, 0), Capacity = 1},
+                new Slot {StartTime = new TimeSpan(14, 0, 0), EndTime = new TimeSpan(17, 0, 0), Capacity = 1}
             },
                 Reservation = new CarWashConfiguration.ReservationSettings
                 {

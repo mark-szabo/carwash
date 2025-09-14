@@ -385,11 +385,10 @@ class Reserve extends TrackedComponent {
         this.setState({
             activeStep: 2,
             selectedDate,
-            disabledSlots: [
-                this.isTimeNotAvailable(selectedDate, 8),
-                this.isTimeNotAvailable(selectedDate, 11),
-                this.isTimeNotAvailable(selectedDate, 14),
-            ],
+            disabledSlots: this.props.configuration.slots.map((slot, index) => {
+                const startHour = parseInt(slot.startTime.split(':')[0], 10);
+                return this.isTimeNotAvailable(selectedDate, startHour);
+            }),
             dateStepLabel: selectedDate.format('MMMM D, YYYY'),
             dateSelected: true,
         });
@@ -638,11 +637,15 @@ class Reserve extends TrackedComponent {
                 }
             }
 
+            // Parse TimeSpan format (e.g., "08:00:00") to display hours
+            const startHour = parseInt(slot.startTime.split(':')[0], 10);
+            const endHour = parseInt(slot.endTime.split(':')[0], 10);
+
             jsx.push(
                 <FormControlLabel
-                    value={slot.startTime}
+                    value={startHour}
                     control={<Radio />}
-                    label={`${slot.startTime}:00 - ${slot.endTime}:00 ${freeSlotsText}`}
+                    label={`${startHour}:00 - ${endHour}:00 ${freeSlotsText}`}
                     disabled={disabledSlots[i] && freeSlots === 0}
                     id={`reserve-slot-${i}`}
                 />
