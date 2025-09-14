@@ -11,7 +11,8 @@ import { ThemeProvider, StyledEngineProvider, createTheme, adaptV4Theme } from '
 import Snackbar from '@mui/material/Snackbar';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
-import moment from 'moment';
+import * as dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import * as signalR from '@microsoft/signalr';
 import Layout from './components/Layout';
 import Home from './components/Home';
@@ -32,6 +33,8 @@ import KeyLockerAdmin from './components/KeyLockerAdmin';
 import ErrorBoundary from './components/ErrorBoundary';
 import NotFound from './components/NotFound';
 import PhoneNumberDialog from './components/PhoneNumberDialog';
+
+dayjs.extend(utc);
 
 // A theme with custom primary and secondary color.
 const lightTheme = createTheme(
@@ -380,7 +383,7 @@ export default class App extends Component {
                 const backlog = data;
                 for (let i = 0; i < backlog.length; i++) {
                     // Treat incoming date as UTC, then convert to local time for display
-                    backlog[i].startDate = moment.utc(backlog[i].startDate).local();
+                    backlog[i].startDate = dayjs.utc(backlog[i].startDate).local();
                 }
                 this.setState({ backlog, backlogLoading: false });
                 if (refresh) this.openSnackbar('Refreshed.');
