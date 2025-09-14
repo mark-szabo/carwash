@@ -1,5 +1,8 @@
-import * as moment from 'moment';
+import * as dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import { Severity } from './Constants';
+
+dayjs.extend(utc);
 
 /**
  * Format location for display
@@ -22,9 +25,9 @@ export function formatLocation(location) {
  * @returns {string} date in the format like '2:00 PM - 5:00 PM • September 21'
  */
 export function formatDate(reservation) {
-    const startTime = moment.utc(reservation.startDate).local().format('h:mm A');
-    const endTime = moment.utc(reservation.endDate).local().format('h:mm A');
-    const date = moment.utc(reservation.startDate).local().format('MMMM D');
+    const startTime = dayjs.utc(reservation.startDate).local().format('h:mm A');
+    const endTime = dayjs.utc(reservation.endDate).local().format('h:mm A');
+    const date = dayjs.utc(reservation.startDate).local().format('MMMM D');
 
     return `${startTime} - ${endTime} • ${date}`;
 }
@@ -35,8 +38,8 @@ export function formatDate(reservation) {
  * @returns {string} date in the format like 'September 21, 2:00 PM - 5:00 PM'
  */
 export function formatDate2(reservation) {
-    const startTime = moment.utc(reservation.startDate).local().format('MMMM D, h:mm A');
-    const endTime = moment.utc(reservation.endDate).local().format('h:mm A');
+    const startTime = dayjs.utc(reservation.startDate).local().format('MMMM D, h:mm A');
+    const endTime = dayjs.utc(reservation.endDate).local().format('h:mm A');
 
     return `${startTime} - ${endTime}`;
 }
@@ -48,8 +51,8 @@ export function formatDate2(reservation) {
  * @returns {string} date in the format like '2018 September 21, 2:00 PM - September 22, 5:00 PM'
  */
 export function format2Dates(date1, date2) {
-    const startTime = moment.utc(date1).local().format('YYYY MMMM D, h:mm A');
-    const endTime = moment.utc(date2).local().format('MMMM D, h:mm A');
+    const startTime = dayjs.utc(date1).local().format('YYYY MMMM D, h:mm A');
+    const endTime = dayjs.utc(date2).local().format('MMMM D, h:mm A');
 
     return `${startTime} - ${endTime}`;
 }

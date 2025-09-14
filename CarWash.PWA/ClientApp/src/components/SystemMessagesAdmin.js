@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import moment from 'moment';
+import * as dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import { withStyles } from '@mui/styles';
 import apiFetch from '../Auth';
 import List from '@mui/material/List';
@@ -22,6 +23,8 @@ import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import Paper from '@mui/material/Paper';
 import { getSeverityName, format2Dates } from '../Helpers';
+
+dayjs.extend(utc);
 
 const styles = theme => ({
     list: {
@@ -81,8 +84,8 @@ function SystemMessagesAdmin(props) {
         const payload = {
             message: newMessage,
             severity: newSeverity,
-            startDateTime: moment(newStartDateTimeLocal).utc().format(),
-            endDateTime: moment(newEndDateTimeLocal).utc().format(),
+            startDateTime: dayjs(newStartDateTimeLocal).utc().format(),
+            endDateTime: dayjs(newEndDateTimeLocal).utc().format(),
         };
 
         apiFetch('api/systemmessages', {

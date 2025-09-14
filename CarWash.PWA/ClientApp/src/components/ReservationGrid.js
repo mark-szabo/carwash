@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@mui/styles';
 import Typography from '@mui/material/Typography';
-import * as moment from 'moment';
+import * as dayjs from 'dayjs';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
 import Masonry from 'react-virtualized/dist/commonjs/Masonry';
 import createCellPositioner from 'react-virtualized/dist/commonjs/Masonry/createCellPositioner';
@@ -85,7 +85,7 @@ class ReservationGrid extends React.PureComponent {
     reorderReservations = reservations =>
         reservations
             .filter(r => r.state !== State.Done)
-            .sort((r1, r2) => (moment(r1.startDate).isBefore(moment(r2.startDate)) ? -1 : 1))
+            .sort((r1, r2) => (dayjs(r1.startDate).isBefore(dayjs(r2.startDate)) ? -1 : 1))
             .concat(reservations.filter(r => r.state === State.Done));
 
     onResize = ({ width }) => {

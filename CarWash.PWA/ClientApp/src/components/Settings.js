@@ -20,7 +20,8 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import red from '@mui/material/colors/red';
 import * as download from 'downloadjs';
-import * as moment from 'moment';
+import * as dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import { NotificationChannel, PaymentMethod } from '../Constants';
 import { validatePhoneNumber } from '../Helpers';
 import registerPush, { askPermission } from '../PushService';
@@ -28,6 +29,8 @@ import Spinner from './Spinner';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+
+dayjs.extend(utc);
 
 const styles = theme => ({
     dangerButton: {
@@ -134,7 +137,7 @@ class Settings extends TrackedComponent {
             data => {
                 const dataString = JSON.stringify(data);
                 const name = this.props.user.firstName.toLowerCase() + this.props.user.lastName.toLowerCase();
-                const date = moment.utc().format('YYYY-MM-DD'); // get the current date in UTC
+                const date = dayjs.utc().format('YYYY-MM-DD'); // get the current date in UTC
                 download(dataString, `carwash_${name}_${date}.json`, 'text/json');
             },
             error => {
