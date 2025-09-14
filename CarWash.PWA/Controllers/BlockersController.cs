@@ -98,7 +98,7 @@ namespace CarWash.PWA.Controllers
 
             blocker.CreatedById = _user.Id;
             blocker.CreatedOn = DateTime.UtcNow;
-            if (blocker.EndDate == null) blocker.EndDate = new DateTime(blocker.StartDate.Year, blocker.StartDate.Month, blocker.StartDate.Day, 23, 59, 59);
+            if (blocker.EndDate == null) blocker.EndDate = new DateTime(blocker.StartDate.Year, blocker.StartDate.Month, blocker.StartDate.Day, 23, 59, 59, DateTimeKind.Utc);
 
             if (blocker.EndDate.Value.Subtract(blocker.StartDate).TotalDays > 31) return BadRequest("Blocker cannot be longer than one month.");
             if (blocker.EndDate <= blocker.StartDate) return BadRequest("Blocker end time should be after the start time.");

@@ -121,8 +121,8 @@ namespace CarWash.PWA.Controllers
             dbReservation.Services = reservation.Services;
             dbReservation.Private = reservation.Private;
             var oldStartDate = dbReservation.StartDate;
-            var newStartDate = reservation.StartDate; // Keep in UTC
-            dbReservation.StartDate = newStartDate.Date + new TimeSpan(newStartDate.Hour, minutes: 0, seconds: 0);
+            var newStartDate = reservation.StartDate;
+            dbReservation.StartDate = reservation.StartDate;
             if (reservation.EndDate != null) dbReservation.EndDate = (DateTime)reservation.EndDate; // Keep in UTC
             else dbReservation.EndDate = null;
             // Comments cannot be modified when reservation is updated.
@@ -149,7 +149,7 @@ namespace CarWash.PWA.Controllers
 
                 if (reservation.UserId != null)
                 {
-                    var reservationUser = _context.Users.Find(reservation.UserId);
+                    var reservationUser = await _context.Users.FindAsync(reservation.UserId);
                     if (_user.IsAdmin && reservationUser.Company != _user.Company) return Forbid();
 
                     dbReservation.UserId = reservation.UserId;
@@ -213,7 +213,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -263,8 +263,6 @@ namespace CarWash.PWA.Controllers
             reservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty).Replace(" ", string.Empty);
             reservation.CreatedById = _user.Id;
             reservation.CreatedOn = DateTime.UtcNow;
-            reservation.StartDate = reservation.StartDate; // Keep in UTC
-            reservation.StartDate = reservation.StartDate.Date + new TimeSpan(reservation.StartDate.Hour, minutes: 0, seconds: 0);
 
             if (reservation.Comments.Count == 1)
             {
@@ -340,7 +338,7 @@ namespace CarWash.PWA.Controllers
 
                 if (reservation.UserId != null)
                 {
-                    var reservationUser = _context.Users.Find(reservation.UserId);
+                    var reservationUser = await _context.Users.FindAsync(reservation.UserId);
                     if (_user.IsAdmin && reservationUser.Company != _user.Company)
                     {
                         _telemetryClient.TrackTrace(
@@ -591,7 +589,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -694,7 +692,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == reservation.Id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == reservation.Id))
                 {
                     return NotFound();
                 }
@@ -755,7 +753,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -807,7 +805,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -899,7 +897,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -946,7 +944,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -1002,7 +1000,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -1090,7 +1088,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -1185,7 +1183,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -1233,7 +1231,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -1281,7 +1279,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
