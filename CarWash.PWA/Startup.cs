@@ -101,6 +101,7 @@ namespace CarWash.PWA
             services.AddScoped<IPushService, PushService>();
             services.AddScoped<IBotService, BotService>();
             services.AddScoped<IKeyLockerService, KeyLockerService>();
+            services.AddScoped<IReservationService, ReservationService>();
             services.AddHttpClient<ICloudflareService, CloudflareService>();
 
             // Add framework services

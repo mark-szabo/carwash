@@ -31,20 +31,14 @@ namespace CarWash.PWA.Controllers
         IOptionsMonitor<CarWashConfiguration> configuration,
         ApplicationDbContext context,
         IUserService userService,
-        IEmailService emailService,
-        ICalendarService calendarService,
-        IPushService pushService,
-        IBotService botService,
+        IReservationService reservationService,
         IHubContext<BacklogHub> backlogHub,
         TelemetryClient telemetryClient) : ControllerBase
     {
         private readonly IOptionsMonitor<CarWashConfiguration> _configuration = configuration;
         private readonly ApplicationDbContext _context = context;
         private readonly User _user = userService.CurrentUser;
-        private readonly IEmailService _emailService = emailService;
-        private readonly ICalendarService _calendarService = calendarService;
-        private readonly IPushService _pushService = pushService;
-        private readonly IBotService _botService = botService;
+        private readonly IReservationService _reservationService = reservationService;
         private readonly IHubContext<BacklogHub> _backlogHub = backlogHub;
         private readonly TelemetryClient _telemetryClient = telemetryClient;
 
@@ -113,103 +107,34 @@ namespace CarWash.PWA.Controllers
             if (id != reservation.Id) return BadRequest();
 
             var dbReservation = await _context.Reservation.FindAsync(id);
-
             if (dbReservation == null) return NotFound();
 
-            dbReservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty).Replace(" ", string.Empty);
-            dbReservation.Location = reservation.Location;
-            dbReservation.Services = reservation.Services;
-            dbReservation.Private = reservation.Private;
-            var oldStartDate = dbReservation.StartDate;
-            var newStartDate = reservation.StartDate;
-            dbReservation.StartDate = reservation.StartDate;
-            if (reservation.EndDate != null) dbReservation.EndDate = (DateTime)reservation.EndDate; // Keep in UTC
-            else dbReservation.EndDate = null;
-            // Comments cannot be modified when reservation is updated.
-
             try
             {
-                dbReservation.EndDate = CalculateEndTime(dbReservation.StartDate, dbReservation.EndDate);
+                // Validate the reservation
+                var validationResult = await _reservationService.ValidateReservationAsync(reservation, true, _user);
+                if (!validationResult.IsValid)
+                    return BadRequest(validationResult.ErrorMessage);
+
+                // Update the reservation
+                var updatedReservation = await _reservationService.UpdateReservationAsync(reservation, _user, dropoffConfirmed);
+
+                // Broadcast SignalR update
+                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, updatedReservation.Id);
+
+                return Ok(new ReservationViewModel(updatedReservation));
             }
-            catch (ArgumentOutOfRangeException)
+            catch (ArgumentException ex)
             {
-                return BadRequest("Reservation can be made to slots only.");
+                return BadRequest(ex.Message);
             }
-
-            if (dropoffConfirmed)
+            catch (UnauthorizedAccessException ex)
             {
-                if (dbReservation.Location == null) return BadRequest("Location must be set if drop-off pre-confirmed.");
-                dbReservation.State = State.DropoffAndLocationConfirmed;
+                return Forbid();
             }
-
-            #region Input validation
-            if (reservation.UserId != _user.Id)
+            catch (InvalidOperationException ex)
             {
-                if (!_user.IsAdmin && !_user.IsCarwashAdmin) return Forbid();
-
-                if (reservation.UserId != null)
-                {
-                    var reservationUser = await _context.Users.FindAsync(reservation.UserId);
-                    if (_user.IsAdmin && reservationUser.Company != _user.Company) return Forbid();
-
-                    dbReservation.UserId = reservation.UserId;
-                }
-            }
-            if (reservation.Services == null || reservation.Services.Count == 0) return BadRequest("No service chosen.");
-            #endregion
-
-            // Time requirement calculation
-            dbReservation.TimeRequirement = dbReservation.Services.Contains(Constants.ServiceType.Carpet) ?
-                _configuration.CurrentValue.Reservation.CarpetCleaningMultiplier * _configuration.CurrentValue.Reservation.TimeUnit :
-                _configuration.CurrentValue.Reservation.TimeUnit;
-
-            #region Business validation
-            // Checks whether start and end times are on the same day
-            if (!IsStartAndEndTimeOnSameDay(dbReservation.StartDate, dbReservation.EndDate))
-                return BadRequest("Reservation time range should be located entirely on the same day.");
-
-            // Checks whether end time is later than start time
-            if (!IsEndTimeLaterThanStartTime(dbReservation.StartDate, dbReservation.EndDate))
-                return BadRequest("Reservation end time should be later than the start time.");
-
-            // Checks whether start or end time is before the earliest allowed time
-            if (IsInPast(dbReservation.StartDate, dbReservation.EndDate))
-                return BadRequest("Cannot reserve in the past.");
-
-            // Checks whether start or end times fit into a slot
-            if (!IsInSlot(dbReservation.StartDate, dbReservation.EndDate))
-                return BadRequest("Reservation can be made to slots only.");
-
-            // Checks if the date/time is blocked
-            if (await IsBlocked(dbReservation.StartDate, dbReservation.EndDate))
-                return BadRequest("This time is blocked.");
-
-            // Don't check if date&slot haven't changed
-            if (newStartDate != oldStartDate)
-            {
-                // Check if there is enough time on that day
-                if (!await IsEnoughTimeOnDateAsync(dbReservation.StartDate, dbReservation.TimeRequirement))
-                    return BadRequest("Company limit has been met for this day or there is not enough time at all.");
-
-                // Check if there is enough time in that slot
-                if (!await IsEnoughTimeInSlotAsync(dbReservation.StartDate, dbReservation.TimeRequirement))
-                    return BadRequest("There is not enough time in that slot.");
-            }
-            #endregion
-
-            // Check if MPV
-            dbReservation.Mpv = dbReservation.Mpv || await IsMpvAsync(dbReservation.VehiclePlateNumber);
-
-            // Update calendar event using Microsoft Graph
-            if (dbReservation.UserId == _user.Id && _user.CalendarIntegration)
-            {
-                dbReservation.User = _user;
-                dbReservation.OutlookEventId = await _calendarService.UpdateEventAsync(dbReservation);
-            }
-
-            try
-            {
-                await _context.SaveChangesAsync();
+                return NotFound();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -222,21 +147,6 @@ namespace CarWash.PWA.Controllers
                     throw;
                 }
             }
-
-            // Broadcast backlog update to all connected clients on SignalR
-            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, dbReservation.Id);
-
-            // Track event with AppInsight
-            _telemetryClient.TrackEvent(
-                "Reservation was updated.",
-                new Dictionary<string, string>
-                {
-                    { "Reservation ID", dbReservation.Id },
-                    { "Reservation user ID", dbReservation.UserId },
-                    { "Action user ID", _user.Id },
-                });
-
-            return Ok(new ReservationViewModel(dbReservation));
         }
 
         // POST: api/Reservations
@@ -256,210 +166,29 @@ namespace CarWash.PWA.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            #region Defaults
-            reservation.UserId ??= _user.Id;
-            reservation.State = State.SubmittedNotActual;
-            reservation.Mpv = false;
-            reservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty).Replace(" ", string.Empty);
-            reservation.CreatedById = _user.Id;
-            reservation.CreatedOn = DateTime.UtcNow;
-
-            if (reservation.Comments.Count == 1)
-            {
-                reservation.Comments[0].UserId = _user.Id;
-                reservation.Comments[0].Timestamp = DateTime.UtcNow;
-                reservation.Comments[0].Role = CommentRole.User;
-            }
-            if (reservation.Comments.Count > 1)
-            {
-                _telemetryClient.TrackTrace(
-                    "BadRequest: Only one comment can be added when creating a reservation.",
-                    Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
-                    new Dictionary<string, string>
-                    {
-                        { "UserId", reservation.UserId },
-                        { "Comments", reservation.CommentsJson }
-                    });
-                return BadRequest("Only one comment can be added when creating a reservation.");
-            }
-
             try
             {
-                reservation.EndDate = CalculateEndTime(reservation.StartDate, reservation.EndDate);
+                // Validate the reservation
+                var validationResult = await _reservationService.ValidateReservationAsync(reservation, false, _user);
+                if (!validationResult.IsValid)
+                    return BadRequest(validationResult.ErrorMessage);
+
+                // Create the reservation
+                var createdReservation = await _reservationService.CreateReservationAsync(reservation, _user, dropoffConfirmed);
+
+                // Broadcast SignalR update
+                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationCreated, createdReservation.Id);
+
+                return CreatedAtAction("GetReservation", new { id = createdReservation.Id }, new ReservationViewModel(createdReservation));
             }
-            catch (ArgumentOutOfRangeException e)
+            catch (ArgumentException ex)
             {
-                _telemetryClient.TrackException(e, new Dictionary<string, string>
-                    {
-                        { "CreatedById", reservation.CreatedById },
-                        { "StartDate", reservation.StartDate.ToString() }
-                    });
-
-                return BadRequest("Reservation can be made to slots only.");
+                return BadRequest(ex.Message);
             }
-
-            if (dropoffConfirmed)
+            catch (UnauthorizedAccessException ex)
             {
-                if (reservation.Location == null)
-                {
-                    _telemetryClient.TrackTrace(
-                        "BadRequest: Location must be set if drop-off pre-confirmed.",
-                        Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
-                        new Dictionary<string, string>
-                        {
-                            { "UserId", reservation.UserId },
-                            { "Location", reservation.Location }
-                        });
-
-                    return BadRequest("Location must be set if drop-off pre-confirmed.");
-                }
-                reservation.State = State.DropoffAndLocationConfirmed;
+                return Forbid();
             }
-            #endregion
-
-            #region Input validation
-            if (reservation.UserId != _user.Id)
-            {
-                if (!_user.IsAdmin && !_user.IsCarwashAdmin)
-                {
-                    _telemetryClient.TrackTrace(
-                        "Forbid: User cannot reserve in the name of others unless admin.",
-                        Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
-                        new Dictionary<string, string>
-                        {
-                            { "UserId", reservation.UserId },
-                            { "IsAdmin", _user.IsAdmin.ToString() },
-                            { "IsCarwashAdmin", _user.IsCarwashAdmin.ToString() },
-                            { "CreatedById", reservation.CreatedById }
-                        });
-
-                    return Forbid();
-                }
-
-                if (reservation.UserId != null)
-                {
-                    var reservationUser = await _context.Users.FindAsync(reservation.UserId);
-                    if (_user.IsAdmin && reservationUser.Company != _user.Company)
-                    {
-                        _telemetryClient.TrackTrace(
-                            "Forbid: Admin cannot reserve in the name of other companies' users.",
-                            Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
-                            new Dictionary<string, string>
-                            {
-                                { "UserId", reservation.UserId },
-                                { "IsAdmin", _user.IsAdmin.ToString() },
-                                { "IsCarwashAdmin", _user.IsCarwashAdmin.ToString() },
-                                { "CreatedById", reservation.CreatedById }
-                            });
-                        return Forbid();
-                    }
-                }
-            }
-
-            if (reservation.Services == null || reservation.Services.Count == 0)
-            {
-                _telemetryClient.TrackTrace(
-                    "BadRequest: No service chosen.",
-                    Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
-                    new Dictionary<string, string>
-                    {
-                        { "UserId", reservation.UserId },
-                        { "Services", reservation.ServicesJson }
-                    });
-
-                return BadRequest("No service chosen.");
-            }
-            #endregion
-
-            // Time requirement calculation
-            reservation.TimeRequirement = reservation.Services.Contains(Constants.ServiceType.Carpet) ?
-                _configuration.CurrentValue.Reservation.CarpetCleaningMultiplier * _configuration.CurrentValue.Reservation.TimeUnit :
-                _configuration.CurrentValue.Reservation.TimeUnit;
-
-            #region Business validation
-            // Checks whether start and end times are on the same day
-            if (!IsStartAndEndTimeOnSameDay(reservation.StartDate, reservation.EndDate))
-                return BadRequest("Reservation time range should be located entirely on the same day.");
-
-            // Checks whether end time is later than start time
-            if (!IsEndTimeLaterThanStartTime(reservation.StartDate, reservation.EndDate))
-                return BadRequest("Reservation end time should be later than the start time.");
-
-            // Checks whether start or end time is before the earliest allowed time
-            if (IsInPast(reservation.StartDate, reservation.EndDate))
-                return BadRequest("Cannot reserve in the past.");
-
-            // Checks whether start or end times fit into a slot
-            if (!IsInSlot(reservation.StartDate, reservation.EndDate))
-                return BadRequest("Reservation can be made to slots only.");
-
-            // Checks whether user has met the active concurrent reservation limit
-            if (await IsUserConcurrentReservationLimitMetAsync())
-                return BadRequest($"Cannot have more than {_configuration.CurrentValue.Reservation.UserConcurrentReservationLimit} concurrent active reservations.");
-
-            // Checks if the date/time is blocked
-            if (await IsBlocked(reservation.StartDate, reservation.EndDate))
-                return BadRequest("This time is blocked.");
-
-            // Check if there is enough time on that day
-            if (!await IsEnoughTimeOnDateAsync(reservation.StartDate, reservation.TimeRequirement))
-                return BadRequest("Company limit has been met for this day or there is not enough time at all.");
-
-            // Check if there is enough time in that slot
-            if (!await IsEnoughTimeInSlotAsync(reservation.StartDate, reservation.TimeRequirement))
-                return BadRequest("There is not enough time in that slot.");
-            #endregion
-
-            // Check if MPV
-            reservation.Mpv = await IsMpvAsync(reservation.VehiclePlateNumber);
-
-            // Send meeting request
-            if (reservation.UserId == _user.Id)
-            {
-                if (_user.CalendarIntegration)
-                {
-                    reservation.User = _user;
-                    reservation.OutlookEventId = await _calendarService.CreateEventAsync(reservation);
-                }
-            }
-            else
-            {
-                var user = await _context.Users.FindAsync(reservation.UserId);
-                if (user.CalendarIntegration)
-                {
-                    var timer = DateTime.UtcNow;
-                    try
-                    {
-                        reservation.User = user;
-                        reservation.OutlookEventId = await _calendarService.CreateEventAsync(reservation);
-                        _telemetryClient.TrackDependency("CalendarService", "CreateEvent", new { ReservationId = reservation.Id, UserId = user.Id }.ToString(), timer, DateTime.UtcNow - timer, success: true);
-
-                    }
-                    catch (Exception e)
-                    {
-                        _telemetryClient.TrackDependency("CalendarService", "CreateEvent", new { ReservationId = reservation.Id, UserId = user.Id }.ToString(), timer, DateTime.UtcNow - timer, success: false);
-                        _telemetryClient.TrackException(e);
-                    }
-                }
-            }
-
-            _context.Reservation.Add(reservation);
-            await _context.SaveChangesAsync();
-
-            // Broadcast backlog update to all connected clients on SignalR
-            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationCreated, reservation.Id);
-
-            // Track event with AppInsight
-            _telemetryClient.TrackEvent(
-                "New reservation was submitted.",
-                new Dictionary<string, string>
-                {
-                    { "Reservation ID", reservation.Id },
-                    { "Reservation user ID", reservation.UserId },
-                    { "Action user ID", _user.Id },
-                });
-
-            return CreatedAtAction("GetReservation", new { id = reservation.Id }, new ReservationViewModel(reservation));
         }
 
         // DELETE: api/Reservations/{id}
@@ -479,31 +208,23 @@ namespace CarWash.PWA.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var reservation = await _context.Reservation.Include(r => r.User).SingleOrDefaultAsync(r => r.Id == id);
-            if (reservation == null) return NotFound();
+            try
+            {
+                var deletedReservation = await _reservationService.DeleteReservationAsync(id, _user);
 
-            if (reservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin)) return Forbid();
+                // Broadcast SignalR update
+                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationDeleted, deletedReservation.Id);
 
-            _context.Reservation.Remove(reservation);
-            await _context.SaveChangesAsync();
-
-            // Delete calendar event using Microsoft Graph
-            await _calendarService.DeleteEventAsync(reservation);
-
-            // Broadcast backlog update to all connected clients on SignalR
-            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationDeleted, reservation.Id);
-
-            // Track event with AppInsight
-            _telemetryClient.TrackEvent(
-                "Reservation was deleted.",
-                new Dictionary<string, string>
-                {
-                    { "Reservation ID", reservation.Id },
-                    { "Reservation user ID", reservation.UserId },
-                    { "Action user ID", _user.Id },
-                });
-
-            return Ok(new ReservationViewModel(reservation));
+                return Ok(new ReservationViewModel(deletedReservation));
+            }
+            catch (InvalidOperationException)
+            {
+                return NotFound();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         // GET: api/reservations/company
@@ -571,48 +292,27 @@ namespace CarWash.PWA.Controllers
         [HttpPost("{id}/confirmdropoff")]
         public async Task<IActionResult> ConfirmDropoff([FromRoute] string id, [FromBody] string location)
         {
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-            if (location == null) return BadRequest("Reservation location cannot be null.");
-
-            var reservation = await _context.Reservation.FindAsync(id);
-
-            if (reservation == null) return NotFound();
-
-            if (reservation.UserId != _user.Id && !(_user.IsAdmin || _user.IsCarwashAdmin)) return Forbid();
-
-            reservation.State = State.DropoffAndLocationConfirmed;
-            reservation.Location = location;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _reservationService.ConfirmDropoffAsync(id, location, _user);
+
+                // Broadcast SignalR update
+                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationDropoffConfirmed, id);
+
+                return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ArgumentException ex)
             {
-                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return BadRequest(ex.Message);
             }
-
-            // Broadcast backlog update to all connected clients on SignalR
-            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationDropoffConfirmed, reservation.Id);
-
-            // Track event with AppInsight
-            _telemetryClient.TrackEvent(
-                "Key dropoff was confirmed by user.",
-                new Dictionary<string, string>
-                {
-                    { "Reservation ID", reservation.Id },
-                    { "Reservation user ID", reservation.UserId },
-                    { "Action user ID", _user.Id },
-                });
-
-            return NoContent();
+            catch (InvalidOperationException)
+            {
+                return NotFound();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         // POST: api/reservations/next/confirmdropoff
@@ -737,39 +437,27 @@ namespace CarWash.PWA.Controllers
         [HttpPost("{id}/startwash")]
         public async Task<IActionResult> StartWash([FromRoute] string id)
         {
-            if (!_user.IsCarwashAdmin) return Forbid();
-
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-
-            var reservation = await _context.Reservation.FindAsync(id);
-
-            if (reservation == null) return NotFound();
-
-            reservation.State = State.WashInProgress;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _reservationService.StartWashAsync(id, _user);
+
+                // Broadcast SignalR update
+                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+
+                return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ArgumentException ex)
             {
-                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return BadRequest(ex.Message);
             }
-
-            // Broadcast backlog update to all connected clients on SignalR
-            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
-
-            // Try to send message through bot
-            await _botService.SendWashStartedMessageAsync(reservation);
-
-            return NoContent();
+            catch (InvalidOperationException)
+            {
+                return NotFound();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         // POST: api/reservations/{id}/completewash
@@ -786,83 +474,27 @@ namespace CarWash.PWA.Controllers
         [HttpPost("{id}/completewash")]
         public async Task<IActionResult> CompleteWash([FromRoute] string id)
         {
-            if (!_user.IsCarwashAdmin) return Forbid();
-
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-
-            var reservation = await _context.Reservation
-                .Include(r => r.User)
-                .Include(r => r.KeyLockerBox)
-                .SingleOrDefaultAsync(r => r.Id == id);
-
-            if (reservation == null) return NotFound();
-
-            reservation.State = reservation.Private ? State.NotYetPaid : State.Done;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _reservationService.CompleteWashAsync(id, _user);
+
+                // Broadcast SignalR update
+                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+
+                return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ArgumentException ex)
             {
-                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return BadRequest(ex.Message);
             }
-
-            switch (reservation.User.NotificationChannel)
+            catch (InvalidOperationException)
             {
-                case NotificationChannel.Disabled:
-                    break;
-                case NotificationChannel.Push:
-                    var notification = new Notification
-                    {
-                        Title = reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!",
-                        Body = $"You can find it here: {reservation.Location}" + (reservation.KeyLockerBox != null ? $" (Locker: {reservation.KeyLockerBox.Name})" : ""),
-                        Tag = NotificationTag.Done
-                    };
-                    try
-                    {
-                        await _pushService.Send(reservation.UserId, notification);
-                        break;
-                    }
-                    catch (PushService.NoActivePushSubscriptionException)
-                    {
-                        reservation.User.NotificationChannel = NotificationChannel.Email;
-                        await _context.SaveChangesAsync();
-                    }
-                    catch (Exception e)
-                    {
-                        _telemetryClient.TrackException(e);
-                    }
-                    // If push fails, fallback to email
-                    goto case NotificationChannel.Email;
-                case NotificationChannel.NotSet:
-                case NotificationChannel.Email:
-                    var email = new Email
-                    {
-                        To = reservation.User.Email,
-                        Subject = reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!",
-                        Body = $"You can find it here: {reservation.Location}" + (reservation.KeyLockerBox != null ? $" (Locker: {reservation.KeyLockerBox.Name})" : ""),
-                    };
-                    await _emailService.Send(email, TimeSpan.FromMinutes(1));
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                return NotFound();
             }
-
-            // Broadcast backlog update to all connected clients on SignalR
-            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
-
-            // Try to send message through bot
-            await _botService.SendWashCompletedMessageAsync(reservation);
-
-            return NoContent();
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         // POST: api/reservations/{id}/confirmpayment
@@ -879,38 +511,29 @@ namespace CarWash.PWA.Controllers
         [HttpPost("{id}/confirmpayment")]
         public async Task<IActionResult> ConfirmPayment([FromRoute] string id)
         {
-            if (!_user.IsCarwashAdmin) return Forbid();
-
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-
-            var reservation = await _context.Reservation.FindAsync(id);
-
-            if (reservation == null) return NotFound();
-
-            if (reservation.State != State.NotYetPaid) return BadRequest("Reservation state is not 'Not yet paid'.");
-
-            reservation.State = State.Done;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _reservationService.ConfirmPaymentAsync(id, _user);
+
+                // Broadcast SignalR update
+                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+
+                return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ArgumentException ex)
             {
-                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return BadRequest(ex.Message);
             }
-
-            // Broadcast backlog update to all connected clients on SignalR
-            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
-
-            return NoContent();
+            catch (InvalidOperationException ex)
+            {
+                if (ex.Message.Contains("not found"))
+                    return NotFound();
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         // POST: api/reservations/{id}/state/{state}
@@ -928,36 +551,27 @@ namespace CarWash.PWA.Controllers
         [HttpPost("{id}/state/{state}")]
         public async Task<IActionResult> SetState([FromRoute] string id, [FromRoute] State state)
         {
-            if (!_user.IsCarwashAdmin) return Forbid();
-
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-
-            var reservation = await _context.Reservation.FindAsync(id);
-
-            if (reservation == null) return NotFound();
-
-            reservation.State = state;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _reservationService.SetReservationStateAsync(id, state, _user);
+
+                // Broadcast SignalR update
+                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+
+                return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ArgumentException ex)
             {
-                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return BadRequest(ex.Message);
             }
-
-            // Broadcast backlog update to all connected clients on SignalR
-            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
-
-            return NoContent();
+            catch (InvalidOperationException)
+            {
+                return NotFound();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         // POST: api/reservations/{id}/carwashcomment
@@ -977,72 +591,27 @@ namespace CarWash.PWA.Controllers
 
         public async Task<IActionResult> AddCarwashComment([FromRoute] string id, [FromBody] string comment)
         {
-            if (!_user.IsCarwashAdmin) return Forbid();
-
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-            if (comment == null) return BadRequest("Comment cannot be null.");
-
-            var reservation = await _context.Reservation.Include(r => r.User).SingleOrDefaultAsync(r => r.Id == id);
-
-            if (reservation == null) return NotFound();
-
-            reservation.Comments.Add(new Comment
-            {
-                UserId = _user.Id,
-                Role = CommentRole.Carwash,
-                Timestamp = DateTime.UtcNow,
-                Message = comment
-            });
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _reservationService.AddCommentAsync(id, comment, _user);
+
+                // Broadcast SignalR update
+                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationChatMessageSent, id);
+
+                return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ArgumentException ex)
             {
-                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return BadRequest(ex.Message);
             }
-
-            switch (reservation.User.NotificationChannel)
+            catch (InvalidOperationException)
             {
-                case NotificationChannel.Disabled:
-                    break;
-                case NotificationChannel.NotSet:
-                case NotificationChannel.Email:
-                case NotificationChannel.Push:
-                    var notification = new Notification
-                    {
-                        Title = "CarWash has left a comment on your reservation.",
-                        Body = comment,
-                        Tag = NotificationTag.Comment
-                    };
-                    try
-                    {
-                        await _pushService.Send(reservation.UserId, notification);
-                    }
-                    catch (Exception e)
-                    {
-                        _telemetryClient.TrackException(e);
-                    }
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                return NotFound();
             }
-
-            // Broadcast backlog update to all connected clients on SignalR
-            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationChatMessageSent, reservation.Id);
-
-            // Try to send message through bot
-            await _botService.SendCarWashCommentLeftMessageAsync(reservation);
-
-            return NoContent();
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         // POST: api/reservations/{id}/comment
@@ -1060,96 +629,27 @@ namespace CarWash.PWA.Controllers
         [HttpPost("{id}/comment")]
         public async Task<IActionResult> AddComment([FromRoute] string id, [FromBody] string comment)
         {
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-            if (comment == null) return BadRequest("Comment cannot be null.");
-
-            var reservation = await _context.Reservation.Include(r => r.User).SingleOrDefaultAsync(r => r.Id == id);
-
-            if (reservation == null) return NotFound();
-
-            if (reservation.UserId != _user.Id)
-            {
-                if (!_user.IsAdmin && !_user.IsCarwashAdmin) return Forbid();
-
-                if (_user.IsAdmin && reservation.User.Company != _user.Company) return Forbid();
-            }
-
-            reservation.AddComment(new Comment
-            {
-                UserId = _user.Id,
-                Role = reservation.UserId != _user.Id && _user.IsCarwashAdmin ? CommentRole.Carwash : CommentRole.User,
-                Timestamp = DateTime.UtcNow,
-                Message = comment
-            });
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _reservationService.AddCommentAsync(id, comment, _user);
+
+                // Broadcast SignalR update
+                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationChatMessageSent, id);
+
+                return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ArgumentException ex)
             {
-                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return BadRequest(ex.Message);
             }
-
-            // Send notification to user if CarWash sends message
-            if (_user.IsCarwashAdmin)
+            catch (InvalidOperationException)
             {
-                switch (reservation.User.NotificationChannel)
-                {
-                    case NotificationChannel.Disabled:
-                        break;
-                    case NotificationChannel.Push:
-                        var notification = new Notification
-                        {
-                            Title = "CarWash has left a comment on your reservation.",
-                            Body = comment,
-                            Tag = NotificationTag.Comment
-                        };
-                        try
-                        {
-                            await _pushService.Send(reservation.UserId, notification);
-                            break;
-                        }
-                        catch (PushService.NoActivePushSubscriptionException)
-                        {
-                            reservation.User.NotificationChannel = NotificationChannel.Email;
-                            await _context.SaveChangesAsync();
-                        }
-                        catch (Exception e)
-                        {
-                            _telemetryClient.TrackException(e);
-                        }
-                        // If push fails, fallback to email
-                        goto case NotificationChannel.Email;
-                    case NotificationChannel.NotSet:
-                    case NotificationChannel.Email:
-                        var email = new Email
-                        {
-                            To = reservation.User.Email,
-                            Subject = "CarWash has left a comment on your reservation",
-                            Body = comment + $"\n\n<a href=\"{configuration.CurrentValue.ConnectionStrings.BaseUrl}\">Reply</a>\n\nPlease do not reply to this email, messages to service providers can only be sent within the app. Kindly log in to your account and communicate directly through the in-app messaging feature.",
-                        };
-                        await _emailService.Send(email, TimeSpan.FromMinutes(1));
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-
-                // Try to send message through bot
-                await _botService.SendCarWashCommentLeftMessageAsync(reservation);
+                return NotFound();
             }
-
-            // Broadcast backlog update to all connected clients on SignalR
-            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationChatMessageSent, reservation.Id);
-
-            return NoContent();
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         // POST: api/reservations/{id}/mpv
