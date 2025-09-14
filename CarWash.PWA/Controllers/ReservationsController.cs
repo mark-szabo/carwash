@@ -1385,11 +1385,12 @@ namespace CarWash.PWA.Controllers
                 .ToListAsync();
 
             var notAvailableTimes = slotReservationAggregate
-                .Where(d => {
+                .Where(d =>
+                {
                     // Convert UTC DateTime to provider's timezone to find matching slot
-                    var timeZoneId = _configuration.CurrentValue.TimeZone;
+                    var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
                     TimeSpan timeOfDay;
-                    
+
                     if (timeZoneId == "UTC")
                     {
                         timeOfDay = d.DateTime.TimeOfDay;
@@ -1400,7 +1401,7 @@ namespace CarWash.PWA.Controllers
                         var dateTimeInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(d.DateTime, providerTimeZone);
                         timeOfDay = dateTimeInProviderZone.TimeOfDay;
                     }
-                    
+
                     var slotCapacity = _configuration.CurrentValue.Slots.Find(s => s.StartTime == timeOfDay)?.Capacity;
                     return slotCapacity != null && d.TimeSum >= slotCapacity * _configuration.CurrentValue.Reservation.TimeUnit;
                 })
@@ -1411,9 +1412,9 @@ namespace CarWash.PWA.Controllers
             foreach (var slot in _configuration.CurrentValue.Slots)
             {
                 var now = DateTime.UtcNow;
-                var timeZoneId = _configuration.CurrentValue.TimeZone;
+                var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
                 DateTime slotStartTimeUtc;
-                
+
                 if (timeZoneId == "UTC")
                 {
                     // For UTC timezone, create time directly
@@ -1428,7 +1429,7 @@ namespace CarWash.PWA.Controllers
                     var slotStartTimeInProviderZone = todayInProviderZone.Add(slot.StartTime);
                     slotStartTimeUtc = TimeZoneInfo.ConvertTimeToUtc(slotStartTimeInProviderZone, providerTimeZone);
                 }
-                
+
                 if (!notAvailableTimes.Contains(slotStartTimeUtc) && slotStartTimeUtc.AddMinutes(_configuration.CurrentValue.Reservation.MinutesToAllowReserveInPast) < DateTime.UtcNow)
                 {
                     notAvailableTimes.Add(slotStartTimeUtc);
@@ -1461,9 +1462,9 @@ namespace CarWash.PWA.Controllers
                     foreach (var slot in _configuration.CurrentValue.Slots)
                     {
                         // Convert slot times from provider timezone to UTC for the iteration date
-                        var timeZoneId = _configuration.CurrentValue.TimeZone;
+                        var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
                         DateTime slotStart, slotEnd;
-                        
+
                         if (timeZoneId == "UTC")
                         {
                             // For UTC timezone, create times directly
@@ -1479,7 +1480,7 @@ namespace CarWash.PWA.Controllers
                             slotStart = TimeZoneInfo.ConvertTimeToUtc(slotStartInProviderZone, providerTimeZone);
                             slotEnd = TimeZoneInfo.ConvertTimeToUtc(slotEndInProviderZone, providerTimeZone);
                         }
-                        
+
                         if (slotStart > blocker.StartDate && slotEnd < blocker.EndDate && !notAvailableTimes.Contains(slotStart))
                         {
                             notAvailableTimes.Add(slotStart);
@@ -1549,9 +1550,9 @@ namespace CarWash.PWA.Controllers
             foreach (var a in slotReservationAggregate)
             {
                 // Convert UTC DateTime to provider's timezone to find matching slot
-                var timeZoneId = _configuration.CurrentValue.TimeZone;
+                var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
                 TimeSpan timeOfDay;
-                
+
                 if (timeZoneId == "UTC")
                 {
                     timeOfDay = a.DateTime.TimeOfDay;
@@ -1562,7 +1563,7 @@ namespace CarWash.PWA.Controllers
                     var dateTimeInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(a.DateTime, providerTimeZone);
                     timeOfDay = dateTimeInProviderZone.TimeOfDay;
                 }
-                
+
                 var slotCapacity = _configuration.CurrentValue.Slots.Find(s => s.StartTime == timeOfDay)?.Capacity;
                 if (slotCapacity == null) continue;
                 slotReservationPercentage.Add(new ReservationPercentageViewModel(
@@ -1596,9 +1597,9 @@ namespace CarWash.PWA.Controllers
             foreach (var a in slotReservationAggregate)
             {
                 // Convert UTC DateTime to provider's timezone to find matching slot
-                var timeZoneId = _configuration.CurrentValue.TimeZone;
+                var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
                 TimeSpan timeOfDay;
-                
+
                 if (timeZoneId == "UTC")
                 {
                     timeOfDay = a.DateTime.TimeOfDay;
@@ -1609,7 +1610,7 @@ namespace CarWash.PWA.Controllers
                     var dateTimeInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(a.DateTime, providerTimeZone);
                     timeOfDay = dateTimeInProviderZone.TimeOfDay;
                 }
-                
+
                 var slotCapacity = _configuration.CurrentValue.Slots.Find(s => s.StartTime == timeOfDay)?.Capacity;
                 if (slotCapacity == null) continue;
                 var reservedCapacity = (int)Math.Ceiling((double)a.TimeSum / _configuration.CurrentValue.Reservation.TimeUnit);
@@ -1622,9 +1623,9 @@ namespace CarWash.PWA.Controllers
             foreach (var slot in _configuration.CurrentValue.Slots)
             {
                 // Convert slot time to UTC for the given date
-                var timeZoneId = _configuration.CurrentValue.TimeZone;
+                var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
                 DateTime slotStartTimeUtc;
-                
+
                 if (timeZoneId == "UTC")
                 {
                     // For UTC timezone, create time directly
@@ -1637,7 +1638,7 @@ namespace CarWash.PWA.Controllers
                     var slotStartTimeInProviderZone = dateInProviderZone.Add(slot.StartTime);
                     slotStartTimeUtc = TimeZoneInfo.ConvertTimeToUtc(slotStartTimeInProviderZone, providerTimeZone);
                 }
-                
+
                 // ReSharper disable SimplifyLinqExpression
                 if (!slotFreeCapacity.Any(s => s.StartTime == slotStartTimeUtc))
                     slotFreeCapacity.Add(new ReservationCapacityViewModel(
@@ -1791,7 +1792,7 @@ namespace CarWash.PWA.Controllers
         {
             var capacity = 0;
             var now = DateTime.UtcNow;
-            var timeZoneId = _configuration.CurrentValue.TimeZone;
+            var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
             TimeSpan currentTimeOfDay;
 
             if (timeZoneId == "UTC")
@@ -1813,7 +1814,7 @@ namespace CarWash.PWA.Controllers
                 if (currentTimeOfDay >= slot.StartTime && currentTimeOfDay < slot.EndTime)
                 {
                     DateTime endTimeUtc;
-                    
+
                     if (timeZoneId == "UTC")
                     {
                         endTimeUtc = now.Date.Add(slot.EndTime);
@@ -1826,7 +1827,7 @@ namespace CarWash.PWA.Controllers
                         var endTimeInProviderZone = todayInProviderZone.Add(slot.EndTime);
                         endTimeUtc = TimeZoneInfo.ConvertTimeToUtc(endTimeInProviderZone, providerTimeZone);
                     }
-                    
+
                     var timeDifference = endTimeUtc - now;
                     var slotTimeSpan = (slot.EndTime - slot.StartTime).TotalMinutes;
                     var slotCapacity = timeDifference.TotalMinutes / slotTimeSpan * slot.Capacity;
@@ -1842,12 +1843,11 @@ namespace CarWash.PWA.Controllers
             if (endTime != null) return (DateTime)endTime; // Keep in UTC
 
             // Ensure startTime is treated as UTC
-            if (startTime.Kind == DateTimeKind.Unspecified)
-                startTime = DateTime.SpecifyKind(startTime, DateTimeKind.Utc);
+            startTime = DateTime.SpecifyKind(startTime, DateTimeKind.Utc);
 
             TimeSpan startTimeOfDay;
-            var timeZoneId = _configuration.CurrentValue.TimeZone;
-            
+            var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
+
             if (timeZoneId == "UTC")
             {
                 // For UTC timezone, no conversion needed
@@ -1973,13 +1973,13 @@ namespace CarWash.PWA.Controllers
             // Ensure DateTime objects are treated as UTC
             if (startTime.Kind == DateTimeKind.Unspecified)
                 startTime = DateTime.SpecifyKind(startTime, DateTimeKind.Utc);
-            
+
             var endTimeValue = (DateTime)endTime;
             if (endTimeValue.Kind == DateTimeKind.Unspecified)
                 endTimeValue = DateTime.SpecifyKind(endTimeValue, DateTimeKind.Utc);
 
             TimeSpan startTimeOfDay, endTimeOfDay;
-            var timeZoneId = _configuration.CurrentValue.TimeZone;
+            var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
 
             if (timeZoneId == "UTC")
             {
@@ -1993,7 +1993,7 @@ namespace CarWash.PWA.Controllers
                 var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
                 var startTimeInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(startTime, providerTimeZone);
                 var endTimeInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(endTimeValue, providerTimeZone);
-                
+
                 startTimeOfDay = startTimeInProviderZone.TimeOfDay;
                 endTimeOfDay = endTimeInProviderZone.TimeOfDay;
             }
@@ -2154,7 +2154,7 @@ namespace CarWash.PWA.Controllers
                 dateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
 
             TimeSpan timeOfDay;
-            var timeZoneId = _configuration.CurrentValue.TimeZone;
+            var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
 
             if (timeZoneId == "UTC")
             {

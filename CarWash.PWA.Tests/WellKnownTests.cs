@@ -72,63 +72,63 @@ namespace CarWash.PWA.Tests
             var configurationStub = new Mock<IOptionsMonitor<CarWashConfiguration>>();
             configurationStub.Setup(s => s.CurrentValue).Returns(() => new CarWashConfiguration
             {
-                TimeZone = "UTC", // Explicitly set timezone for tests
-                Slots = new List<Slot>
-            {
-                new Slot {StartTime = new TimeSpan(8, 0, 0), EndTime = new TimeSpan(11, 0, 0), Capacity = 1},
-                new Slot {StartTime = new TimeSpan(11, 0, 0), EndTime = new TimeSpan(14, 0, 0), Capacity = 1},
-                new Slot {StartTime = new TimeSpan(14, 0, 0), EndTime = new TimeSpan(17, 0, 0), Capacity = 1}
-            },
+                Slots =
+                [
+                    new() {StartTime = new TimeSpan(8, 0, 0), EndTime = new TimeSpan(11, 0, 0), Capacity = 1},
+                    new() {StartTime = new TimeSpan(11, 0, 0), EndTime = new TimeSpan(14, 0, 0), Capacity = 1},
+                    new() {StartTime = new TimeSpan(14, 0, 0), EndTime = new TimeSpan(17, 0, 0), Capacity = 1}
+                ],
                 Reservation = new CarWashConfiguration.ReservationSettings
                 {
+                    TimeZone = "Europe/Budapest",
                     TimeUnit = 12,
                     UserConcurrentReservationLimit = 2,
                     MinutesToAllowReserveInPast = 120,
                     HoursAfterCompanyLimitIsNotChecked = 11
                 },
                 Services =
-            [
-                new() {
-                    Id = 0,
-                    Name = "exterior",
-                    Group = "Basics",
-                    TimeInMinutes = 12,
-                    Price = 6311,
-                    PriceMpv = 7889,
-                },
-                new() {
-                    Id = 1,
-                    Name = "interior",
-                    Group = "Basics",
-                    TimeInMinutes = 12,
-                    Price = 3610,
-                    PriceMpv = 5406,
-                },
-                new() {
-                    Id = 2,
-                    Name = "carpet",
-                    Group = "Basics",
-                    TimeInMinutes = 24,
-                    Price = -1,
-                    PriceMpv = -1,
-                },
-                new() {
-                    Id = 9,
-                    Name = "wheel cleaning",
-                    Group = "Extras",
-                    TimeInMinutes = 0,
-                    Price = 2073,
-                    PriceMpv = 2073,
-                },
-                new() {
-                    Id = 13,
-                    Name = "prewash",
-                    Group = "Extras",
-                    TimeInMinutes = 0,
-                    Price = 1732,
-                    PriceMpv = 1732,
-                },
-            ],
+                [
+                    new() {
+                        Id = 0,
+                        Name = "exterior",
+                        Group = "Basics",
+                        TimeInMinutes = 12,
+                        Price = 6311,
+                        PriceMpv = 7889,
+                    },
+                    new() {
+                        Id = 1,
+                        Name = "interior",
+                        Group = "Basics",
+                        TimeInMinutes = 12,
+                        Price = 3610,
+                        PriceMpv = 5406,
+                    },
+                    new() {
+                        Id = 2,
+                        Name = "carpet",
+                        Group = "Basics",
+                        TimeInMinutes = 24,
+                        Price = -1,
+                        PriceMpv = -1,
+                    },
+                    new() {
+                        Id = 9,
+                        Name = "wheel cleaning",
+                        Group = "Extras",
+                        TimeInMinutes = 0,
+                        Price = 2073,
+                        PriceMpv = 2073,
+                    },
+                    new() {
+                        Id = 13,
+                        Name = "prewash",
+                        Group = "Extras",
+                        TimeInMinutes = 0,
+                        Price = 1732,
+                        PriceMpv = 1732,
+                    },
+                ],
             });
 
             return configurationStub.Object;
