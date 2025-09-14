@@ -57,6 +57,11 @@ namespace CarWash.ClassLibrary.Services
                 return new ValidationResult { IsValid = false, ErrorMessage = "No service chosen." };
             }
 
+            // Calculate time requirement for validation
+            var timeRequirement = reservation.Services.Contains(Constants.ServiceType.Carpet) ?
+                _configuration.CurrentValue.Reservation.CarpetCleaningMultiplier * _configuration.CurrentValue.Reservation.TimeUnit :
+                _configuration.CurrentValue.Reservation.TimeUnit;
+
             // Authorization validation
             if (reservation.UserId != currentUser.Id)
             {
@@ -114,10 +119,10 @@ namespace CarWash.ClassLibrary.Services
             if (await IsBlocked(reservation.StartDate, reservation.EndDate, currentUser))
                 return new ValidationResult { IsValid = false, ErrorMessage = "This time is blocked." };
 
-            if (!await IsEnoughTimeOnDateAsync(reservation.StartDate, reservation.TimeRequirement, currentUser))
+            if (!await IsEnoughTimeOnDateAsync(reservation.StartDate, timeRequirement, currentUser))
                 return new ValidationResult { IsValid = false, ErrorMessage = "Company limit has been met for this day or there is not enough time at all." };
 
-            if (!await IsEnoughTimeInSlotAsync(reservation.StartDate, reservation.TimeRequirement, currentUser))
+            if (!await IsEnoughTimeInSlotAsync(reservation.StartDate, timeRequirement, currentUser))
                 return new ValidationResult { IsValid = false, ErrorMessage = "There is not enough time in that slot." };
 
             return new ValidationResult { IsValid = true };

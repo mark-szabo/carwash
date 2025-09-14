@@ -168,6 +168,9 @@ namespace CarWash.PWA.Controllers
 
             try
             {
+                // Set defaults that are needed for validation
+                reservation.UserId ??= _user.Id;
+                
                 // Validate the reservation
                 var validationResult = await _reservationService.ValidateReservationAsync(reservation, false, _user);
                 if (!validationResult.IsValid)
