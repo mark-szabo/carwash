@@ -257,7 +257,7 @@ namespace CarWash.PWA.Controllers
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             #region Defaults
-            if (reservation.UserId == null) reservation.UserId = _user.Id;
+            reservation.UserId ??= _user.Id;
             reservation.State = State.SubmittedNotActual;
             reservation.Mpv = false;
             reservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty).Replace(" ", string.Empty);
@@ -1524,54 +1524,6 @@ namespace CarWash.PWA.Controllers
                 VehiclePlateNumber: lastReservation.VehiclePlateNumber,
                 Location: lastReservation.Location,
                 Services: lastReservation.Services));
-        }
-
-        // GET: api/reservations/reservationpercentage
-        /// <summary>
-        /// Gets a list of slots and their reservation percentage on a given date
-        /// </summary>
-        /// <param name="date">the date to filter on</param>
-        /// <returns>List of <see cref="ReservationPercentageViewModel"/></returns>
-        [Obsolete("Use GetReservationCapacity instead.")]
-        [HttpGet, Route("reservationpercentage")]
-        public async Task<ActionResult<IEnumerable<ReservationPercentageViewModel>>> GetReservationPercentage(DateTime date)
-        {
-            var slotReservationAggregate = await _context.Reservation
-                .Where(r => r.StartDate.Date == date.Date)
-                .GroupBy(r => r.StartDate)
-                .Select(g => new
-                {
-                    DateTime = g.Key,
-                    TimeSum = g.Sum(r => r.TimeRequirement)
-                })
-                .ToListAsync();
-
-            var slotReservationPercentage = new List<ReservationPercentageViewModel>();
-            foreach (var a in slotReservationAggregate)
-            {
-                // Convert UTC DateTime to provider's timezone to find matching slot
-                var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
-                TimeSpan timeOfDay;
-
-                if (timeZoneId == "UTC")
-                {
-                    timeOfDay = a.DateTime.TimeOfDay;
-                }
-                else
-                {
-                    var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
-                    var dateTimeInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(a.DateTime, providerTimeZone);
-                    timeOfDay = dateTimeInProviderZone.TimeOfDay;
-                }
-
-                var slotCapacity = _configuration.CurrentValue.Slots.Find(s => s.StartTime == timeOfDay)?.Capacity;
-                if (slotCapacity == null) continue;
-                slotReservationPercentage.Add(new ReservationPercentageViewModel(
-                    StartTime: a.DateTime,
-                    Percentage: a.TimeSum == 0 ? 0 : Math.Round(a.TimeSum / (double)(slotCapacity * _configuration.CurrentValue.Reservation.TimeUnit), 2)));
-            }
-
-            return Ok(slotReservationPercentage);
         }
 
         // GET: api/reservations/reservationcapacity
