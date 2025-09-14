@@ -20,12 +20,11 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
 import TextField from '@mui/material/TextField';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import Grid from '@mui/material/Grid';
-import * as moment from 'moment';
 import * as dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
@@ -191,7 +190,7 @@ class Reserve extends TrackedComponent {
                     floor = floor || '';
                     seat = seat || '';
 
-                    const date = moment.utc(data.startDate).local();
+                    const date = dayjs.utc(data.startDate).local();
                     this.setState({
                         selectedServices: data.services,
                         selectedDate: date,
@@ -243,12 +242,12 @@ class Reserve extends TrackedComponent {
                     for (const i in dates) {
                         if (dates.hasOwnProperty(i)) {
                             // Workaround: treating UTC time as local, as we are talking about dates only (no time)
-                            dates[i] = moment(dates[i]).toDate();
+                            dates[i] = dayjs(dates[i]).toDate();
                         }
                     }
                     for (const i in times) {
                         if (times.hasOwnProperty(i)) {
-                            times[i] = moment.utc(times[i]); // Parse as UTC
+                            times[i] = dayjs.utc(times[i]); // Parse as UTC
                         }
                     }
                     this.setState({
@@ -387,8 +386,8 @@ class Reserve extends TrackedComponent {
 
     handleDateSelectionComplete = date => {
         if (!date) return;
-        const selectedDate = moment(date).startOf('day'); // This is local time from the date picker
-
+        // This is the local time from the date picker
+        const selectedDate = dayjs.tz(date, this.props.configuration.reservationSettings.timeZone).startOf('day');
         this.setState({
             activeStep: 2,
             selectedDate,
@@ -416,11 +415,8 @@ class Reserve extends TrackedComponent {
 
     handleTimeSelectionComplete = event => {
         const time = event.target.value;
-        const dateTime = moment(this.state.selectedDate); // Work with local time
-        dateTime.hours(time);
-        dateTime.minutes(0);
-        dateTime.seconds(0);
-        dateTime.milliseconds(0);
+        // Work with local time
+        const dateTime = this.state.selectedDate.hour(time).minute(0).second(0).millisecond(0);
         this.setState({
             activeStep: 3,
             selectedDate: dateTime,
@@ -693,8 +689,8 @@ class Reserve extends TrackedComponent {
             dateSelected,
             timeSelected,
         } = this.state;
-        const today = moment();
-        const yearFromToday = moment().add(1, 'year');
+        const today = dayjs();
+        const yearFromToday = dayjs().add(1, 'year');
 
         const shouldDisableDate = date => {
             const dayOfWeek = date.day();
@@ -783,7 +779,7 @@ class Reserve extends TrackedComponent {
                     <Step>
                         <StepLabel>{dateStepLabel}</StepLabel>
                         <StepContent>
-                            <LocalizationProvider dateAdapter={AdapterMoment}>
+                            <LocalizationProvider dateAdapter={AdapterDayjs}>
                                 <DateCalendar
                                     onChange={date => this.handleDateSelectionComplete(date)}
                                     value={selectedDate}
