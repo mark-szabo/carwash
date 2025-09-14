@@ -190,7 +190,7 @@ class Reserve extends TrackedComponent {
                     floor = floor || '';
                     seat = seat || '';
 
-                    const date = dayjs.utc(data.startDate).local();
+                    const date = dayjs.utc(data.startDate).tz(this.props.configuration.reservationSettings.timeZone);
                     this.setState({
                         selectedServices: data.services,
                         selectedDate: date,
@@ -290,13 +290,6 @@ class Reserve extends TrackedComponent {
         }));
     };
 
-    handleNextFromDateSelection = () => {
-        this.setState(state => ({
-            activeStep: state.activeStep + 1,
-            reservationPercentageDataArrived: true,
-        }));
-    };
-
     handleBack = () => {
         this.setState(state => ({
             activeStep: state.activeStep - 1,
@@ -384,10 +377,11 @@ class Reserve extends TrackedComponent {
         }));
     };
 
-    handleDateSelectionComplete = date => {
+    handleDateSelectionComplete = (date, stripTime = true) => {
         if (!date) return;
         // This is the local time from the date picker
-        const selectedDate = dayjs.tz(date, this.props.configuration.reservationSettings.timeZone).startOf('day');
+        let selectedDate = dayjs.tz(date, this.props.configuration.reservationSettings.timeZone);
+        if (stripTime) selectedDate = selectedDate.startOf('day');
         this.setState({
             activeStep: 2,
             selectedDate,
@@ -799,7 +793,7 @@ class Reserve extends TrackedComponent {
                                     </Button>
                                     <Button
                                         disabled={!dateSelected}
-                                        onClick={this.handleNextFromDateSelection}
+                                        onClick={() => this.handleDateSelectionComplete(selectedDate, false)}
                                         variant="contained"
                                         color="primary"
                                         className={classes.button}
