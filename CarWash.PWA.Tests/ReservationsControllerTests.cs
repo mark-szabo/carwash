@@ -1982,19 +1982,6 @@ namespace CarWash.PWA.Tests
             Assert.IsType<NotFoundResult>(result);
         }
 
-        // [Fact]
-        // public void GetObfuscatedReservations_ByDefault_ReturnsAListOfReservations()
-        // {
-        //     var dbContext = CreateInMemoryDbContext();
-        //     var controller = CreateControllerStub(dbContext);
-        //
-        //     var result = controller.GetObfuscatedReservations();
-        //
-        //     Assert.NotEmpty(result);
-        //     const int NUMBER_OF_ALL_RESERVATIONS = 8;
-        //     Assert.Equal(NUMBER_OF_ALL_RESERVATIONS, result.Count());
-        // }
-
         [Fact]
         public async Task GetNotAvailableDatesAndTimes_AsCarWashAdmin_ReturnsEmptyList()
         {

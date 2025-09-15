@@ -165,6 +165,9 @@ namespace CarWash.PWA.Controllers
 
             try
             {
+                // Set defaults before validation
+                reservation.UserId ??= _user.Id;
+
                 // Validate the reservation
                 var validationResult = await _reservationService.ValidateReservationAsync(reservation, false, _user);
                 if (!validationResult.IsValid)
@@ -276,10 +279,10 @@ namespace CarWash.PWA.Controllers
         /// <param name="id">Reservation id</param>
         /// <param name="location">Car location</param>
         /// <returns>No content</returns>
-        /// <response code="200">OK</response>
-        /// <response code="400">BadRequest if location is empty.</response>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if id or location param is null.</response>
         /// <response code="401">Unauthorized</response>
-        /// <response code="403">Forbidden if user is not the reservation owner.</response>
+        /// <response code="403">Forbidden if user is not admin but tries to update another user's reservation.</response>
         /// <response code="404">NotFound if reservation not found.</response>
         [UserAction]
         [HttpPost("{id}/confirm-dropoff")]
@@ -289,7 +292,7 @@ namespace CarWash.PWA.Controllers
             {
                 await _reservationService.ConfirmDropoffAsync(id, location, _user);
                 await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
-                return Ok();
+                return NoContent();
             }
             catch (ArgumentException ex)
             {
@@ -307,63 +310,103 @@ namespace CarWash.PWA.Controllers
 
         // POST: api/reservations/confirm-dropoff-by-email
         /// <summary>
-        /// Confirm dropoff and location by email
+        /// Confirm car key dropoff and location of user's next reservation (service endpoint)
         /// </summary>
-        /// <param name="model">Confirmation model</param>
+        /// <param name="model">Model containing user email and car location.</param>
         /// <returns>No content</returns>
-        /// <response code="200">OK</response>
-        /// <response code="400">BadRequest if invalid data.</response>
-        [AllowAnonymous]
-        [HttpPost, Route("confirm-dropoff-by-email")]
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if email or location param is null.</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="404">NotFound if user does not exist or if there's no reservation where the key can be dropped off.</response>
+        /// <response code="409">Conflict if user has more than one reservation where the key can be dropped off.</response>
+        [ServiceAction]
+        [HttpPost("next/confirmdropoff")]
         public async Task<IActionResult> ConfirmDropoffByEmail([FromBody] ConfirmDropoffByEmailViewModel model)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (model?.Email == null) return BadRequest("Email cannot be null.");
+            if (model.Location == null) return BadRequest("Reservation location cannot be null.");
 
-            try
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == model.Email);
+            if (user == null) return NotFound($"No user found with email address '{model.Email}'.");
+
+            var reservations = await _context.Reservation
+                .Include(r => r.User)
+                .Where(r => r.User.Email == user.Email && (r.State == State.SubmittedNotActual || r.State == State.ReminderSentWaitingForKey))
+                .OrderBy(r => r.StartDate)
+                .ToListAsync();
+
+            if (reservations == null || reservations.Count == 0) return NotFound("No reservations found.");
+
+            Reservation reservation;
+            string reservationResolution;
+            // Only one active - straightforward
+            if (reservations.Count == 1)
             {
-                var reservation = await _context.Reservation
-                    .Include(r => r.User)
-                    .FirstOrDefaultAsync(r => r.Id == model.ReservationId);
-
-                if (reservation == null) return NotFound();
-
-                reservation.Location = model.Location;
-                reservation.State = State.DropoffAndLocationConfirmed;
-
-                await _context.SaveChangesAsync();
-                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
-
-                return Ok();
+                reservation = reservations[0];
+                reservationResolution = "Only one active reservation.";
             }
-            catch (Exception ex)
+            // Vehicle plate number was specified and only one reservation for that car - easy
+            else if (model.VehiclePlateNumber?.ToUpper() != null && reservations.Count(r => r.VehiclePlateNumber == model.VehiclePlateNumber) == 1)
             {
-                _telemetryClient.TrackException(ex);
-                return BadRequest("An error occurred.");
+                reservation = reservations.Single(r => r.VehiclePlateNumber == model.VehiclePlateNumber.ToUpper());
+                reservationResolution = "Vehicle plate number was specified and only one reservation exists for that car.";
             }
+            // Only one where we are waiting for the key - still pretty straightforward
+            else if (reservations.Count(r => r.State == State.ReminderSentWaitingForKey) == 1)
+            {
+                reservation = reservations.Single(r => r.State == State.ReminderSentWaitingForKey);
+                reservationResolution = "Only one reservation is waiting for the key.";
+            }
+            // Only one today - probably fine
+            else if (reservations.Count(r => r.StartDate.Date == DateTime.UtcNow.Date) == 1)
+            {
+                reservation = reservations.Single(r => r.StartDate.Date == DateTime.UtcNow.Date);
+                reservationResolution = "Only one reservation today.";
+            }
+            else if (model.VehiclePlateNumber == null)
+            {
+                return Conflict("More than one reservation found where the reservation state is submitted or waiting for key. Please specify vehicle plate number!");
+            }
+            else
+            {
+                return Conflict("More than one reservation found where the reservation state is submitted or waiting for key.");
+            }
+
+            await _reservationService.ConfirmDropoffAsync(reservation.Id, model.Location, reservation.User);
+            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
+
+            _telemetryClient.TrackEvent("ConfirmDropoffByEmail", new Dictionary<string, string>
+            {
+                { "Email", model.Email },
+                { "Resolution", reservationResolution }
+            });
+
+            return NoContent();
         }
 
-        // POST: api/reservations/{id}/start-wash
+        // POST: api/reservations/{id}/startwash
         /// <summary>
-        /// Start wash (carwash admin only)
+        /// Log the start of the carwash
         /// </summary>
-        /// <param name="id">Reservation id</param>
+        /// <param name="id">reservation id</param>
         /// <returns>No content</returns>
-        /// <response code="200">OK</response>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if id is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         /// <response code="404">NotFound if reservation not found.</response>
-        [HttpPost("{id}/start-wash")]
+        [UserAction]
+        [HttpPost("{id}/startwash")]
         public async Task<IActionResult> StartWash([FromRoute] string id)
         {
+            if (!_user.IsCarwashAdmin) return Forbid();
+            if (id == null) return BadRequest("Reservation id cannot be null.");
+
             try
             {
                 await _reservationService.StartWashAsync(id, _user);
                 await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
-                return Ok();
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Forbid();
+                return NoContent();
             }
             catch (InvalidOperationException)
             {
@@ -371,28 +414,29 @@ namespace CarWash.PWA.Controllers
             }
         }
 
-        // POST: api/reservations/{id}/complete-wash
+        // POST: api/reservations/{id}/completewash
         /// <summary>
-        /// Complete wash (carwash admin only)
+        /// Log the completion of the carwash
         /// </summary>
-        /// <param name="id">Reservation id</param>
+        /// <param name="id">reservation id</param>
         /// <returns>No content</returns>
-        /// <response code="200">OK</response>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if id is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         /// <response code="404">NotFound if reservation not found.</response>
-        [HttpPost("{id}/complete-wash")]
+        [UserAction]
+        [HttpPost("{id}/completewash")]
         public async Task<IActionResult> CompleteWash([FromRoute] string id)
         {
+            if (!_user.IsCarwashAdmin) return Forbid();
+            if (id == null) return BadRequest("Reservation id cannot be null.");
+
             try
             {
                 await _reservationService.CompleteWashAsync(id, _user);
                 await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
-                return Ok();
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Forbid();
+                return NoContent();
             }
             catch (InvalidOperationException)
             {
@@ -400,28 +444,29 @@ namespace CarWash.PWA.Controllers
             }
         }
 
-        // POST: api/reservations/{id}/confirm-payment
+        // POST: api/reservations/{id}/confirmpayment
         /// <summary>
-        /// Confirm payment for private reservation (carwash admin only)
+        /// Confirm payment
         /// </summary>
-        /// <param name="id">Reservation id</param>
+        /// <param name="id">reservation id</param>
         /// <returns>No content</returns>
-        /// <response code="200">OK</response>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if id is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         /// <response code="404">NotFound if reservation not found.</response>
-        [HttpPost("{id}/confirm-payment")]
+        [UserAction]
+        [HttpPost("{id}/confirmpayment")]
         public async Task<IActionResult> ConfirmPayment([FromRoute] string id)
         {
+            if (!_user.IsCarwashAdmin) return Forbid();
+            if (id == null) return BadRequest("Reservation id cannot be null.");
+
             try
             {
                 await _reservationService.ConfirmPaymentAsync(id, _user);
                 await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
-                return Ok();
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Forbid();
+                return NoContent();
             }
             catch (InvalidOperationException)
             {
@@ -429,29 +474,30 @@ namespace CarWash.PWA.Controllers
             }
         }
 
-        // PUT: api/reservations/{id}/state/{state}
+        // POST: api/reservations/{id}/state/{state}
         /// <summary>
-        /// Set reservation state (carwash admin only)
+        /// Set new state
         /// </summary>
-        /// <param name="id">Reservation id</param>
-        /// <param name="state">New state</param>
+        /// <param name="id">reservation id</param>
+        /// <param name="state">state no.</param>
         /// <returns>No content</returns>
-        /// <response code="200">OK</response>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if id or location param is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         /// <response code="404">NotFound if reservation not found.</response>
-        [HttpPut("{id}/state/{state}")]
+        [UserAction]
+        [HttpPost("{id}/state/{state}")]
         public async Task<IActionResult> SetState([FromRoute] string id, [FromRoute] State state)
         {
+            if (!_user.IsCarwashAdmin) return Forbid();
+            if (id == null) return BadRequest("Reservation id cannot be null.");
+
             try
             {
                 await _reservationService.SetReservationStateAsync(id, state, _user);
                 await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
-                return Ok();
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Forbid();
+                return NoContent();
             }
             catch (InvalidOperationException)
             {
@@ -459,56 +505,62 @@ namespace CarWash.PWA.Controllers
             }
         }
 
-        // POST: api/reservations/{id}/add-carwash-comment
+        // POST: api/reservations/{id}/carwashcomment
         /// <summary>
-        /// Add a carwash comment (carwash admin only)
+        /// Add a carwash comment to a reservation
         /// </summary>
-        /// <param name="id">Reservation id</param>
-        /// <param name="comment">Comment text</param>
+        /// <param name="id">reservation id</param>
+        /// <param name="comment">comment to be added</param>
         /// <returns>No content</returns>
-        /// <response code="200">OK</response>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if id or comment is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
-        /// <response code="404">NotFound if reservation not found.</response>
-        [HttpPost("{id}/add-carwash-comment")]
-        public async Task<IActionResult> AddCarwashComment([FromRoute] string id, [FromBody] string comment)
-        {
-            try
-            {
-                await _reservationService.AddCommentAsync(id, comment, _user);
-                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
-                return Ok();
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Forbid();
-            }
-            catch (InvalidOperationException)
-            {
-                return NotFound();
-            }
-        }
-
-        // POST: api/reservations/{id}/add-comment
-        /// <summary>
-        /// Add a comment
-        /// </summary>
-        /// <param name="id">Reservation id</param>
-        /// <param name="comment">Comment text</param>
-        /// <returns>No content</returns>
-        /// <response code="200">OK</response>
-        /// <response code="401">Unauthorized</response>
-        /// <response code="403">Forbidden if user is not the reservation owner.</response>
         /// <response code="404">NotFound if reservation not found.</response>
         [UserAction]
-        [HttpPost("{id}/add-comment")]
-        public async Task<IActionResult> AddComment([FromRoute] string id, [FromBody] string comment)
+        [HttpPost("{id}/carwashcomment")]
+        public async Task<IActionResult> AddCarwashComment([FromRoute] string id, [FromBody] string comment)
         {
+            if (!_user.IsCarwashAdmin) return Forbid();
+            if (id == null) return BadRequest("Reservation id cannot be null.");
+            if (comment == null) return BadRequest("Comment cannot be null.");
+
             try
             {
                 await _reservationService.AddCommentAsync(id, comment, _user);
                 await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
-                return Ok();
+                return NoContent();
+            }
+            catch (InvalidOperationException)
+            {
+                return NotFound();
+            }
+        }
+
+        // POST: api/reservations/{id}/comment
+        /// <summary>
+        /// Add a comment to a reservation
+        /// </summary>
+        /// <param name="id">reservation id</param>
+        /// <param name="comment">comment to be added</param>
+        /// <returns>No content</returns>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if id or comment is null.</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">Forbidden if user is not carwash admin.</response>
+        /// <response code="404">NotFound if reservation not found.</response>
+        [UserAction]
+        [HttpPost("{id}/comment")]
+        public async Task<IActionResult> AddComment([FromRoute] string id, [FromBody] string comment)
+        {
+            if (id == null) return BadRequest("Reservation id cannot be null.");
+            if (comment == null) return BadRequest("Comment cannot be null.");
+
+            try
+            {
+                await _reservationService.AddCommentAsync(id, comment, _user);
+                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+                return NoContent();
             }
             catch (UnauthorizedAccessException)
             {
@@ -520,25 +572,30 @@ namespace CarWash.PWA.Controllers
             }
         }
 
-        // PUT: api/reservations/{id}/mpv
+        // POST: api/reservations/{id}/mpv
         /// <summary>
-        /// Set MPV flag (carwash admin only)
+        /// Change wether a car is MPV or not
         /// </summary>
-        /// <param name="id">Reservation id</param>
-        /// <param name="mpv">MPV flag</param>
+        /// <param name="id">reservation id</param>
+        /// <param name="mpv">the new value (true/false)</param>
         /// <returns>No content</returns>
-        /// <response code="200">OK</response>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if id is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         /// <response code="404">NotFound if reservation not found.</response>
-        [HttpPut("{id}/mpv")]
+        [UserAction]
+        [HttpPost("{id}/mpv")]
         public async Task<IActionResult> SetMpv([FromRoute] string id, [FromBody] bool mpv)
         {
+            if (!_user.IsCarwashAdmin) return Forbid();
+            if (id == null) return BadRequest("Reservation id cannot be null.");
+
             try
             {
                 await _reservationService.SetMpvAsync(id, mpv, _user);
                 await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
-                return Ok();
+                return NoContent();
             }
             catch (UnauthorizedAccessException)
             {
@@ -550,25 +607,31 @@ namespace CarWash.PWA.Controllers
             }
         }
 
-        // PUT: api/reservations/{id}/services
+        // POST: api/reservations/{id}/services
         /// <summary>
-        /// Update services (carwash admin only)
+        /// Update selected services
         /// </summary>
-        /// <param name="id">Reservation id</param>
-        /// <param name="services">Services list</param>
+        /// <param name="id">reservation id</param>
+        /// <param name="services">new services</param>
         /// <returns>No content</returns>
-        /// <response code="200">OK</response>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if id or services param is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         /// <response code="404">NotFound if reservation not found.</response>
-        [HttpPut("{id}/services")]
+        [UserAction]
+        [HttpPost("{id}/services")]
         public async Task<IActionResult> UpdateServices([FromRoute] string id, [FromBody] List<int> services)
         {
+            if (!_user.IsCarwashAdmin) return Forbid();
+            if (id == null) return BadRequest("Reservation id cannot be null.");
+            if (services == null) return BadRequest("Services param cannot be null.");
+
             try
             {
                 await _reservationService.UpdateServicesAsync(id, services, _user);
                 await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
-                return Ok();
+                return NoContent();
             }
             catch (UnauthorizedAccessException)
             {
@@ -580,25 +643,31 @@ namespace CarWash.PWA.Controllers
             }
         }
 
-        // PUT: api/reservations/{id}/location
+        // POST: api/reservations/{id}/location
         /// <summary>
-        /// Update location (carwash admin only)
+        /// Update car location
         /// </summary>
-        /// <param name="id">Reservation id</param>
-        /// <param name="location">Location</param>
+        /// <param name="id">reservation id</param>
+        /// <param name="location">new location</param>
         /// <returns>No content</returns>
-        /// <response code="200">OK</response>
+        /// <response code="204">NoContent</response>
+        /// <response code="400">BadRequest if id or services param is null.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
         /// <response code="404">NotFound if reservation not found.</response>
-        [HttpPut("{id}/location")]
+        [UserAction]
+        [HttpPost("{id}/location")]
         public async Task<IActionResult> UpdateLocation([FromRoute] string id, [FromBody] string location)
         {
+            if (!_user.IsCarwashAdmin) return Forbid();
+            if (id == null) return BadRequest("Reservation id cannot be null.");
+            if (location == null) return BadRequest("Location cannot be null.");
+
             try
             {
                 await _reservationService.UpdateLocationAsync(id, location, _user);
                 await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
-                return Ok();
+                return NoContent();
             }
             catch (UnauthorizedAccessException)
             {

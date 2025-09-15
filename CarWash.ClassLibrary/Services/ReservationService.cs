@@ -129,7 +129,6 @@ namespace CarWash.ClassLibrary.Services
         public async Task<Reservation> CreateReservationAsync(Reservation reservation, User currentUser)
         {
             // Set defaults
-            reservation.UserId ??= currentUser.Id;
             reservation.State = State.SubmittedNotActual;
             reservation.Mpv = false;
             reservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty).Replace(" ", string.Empty);
