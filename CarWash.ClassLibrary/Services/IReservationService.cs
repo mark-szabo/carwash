@@ -27,18 +27,16 @@ namespace CarWash.ClassLibrary.Services
         /// </summary>
         /// <param name="reservation">The reservation to create</param>
         /// <param name="currentUser">The current user creating the reservation</param>
-        /// <param name="dropoffConfirmed">Whether dropoff is pre-confirmed</param>
         /// <returns>The created reservation</returns>
-        Task<Reservation> CreateReservationAsync(Reservation reservation, User currentUser, bool dropoffConfirmed = false);
+        Task<Reservation> CreateReservationAsync(Reservation reservation, User currentUser);
 
         /// <summary>
         /// Updates an existing reservation with business logic validation
         /// </summary>
         /// <param name="reservation">The reservation to update</param>
         /// <param name="currentUser">The current user updating the reservation</param>
-        /// <param name="dropoffConfirmed">Whether dropoff is pre-confirmed</param>
         /// <returns>The updated reservation</returns>
-        Task<Reservation> UpdateReservationAsync(Reservation reservation, User currentUser, bool dropoffConfirmed = false);
+        Task<Reservation> UpdateReservationAsync(Reservation reservation, User currentUser);
 
         /// <summary>
         /// Deletes a reservation and handles cleanup

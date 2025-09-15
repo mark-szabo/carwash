@@ -126,7 +126,7 @@ namespace CarWash.ClassLibrary.Services
         }
 
         /// <inheritdoc />
-        public async Task<Reservation> CreateReservationAsync(Reservation reservation, User currentUser, bool dropoffConfirmed = false)
+        public async Task<Reservation> CreateReservationAsync(Reservation reservation, User currentUser)
         {
             // Set defaults
             reservation.UserId ??= currentUser.Id;
@@ -157,23 +157,6 @@ namespace CarWash.ClassLibrary.Services
 
             // EndDate should already be calculated during validation
 
-            if (dropoffConfirmed)
-            {
-                if (reservation.Location == null)
-                {
-                    telemetryClient.TrackTrace(
-                        "BadRequest: Location must be set if drop-off pre-confirmed.",
-                        Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error,
-                        new Dictionary<string, string>
-                        {
-                            { "UserId", reservation.UserId },
-                            { "Location", reservation.Location }
-                        });
-                    throw new ArgumentException("Location must be set if drop-off pre-confirmed.");
-                }
-                reservation.State = State.DropoffAndLocationConfirmed;
-            }
-
             // Time requirement calculation
             reservation.TimeRequirement = reservation.Services.Contains(Constants.ServiceType.Carpet) ?
                 configuration.CurrentValue.Reservation.CarpetCleaningMultiplier * configuration.CurrentValue.Reservation.TimeUnit :
@@ -202,7 +185,7 @@ namespace CarWash.ClassLibrary.Services
         }
 
         /// <inheritdoc />
-        public async Task<Reservation> UpdateReservationAsync(Reservation reservation, User currentUser, bool dropoffConfirmed = false)
+        public async Task<Reservation> UpdateReservationAsync(Reservation reservation, User currentUser)
         {
             var dbReservation = await context.Reservation.FindAsync(reservation.Id);
             if (dbReservation == null)
@@ -218,13 +201,6 @@ namespace CarWash.ClassLibrary.Services
             dbReservation.StartDate = reservation.StartDate;
             if (reservation.EndDate != null) dbReservation.EndDate = (DateTime)reservation.EndDate;
             // EndDate should already be calculated during validation
-
-            if (dropoffConfirmed)
-            {
-                if (dbReservation.Location == null)
-                    throw new ArgumentException("Location must be set if drop-off pre-confirmed.");
-                dbReservation.State = State.DropoffAndLocationConfirmed;
-            }
 
             // Update user if changed
             if (reservation.UserId != currentUser.Id)

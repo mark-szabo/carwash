@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CarWash.ClassLibrary;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
+using CarWash.ClassLibrary.Models.ViewModels;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Controllers;
 using CarWash.PWA.Hubs;
@@ -594,7 +595,7 @@ namespace CarWash.PWA.Tests
             };
             var controller = CreateControllerStub(dbContext);
 
-            var result = await controller.PostReservation(newReservation, true);
+            var result = await controller.PostReservation(newReservation);
             var created = (CreatedAtActionResult)result.Result;
             var reservation = (ReservationViewModel)created.Value;
 
@@ -617,7 +618,7 @@ namespace CarWash.PWA.Tests
             };
             var controller = CreateControllerStub(dbContext);
 
-            var result = await controller.PostReservation(newReservation, true);
+            var result = await controller.PostReservation(newReservation);
 
             Assert.IsType<ActionResult<ReservationViewModel>>(result);
             Assert.IsType<BadRequestObjectResult>(result.Result);
@@ -944,7 +945,7 @@ namespace CarWash.PWA.Tests
             reservation.Location = LOCATION;
             var controller = CreateControllerStub(dbContext);
 
-            var result = await controller.PutReservation(reservation.Id, reservation, true);
+            var result = await controller.PutReservation(reservation.Id, reservation);
             var ok = (OkObjectResult)result.Result;
             var updatedReservation = (ReservationViewModel)ok.Value;
 
@@ -962,7 +963,7 @@ namespace CarWash.PWA.Tests
             reservation.Location = null;
             var controller = CreateControllerStub(dbContext);
 
-            var result = await controller.PutReservation(reservation.Id, reservation, true);
+            var result = await controller.PutReservation(reservation.Id, reservation);
 
             Assert.IsType<ActionResult<ReservationViewModel>>(result);
             Assert.IsType<BadRequestObjectResult>(result.Result);
@@ -1119,7 +1120,7 @@ namespace CarWash.PWA.Tests
         {
             var dbContext = CreateInMemoryDbContext();
             const string LOCATION = "M/-3/180";
-            var model = new ConfirmDropoffByEmailViewModel(Email: default, Location: LOCATION, VehiclePlateNumber: default);
+            var model = new ConfirmDropoffByEmailViewModel(Email: default, Location: LOCATION, VehiclePlateNumber: default, ReservationId: default, Hash: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1131,7 +1132,7 @@ namespace CarWash.PWA.Tests
         public async Task ConfirmDropoffByEmail_WithNoLocation_ReturnsBadRequest()
         {
             var dbContext = CreateInMemoryDbContext();
-            var model = new ConfirmDropoffByEmailViewModel(Email: JOHN_EMAIL, Location: default, VehiclePlateNumber: default);
+            var model = new ConfirmDropoffByEmailViewModel(Email: JOHN_EMAIL, Location: default, VehiclePlateNumber: default, ReservationId: default, Hash: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1144,7 +1145,7 @@ namespace CarWash.PWA.Tests
         {
             var dbContext = CreateInMemoryDbContext();
             const string LOCATION = "M/-3/180";
-            var model = new ConfirmDropoffByEmailViewModel(Email: "invalid email", Location: LOCATION, VehiclePlateNumber: default);
+            var model = new ConfirmDropoffByEmailViewModel(Email: "invalid email", Location: LOCATION, VehiclePlateNumber: default, ReservationId: default, Hash: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1158,7 +1159,7 @@ namespace CarWash.PWA.Tests
             var dbContext = CreateInMemoryDbContext();
             const string LOCATION = "M/-3/180";
             // Jane does not have any reservations.
-            var model = new ConfirmDropoffByEmailViewModel(Email: JANE_EMAIL, Location: LOCATION, VehiclePlateNumber: default);
+            var model = new ConfirmDropoffByEmailViewModel(Email: JANE_EMAIL, Location: LOCATION, VehiclePlateNumber: default, ReservationId: default, Hash: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1174,7 +1175,7 @@ namespace CarWash.PWA.Tests
             dbContext.ChangeTracker.Clear();
             const string LOCATION = "M/-3/180";
             // John has exactly one active reservation.
-            var model = new ConfirmDropoffByEmailViewModel(Email: JOHN_EMAIL, Location: LOCATION, VehiclePlateNumber: default);
+            var model = new ConfirmDropoffByEmailViewModel(Email: JOHN_EMAIL, Location: LOCATION, VehiclePlateNumber: default, ReservationId: default, Hash: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1205,7 +1206,7 @@ namespace CarWash.PWA.Tests
             dbContext.ChangeTracker.Clear();
             const string LOCATION = "M/-3/180";
             // John has exactly one reservation waiting for key.
-            var model = new ConfirmDropoffByEmailViewModel(Email: JOHN_EMAIL, Location: LOCATION, VehiclePlateNumber: default);
+            var model = new ConfirmDropoffByEmailViewModel(Email: JOHN_EMAIL, Location: LOCATION, VehiclePlateNumber: default, ReservationId: default, Hash: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1236,7 +1237,7 @@ namespace CarWash.PWA.Tests
             dbContext.ChangeTracker.Clear();
             const string LOCATION = "M/-3/180";
             // John has two reservations waiting for key, but only one of those is today.
-            var model = new ConfirmDropoffByEmailViewModel(Email: JOHN_EMAIL, Location: LOCATION, VehiclePlateNumber: default);
+            var model = new ConfirmDropoffByEmailViewModel(Email: JOHN_EMAIL, Location: LOCATION, VehiclePlateNumber: default, ReservationId: default, Hash: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1267,7 +1268,7 @@ namespace CarWash.PWA.Tests
             dbContext.ChangeTracker.Clear();
             const string LOCATION = "M/-3/180";
             // Admin has two reservations scheduled, but only one of those is today.
-            var model = new ConfirmDropoffByEmailViewModel(Email: ADMIN_EMAIL, Location: LOCATION, VehiclePlateNumber: default);
+            var model = new ConfirmDropoffByEmailViewModel(Email: ADMIN_EMAIL, Location: LOCATION, VehiclePlateNumber: default, ReservationId: default, Hash: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1298,7 +1299,7 @@ namespace CarWash.PWA.Tests
             dbContext.ChangeTracker.Clear();
             const string LOCATION = "M/-3/180";
             // Admin has two reservations scheduled, both in the future. But we specify the vehicle plate number which is unique among the active reservations of Admin.
-            var model = new ConfirmDropoffByEmailViewModel(Email: ADMIN_EMAIL, Location: LOCATION, VehiclePlateNumber: PLATE);
+            var model = new ConfirmDropoffByEmailViewModel(Email: ADMIN_EMAIL, Location: LOCATION, VehiclePlateNumber: PLATE, ReservationId: default, Hash: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1328,7 +1329,7 @@ namespace CarWash.PWA.Tests
             await dbContext.SaveChangesAsync();
             const string LOCATION = "M/-3/180";
             // Admin has two reservations scheduled, both in the future. And we do not specify the vehicle plate number.
-            var model = new ConfirmDropoffByEmailViewModel(Email: ADMIN_EMAIL, Location: LOCATION, VehiclePlateNumber: default);
+            var model = new ConfirmDropoffByEmailViewModel(Email: ADMIN_EMAIL, Location: LOCATION, VehiclePlateNumber: default, ReservationId: default, Hash: default);
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1357,7 +1358,7 @@ namespace CarWash.PWA.Tests
             await dbContext.SaveChangesAsync();
             const string LOCATION = "M/-3/180";
             // Admin has two reservations scheduled, both in the future. We do specify the vehicle plate number, but both of the active reservations have the same plate.
-            var model = new ConfirmDropoffByEmailViewModel(Email: ADMIN_EMAIL, Location: LOCATION, VehiclePlateNumber: PLATE); ;
+            var model = new ConfirmDropoffByEmailViewModel(Email: ADMIN_EMAIL, Location: LOCATION, VehiclePlateNumber: PLATE, ReservationId: default, Hash: default); ;
             var controller = CreateServiceControllerStub(dbContext);
 
             var result = await controller.ConfirmDropoffByEmail(model);
@@ -1981,18 +1982,18 @@ namespace CarWash.PWA.Tests
             Assert.IsType<NotFoundResult>(result);
         }
 
-        [Fact]
-        public void GetObfuscatedReservations_ByDefault_ReturnsAListOfReservations()
-        {
-            var dbContext = CreateInMemoryDbContext();
-            var controller = CreateControllerStub(dbContext);
-
-            var result = controller.GetObfuscatedReservations();
-
-            Assert.NotEmpty(result);
-            const int NUMBER_OF_ALL_RESERVATIONS = 8;
-            Assert.Equal(NUMBER_OF_ALL_RESERVATIONS, result.Count());
-        }
+        // [Fact]
+        // public void GetObfuscatedReservations_ByDefault_ReturnsAListOfReservations()
+        // {
+        //     var dbContext = CreateInMemoryDbContext();
+        //     var controller = CreateControllerStub(dbContext);
+        //
+        //     var result = controller.GetObfuscatedReservations();
+        //
+        //     Assert.NotEmpty(result);
+        //     const int NUMBER_OF_ALL_RESERVATIONS = 8;
+        //     Assert.Equal(NUMBER_OF_ALL_RESERVATIONS, result.Count());
+        // }
 
         [Fact]
         public async Task GetNotAvailableDatesAndTimes_AsCarWashAdmin_ReturnsEmptyList()

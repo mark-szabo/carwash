@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
+using CarWash.ClassLibrary.Models.ViewModels;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Attributes;
 using Microsoft.AspNetCore.Authorization;
