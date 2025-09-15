@@ -1739,22 +1739,6 @@ namespace CarWash.PWA.Controllers
                 reservation.Comments)
         { }
     }
-
-    public record ObfuscatedReservationViewModel(
-    string Company,
-    List<int> Services,
-    int? TimeRequirement,
-    DateTime StartDate,
-    DateTime EndDate);
-
-    public record NotAvailableDatesAndTimesViewModel(IEnumerable<DateOnly> Dates, IEnumerable<DateTime> Times);
-
-    public record LastSettingsViewModel(string VehiclePlateNumber, string Location, List<int> Services);
-
-    public record ReservationPercentageViewModel(DateTime StartTime, double Percentage);
-
-    public record ReservationCapacityViewModel(DateTime StartTime, int FreeCapacity);
-
-    public record ConfirmDropoffByEmailViewModel(string Email, string Location, string VehiclePlateNumber);
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }
+
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
