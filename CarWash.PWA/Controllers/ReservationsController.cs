@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using CarWash.ClassLibrary;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
+using CarWash.ClassLibrary.Models.ViewModels;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Attributes;
 using CarWash.PWA.Hubs;
@@ -670,36 +671,29 @@ namespace CarWash.PWA.Controllers
         [HttpPost("{id}/mpv")]
         public async Task<IActionResult> SetMpv([FromRoute] string id, [FromBody] bool mpv)
         {
-            if (!_user.IsCarwashAdmin) return Forbid();
-
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-
-            var reservation = await _context.Reservation.FindAsync(id);
-
-            if (reservation == null) return NotFound();
-
-            reservation.Mpv = mpv;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _reservationService.SetMpvAsync(id, mpv, _user);
+                
+                // Broadcast backlog update to all connected clients on SignalR
+                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+
+                return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ArgumentException ex)
             {
-                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return BadRequest(ex.Message);
             }
-
-            // Broadcast backlog update to all connected clients on SignalR
-            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
-
-            return NoContent();
+            catch (InvalidOperationException ex)
+            {
+                if (ex.Message.Contains("not found"))
+                    return NotFound();
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         // POST: api/reservations/{id}/services
@@ -717,37 +711,29 @@ namespace CarWash.PWA.Controllers
         [HttpPost("{id}/services")]
         public async Task<IActionResult> UpdateServices([FromRoute] string id, [FromBody] List<int> services)
         {
-            if (!_user.IsCarwashAdmin) return Forbid();
-
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-            if (services == null) return BadRequest("Services param cannot be null.");
-
-            var reservation = await _context.Reservation.FindAsync(id);
-
-            if (reservation == null) return NotFound();
-
-            reservation.Services = services;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _reservationService.UpdateServicesAsync(id, services, _user);
+                
+                // Broadcast backlog update to all connected clients on SignalR
+                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+
+                return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ArgumentException ex)
             {
-                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return BadRequest(ex.Message);
             }
-
-            // Broadcast backlog update to all connected clients on SignalR
-            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
-
-            return NoContent();
+            catch (InvalidOperationException ex)
+            {
+                if (ex.Message.Contains("not found"))
+                    return NotFound();
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         // POST: api/reservations/{id}/location
@@ -765,37 +751,29 @@ namespace CarWash.PWA.Controllers
         [HttpPost("{id}/location")]
         public async Task<IActionResult> UpdateLocation([FromRoute] string id, [FromBody] string location)
         {
-            if (!_user.IsCarwashAdmin) return Forbid();
-
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-            if (location == null) return BadRequest("New location cannot be null.");
-
-            var reservation = await _context.Reservation.FindAsync(id);
-
-            if (reservation == null) return NotFound();
-
-            reservation.Location = location;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _reservationService.UpdateLocationAsync(id, location, _user);
+                
+                // Broadcast backlog update to all connected clients on SignalR
+                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+
+                return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ArgumentException ex)
             {
-                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return BadRequest(ex.Message);
             }
-
-            // Broadcast backlog update to all connected clients on SignalR
-            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
-
-            return NoContent();
+            catch (InvalidOperationException ex)
+            {
+                if (ex.Message.Contains("not found"))
+                    return NotFound();
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         // GET: api/reservations/obfuscated
@@ -827,6 +805,9 @@ namespace CarWash.PWA.Controllers
         [UserAction]
         [HttpGet, Route("notavailabledates")]
         public async Task<NotAvailableDatesAndTimesViewModel> GetNotAvailableDatesAndTimes(int daysAhead = 365)
+        {
+            return await _reservationService.GetNotAvailableDatesAndTimesAsync(_user, daysAhead);
+        }
         {
             if (_user.IsCarwashAdmin) return new NotAvailableDatesAndTimesViewModel([], []);
 
@@ -1014,17 +995,9 @@ namespace CarWash.PWA.Controllers
         [HttpGet, Route("lastsettings")]
         public async Task<ActionResult<LastSettingsViewModel>> GetLastSettings()
         {
-            var lastReservation = await _context.Reservation
-                .Where(r => r.UserId == _user.Id)
-                .OrderByDescending(r => r.CreatedOn)
-                .FirstOrDefaultAsync();
-
-            if (lastReservation == null) return NoContent();
-
-            return Ok(new LastSettingsViewModel(
-                VehiclePlateNumber: lastReservation.VehiclePlateNumber,
-                Location: lastReservation.Location,
-                Services: lastReservation.Services));
+            var lastSettings = await _reservationService.GetLastSettingsAsync(_user);
+            if (lastSettings == null) return NoContent();
+            return Ok(lastSettings);
         }
 
         // GET: api/reservations/reservationcapacity
@@ -1035,6 +1008,10 @@ namespace CarWash.PWA.Controllers
         /// <returns>List of <see cref="ReservationCapacityViewModel"/></returns>
         [HttpGet, Route("reservationcapacity")]
         public async Task<ActionResult<IEnumerable<ReservationCapacityViewModel>>> GetReservationCapacity(DateTime date)
+        {
+            var result = await _reservationService.GetReservationCapacityAsync(date);
+            return Ok(result);
+        }
         {
             var slotReservationAggregate = await _context.Reservation
                 .Where(r => r.StartDate.Date == date.Date)
@@ -1114,6 +1091,23 @@ namespace CarWash.PWA.Controllers
         [UserAction]
         [HttpGet, Route("export")]
         public async Task<IActionResult> Export(DateTime? startDate = null, DateTime? endDate = null)
+        {
+            try
+            {
+                var startDateNonNull = startDate ?? DateTime.UtcNow.Date.AddMonths(-1);
+                var endDateNonNull = endDate ?? DateTime.UtcNow.Date;
+                
+                var excelData = await _reservationService.ExportReservationsAsync(_user, startDate, endDate);
+                var stream = new MemoryStream(excelData);
+                
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                           $"carwash-export-{startDateNonNull.Year}-{startDateNonNull.Month}-{startDateNonNull.Day}.xlsx");
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+        }
         {
             var startDateNonNull = startDate ?? DateTime.UtcNow.Date.AddMonths(-1);
             var endDateNonNull = endDate ?? DateTime.UtcNow.Date;

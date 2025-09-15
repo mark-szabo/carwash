@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
+using CarWash.ClassLibrary.Models.ViewModels;
 
 namespace CarWash.ClassLibrary.Services
 {
@@ -104,6 +105,64 @@ namespace CarWash.ClassLibrary.Services
         /// <param name="vehiclePlateNumber">The vehicle plate number</param>
         /// <returns>True if the vehicle is categorized as MPV</returns>
         Task<bool> IsMpvAsync(string vehiclePlateNumber);
+
+        /// <summary>
+        /// Sets the MPV flag for a reservation
+        /// </summary>
+        /// <param name="reservationId">The reservation ID</param>
+        /// <param name="mpv">The MPV flag value</param>
+        /// <param name="currentUser">The current user (must be carwash admin)</param>
+        /// <returns>Task representing the operation</returns>
+        Task SetMpvAsync(string reservationId, bool mpv, User currentUser);
+
+        /// <summary>
+        /// Updates the services for a reservation
+        /// </summary>
+        /// <param name="reservationId">The reservation ID</param>
+        /// <param name="services">The new services list</param>
+        /// <param name="currentUser">The current user (must be carwash admin)</param>
+        /// <returns>Task representing the operation</returns>
+        Task UpdateServicesAsync(string reservationId, List<int> services, User currentUser);
+
+        /// <summary>
+        /// Updates the location for a reservation
+        /// </summary>
+        /// <param name="reservationId">The reservation ID</param>
+        /// <param name="location">The new location</param>
+        /// <param name="currentUser">The current user (must be carwash admin)</param>
+        /// <returns>Task representing the operation</returns>
+        Task UpdateLocationAsync(string reservationId, string location, User currentUser);
+
+        /// <summary>
+        /// Gets not available dates and times
+        /// </summary>
+        /// <param name="currentUser">The current user</param>
+        /// <param name="daysAhead">Number of days ahead to check</param>
+        /// <returns>Not available dates and times view model</returns>
+        Task<NotAvailableDatesAndTimesViewModel> GetNotAvailableDatesAndTimesAsync(User currentUser, int daysAhead = 365);
+
+        /// <summary>
+        /// Gets last settings for a user
+        /// </summary>
+        /// <param name="currentUser">The current user</param>
+        /// <returns>Last settings view model or null if no previous reservation exists</returns>
+        Task<LastSettingsViewModel?> GetLastSettingsAsync(User currentUser);
+
+        /// <summary>
+        /// Gets reservation capacity for a specific date
+        /// </summary>
+        /// <param name="date">The date to check capacity for</param>
+        /// <returns>List of reservation capacity view models</returns>
+        Task<IEnumerable<ReservationCapacityViewModel>> GetReservationCapacityAsync(DateTime date);
+
+        /// <summary>
+        /// Exports reservations to Excel for a given timespan
+        /// </summary>
+        /// <param name="currentUser">The current user</param>
+        /// <param name="startDate">Start date (optional)</param>
+        /// <param name="endDate">End date (optional)</param>
+        /// <returns>Excel file data as byte array</returns>
+        Task<byte[]> ExportReservationsAsync(User currentUser, DateTime? startDate = null, DateTime? endDate = null);
     }
 
     /// <summary>
