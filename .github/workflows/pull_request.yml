@@ -61,5 +61,7 @@ jobs:
                   dotnet build "${{ env.WORKING_DIRECTORY_FUNCTIONS }}" --configuration ${{ env.CONFIGURATION }} --no-restore
                   dotnet dotnet-coverage collect "dotnet test CarWash.PWA.Tests" -f xml -o "coverage.xml"
                   .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ env.SONAR_TOKEN }}"
+            - name: Test
+              run: dotnet test "CarWash.PWA.Tests"
             - name: Publish
               run: dotnet publish "${{ env.WORKING_DIRECTORY_PWA }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
