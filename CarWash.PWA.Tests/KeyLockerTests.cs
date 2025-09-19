@@ -172,6 +172,7 @@ namespace CarWash.PWA.Tests
             var service = new KeyLockerService(context, config, iotHubClient, TestControllerFactory.CreateTelemetryClientStub());
             await service.GenerateBoxesToLocker("Box", 1, "Bldg", "1", "locker1");
             context.KeyLockerBox.First().State = KeyLockerBoxState.Used;
+            await context.SaveChangesAsync();
 
             // Act
             await Assert.ThrowsAsync<InvalidOperationException>(() => service.OpenRandomAvailableBoxAsync("locker1"));
