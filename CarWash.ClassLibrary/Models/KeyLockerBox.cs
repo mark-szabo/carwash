@@ -44,7 +44,7 @@ namespace CarWash.ClassLibrary.Models
         /// <summary>
         /// Curent state of the box.
         /// </summary>
-        public KeyLockerBoxState State { get; set; } = KeyLockerBoxState.Unavailable;
+        public KeyLockerBoxState State { get; set; } = KeyLockerBoxState.Empty;
 
         /// <summary>
         /// Indicates if the box door is currently closed.
