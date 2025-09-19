@@ -1,5 +1,6 @@
 name: Build and deploy to TEST
 on:
+    workflow_dispatch:
     push:
         branches:
             - develop
