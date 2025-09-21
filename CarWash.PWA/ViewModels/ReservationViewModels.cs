@@ -1,39 +1,10 @@
 using System;
 using System.Collections.Generic;
 using CarWash.ClassLibrary.Enums;
+using CarWash.ClassLibrary.Models;
 
-namespace CarWash.ClassLibrary.Models.ViewModels
+namespace CarWash.PWA.ViewModels
 {
-    /// <summary>
-    /// View model for not available dates and times
-    /// </summary>
-    public record NotAvailableDatesAndTimesViewModel(IEnumerable<DateOnly> Dates, IEnumerable<DateTime> Times);
-
-    /// <summary>
-    /// View model for last user settings
-    /// </summary>
-    public record LastSettingsViewModel(string VehiclePlateNumber, string Location, List<int> Services);
-
-    /// <summary>
-    /// View model for reservation capacity
-    /// </summary>
-    public record ReservationCapacityViewModel(DateTime StartTime, int FreeCapacity);
-
-    /// <summary>
-    /// View model for obfuscated reservations
-    /// </summary>
-    public record ObfuscatedReservationViewModel(
-        string Company,
-        List<int> Services,
-        int? TimeRequirement,
-        DateTime StartDate,
-        DateTime EndDate);
-
-    /// <summary>
-    /// View model for reservation percentage
-    /// </summary>
-    public record ReservationPercentageViewModel(DateTime StartTime, double Percentage);
-
     /// <summary>
     /// View model for confirm dropoff by email
     /// </summary>
@@ -52,7 +23,7 @@ namespace CarWash.ClassLibrary.Models.ViewModels
         string UserId,
         string VehiclePlateNumber,
         string Location,
-        KeyLockerBoxViewModel? KeyLockerBox,
+        KeyLockerBoxViewModel KeyLockerBox,
         State State,
         List<int> Services,
         bool Private,
@@ -86,7 +57,7 @@ namespace CarWash.ClassLibrary.Models.ViewModels
         UserViewModel User,
         string VehiclePlateNumber,
         string Location,
-        KeyLockerBoxViewModel? KeyLockerBox,
+        KeyLockerBoxViewModel KeyLockerBox,
         State State,
         List<int> Services,
         bool Private,

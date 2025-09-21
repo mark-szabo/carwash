@@ -1,7 +1,7 @@
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
 
-namespace CarWash.ClassLibrary.Models.ViewModels
+namespace CarWash.PWA.ViewModels
 {
     /// <summary>
     /// View model for users

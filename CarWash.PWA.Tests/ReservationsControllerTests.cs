@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 using CarWash.ClassLibrary;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
-using CarWash.ClassLibrary.Models.ViewModels;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Controllers;
 using CarWash.PWA.Hubs;
+using CarWash.PWA.ViewModels;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
@@ -579,52 +579,6 @@ namespace CarWash.PWA.Tests
         }
 
         [Theory]
-        [InlineData(MONTH_DST, UTC_HOUR_DST)]
-        [InlineData(MONTH_END_DST, UTC_HOUR_END_DST)]
-        public async Task PostReservation_WithDropoffConfirmed_ReturnsNewReservationWithLocation(int month, int hour)
-        {
-            var dbContext = CreateInMemoryDbContext();
-            const string LOCATION = "M/-3/180";
-            var newReservation = new Reservation
-            {
-                VehiclePlateNumber = "TEST01",
-                StartDate = new DateTime(YEAR, month, 05, hour, 00, 00, DateTimeKind.Utc),
-                Services = new List<int> { Constants.ServiceType.Interior },
-                Location = LOCATION,
-                Private = false,
-            };
-            var controller = CreateControllerStub(dbContext);
-
-            var result = await controller.PostReservation(newReservation);
-            var created = (CreatedAtActionResult)result.Result;
-            var reservation = (ReservationViewModel)created.Value;
-
-            Assert.IsType<ActionResult<ReservationViewModel>>(result);
-            Assert.IsType<CreatedAtActionResult>(result.Result);
-            Assert.IsType<ReservationViewModel>(created.Value);
-            Assert.Equal(LOCATION, reservation.Location);
-        }
-
-        [Fact]
-        public async Task PostReservation_WithDropoffConfirmedButNoLocationSpecified_ReturnsBadRequest()
-        {
-            var dbContext = CreateInMemoryDbContext();
-            var newReservation = new Reservation
-            {
-                VehiclePlateNumber = "TEST01",
-                StartDate = new DateTime(YEAR, MONTH_DST, 05, UTC_HOUR_DST, 00, 00, DateTimeKind.Utc),
-                Services = new List<int> { Constants.ServiceType.Interior },
-                Private = false,
-            };
-            var controller = CreateControllerStub(dbContext);
-
-            var result = await controller.PostReservation(newReservation);
-
-            Assert.IsType<ActionResult<ReservationViewModel>>(result);
-            Assert.IsType<BadRequestObjectResult>(result.Result);
-        }
-
-        [Theory]
         [InlineData("TST000", MONTH_DST, UTC_HOUR_DST)]
         [InlineData("TST 000", MONTH_DST, UTC_HOUR_DST)]
         [InlineData("TST-000", MONTH_DST, UTC_HOUR_DST)]
@@ -928,39 +882,6 @@ namespace CarWash.PWA.Tests
             var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
             reservation.StartDate = new DateTime(YEAR, MONTH_DST, 04, UTC_HOUR_DST, 00, 00, DateTimeKind.Utc);
             reservation.EndDate = new DateTime(YEAR, MONTH_DST, 04, UTC_HOUR_DST + 3, 00, 00, DateTimeKind.Utc);
-            var controller = CreateControllerStub(dbContext);
-
-            var result = await controller.PutReservation(reservation.Id, reservation);
-
-            Assert.IsType<ActionResult<ReservationViewModel>>(result);
-            Assert.IsType<BadRequestObjectResult>(result.Result);
-        }
-
-        [Fact]
-        public async Task PutReservation_WithDropoffConfirmed_ReturnsNewReservationWithLocation()
-        {
-            var dbContext = CreateInMemoryDbContext();
-            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
-            const string LOCATION = "M/-3/180";
-            reservation.Location = LOCATION;
-            var controller = CreateControllerStub(dbContext);
-
-            var result = await controller.PutReservation(reservation.Id, reservation);
-            var ok = (OkObjectResult)result.Result;
-            var updatedReservation = (ReservationViewModel)ok.Value;
-
-            Assert.IsType<ActionResult<ReservationViewModel>>(result);
-            Assert.IsType<OkObjectResult>(result.Result);
-            Assert.IsType<ReservationViewModel>(ok.Value);
-            Assert.Equal(LOCATION, reservation.Location);
-        }
-
-        [Fact]
-        public async Task PutReservation_WithDropoffConfirmedButNoLocationSpecified_ReturnsBadRequest()
-        {
-            var dbContext = CreateInMemoryDbContext();
-            var reservation = await dbContext.Reservation.AsNoTracking().FirstAsync(r => r.VehiclePlateNumber == "TEST01");
-            reservation.Location = null;
             var controller = CreateControllerStub(dbContext);
 
             var result = await controller.PutReservation(reservation.Id, reservation);
@@ -2022,11 +1943,11 @@ namespace CarWash.PWA.Tests
 
             var result = await controller.GetLastSettings();
             var ok = (OkObjectResult)result.Result;
-            var lastSettings = (LastSettingsViewModel)ok.Value;
+            var lastSettings = (LastSettings)ok.Value;
 
-            Assert.IsType<ActionResult<LastSettingsViewModel>>(result);
+            Assert.IsType<ActionResult<LastSettings>>(result);
             Assert.IsType<OkObjectResult>(result.Result);
-            Assert.IsType<LastSettingsViewModel>(ok.Value);
+            Assert.IsType<LastSettings>(ok.Value);
             Assert.Equal("TEST00", lastSettings.VehiclePlateNumber);
             Assert.Equal("M/-1/11", lastSettings.Location);
             Assert.Equal(new List<int> { Constants.ServiceType.Exterior, Constants.ServiceType.Interior }, lastSettings.Services);
@@ -2040,7 +1961,7 @@ namespace CarWash.PWA.Tests
 
             var result = await controller.GetReservationCapacity(new DateTime(YEAR, MONTH_DST, 04));
             var ok = (OkObjectResult)result.Result;
-            var slotCapacity = ((IEnumerable<ReservationCapacityViewModel>)ok.Value).ToList();
+            var slotCapacity = ((IEnumerable<ReservationCapacity>)ok.Value).ToList();
 
             Assert.NotEmpty(slotCapacity);
             Assert.Equal(3, slotCapacity.Count);

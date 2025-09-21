@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 using CarWash.ClassLibrary;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
-using CarWash.ClassLibrary.Models.ViewModels;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Attributes;
 using CarWash.PWA.Hubs;
+using CarWash.PWA.ViewModels;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -34,12 +34,7 @@ namespace CarWash.PWA.Controllers
         IHubContext<BacklogHub> backlogHub,
         TelemetryClient telemetryClient) : ControllerBase
     {
-        private readonly IOptionsMonitor<CarWashConfiguration> _configuration = configuration;
-        private readonly ApplicationDbContext _context = context;
         private readonly User _user = userService.CurrentUser;
-        private readonly IReservationService _reservationService = reservationService;
-        private readonly IHubContext<BacklogHub> _backlogHub = backlogHub;
-        private readonly TelemetryClient _telemetryClient = telemetryClient;
 
         // GET: api/reservations
         /// <summary>
@@ -52,7 +47,7 @@ namespace CarWash.PWA.Controllers
         [HttpGet]
         public IEnumerable<ReservationViewModel> GetReservations()
         {
-            return _context.Reservation
+            return context.Reservation
                 .Include(r => r.KeyLockerBox)
                 .Where(r => r.UserId == _user.Id)
                 .OrderByDescending(r => r.StartDate)
@@ -76,7 +71,7 @@ namespace CarWash.PWA.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var reservation = await _context.Reservation.FindAsync(id);
+            var reservation = await context.Reservation.FindAsync(id);
 
             if (reservation == null) return NotFound();
 
@@ -104,39 +99,35 @@ namespace CarWash.PWA.Controllers
 
             if (id != reservation.Id) return BadRequest();
 
-            var dbReservation = await _context.Reservation.FindAsync(id);
-            if (dbReservation == null) return NotFound();
-
             try
             {
-                // Validate the reservation
-                var validationResult = await _reservationService.ValidateReservationAsync(reservation, true, _user, id);
-                if (!validationResult.IsValid)
-                    return BadRequest(validationResult.ErrorMessage);
-
                 // Update the reservation
-                var updatedReservation = await _reservationService.UpdateReservationAsync(reservation, _user);
+                var updatedReservation = await reservationService.UpdateReservationAsync(reservation, _user);
 
                 // Broadcast SignalR update
-                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, updatedReservation.Id);
+                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, updatedReservation.Id);
 
                 return Ok(new ReservationViewModel(updatedReservation));
+            }
+            catch (ReservationValidationExeption ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
                 return Forbid();
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
                 return NotFound();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
+                if (!await context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -165,27 +156,23 @@ namespace CarWash.PWA.Controllers
 
             try
             {
-                // Set defaults before validation
-                reservation.UserId ??= _user.Id;
-
-                // Validate the reservation
-                var validationResult = await _reservationService.ValidateReservationAsync(reservation, false, _user);
-                if (!validationResult.IsValid)
-                    return BadRequest(validationResult.ErrorMessage);
-
                 // Create the reservation
-                var createdReservation = await _reservationService.CreateReservationAsync(reservation, _user);
+                var createdReservation = await reservationService.CreateReservationAsync(reservation, _user);
 
                 // Broadcast SignalR update
-                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationCreated, createdReservation.Id);
+                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationCreated, createdReservation.Id);
 
                 return CreatedAtAction(nameof(GetReservation), new { id = createdReservation.Id }, new ReservationViewModel(createdReservation));
+            }
+            catch (ReservationValidationExeption ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
                 return Forbid();
             }
@@ -207,10 +194,10 @@ namespace CarWash.PWA.Controllers
         {
             try
             {
-                var deletedReservation = await _reservationService.DeleteReservationAsync(id, _user);
+                var deletedReservation = await reservationService.DeleteReservationAsync(id, _user);
 
                 // Broadcast SignalR update
-                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationDeleted, id);
+                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationDeleted, id);
 
                 return Ok(new ReservationViewModel(deletedReservation));
             }
@@ -237,7 +224,7 @@ namespace CarWash.PWA.Controllers
         {
             if (!_user.IsAdmin) return Forbid();
 
-            var reservations = await _context.Reservation
+            var reservations = await context.Reservation
                 .Include(r => r.User)
                 .Include(r => r.KeyLockerBox)
                 .Where(r => r.User.Company == _user.Company)
@@ -260,7 +247,7 @@ namespace CarWash.PWA.Controllers
         {
             if (!_user.IsCarwashAdmin) return Forbid();
 
-            var reservations = await _context.Reservation
+            var reservations = await context.Reservation
                 .Include(r => r.User)
                 .Include(r => r.KeyLockerBox)
                 .Where(r => r.State == State.DropoffAndLocationConfirmed ||
@@ -290,8 +277,8 @@ namespace CarWash.PWA.Controllers
         {
             try
             {
-                await _reservationService.ConfirmDropoffAsync(id, location, _user);
-                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+                await reservationService.ConfirmDropoffAsync(id, location, _user);
+                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
                 return NoContent();
             }
             catch (ArgumentException ex)
@@ -326,10 +313,10 @@ namespace CarWash.PWA.Controllers
             if (model?.Email == null) return BadRequest("Email cannot be null.");
             if (model.Location == null) return BadRequest("Reservation location cannot be null.");
 
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == model.Email);
+            var user = await context.Users.SingleOrDefaultAsync(u => u.Email == model.Email);
             if (user == null) return NotFound($"No user found with email address '{model.Email}'.");
 
-            var reservations = await _context.Reservation
+            var reservations = await context.Reservation
                 .Include(r => r.User)
                 .Where(r => r.User.Email == user.Email && (r.State == State.SubmittedNotActual || r.State == State.ReminderSentWaitingForKey))
                 .OrderBy(r => r.StartDate)
@@ -372,10 +359,10 @@ namespace CarWash.PWA.Controllers
                 return Conflict("More than one reservation found where the reservation state is submitted or waiting for key.");
             }
 
-            await _reservationService.ConfirmDropoffAsync(reservation.Id, model.Location, reservation.User);
-            await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
+            await reservationService.ConfirmDropoffAsync(reservation.Id, model.Location, reservation.User);
+            await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
 
-            _telemetryClient.TrackEvent("ConfirmDropoffByEmail", new Dictionary<string, string>
+            telemetryClient.TrackEvent("ConfirmDropoffByEmail", new Dictionary<string, string>
             {
                 { "Email", model.Email },
                 { "Resolution", reservationResolution }
@@ -404,8 +391,8 @@ namespace CarWash.PWA.Controllers
 
             try
             {
-                await _reservationService.StartWashAsync(id, _user);
-                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+                await reservationService.StartWashAsync(id, _user);
+                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
                 return NoContent();
             }
             catch (InvalidOperationException)
@@ -434,8 +421,8 @@ namespace CarWash.PWA.Controllers
 
             try
             {
-                await _reservationService.CompleteWashAsync(id, _user);
-                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+                await reservationService.CompleteWashAsync(id, _user);
+                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
                 return NoContent();
             }
             catch (InvalidOperationException)
@@ -464,8 +451,8 @@ namespace CarWash.PWA.Controllers
 
             try
             {
-                await _reservationService.ConfirmPaymentAsync(id, _user);
-                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+                await reservationService.ConfirmPaymentAsync(id, _user);
+                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
                 return NoContent();
             }
             catch (InvalidOperationException)
@@ -495,8 +482,8 @@ namespace CarWash.PWA.Controllers
 
             try
             {
-                await _reservationService.SetReservationStateAsync(id, state, _user);
-                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+                await reservationService.SetReservationStateAsync(id, state, _user);
+                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
                 return NoContent();
             }
             catch (InvalidOperationException)
@@ -527,8 +514,8 @@ namespace CarWash.PWA.Controllers
 
             try
             {
-                await _reservationService.AddCommentAsync(id, comment, _user);
-                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+                await reservationService.AddCommentAsync(id, comment, _user);
+                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
                 return NoContent();
             }
             catch (InvalidOperationException)
@@ -558,8 +545,8 @@ namespace CarWash.PWA.Controllers
 
             try
             {
-                await _reservationService.AddCommentAsync(id, comment, _user);
-                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+                await reservationService.AddCommentAsync(id, comment, _user);
+                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
                 return NoContent();
             }
             catch (UnauthorizedAccessException)
@@ -593,8 +580,8 @@ namespace CarWash.PWA.Controllers
 
             try
             {
-                await _reservationService.SetMpvAsync(id, mpv, _user);
-                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+                await reservationService.SetMpvAsync(id, mpv, _user);
+                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
                 return NoContent();
             }
             catch (UnauthorizedAccessException)
@@ -629,8 +616,8 @@ namespace CarWash.PWA.Controllers
 
             try
             {
-                await _reservationService.UpdateServicesAsync(id, services, _user);
-                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+                await reservationService.UpdateServicesAsync(id, services, _user);
+                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
                 return NoContent();
             }
             catch (UnauthorizedAccessException)
@@ -665,8 +652,8 @@ namespace CarWash.PWA.Controllers
 
             try
             {
-                await _reservationService.UpdateLocationAsync(id, location, _user);
-                await _backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+                await reservationService.UpdateLocationAsync(id, location, _user);
+                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
                 return NoContent();
             }
             catch (UnauthorizedAccessException)
@@ -689,9 +676,9 @@ namespace CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         [UserAction]
         [HttpGet, Route("not-available-dates-and-times")]
-        public async Task<NotAvailableDatesAndTimesViewModel> GetNotAvailableDatesAndTimes(int daysAhead = 365)
+        public async Task<NotAvailableDatesAndTimes> GetNotAvailableDatesAndTimes(int daysAhead = 365)
         {
-            return await _reservationService.GetNotAvailableDatesAndTimesAsync(_user, daysAhead);
+            return await reservationService.GetNotAvailableDatesAndTimesAsync(_user, daysAhead);
         }
 
         // GET: api/reservations/last-settings
@@ -703,9 +690,9 @@ namespace CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         [UserAction]
         [HttpGet, Route("last-settings")]
-        public async Task<ActionResult<LastSettingsViewModel>> GetLastSettings()
+        public async Task<ActionResult<LastSettings>> GetLastSettings()
         {
-            var lastSettings = await _reservationService.GetLastSettingsAsync(_user);
+            var lastSettings = await reservationService.GetLastSettingsAsync(_user);
             return lastSettings != null ? Ok(lastSettings) : NotFound();
         }
 
@@ -719,9 +706,9 @@ namespace CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         [UserAction]
         [HttpGet, Route("capacity")]
-        public async Task<ActionResult<IEnumerable<ReservationCapacityViewModel>>> GetReservationCapacity(DateTime date)
+        public async Task<ActionResult<IEnumerable<ReservationCapacity>>> GetReservationCapacity(DateTime date)
         {
-            var capacity = await _reservationService.GetReservationCapacityAsync(date);
+            var capacity = await reservationService.GetReservationCapacityAsync(date);
             return Ok(capacity);
         }
 
@@ -744,11 +731,11 @@ namespace CarWash.PWA.Controllers
             {
                 var startDateNonNull = startDate ?? DateTime.UtcNow.Date.AddMonths(-1);
                 var endDateNonNull = endDate ?? DateTime.UtcNow.Date;
-                
-                var excelData = await _reservationService.ExportReservationsAsync(_user, startDate, endDate);
+
+                var excelData = await reservationService.ExportReservationsAsync(_user, startDate, endDate);
                 var stream = new MemoryStream(excelData);
-                
-                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                            $"carwash-export-{startDateNonNull.Year}-{startDateNonNull.Month}-{startDateNonNull.Day}.xlsx");
             }
             catch (UnauthorizedAccessException)

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
-using CarWash.ClassLibrary.Models.ViewModels;
 
 namespace CarWash.ClassLibrary.Services
 {
@@ -12,16 +11,6 @@ namespace CarWash.ClassLibrary.Services
     /// </summary>
     public interface IReservationService
     {
-        /// <summary>
-        /// Validates a reservation for business rules and constraints
-        /// </summary>
-        /// <param name="reservation">The reservation to validate</param>
-        /// <param name="isUpdate">Whether this is an update operation</param>
-        /// <param name="currentUser">The current user performing the operation</param>
-        /// <param name="excludeReservationId">For updates, the ID of reservation to exclude from capacity calculations</param>
-        /// <returns>Validation result with any error messages</returns>
-        Task<ValidationResult> ValidateReservationAsync(Reservation reservation, bool isUpdate, User currentUser, string? excludeReservationId = null);
-
         /// <summary>
         /// Creates a new reservation with all necessary business logic
         /// </summary>
@@ -137,21 +126,21 @@ namespace CarWash.ClassLibrary.Services
         /// <param name="currentUser">The current user</param>
         /// <param name="daysAhead">Number of days ahead to check</param>
         /// <returns>Not available dates and times view model</returns>
-        Task<NotAvailableDatesAndTimesViewModel> GetNotAvailableDatesAndTimesAsync(User currentUser, int daysAhead = 365);
+        Task<NotAvailableDatesAndTimes> GetNotAvailableDatesAndTimesAsync(User currentUser, int daysAhead = 365);
 
         /// <summary>
         /// Gets last settings for a user
         /// </summary>
         /// <param name="currentUser">The current user</param>
         /// <returns>Last settings view model or null if no previous reservation exists</returns>
-        Task<LastSettingsViewModel?> GetLastSettingsAsync(User currentUser);
+        Task<LastSettings?> GetLastSettingsAsync(User currentUser);
 
         /// <summary>
         /// Gets reservation capacity for a specific date
         /// </summary>
         /// <param name="date">The date to check capacity for</param>
         /// <returns>List of reservation capacity view models</returns>
-        Task<IEnumerable<ReservationCapacityViewModel>> GetReservationCapacityAsync(DateTime date);
+        Task<IEnumerable<ReservationCapacity>> GetReservationCapacityAsync(DateTime date);
 
         /// <summary>
         /// Exports reservations to Excel for a given timespan
@@ -164,11 +153,40 @@ namespace CarWash.ClassLibrary.Services
     }
 
     /// <summary>
+    /// Model for not available dates and times
+    /// </summary>
+    public record NotAvailableDatesAndTimes(IEnumerable<DateOnly> Dates, IEnumerable<DateTime> Times);
+
+    /// <summary>
+    /// Model for last user settings
+    /// </summary>
+    public record LastSettings(string VehiclePlateNumber, string Location, List<int> Services);
+
+    /// <summary>
+    /// Model for reservation capacity
+    /// </summary>
+    public record ReservationCapacity(DateTime StartTime, int FreeCapacity);
+
+    /// <summary>
     /// Result of reservation validation
     /// </summary>
-    public class ValidationResult
+    /// <param name="IsValid"></param>
+    /// <param name="ErrorMessage"></param>
+    internal record ValidationResult(bool IsValid, string ErrorMessage = "");
+
+    [Serializable]
+    public class ReservationValidationExeption : Exception
     {
-        public bool IsValid { get; set; }
-        public string ErrorMessage { get; set; } = string.Empty;
+        public ReservationValidationExeption()
+        {
+        }
+
+        public ReservationValidationExeption(string? message) : base(message)
+        {
+        }
+
+        public ReservationValidationExeption(string? message, Exception? innerException) : base(message, innerException)
+        {
+        }
     }
 }

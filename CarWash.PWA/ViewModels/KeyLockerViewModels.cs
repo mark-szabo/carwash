@@ -1,6 +1,6 @@
 using CarWash.ClassLibrary.Models;
 
-namespace CarWash.ClassLibrary.Models.ViewModels
+namespace CarWash.PWA.ViewModels
 {
     /// <summary>
     /// ViewModel for a key locker box
