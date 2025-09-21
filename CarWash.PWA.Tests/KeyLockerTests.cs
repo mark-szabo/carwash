@@ -473,7 +473,6 @@ namespace CarWash.PWA.Tests
         {
             // Arrange
             var context = TestDbContextFactory.Create();
-            var config = TestOptionsMonitorFactory.Create();
             var keyLockerServiceMock = new Mock<IKeyLockerService>();
             var reservation = new Reservation
             {
@@ -494,7 +493,7 @@ namespace CarWash.PWA.Tests
                     Floor = "1",
                     Name = "Box4"
                 });
-            var ctrl = TestControllerFactory.CreateKeyLockerController(true, context, keyLockerServiceMock.Object, config);
+            var ctrl = TestControllerFactory.CreateKeyLockerController(true, context, keyLockerServiceMock.Object);
 
             // Act - providing location as query parameter
             var result = await ctrl.OpenRandomAvailableBox("res6", "Bldg/1/A1");
@@ -536,9 +535,9 @@ namespace CarWash.PWA.Tests
 
     public static class TestControllerFactory
     {
-        public static KeyLockerController CreateKeyLockerController(bool isAdmin, ApplicationDbContext context = null, IKeyLockerService keyLockerService = null, IOptionsMonitor<CarWashConfiguration> config = null)
+        public static KeyLockerController CreateKeyLockerController(bool isAdmin, ApplicationDbContext context = null, IKeyLockerService keyLockerService = null)
         {
-            if (config == null) config = TestOptionsMonitorFactory.Create();
+            var config = TestOptionsMonitorFactory.Create();
             if (context == null) context = TestDbContextFactory.Create();
             var userService = new Mock<IUserService>();
             userService.Setup(x => x.CurrentUser).Returns(new User
