@@ -473,7 +473,7 @@ namespace CarWash.PWA.Tests
         {
             // Arrange
             var context = TestDbContextFactory.Create();
-            var config = TestOptionsMonitorFactory.CreateWithGarages();
+            var config = TestOptionsMonitorFactory.Create();
             var keyLockerServiceMock = new Mock<IKeyLockerService>();
             var reservation = new Reservation
             {
@@ -520,14 +520,6 @@ namespace CarWash.PWA.Tests
     public static class TestOptionsMonitorFactory
     {
         public static IOptionsMonitor<CarWashConfiguration> Create()
-        {
-            var config = new CarWashConfiguration();
-            var mock = new Mock<IOptionsMonitor<CarWashConfiguration>>();
-            mock.Setup(x => x.CurrentValue).Returns(config);
-            return mock.Object;
-        }
-        
-        public static IOptionsMonitor<CarWashConfiguration> CreateWithGarages()
         {
             var config = new CarWashConfiguration();
             config.Garages.Add(new Garage
