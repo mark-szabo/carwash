@@ -11,6 +11,11 @@ namespace CarWash.ClassLibrary.Services
     /// </summary>
     public interface IReservationService
     {
+        Task<Reservation?> GetReservationByIdAsync(string reservationId, User currentUser);
+        Task<List<Reservation>> GetReservationsOfUserAsync(User currentUser);
+        Task<List<Reservation>> GetReservationsOfCompanyAsync(User currentUser);
+        Task<List<Reservation>> GetReservationsOnBacklog(User currentUser);
+
         /// <summary>
         /// Creates a new reservation with all necessary business logic
         /// </summary>
@@ -43,6 +48,7 @@ namespace CarWash.ClassLibrary.Services
         /// <param name="currentUser">The current user</param>
         /// <returns>Task representing the operation</returns>
         Task ConfirmDropoffAsync(string reservationId, string location, User currentUser);
+        Task<Reservation> ConfirmDropoffByEmail(string email, string location, string? vehiclePlateNumber);
 
         /// <summary>
         /// Starts the wash process for a reservation

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CarWash.ClassLibrary.Enums;
@@ -25,6 +26,66 @@ namespace CarWash.ClassLibrary.Services
         TelemetryClient telemetryClient) : IReservationService
     {
         private readonly ReservationValidator reservationValidator = new(context, configuration, telemetryClient);
+
+        /// <inheritdoc />
+        public async Task<Reservation?> GetReservationByIdAsync(string reservationId, User currentUser)
+        {
+            var reservation = await context.Reservation
+                .Include(r => r.User)
+                .Include(r => r.KeyLockerBox)
+                .SingleOrDefaultAsync(r => r.Id == reservationId);
+
+            if (reservation == null) return null;
+
+            if (reservation.UserId != currentUser.Id)
+            {
+                if (!currentUser.IsAdmin && !currentUser.IsCarwashAdmin)
+                    throw new UnauthorizedAccessException("Cannot view reservation of other users.");
+
+                if (currentUser.IsAdmin && reservation.User.Company != currentUser.Company)
+                    throw new UnauthorizedAccessException("Cannot view reservation of users from other companies.");
+            }
+
+            return reservation;
+        }
+
+        /// <inheritdoc />
+        public async Task<List<Reservation>> GetReservationsOfUserAsync(User currentUser)
+        {
+            return await context.Reservation
+                .Include(r => r.KeyLockerBox)
+                .Where(r => r.UserId == currentUser.Id)
+                .OrderByDescending(r => r.StartDate)
+                .ToListAsync();
+        }
+
+        /// <inheritdoc />
+        public async Task<List<Reservation>> GetReservationsOfCompanyAsync(User currentUser)
+        {
+            if (!currentUser.IsAdmin) throw new UnauthorizedAccessException();
+
+            return await context.Reservation
+                .Include(r => r.User)
+                .Include(r => r.KeyLockerBox)
+                .Where(r => r.User!.Company == currentUser.Company)
+                .OrderByDescending(r => r.StartDate)
+                .ToListAsync();
+        }
+
+        /// <inheritdoc />
+        public async Task<List<Reservation>> GetReservationsOnBacklog(User currentUser)
+        {
+            if (!currentUser.IsCarwashAdmin) throw new UnauthorizedAccessException();
+
+            return await context.Reservation
+                .Include(r => r.User)
+                .Include(r => r.KeyLockerBox)
+                .Where(r => r.State == State.DropoffAndLocationConfirmed ||
+                           r.State == State.ReminderSentWaitingForKey ||
+                           r.State == State.WashInProgress)
+                .OrderBy(r => r.StartDate)
+                .ToListAsync();
+        }
 
         /// <inheritdoc />
         public async Task<Reservation> CreateReservationAsync(Reservation reservation, User currentUser)
@@ -140,7 +201,21 @@ namespace CarWash.ClassLibrary.Services
                 dbReservation.OutlookEventId = await calendarService.UpdateEventAsync(dbReservation);
             }
 
-            await context.SaveChangesAsync();
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await context.Reservation.AnyAsync(e => e.Id == reservation.Id))
+                {
+                    throw new InvalidOperationException();
+                }
+                else
+                {
+                    throw;
+                }
+            }
 
             // Track event
             telemetryClient.TrackEvent(
@@ -187,14 +262,11 @@ namespace CarWash.ClassLibrary.Services
         /// <inheritdoc />
         public async Task ConfirmDropoffAsync(string reservationId, string location, User currentUser)
         {
-            if (string.IsNullOrEmpty(reservationId))
-                throw new ArgumentException("Reservation id cannot be null.");
-            if (string.IsNullOrEmpty(location))
-                throw new ArgumentException("Reservation location cannot be null.");
+            ArgumentNullException.ThrowIfNull(reservationId);
+            ArgumentNullException.ThrowIfNull(location);
 
-            var reservation = await context.Reservation.FindAsync(reservationId);
-            if (reservation == null)
-                throw new InvalidOperationException("Reservation not found.");
+            var reservation = await context.Reservation.FindAsync(reservationId)
+                ?? throw new InvalidOperationException("Reservation not found.");
 
             if (reservation.UserId != currentUser.Id && !currentUser.IsAdmin && !currentUser.IsCarwashAdmin)
                 throw new UnauthorizedAccessException("Cannot confirm dropoff for other users.");
@@ -213,6 +285,68 @@ namespace CarWash.ClassLibrary.Services
                     { "Reservation user ID", reservation.UserId },
                     { "Action user ID", currentUser.Id },
                 });
+        }
+
+        public async Task<Reservation> ConfirmDropoffByEmail(string email, string location, string? vehiclePlateNumber)
+        {
+            ArgumentNullException.ThrowIfNull(email);
+            ArgumentNullException.ThrowIfNull(location);
+
+            var user = await context.Users.SingleOrDefaultAsync(u => u.Email == email)
+                ?? throw new InvalidOperationException($"No user found with email address '{email}'.");
+
+            var reservations = await context.Reservation
+                .Include(r => r.User)
+                .Where(r => r.User!.Email == user.Email && (r.State == State.SubmittedNotActual || r.State == State.ReminderSentWaitingForKey))
+                .OrderBy(r => r.StartDate)
+                .ToListAsync();
+
+            if (reservations.Count == 0) throw new InvalidOperationException("No reservations found.");
+
+            Reservation reservation;
+            string reservationResolution;
+            // Only one active - straightforward
+            if (reservations.Count == 1)
+            {
+                reservation = reservations[0];
+                reservationResolution = "Only one active reservation.";
+            }
+            // Vehicle plate number was specified and only one reservation for that car - easy
+            else if (vehiclePlateNumber?.ToUpper() != null && reservations.Count(r => r.VehiclePlateNumber == vehiclePlateNumber) == 1)
+            {
+                reservation = reservations.Single(r => r.VehiclePlateNumber == vehiclePlateNumber.ToUpper());
+                reservationResolution = "Vehicle plate number was specified and only one reservation exists for that car.";
+            }
+            // Only one where we are waiting for the key - still pretty straightforward
+            else if (reservations.Count(r => r.State == State.ReminderSentWaitingForKey) == 1)
+            {
+                reservation = reservations.Single(r => r.State == State.ReminderSentWaitingForKey);
+                reservationResolution = "Only one reservation is waiting for the key.";
+            }
+            // Only one today - probably fine
+            else if (reservations.Count(r => r.StartDate.Date == DateTime.UtcNow.Date) == 1)
+            {
+                reservation = reservations.Single(r => r.StartDate.Date == DateTime.UtcNow.Date);
+                reservationResolution = "Only one reservation today.";
+            }
+            else if (vehiclePlateNumber == null)
+            {
+                throw new InvalidDataException("More than one reservation found where the reservation state is submitted or waiting for key. Please specify vehicle plate number!");
+            }
+            else
+            {
+                throw new InvalidDataException("More than one reservation found where the reservation state is submitted or waiting for key.");
+            }
+
+            await ConfirmDropoffAsync(reservation.Id, location, reservation.User!);
+
+            telemetryClient.TrackEvent("ConfirmDropoffByEmail", new Dictionary<string, string>
+            {
+                { "Email", email },
+                { "Resolution", reservationResolution }
+            });
+
+            return reservation;
         }
 
         /// <inheritdoc />

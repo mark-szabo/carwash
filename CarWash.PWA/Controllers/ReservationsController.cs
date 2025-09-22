@@ -14,7 +14,6 @@ using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace CarWash.PWA.Controllers
@@ -45,12 +44,10 @@ namespace CarWash.PWA.Controllers
         /// <response code="401">Unauthorized</response>
         [UserAction]
         [HttpGet]
-        public IEnumerable<ReservationViewModel> GetReservations()
+        public async Task<IEnumerable<ReservationViewModel>> GetReservationsAsync()
         {
-            return context.Reservation
-                .Include(r => r.KeyLockerBox)
-                .Where(r => r.UserId == _user.Id)
-                .OrderByDescending(r => r.StartDate)
+            return (await reservationService
+                .GetReservationsOfUserAsync(_user))
                 .Select(reservation => new ReservationViewModel(reservation));
         }
 
@@ -71,13 +68,18 @@ namespace CarWash.PWA.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var reservation = await context.Reservation.FindAsync(id);
+            try
+            {
+                var reservation = await reservationService.GetReservationByIdAsync(id, _user);
 
-            if (reservation == null) return NotFound();
+                if (reservation == null) return NotFound();
 
-            if (reservation.UserId != _user.Id && !((_user.IsAdmin && reservation.User.Company == _user.Company) || _user.IsCarwashAdmin)) return Forbid();
-
-            return Ok(new ReservationViewModel(reservation));
+                return Ok(new ReservationViewModel(reservation));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
         }
 
         // PUT: api/reservations/{id}
@@ -124,17 +126,6 @@ namespace CarWash.PWA.Controllers
             catch (InvalidOperationException)
             {
                 return NotFound();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await context.Reservation.AnyAsync(e => e.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
             }
         }
 
@@ -222,16 +213,16 @@ namespace CarWash.PWA.Controllers
         [HttpGet, Route("company")]
         public async Task<ActionResult<IEnumerable<AdminReservationViewModel>>> GetCompanyReservations()
         {
-            if (!_user.IsAdmin) return Forbid();
+            try
+            {
+                var reservations = await reservationService.GetReservationsOfCompanyAsync(_user);
 
-            var reservations = await context.Reservation
-                .Include(r => r.User)
-                .Include(r => r.KeyLockerBox)
-                .Where(r => r.User.Company == _user.Company)
-                .OrderByDescending(r => r.StartDate)
-                .ToListAsync();
-
-            return Ok(reservations.Select(r => new AdminReservationViewModel(r)));
+                return Ok(reservations.Select(r => new AdminReservationViewModel(r)));
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         // GET: api/reservations/backlog
@@ -245,18 +236,16 @@ namespace CarWash.PWA.Controllers
         [HttpGet, Route("backlog")]
         public async Task<ActionResult<IEnumerable<AdminReservationViewModel>>> GetBacklog()
         {
-            if (!_user.IsCarwashAdmin) return Forbid();
+            try
+            {
+                var reservations = await reservationService.GetReservationsOnBacklog(_user);
 
-            var reservations = await context.Reservation
-                .Include(r => r.User)
-                .Include(r => r.KeyLockerBox)
-                .Where(r => r.State == State.DropoffAndLocationConfirmed ||
-                           r.State == State.ReminderSentWaitingForKey ||
-                           r.State == State.WashInProgress)
-                .OrderBy(r => r.StartDate)
-                .ToListAsync();
-
-            return Ok(reservations.Select(r => new AdminReservationViewModel(r)));
+                return Ok(reservations.Select(r => new AdminReservationViewModel(r)));
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         // POST: api/reservations/{id}/confirm-dropoff
@@ -310,65 +299,29 @@ namespace CarWash.PWA.Controllers
         [HttpPost("next/confirmdropoff")]
         public async Task<IActionResult> ConfirmDropoffByEmail([FromBody] ConfirmDropoffByEmailViewModel model)
         {
-            if (model?.Email == null) return BadRequest("Email cannot be null.");
-            if (model.Location == null) return BadRequest("Reservation location cannot be null.");
-
-            var user = await context.Users.SingleOrDefaultAsync(u => u.Email == model.Email);
-            if (user == null) return NotFound($"No user found with email address '{model.Email}'.");
-
-            var reservations = await context.Reservation
-                .Include(r => r.User)
-                .Where(r => r.User.Email == user.Email && (r.State == State.SubmittedNotActual || r.State == State.ReminderSentWaitingForKey))
-                .OrderBy(r => r.StartDate)
-                .ToListAsync();
-
-            if (reservations == null || reservations.Count == 0) return NotFound("No reservations found.");
-
-            Reservation reservation;
-            string reservationResolution;
-            // Only one active - straightforward
-            if (reservations.Count == 1)
+            try
             {
-                reservation = reservations[0];
-                reservationResolution = "Only one active reservation.";
+                var reservation = await reservationService.ConfirmDropoffByEmail(model.Email, model.Location, model.VehiclePlateNumber);
+                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
+
+                return NoContent();
             }
-            // Vehicle plate number was specified and only one reservation for that car - easy
-            else if (model.VehiclePlateNumber?.ToUpper() != null && reservations.Count(r => r.VehiclePlateNumber == model.VehiclePlateNumber) == 1)
+            catch (ArgumentException ex)
             {
-                reservation = reservations.Single(r => r.VehiclePlateNumber == model.VehiclePlateNumber.ToUpper());
-                reservationResolution = "Vehicle plate number was specified and only one reservation exists for that car.";
+                return BadRequest(ex.Message);
             }
-            // Only one where we are waiting for the key - still pretty straightforward
-            else if (reservations.Count(r => r.State == State.ReminderSentWaitingForKey) == 1)
+            catch (UnauthorizedAccessException)
             {
-                reservation = reservations.Single(r => r.State == State.ReminderSentWaitingForKey);
-                reservationResolution = "Only one reservation is waiting for the key.";
+                return Forbid();
             }
-            // Only one today - probably fine
-            else if (reservations.Count(r => r.StartDate.Date == DateTime.UtcNow.Date) == 1)
+            catch (InvalidOperationException)
             {
-                reservation = reservations.Single(r => r.StartDate.Date == DateTime.UtcNow.Date);
-                reservationResolution = "Only one reservation today.";
+                return NotFound();
             }
-            else if (model.VehiclePlateNumber == null)
+            catch (InvalidDataException ex)
             {
-                return Conflict("More than one reservation found where the reservation state is submitted or waiting for key. Please specify vehicle plate number!");
+                return Conflict(ex.Message);
             }
-            else
-            {
-                return Conflict("More than one reservation found where the reservation state is submitted or waiting for key.");
-            }
-
-            await reservationService.ConfirmDropoffAsync(reservation.Id, model.Location, reservation.User);
-            await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
-
-            telemetryClient.TrackEvent("ConfirmDropoffByEmail", new Dictionary<string, string>
-            {
-                { "Email", model.Email },
-                { "Resolution", reservationResolution }
-            });
-
-            return NoContent();
         }
 
         // POST: api/reservations/{id}/startwash

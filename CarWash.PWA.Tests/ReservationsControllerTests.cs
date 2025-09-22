@@ -37,12 +37,12 @@ namespace CarWash.PWA.Tests
         private const int UTC_HOUR_END_DST = 7;
 
         [Fact]
-        public void GetReservations_ByDefault_ReturnsAListOfReservations()
+        public async Task GetReservations_ByDefault_ReturnsAListOfReservations()
         {
             var dbContext = CreateInMemoryDbContext();
             var controller = CreateControllerStub(dbContext);
 
-            var result = controller.GetReservations();
+            var result = await controller.GetReservationsAsync();
 
             Assert.NotEmpty(result);
             const int NUMBER_OF_JOHNS_RESERVATIONS = 2;
