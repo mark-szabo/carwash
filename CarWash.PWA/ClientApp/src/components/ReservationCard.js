@@ -104,10 +104,10 @@ function ReservationCard(props) {
                             <Button
                                 size="small"
                                 color="primary"
-                                variant="outlined"
+                                variant="contained"
                                 onClick={() => setDropoffDialogOpen(true)}
                             >
-                                Confirm key drop-off
+                                Confirm key dropoff
                             </Button>
                             <Button component={Link} to={`/reserve/${reservation.id}`} size="small" color="primary">
                                 Edit
@@ -145,10 +145,10 @@ function ReservationCard(props) {
                         <Button
                             size="small"
                             color="primary"
-                            variant="outlined"
+                            variant="contained"
                             onClick={() => setDropoffDialogOpen(true)}
                         >
-                            Confirm key drop-off
+                            Confirm key dropoff
                         </Button>
                         <Button component={Link} to={`/reserve/${reservation.id}`} size="small" color="primary">
                             Edit
