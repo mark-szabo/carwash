@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@mui/styles';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
-import * as moment from 'moment';
+import * as dayjs from 'dayjs';
 import CarwashCard from './CarwashCard';
 import CardSection from './CardSection';
 import { State } from '../Constants';
@@ -66,28 +66,28 @@ class CarwashGrid extends Component {
             r.vehiclePlateNumber.toUpperCase().includes(searchTerm.toUpperCase())
         );
 
-        const yesterdayMidnight = moment().hours(0).minutes(0).seconds(0);
-        const todayMidnight = moment().hours(0).minutes(0).seconds(0).add(1, 'days');
-        const tomorrowMidnight = moment().hours(0).minutes(0).seconds(0).add(2, 'days');
+        const yesterdayMidnight = dayjs().hour(0).minute(0).second(0);
+        const todayMidnight = dayjs().hour(0).minute(0).second(0).add(1, 'day');
+        const tomorrowMidnight = dayjs().hour(0).minute(0).second(0).add(2, 'days');
 
-        const earlier = filteredBacklog.filter(r => moment(r.startDate).isBefore(yesterdayMidnight));
+        const earlier = filteredBacklog.filter(r => dayjs(r.startDate).isBefore(yesterdayMidnight));
         const done = filteredBacklog.filter(
             r =>
                 (r.state === State.Done || r.state === State.NotYetPaid) &&
-                moment(r.startDate).isAfter(yesterdayMidnight) &&
-                moment(r.startDate).isBefore(todayMidnight)
+                dayjs(r.startDate).isAfter(yesterdayMidnight) &&
+                dayjs(r.startDate).isBefore(todayMidnight)
         );
         const today = filteredBacklog.filter(
             r =>
                 r.state !== State.Done &&
                 r.state !== State.NotYetPaid &&
-                moment(r.startDate).isAfter(yesterdayMidnight) &&
-                moment(r.startDate).isBefore(todayMidnight)
+                dayjs(r.startDate).isAfter(yesterdayMidnight) &&
+                dayjs(r.startDate).isBefore(todayMidnight)
         );
         const tomorrow = filteredBacklog.filter(
-            r => moment(r.startDate).isAfter(todayMidnight) && moment(r.startDate).isBefore(tomorrowMidnight)
+            r => dayjs(r.startDate).isAfter(todayMidnight) && dayjs(r.startDate).isBefore(tomorrowMidnight)
         );
-        const later = filteredBacklog.filter(r => moment(r.startDate).isAfter(tomorrowMidnight));
+        const later = filteredBacklog.filter(r => dayjs(r.startDate).isAfter(tomorrowMidnight));
 
         return (
             <Grid

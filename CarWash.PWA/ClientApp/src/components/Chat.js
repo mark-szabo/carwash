@@ -23,8 +23,7 @@ export default function Chat(props) {
         reservation.comments.push({
             message: commentTextfield,
             role: userRole,
-            // timestamp: new Date().toISOString(),
-            timestamp: new Date().toString(),
+            timestamp: new Date().toISOString(),
         });
         props.updateReservation(reservation);
 

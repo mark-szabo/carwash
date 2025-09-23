@@ -18,24 +18,25 @@ namespace CarWash.ClassLibrary.Models
         /// </summary>
         /// <remarks>
         /// Capacity is in number of cars per slot, not in minutes!
+        /// StartTime and EndTime are specified as time-of-day in the provider's time zone.
         /// Location: Application Settings
         /// Key: Slots
         /// </remarks>
         /// <example>
         /// [
         ///   {
-        ///     "StartTime": 8,
-        ///     "EndTime": 11,
+        ///     "StartTime": "08:00:00",
+        ///     "EndTime": "11:00:00",
         ///     "Capacity": 12
         ///   },
         ///   {
-        ///     "StartTime": 11,
-        ///     "EndTime": 14,
+        ///     "StartTime": "11:00:00",
+        ///     "EndTime": "14:00:00",
         ///     "Capacity": 12
         ///   },
         ///   {
-        ///     "StartTime": 14,
-        ///     "EndTime": 17,
+        ///     "StartTime": "14:00:00",
+        ///     "EndTime": "17:00:00",
         ///     "Capacity": 12
         ///   }
         /// ]
@@ -163,6 +164,18 @@ namespace CarWash.ClassLibrary.Models
         /// </remarks>
         public class ReservationSettings
         {
+            /// <summary>
+            /// Time zone identifier for the car wash provider (e.g., "Europe/Budapest").
+            /// Used to define slot schedules and handle timezone conversions.
+            /// </summary>
+            /// <remarks>
+            /// Location: Application Settings
+            /// Key: Reservation:TimeZone
+            /// Default value: "UTC"
+            /// </remarks>
+            /// <example>"Europe/Budapest"</example>
+            public string TimeZone { get; init; } = "UTC";
+
             /// <summary>
             /// Wash time unit in minutes.
             /// </summary>

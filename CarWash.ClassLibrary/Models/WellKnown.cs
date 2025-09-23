@@ -12,6 +12,7 @@ namespace CarWash.ClassLibrary.Models
         /// </summary>
         /// <remarks>
         /// Capacity is in number of cars per slot, not in minutes!
+        /// StartTime and EndTime are specified as time-of-day in the provider's time zone.
         /// </remarks>
         public List<Slot> Slots { get; set; } = [];
 

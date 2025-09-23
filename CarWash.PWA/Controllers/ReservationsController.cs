@@ -121,9 +121,9 @@ namespace CarWash.PWA.Controllers
             dbReservation.Services = reservation.Services;
             dbReservation.Private = reservation.Private;
             var oldStartDate = dbReservation.StartDate;
-            var newStartDate = reservation.StartDate.ToLocalTime();
-            dbReservation.StartDate = newStartDate.Date + new TimeSpan(newStartDate.Hour, minutes: 0, seconds: 0);
-            if (reservation.EndDate != null) dbReservation.EndDate = ((DateTime)reservation.EndDate).ToLocalTime();
+            var newStartDate = reservation.StartDate;
+            dbReservation.StartDate = reservation.StartDate;
+            if (reservation.EndDate != null) dbReservation.EndDate = (DateTime)reservation.EndDate; // Keep in UTC
             else dbReservation.EndDate = null;
             // Comments cannot be modified when reservation is updated.
 
@@ -149,7 +149,7 @@ namespace CarWash.PWA.Controllers
 
                 if (reservation.UserId != null)
                 {
-                    var reservationUser = _context.Users.Find(reservation.UserId);
+                    var reservationUser = await _context.Users.FindAsync(reservation.UserId);
                     if (_user.IsAdmin && reservationUser.Company != _user.Company) return Forbid();
 
                     dbReservation.UserId = reservation.UserId;
@@ -213,7 +213,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -257,19 +257,17 @@ namespace CarWash.PWA.Controllers
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             #region Defaults
-            if (reservation.UserId == null) reservation.UserId = _user.Id;
+            reservation.UserId ??= _user.Id;
             reservation.State = State.SubmittedNotActual;
             reservation.Mpv = false;
             reservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty).Replace(" ", string.Empty);
             reservation.CreatedById = _user.Id;
-            reservation.CreatedOn = DateTime.Now;
-            reservation.StartDate = reservation.StartDate.ToLocalTime();
-            reservation.StartDate = reservation.StartDate.Date + new TimeSpan(reservation.StartDate.Hour, minutes: 0, seconds: 0);
+            reservation.CreatedOn = DateTime.UtcNow;
 
             if (reservation.Comments.Count == 1)
             {
                 reservation.Comments[0].UserId = _user.Id;
-                reservation.Comments[0].Timestamp = DateTime.Now;
+                reservation.Comments[0].Timestamp = DateTime.UtcNow;
                 reservation.Comments[0].Role = CommentRole.User;
             }
             if (reservation.Comments.Count > 1)
@@ -340,7 +338,7 @@ namespace CarWash.PWA.Controllers
 
                 if (reservation.UserId != null)
                 {
-                    var reservationUser = _context.Users.Find(reservation.UserId);
+                    var reservationUser = await _context.Users.FindAsync(reservation.UserId);
                     if (_user.IsAdmin && reservationUser.Company != _user.Company)
                     {
                         _telemetryClient.TrackTrace(
@@ -429,17 +427,17 @@ namespace CarWash.PWA.Controllers
                 var user = await _context.Users.FindAsync(reservation.UserId);
                 if (user.CalendarIntegration)
                 {
-                    var timer = DateTime.Now;
+                    var timer = DateTime.UtcNow;
                     try
                     {
                         reservation.User = user;
                         reservation.OutlookEventId = await _calendarService.CreateEventAsync(reservation);
-                        _telemetryClient.TrackDependency("CalendarService", "CreateEvent", new { ReservationId = reservation.Id, UserId = user.Id }.ToString(), timer, DateTime.Now - timer, success: true);
+                        _telemetryClient.TrackDependency("CalendarService", "CreateEvent", new { ReservationId = reservation.Id, UserId = user.Id }.ToString(), timer, DateTime.UtcNow - timer, success: true);
 
                     }
                     catch (Exception e)
                     {
-                        _telemetryClient.TrackDependency("CalendarService", "CreateEvent", new { ReservationId = reservation.Id, UserId = user.Id }.ToString(), timer, DateTime.Now - timer, success: false);
+                        _telemetryClient.TrackDependency("CalendarService", "CreateEvent", new { ReservationId = reservation.Id, UserId = user.Id }.ToString(), timer, DateTime.UtcNow - timer, success: false);
                         _telemetryClient.TrackException(e);
                     }
                 }
@@ -550,7 +548,7 @@ namespace CarWash.PWA.Controllers
             var reservations = await _context.Reservation
                 .Include(r => r.User)
                 .Include(r => r.KeyLockerBox)
-                .Where(r => r.StartDate.Date >= DateTime.Today.AddDays(-3) || r.State != State.Done)
+                .Where(r => r.StartDate.Date >= DateTime.UtcNow.Date.AddDays(-3) || r.State != State.Done)
                 .OrderBy(r => r.StartDate)
                 .Select(reservation => new AdminReservationViewModel(reservation, new UserViewModel(reservation.User)))
                 .ToListAsync();
@@ -591,7 +589,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -667,15 +665,15 @@ namespace CarWash.PWA.Controllers
                 reservationResolution = "Only one reservation in 'waiting for key' state.";
             }
             // One where we are waiting for the key and is today - eg. there's another one in the past where the key was not dropped off and nobody deleted it
-            else if (reservations.Count(r => r.State == State.ReminderSentWaitingForKey && r.StartDate.Date == DateTime.Today) == 1)
+            else if (reservations.Count(r => r.State == State.ReminderSentWaitingForKey && r.StartDate.Date == DateTime.UtcNow.Date) == 1)
             {
-                reservation = reservations.Single(r => r.State == State.ReminderSentWaitingForKey && r.StartDate.Date == DateTime.Today);
+                reservation = reservations.Single(r => r.State == State.ReminderSentWaitingForKey && r.StartDate.Date == DateTime.UtcNow.Date);
                 reservationResolution = "Only one reservation TODAY in 'waiting for key' state.";
             }
             // Only one active reservation today - eg. user has two reservations, one today, one in the future and on the morning drops off the keys before the reminder
-            else if (reservations.Count(r => r.StartDate.Date == DateTime.Today) == 1)
+            else if (reservations.Count(r => r.StartDate.Date == DateTime.UtcNow.Date) == 1)
             {
-                reservation = reservations.Single(r => r.StartDate.Date == DateTime.Today);
+                reservation = reservations.Single(r => r.StartDate.Date == DateTime.UtcNow.Date);
                 reservationResolution = "Only one reservation today.";
             }
             else if (model.VehiclePlateNumber == null)
@@ -694,7 +692,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == reservation.Id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == reservation.Id))
                 {
                     return NotFound();
                 }
@@ -755,7 +753,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -807,7 +805,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -899,7 +897,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -946,7 +944,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -992,7 +990,7 @@ namespace CarWash.PWA.Controllers
             {
                 UserId = _user.Id,
                 Role = CommentRole.Carwash,
-                Timestamp = DateTime.Now,
+                Timestamp = DateTime.UtcNow,
                 Message = comment
             });
 
@@ -1002,7 +1000,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -1080,7 +1078,7 @@ namespace CarWash.PWA.Controllers
             {
                 UserId = _user.Id,
                 Role = reservation.UserId != _user.Id && _user.IsCarwashAdmin ? CommentRole.Carwash : CommentRole.User,
-                Timestamp = DateTime.Now,
+                Timestamp = DateTime.UtcNow,
                 Message = comment
             });
 
@@ -1090,7 +1088,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -1185,7 +1183,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -1233,7 +1231,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -1281,7 +1279,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Reservation.Any(e => e.Id == id))
+                if (!await _context.Reservation.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -1310,7 +1308,7 @@ namespace CarWash.PWA.Controllers
         public IEnumerable<ObfuscatedReservationViewModel> GetObfuscatedReservations(int daysAhead = 365)
         {
             return _context.Reservation
-                .Where(r => r.EndDate >= DateTime.Now && r.StartDate <= DateTime.Now.AddDays(daysAhead))
+                .Where(r => r.EndDate >= DateTime.UtcNow && r.StartDate <= DateTime.UtcNow.AddDays(daysAhead))
                 .Include(r => r.User)
                 .OrderBy(r => r.StartDate)
                 .Select(reservation => new ObfuscatedReservationViewModel(reservation.User.Company, reservation.Services, reservation.TimeRequirement, reservation.StartDate, (DateTime)reservation.EndDate));
@@ -1335,7 +1333,7 @@ namespace CarWash.PWA.Controllers
             var userCompanyLimit = (await _context.Company.SingleAsync(c => c.Name == _user.Company)).DailyLimit;
 
             notAvailableDates.AddRange(await _context.Reservation
-                .Where(r => r.EndDate >= DateTime.Now && r.StartDate <= DateTime.Now.AddDays(daysAhead))
+                .Where(r => r.EndDate >= DateTime.UtcNow && r.StartDate <= DateTime.UtcNow.AddDays(daysAhead))
                 .GroupBy(r => r.StartDate.Date)
                 .Select(g => new
                 {
@@ -1346,20 +1344,20 @@ namespace CarWash.PWA.Controllers
                 .Select(d => d.Date)
                 .ToListAsync());
 
-            if (!notAvailableDates.Contains(DateTime.Today))
+            if (!notAvailableDates.Contains(DateTime.UtcNow.Date))
             {
                 var toBeDoneTodayTime = await _context.Reservation
-                    .Where(r => r.StartDate >= DateTime.Now && r.StartDate.Date == DateTime.Today)
+                    .Where(r => r.StartDate >= DateTime.UtcNow && r.StartDate.Date == DateTime.UtcNow.Date)
                     .SumAsync(r => r.TimeRequirement);
 
-                if (toBeDoneTodayTime >= GetRemainingSlotCapacityToday() * _configuration.CurrentValue.Reservation.TimeUnit) notAvailableDates.Add(DateTime.Today.Date);
+                if (toBeDoneTodayTime >= GetRemainingSlotCapacityToday() * _configuration.CurrentValue.Reservation.TimeUnit) notAvailableDates.Add(DateTime.UtcNow.Date);
             }
 
             // If the company has set up limits.
             if (userCompanyLimit > 0)
             {
                 notAvailableDates.AddRange(await _context.Reservation
-                    .Where(r => r.EndDate >= DateTime.Now && r.StartDate <= DateTime.Now.AddDays(daysAhead))
+                    .Where(r => r.EndDate >= DateTime.UtcNow && r.StartDate <= DateTime.UtcNow.AddDays(daysAhead))
                     .Where(r => r.User.Company == _user.Company)
                     .GroupBy(r => r.StartDate.Date)
                     .Select(g => new
@@ -1375,7 +1373,7 @@ namespace CarWash.PWA.Controllers
 
             #region Get not available times
             var slotReservationAggregate = await _context.Reservation
-                .Where(r => r.EndDate >= DateTime.Now && r.StartDate <= DateTime.Now.AddDays(daysAhead))
+                .Where(r => r.EndDate >= DateTime.UtcNow && r.StartDate <= DateTime.UtcNow.AddDays(daysAhead))
                 .GroupBy(r => r.StartDate)
                 .Select(g => new
                 {
@@ -1385,24 +1383,61 @@ namespace CarWash.PWA.Controllers
                 .ToListAsync();
 
             var notAvailableTimes = slotReservationAggregate
-                .Where(d => d.TimeSum >= _configuration.CurrentValue.Slots.Find(s => s.StartTime == d.DateTime.Hour)?.Capacity * _configuration.CurrentValue.Reservation.TimeUnit)
+                .Where(d =>
+                {
+                    // Convert UTC DateTime to provider's timezone to find matching slot
+                    var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
+                    TimeSpan timeOfDay;
+
+                    if (timeZoneId == "UTC")
+                    {
+                        timeOfDay = d.DateTime.TimeOfDay;
+                    }
+                    else
+                    {
+                        var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+                        var dateTimeInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(d.DateTime, providerTimeZone);
+                        timeOfDay = dateTimeInProviderZone.TimeOfDay;
+                    }
+
+                    var slotCapacity = _configuration.CurrentValue.Slots.Find(s => s.StartTime == timeOfDay)?.Capacity;
+                    return slotCapacity != null && d.TimeSum >= slotCapacity * _configuration.CurrentValue.Reservation.TimeUnit;
+                })
                 .Select(d => d.DateTime)
                 .ToList();
 
             // Check if a slot has already started today
             foreach (var slot in _configuration.CurrentValue.Slots)
             {
-                var slotStartTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, slot.StartTime, 0, 0);
-                if (!notAvailableTimes.Contains(slotStartTime) && slotStartTime.AddMinutes(_configuration.CurrentValue.Reservation.MinutesToAllowReserveInPast) < DateTime.Now)
+                var now = DateTime.UtcNow;
+                var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
+                DateTime slotStartTimeUtc;
+
+                if (timeZoneId == "UTC")
                 {
-                    notAvailableTimes.Add(slotStartTime);
+                    // For UTC timezone, create time directly
+                    slotStartTimeUtc = now.Date.Add(slot.StartTime);
+                }
+                else
+                {
+                    // Convert current UTC time to provider's timezone
+                    var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+                    var nowInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(now, providerTimeZone);
+                    var todayInProviderZone = nowInProviderZone.Date;
+                    var slotStartTimeInProviderZone = todayInProviderZone.Add(slot.StartTime);
+                    slotStartTimeUtc = TimeZoneInfo.ConvertTimeToUtc(slotStartTimeInProviderZone, providerTimeZone);
+                }
+
+                if (!notAvailableTimes.Contains(slotStartTimeUtc) && slotStartTimeUtc.AddMinutes(_configuration.CurrentValue.Reservation.MinutesToAllowReserveInPast) < DateTime.UtcNow)
+                {
+                    notAvailableTimes.Add(slotStartTimeUtc);
                 }
             }
             #endregion
 
             #region Check blockers
             var blockers = await _context.Blocker
-                .Where(b => b.EndDate >= DateTime.Now)
+                .Where(b => b.EndDate >= DateTime.UtcNow)
                 .ToListAsync();
 
             foreach (var blocker in blockers)
@@ -1414,7 +1449,7 @@ namespace CarWash.PWA.Controllers
                 while (dateIterator <= ((DateTime)blocker.EndDate).Date)
                 {
                     // Don't bother with the past part of the blocker
-                    if (dateIterator < DateTime.Today)
+                    if (dateIterator < DateTime.UtcNow.Date)
                     {
                         dateIterator = dateIterator.AddDays(1);
                         continue;
@@ -1424,8 +1459,26 @@ namespace CarWash.PWA.Controllers
 
                     foreach (var slot in _configuration.CurrentValue.Slots)
                     {
-                        var slotStart = new DateTime(dateIterator.Year, dateIterator.Month, dateIterator.Day, slot.StartTime, 0, 0);
-                        var slotEnd = new DateTime(dateIterator.Year, dateIterator.Month, dateIterator.Day, slot.EndTime, 0, 0);
+                        // Convert slot times from provider timezone to UTC for the iteration date
+                        var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
+                        DateTime slotStart, slotEnd;
+
+                        if (timeZoneId == "UTC")
+                        {
+                            // For UTC timezone, create times directly
+                            slotStart = dateIterator.Date.Add(slot.StartTime);
+                            slotEnd = dateIterator.Date.Add(slot.EndTime);
+                        }
+                        else
+                        {
+                            var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+                            var dateInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(dateIterator, providerTimeZone).Date;
+                            var slotStartInProviderZone = dateInProviderZone.Add(slot.StartTime);
+                            var slotEndInProviderZone = dateInProviderZone.Add(slot.EndTime);
+                            slotStart = TimeZoneInfo.ConvertTimeToUtc(slotStartInProviderZone, providerTimeZone);
+                            slotEnd = TimeZoneInfo.ConvertTimeToUtc(slotEndInProviderZone, providerTimeZone);
+                        }
+
                         if (slotStart > blocker.StartDate && slotEnd < blocker.EndDate && !notAvailableTimes.Contains(slotStart))
                         {
                             notAvailableTimes.Add(slotStart);
@@ -1471,39 +1524,6 @@ namespace CarWash.PWA.Controllers
                 Services: lastReservation.Services));
         }
 
-        // GET: api/reservations/reservationpercentage
-        /// <summary>
-        /// Gets a list of slots and their reservation percentage on a given date
-        /// </summary>
-        /// <param name="date">the date to filter on</param>
-        /// <returns>List of <see cref="ReservationPercentageViewModel"/></returns>
-        [Obsolete("Use GetReservationCapacity instead.")]
-        [HttpGet, Route("reservationpercentage")]
-        public async Task<ActionResult<IEnumerable<ReservationPercentageViewModel>>> GetReservationPercentage(DateTime date)
-        {
-            var slotReservationAggregate = await _context.Reservation
-                .Where(r => r.StartDate.Date == date.Date)
-                .GroupBy(r => r.StartDate)
-                .Select(g => new
-                {
-                    DateTime = g.Key,
-                    TimeSum = g.Sum(r => r.TimeRequirement)
-                })
-                .ToListAsync();
-
-            var slotReservationPercentage = new List<ReservationPercentageViewModel>();
-            foreach (var a in slotReservationAggregate)
-            {
-                var slotCapacity = _configuration.CurrentValue.Slots.Find(s => s.StartTime == a.DateTime.Hour)?.Capacity;
-                if (slotCapacity == null) continue;
-                slotReservationPercentage.Add(new ReservationPercentageViewModel(
-                    StartTime: a.DateTime,
-                    Percentage: a.TimeSum == 0 ? 0 : Math.Round(a.TimeSum / (double)(slotCapacity * _configuration.CurrentValue.Reservation.TimeUnit), 2)));
-            }
-
-            return Ok(slotReservationPercentage);
-        }
-
         // GET: api/reservations/reservationcapacity
         /// <summary>
         /// Gets a list of slots and their free reservation capacity on a given date
@@ -1526,7 +1546,22 @@ namespace CarWash.PWA.Controllers
             var slotFreeCapacity = new List<ReservationCapacityViewModel>();
             foreach (var a in slotReservationAggregate)
             {
-                var slotCapacity = _configuration.CurrentValue.Slots.Find(s => s.StartTime == a.DateTime.Hour)?.Capacity;
+                // Convert UTC DateTime to provider's timezone to find matching slot
+                var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
+                TimeSpan timeOfDay;
+
+                if (timeZoneId == "UTC")
+                {
+                    timeOfDay = a.DateTime.TimeOfDay;
+                }
+                else
+                {
+                    var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+                    var dateTimeInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(a.DateTime, providerTimeZone);
+                    timeOfDay = dateTimeInProviderZone.TimeOfDay;
+                }
+
+                var slotCapacity = _configuration.CurrentValue.Slots.Find(s => s.StartTime == timeOfDay)?.Capacity;
                 if (slotCapacity == null) continue;
                 var reservedCapacity = (int)Math.Ceiling((double)a.TimeSum / _configuration.CurrentValue.Reservation.TimeUnit);
                 slotFreeCapacity.Add(new ReservationCapacityViewModel(
@@ -1537,10 +1572,27 @@ namespace CarWash.PWA.Controllers
             // Add slots with no reservations yet
             foreach (var slot in _configuration.CurrentValue.Slots)
             {
+                // Convert slot time to UTC for the given date
+                var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
+                DateTime slotStartTimeUtc;
+
+                if (timeZoneId == "UTC")
+                {
+                    // For UTC timezone, create time directly
+                    slotStartTimeUtc = date.Date.Add(slot.StartTime);
+                }
+                else
+                {
+                    var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+                    var dateInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(date, providerTimeZone).Date;
+                    var slotStartTimeInProviderZone = dateInProviderZone.Add(slot.StartTime);
+                    slotStartTimeUtc = TimeZoneInfo.ConvertTimeToUtc(slotStartTimeInProviderZone, providerTimeZone);
+                }
+
                 // ReSharper disable SimplifyLinqExpression
-                if (!slotFreeCapacity.Any(s => s.StartTime.Hour == slot.StartTime))
+                if (!slotFreeCapacity.Any(s => s.StartTime == slotStartTimeUtc))
                     slotFreeCapacity.Add(new ReservationCapacityViewModel(
-                        StartTime: new DateTime(date.Year, date.Month, date.Day, slot.StartTime, 0, 0),
+                        StartTime: slotStartTimeUtc,
                         FreeCapacity: slot.Capacity));
                 // ReSharper restore SimplifyLinqExpression
             }
@@ -1560,8 +1612,8 @@ namespace CarWash.PWA.Controllers
         [HttpGet, Route("export")]
         public async Task<IActionResult> Export(DateTime? startDate = null, DateTime? endDate = null)
         {
-            var startDateNonNull = startDate ?? DateTime.Today.AddMonths(-1);
-            var endDateNonNull = endDate ?? DateTime.Today;
+            var startDateNonNull = startDate ?? DateTime.UtcNow.Date.AddMonths(-1);
+            var endDateNonNull = endDate ?? DateTime.UtcNow.Date;
 
             List<Reservation> reservations;
 
@@ -1689,16 +1741,45 @@ namespace CarWash.PWA.Controllers
         private int GetRemainingSlotCapacityToday()
         {
             var capacity = 0;
+            var now = DateTime.UtcNow;
+            var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
+            TimeSpan currentTimeOfDay;
+
+            if (timeZoneId == "UTC")
+            {
+                // For UTC timezone, no conversion needed
+                currentTimeOfDay = now.TimeOfDay;
+            }
+            else
+            {
+                var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+                var nowInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(now, providerTimeZone);
+                currentTimeOfDay = nowInProviderZone.TimeOfDay;
+            }
 
             foreach (var slot in _configuration.CurrentValue.Slots)
             {
-                if (DateTime.Now.Hour < slot.StartTime) capacity += slot.Capacity;
+                if (currentTimeOfDay < slot.StartTime) capacity += slot.Capacity;
 
-                if (DateTime.Now.Hour >= slot.StartTime && DateTime.Now.Hour < slot.EndTime)
+                if (currentTimeOfDay >= slot.StartTime && currentTimeOfDay < slot.EndTime)
                 {
-                    var endTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, slot.EndTime, 0, 0);
-                    var timeDifference = endTime - DateTime.Now;
-                    var slotTimeSpan = (slot.EndTime - slot.StartTime) * 60;
+                    DateTime endTimeUtc;
+
+                    if (timeZoneId == "UTC")
+                    {
+                        endTimeUtc = now.Date.Add(slot.EndTime);
+                    }
+                    else
+                    {
+                        var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+                        var nowInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(now, providerTimeZone);
+                        var todayInProviderZone = nowInProviderZone.Date;
+                        var endTimeInProviderZone = todayInProviderZone.Add(slot.EndTime);
+                        endTimeUtc = TimeZoneInfo.ConvertTimeToUtc(endTimeInProviderZone, providerTimeZone);
+                    }
+
+                    var timeDifference = endTimeUtc - now;
+                    var slotTimeSpan = (slot.EndTime - slot.StartTime).TotalMinutes;
                     var slotCapacity = timeDifference.TotalMinutes / slotTimeSpan * slot.Capacity;
                     capacity += (int)Math.Floor(slotCapacity);
                 }
@@ -1709,17 +1790,43 @@ namespace CarWash.PWA.Controllers
 
         private DateTime CalculateEndTime(DateTime startTime, DateTime? endTime)
         {
-            if (endTime != null) return ((DateTime)endTime).ToLocalTime();
+            if (endTime != null) return (DateTime)endTime; // Keep in UTC
 
-            var slot = _configuration.CurrentValue.Slots.Find(s => s.StartTime == startTime.Hour);
+            // Ensure startTime is treated as UTC
+            startTime = DateTime.SpecifyKind(startTime, DateTimeKind.Utc);
+
+            TimeSpan startTimeOfDay;
+            var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
+
+            if (timeZoneId == "UTC")
+            {
+                // For UTC timezone, no conversion needed
+                startTimeOfDay = startTime.TimeOfDay;
+            }
+            else
+            {
+                // Convert UTC start time to provider's timezone to find matching slot
+                var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+                var startTimeInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(startTime, providerTimeZone);
+                startTimeOfDay = startTimeInProviderZone.TimeOfDay;
+            }
+
+            var slot = _configuration.CurrentValue.Slots.Find(s => s.StartTime == startTimeOfDay);
             if (slot == null) throw new ArgumentOutOfRangeException(nameof(startTime), "Start time does not fit into any slot.");
 
-            return new DateTime(
-                startTime.Year,
-                startTime.Month,
-                startTime.Day,
-                slot.EndTime,
-                0, 0);
+            if (timeZoneId == "UTC")
+            {
+                // For UTC timezone, create end time directly
+                return startTime.Date.Add(slot.EndTime);
+            }
+            else
+            {
+                // Create end time in provider's timezone and convert back to UTC
+                var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+                var startTimeInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(startTime, providerTimeZone);
+                var endTimeInProviderZone = startTimeInProviderZone.Date.Add(slot.EndTime);
+                return TimeZoneInfo.ConvertTimeToUtc(endTimeInProviderZone, providerTimeZone);
+            }
         }
 
         /// <summary>
@@ -1783,7 +1890,7 @@ namespace CarWash.PWA.Controllers
             if (_user.IsCarwashAdmin) return false;
 
             if (endTime == null) throw new ArgumentNullException(nameof(endTime));
-            var earliestTimeAllowed = DateTime.Now.AddMinutes(_configuration.CurrentValue.Reservation.MinutesToAllowReserveInPast * -1);
+            var earliestTimeAllowed = DateTime.UtcNow.AddMinutes(_configuration.CurrentValue.Reservation.MinutesToAllowReserveInPast * -1);
 
             if (startTime < earliestTimeAllowed || endTime < earliestTimeAllowed)
             {
@@ -1806,14 +1913,42 @@ namespace CarWash.PWA.Controllers
         /// <summary>
         /// Checks whether start and end times fit into a slot
         /// </summary>
-        /// <param name="startTime">start date and time</param>
-        /// <param name="endTime">end date and time</param>
+        /// <param name="startTime">start date and time (UTC)</param>
+        /// <param name="endTime">end date and time (UTC)</param>
         /// <returns>true if start and end times fit into a slot</returns>
         private bool IsInSlot(DateTime startTime, DateTime? endTime)
         {
             if (endTime == null) throw new ArgumentNullException(nameof(endTime));
 
-            if (_configuration.CurrentValue.Slots.Any(s => s.StartTime == startTime.Hour && s.EndTime == ((DateTime)endTime).Hour)) return true;
+            // Ensure DateTime objects are treated as UTC
+            if (startTime.Kind == DateTimeKind.Unspecified)
+                startTime = DateTime.SpecifyKind(startTime, DateTimeKind.Utc);
+
+            var endTimeValue = (DateTime)endTime;
+            if (endTimeValue.Kind == DateTimeKind.Unspecified)
+                endTimeValue = DateTime.SpecifyKind(endTimeValue, DateTimeKind.Utc);
+
+            TimeSpan startTimeOfDay, endTimeOfDay;
+            var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
+
+            if (timeZoneId == "UTC")
+            {
+                // For UTC timezone, no conversion needed
+                startTimeOfDay = startTime.TimeOfDay;
+                endTimeOfDay = endTimeValue.TimeOfDay;
+            }
+            else
+            {
+                // Convert UTC times to provider's timezone for slot validation
+                var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+                var startTimeInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(startTime, providerTimeZone);
+                var endTimeInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(endTimeValue, providerTimeZone);
+
+                startTimeOfDay = startTimeInProviderZone.TimeOfDay;
+                endTimeOfDay = endTimeInProviderZone.TimeOfDay;
+            }
+
+            if (_configuration.CurrentValue.Slots.Any(s => s.StartTime == startTimeOfDay && s.EndTime == endTimeOfDay)) return true;
 
             _telemetryClient.TrackTrace(
                 "BadRequest: Reservation time range should fit into a slot.",
@@ -1822,7 +1957,9 @@ namespace CarWash.PWA.Controllers
                 {
                     { "UserId", _user.Id },
                     { "StartDate", startTime.ToString() },
-                    { "EndDate", endTime.ToString() }
+                    { "EndDate", endTime.ToString() },
+                    { "StartTimeOfDay", startTimeOfDay.ToString() },
+                    { "EndTimeOfDay", endTimeOfDay.ToString() }
                 });
 
             return false;
@@ -1870,7 +2007,7 @@ namespace CarWash.PWA.Controllers
 
             // Do not validate against company limit after {HoursAfterCompanyLimitIsNotChecked} for today
             // or if company limit is 0 (meaning unlimited)
-            if ((date.Date == DateTime.Today && DateTime.Now.Hour >= _configuration.CurrentValue.Reservation.HoursAfterCompanyLimitIsNotChecked)
+            if ((date.Date == DateTime.UtcNow.Date && DateTime.UtcNow.Hour >= _configuration.CurrentValue.Reservation.HoursAfterCompanyLimitIsNotChecked)
                 || userCompanyLimit == 0)
             {
                 var allSlotCapacity = _configuration.CurrentValue.Slots.Sum(s => s.Capacity);
@@ -1920,10 +2057,10 @@ namespace CarWash.PWA.Controllers
                 }
             }
 
-            if (date.Date == DateTime.Today)
+            if (date.Date == DateTime.UtcNow.Date)
             {
                 var toBeDoneTodayTime = await _context.Reservation
-                    .Where(r => r.StartDate >= DateTime.Now && r.StartDate.Date == DateTime.Today)
+                    .Where(r => r.StartDate >= DateTime.UtcNow && r.StartDate.Date == DateTime.UtcNow.Date)
                     .SumAsync(r => r.TimeRequirement);
 
                 var remainingSlotCapacityToday = GetRemainingSlotCapacityToday();
@@ -1962,7 +2099,27 @@ namespace CarWash.PWA.Controllers
                 .Where(r => r.StartDate == dateTime)
                 .SumAsync(r => r.TimeRequirement);
 
-            var slotCapacity = _configuration.CurrentValue.Slots.Find(s => s.StartTime == dateTime.Hour)?.Capacity;
+            // Ensure dateTime is treated as UTC
+            if (dateTime.Kind == DateTimeKind.Unspecified)
+                dateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+
+            TimeSpan timeOfDay;
+            var timeZoneId = _configuration.CurrentValue.Reservation.TimeZone;
+
+            if (timeZoneId == "UTC")
+            {
+                // For UTC timezone, no conversion needed
+                timeOfDay = dateTime.TimeOfDay;
+            }
+            else
+            {
+                // Convert UTC dateTime to provider's timezone to find matching slot
+                var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+                var dateTimeInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(dateTime, providerTimeZone);
+                timeOfDay = dateTimeInProviderZone.TimeOfDay;
+            }
+
+            var slotCapacity = _configuration.CurrentValue.Slots.Find(s => s.StartTime == timeOfDay)?.Capacity;
             if (reservedTimeInSlot + timeRequirement <= slotCapacity * _configuration.CurrentValue.Reservation.TimeUnit) return true;
 
             _telemetryClient.TrackTrace(
