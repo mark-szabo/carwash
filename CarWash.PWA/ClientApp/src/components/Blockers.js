@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import * as moment from 'moment';
+import * as dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import { withStyles } from '@mui/styles';
 import apiFetch from '../Auth';
 import List from '@mui/material/List';
@@ -17,6 +18,8 @@ import Paper from '@mui/material/Paper';
 import Alert from '@mui/material/Alert';
 import Spinner from './Spinner';
 import { format2Dates } from '../Helpers';
+
+dayjs.extend(utc);
 
 const styles = theme => ({
     list: {
@@ -73,8 +76,8 @@ function Blockers(props) {
         setLoading(true);
 
         const payload = {
-            startDate: moment(newBlockerStartDate).utc().format(),
-            endDate: moment(newBlockerEndDate).utc().format(),
+            startDate: dayjs(newBlockerStartDate).utc().format(),
+            endDate: dayjs(newBlockerEndDate).utc().format(),
             comment: newBlockerComment,
         };
 
@@ -218,7 +221,7 @@ function BlockerListItem(props) {
     return (
         <ListItem>
             <ListItemAvatar>
-                <Avatar>{moment(blocker.startDate).format('D')}</Avatar>
+                <Avatar>{dayjs(blocker.startDate).format('D')}</Avatar>
             </ListItemAvatar>
             <ListItemText primary={format2Dates(blocker.startDate, blocker.endDate)} secondary={blocker.comment} />
             {user.isCarwashAdmin && (

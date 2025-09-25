@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using CarWash.ClassLibrary.Models;
 using CarWash.ClassLibrary.Services;
@@ -83,7 +82,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!SystemMessageExists(id))
+                if (!await SystemMessageExistsAsync(id))
                 {
                     return NotFound();
                 }
@@ -121,9 +120,9 @@ namespace CarWash.PWA.Controllers
             return NoContent();
         }
 
-        private bool SystemMessageExists(string id)
+        private async Task<bool> SystemMessageExistsAsync(string id)
         {
-            return context.SystemMessage.Any(e => e.Id == id);
+            return await context.SystemMessage.AnyAsync(e => e.Id == id);
         }
     }
 }

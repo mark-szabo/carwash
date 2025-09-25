@@ -26,7 +26,7 @@ import red from '@mui/material/colors/red';
 import { getStateName, getServiceName, State } from '../Constants';
 import { formatLocation, formatDate2 } from '../Helpers';
 import Chat from './Chat';
-import * as moment from 'moment';
+import * as dayjs from 'dayjs';
 import ErrorBoundary from './ErrorBoundary';
 import DropoffDialog from './DropoffDialog';
 
@@ -98,16 +98,16 @@ function ReservationCard(props) {
     const getButtons = () => {
         switch (reservation.state) {
             case 0:
-                if (moment(reservation.startDate).isSame(moment(), 'day')) {
+                if (dayjs(reservation.startDate).isSame(dayjs(), 'day')) {
                     return (
                         <CardActions className={classes.cardActions}>
                             <Button
                                 size="small"
                                 color="primary"
-                                variant="outlined"
+                                variant="contained"
                                 onClick={() => setDropoffDialogOpen(true)}
                             >
-                                Confirm key drop-off
+                                Drop-off key
                             </Button>
                             <Button component={Link} to={`/reserve/${reservation.id}`} size="small" color="primary">
                                 Edit
@@ -145,10 +145,10 @@ function ReservationCard(props) {
                         <Button
                             size="small"
                             color="primary"
-                            variant="outlined"
+                            variant="contained"
                             onClick={() => setDropoffDialogOpen(true)}
                         >
-                            Confirm key drop-off
+                            Drop-off key
                         </Button>
                         <Button component={Link} to={`/reserve/${reservation.id}`} size="small" color="primary">
                             Edit
@@ -251,7 +251,7 @@ function ReservationCard(props) {
                         subheader={formatDate2(reservation)}
                     />
                     {reservation.state === State.ReminderSentWaitingForKey &&
-                        moment(reservation.startDate) > moment() && 
+                        dayjs(reservation.startDate) > dayjs() && 
                         (
                             <CardContent className={classes.cardWarning}>
                                 <Alert
@@ -260,13 +260,13 @@ function ReservationCard(props) {
                                     className={classes.cardWarningAlert}
                                     icon={<InfoOutlinedIcon className={classes.cardWarningAlertIcon} />}
                                 >
-                                    Drop off the key before {moment(reservation.startDate).format('h:mm A')} or we
-                                    cannot guarantee completion by {moment(reservation.endDate).format('h:mm A')}.
+                                    Drop off the key before {dayjs(reservation.startDate).format('h:mm A')} or we
+                                    cannot guarantee completion by {dayjs(reservation.endDate).format('h:mm A')}.
                                 </Alert>
                             </CardContent>
                         )}
                     {reservation.state === State.ReminderSentWaitingForKey &&
-                        moment(reservation.startDate) < moment() && 
+                        dayjs(reservation.startDate) < dayjs() && 
                         (
                             <CardContent className={classes.cardWarning}>
                                 <Alert
@@ -275,8 +275,8 @@ function ReservationCard(props) {
                                     className={classes.cardErrorAlert}
                                     icon={<ErrorOutlineOutlinedIcon className={classes.cardWarningAlertIcon} />}
                                 >
-                                    Key was not dropped off before {moment(reservation.startDate).format('h:mm A')}.{' '}
-                                    Completion by {moment(reservation.endDate).format('h:mm A')} is not guaranteed.
+                                    Key was not dropped off before {dayjs(reservation.startDate).format('h:mm A')}.{' '}
+                                    Completion by {dayjs(reservation.endDate).format('h:mm A')} is not guaranteed.
                                 </Alert>
                             </CardContent>
                         )}

@@ -95,3 +95,18 @@ export function getAdminStateName(state) {
 export function getServiceName(configuration, serviceId) {
     return configuration.services.find(s => s.id === serviceId)?.name;
 }
+
+export function getKeyLockerBoxStateName(state) {
+    switch (state) {
+        case 0:
+            return 'Empty';
+        case 1:
+            return 'Used';
+        case 2:
+            return 'Disabled';
+        case 3:
+            return 'Unavailable';
+        default:
+            return 'No info';
+    }
+}

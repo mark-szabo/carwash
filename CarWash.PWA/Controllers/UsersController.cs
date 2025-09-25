@@ -173,7 +173,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!context.Users.Any(e => e.Id == _user.Id))
+                if (!await context.Users.AnyAsync(e => e.Id == _user.Id))
                 {
                     return NotFound();
                 }
@@ -260,7 +260,7 @@ Please keep in mind, that we are required to continue storing your previous rese
 
             user.FirstName = "[deleted user]";
             user.LastName = null;
-            user.Email = $"[deleted on {DateTime.Now}]";
+            user.Email = $"[deleted on {DateTime.UtcNow}]";
             user.PhoneNumber = null;
             user.BillingName = null;
             user.BillingAddress = null;
@@ -275,7 +275,7 @@ Please keep in mind, that we are required to continue storing your previous rese
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!context.Users.Any(e => e.Id == id))
+                if (!await context.Users.AnyAsync(e => e.Id == id))
                 {
                     return NotFound();
                 }

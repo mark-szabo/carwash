@@ -35,18 +35,18 @@ namespace CarWash.Functions
         [Function("ReminderFunction")]
         public async Task Run([TimerTrigger("0 */10 * * * *")] TimerInfo timer)
         {
-            log.LogInformation($"Reminder function executed at: {DateTime.Now}");
+            log.LogInformation($"Reminder function executed at: {DateTime.UtcNow}");
             var watch = Stopwatch.StartNew();
 
             // Get reservations from SQL database
             var reservations = await _context.Reservation
                 .Include(r => r.User)
-                .Where(r => r.State == State.SubmittedNotActual && r.StartDate.Date == DateTime.Today)
+                .Where(r => r.State == State.SubmittedNotActual && r.StartDate.Date == DateTime.UtcNow.Date)
                 .ToListAsync();
 
             // Cannot use normal LINQ as dates are not in UTC in database. TODO: refactor database to use UTC based times
             reservations = reservations
-                .Where(r => r.StartDate.AddMinutes(MinutesBeforeReservationToSendReminder * -1) < DateTime.Now.ToLocalTime() && DateTime.Now.ToLocalTime() < r.StartDate)
+                .Where(r => r.StartDate.AddMinutes(MinutesBeforeReservationToSendReminder * -1) < DateTime.UtcNow && DateTime.UtcNow < r.StartDate)
                 .ToList();
 
             if (reservations.Count == 0)

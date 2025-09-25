@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import apiFetch from '../Auth';
+import { getKeyLockerBoxStateName, getAdminStateName } from '../Constants';
 import { Box, Grid, Typography, Paper, Popover, IconButton, Button } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import WifiOffIcon from '@mui/icons-material/WifiOff';
 import CloseIcon from '@mui/icons-material/Close';
-import * as moment from 'moment';
+import * as dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import { amber } from '@mui/material/colors';
+
+dayjs.extend(utc);
+dayjs.extend(relativeTime);
 
 const getBoxColor = (state, isConnected, isDoorClosed) => {
     if (!isConnected) return null;
@@ -31,6 +37,8 @@ function KeyLockerAdmin({ user, openSnackbar, closedKeyLockerBoxIds }) {
     const [selectedBox, setSelectedBox] = useState(null);
     const [openConfirm, setOpenConfirm] = useState(false);
     const [opening, setOpening] = useState(false);
+    const [freeConfirm, setFreeConfirm] = useState(false);
+    const [freeing, setFreeing] = useState(false);
 
     useEffect(() => {
         apiFetch('api/keylocker/state').then(
@@ -50,12 +58,16 @@ function KeyLockerAdmin({ user, openSnackbar, closedKeyLockerBoxIds }) {
         setSelectedBox(box);
         setOpenConfirm(false);
         setOpening(false);
+        setFreeConfirm(false);
+        setFreeing(false);
     };
 
     const handlePopoverClose = () => {
         setAnchorEl(null);
         setOpenConfirm(false);
         setOpening(false);
+        setFreeConfirm(false);
+        setFreeing(false);
     };
 
     const handleOpenBoxClick = async () => {
@@ -67,12 +79,33 @@ function KeyLockerAdmin({ user, openSnackbar, closedKeyLockerBoxIds }) {
         setOpening(true);
         try {
             await apiFetch(`api/keylocker/box/${selectedBox.boxId}/open`, { method: 'POST' });
-            openSnackbar('Box opened successfully!');
+            openSnackbar('Box opened successfully.');
             setOpenConfirm(false);
         } catch (error) {
-            openSnackbar(error.toString());
+            openSnackbar(error?.toString() || 'Failed to open box.');
         } finally {
             setOpening(false);
+        }
+    };
+
+    const handleFreeBoxClick = async () => {
+        if (!freeConfirm) {
+            setFreeConfirm(true);
+            return;
+        }
+        if (!selectedBox) return;
+        setFreeing(true);
+        try {
+            // Call the free endpoint with boxId as query param
+            await apiFetch(`api/keylocker/free/by-reservation?reservationId=${selectedBox.reservation.id}`, {
+                method: 'POST',
+            });
+            openSnackbar('Box freed.');
+            handlePopoverClose(); // close the popover on success
+        } catch (error) {
+            openSnackbar(error?.toString() || 'Failed to free box.');
+        } finally {
+            setFreeing(false);
         }
     };
 
@@ -133,27 +166,29 @@ function KeyLockerAdmin({ user, openSnackbar, closedKeyLockerBoxIds }) {
                         Box {selectedBox?.name}
                     </Typography>
                     <Typography variant="body2" gutterBottom>
-                        State: {selectedBox?.state}
+                        State: {getKeyLockerBoxStateName(selectedBox?.state)}
                         <br />
                         Connected: {selectedBox?.isConnected ? 'Yes' : 'No'}
                         <br />
                         Door Closed: {selectedBox?.isDoorClosed ? 'Yes' : 'No'}
                         <br />
-                        Last Modified: {moment.utc(selectedBox?.lastModifiedAt).local().fromNow()}
+                        Last Modified: {dayjs.utc(selectedBox?.lastModifiedAt).local().fromNow()}
                         <br />
-                        Last Activity: {moment.utc(selectedBox?.lastActivity).local().fromNow()}
+                        Last Activity: {dayjs.utc(selectedBox?.lastActivity).local().fromNow()}
                     </Typography>
                     {selectedBox?.reservation ? (
                         <Box sx={{ mt: 2 }}>
                             <Typography variant="subtitle1">Reservation Info</Typography>
                             <Typography variant="body2">
+                                State: {getAdminStateName(selectedBox.reservation.state)}
+                                <br />
                                 Vehicle Plate Number: {selectedBox.reservation.vehiclePlateNumber}
                                 <br />
                                 Location: {selectedBox.reservation.location}
                                 <br />
                                 Start:{' '}
                                 {selectedBox.reservation.startDate
-                                    ? moment.utc(selectedBox.reservation.startDate).local().fromNow()
+                                    ? dayjs.utc(selectedBox.reservation.startDate).local().fromNow()
                                     : '-'}
                             </Typography>
                         </Box>
@@ -164,10 +199,18 @@ function KeyLockerAdmin({ user, openSnackbar, closedKeyLockerBoxIds }) {
                     )}
                     <Box sx={{ mt: 2, textAlign: 'right', display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                         <Button
+                            variant="outlined"
+                            color={freeConfirm ? 'warning' : 'primary'}
+                            onClick={handleFreeBoxClick}
+                            disabled={freeing || opening || !selectedBox}
+                        >
+                            {freeing ? 'Freeing...' : freeConfirm ? 'Sure?' : 'Free Box'}
+                        </Button>
+                        <Button
                             variant="contained"
                             color={openConfirm ? 'warning' : 'primary'}
                             onClick={handleOpenBoxClick}
-                            disabled={opening}
+                            disabled={freeing || opening || !selectedBox}
                         >
                             {opening ? 'Opening...' : openConfirm ? 'Sure?' : 'Open Box'}
                         </Button>

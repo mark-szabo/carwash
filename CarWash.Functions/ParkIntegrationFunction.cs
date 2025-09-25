@@ -40,7 +40,7 @@ namespace CarWash.Functions
         [Function("ParkIntegrationFunction")]
         public async Task RunAsync([TimerTrigger("0 * 6-15 * * 1-5")] TimerInfo timer)
         {
-            log.LogInformation($"Park integration function executed at: {DateTime.Now}");
+            log.LogInformation($"Park integration function executed at: {DateTime.UtcNow}");
             var watch = Stopwatch.StartNew();
 
             var parkingSessions = await GetParkingSessions(2, log);
@@ -65,7 +65,7 @@ namespace CarWash.Functions
             var reservations = await _context.Reservation
                 .Include(r => r.User)
                 .Where(r =>
-                    r.StartDate.Date == DateTime.Today &&
+                    r.StartDate.Date == DateTime.UtcNow.Date &&
                     r.State == State.SubmittedNotActual &&
                     licensePlates.Contains(r.VehiclePlateNumber))
                 .ToListAsync();

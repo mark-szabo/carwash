@@ -443,6 +443,65 @@ namespace CarWash.PWA.Tests
             Assert.IsType<NoContentResult>(result);
             Assert.Null(context.Reservation.First().KeyLockerBoxId);
         }
+
+        [Fact]
+        public async Task OpenRandomAvailableBox_ReturnsBadRequest_WhenLocationNotSet()
+        {
+            // Arrange
+            var context = TestDbContextFactory.Create();
+            var reservation = new Reservation
+            {
+                Id = "res5",
+                UserId = "user1",
+                VehiclePlateNumber = "ABC123",
+                Location = null // No location set
+            };
+            context.Reservation.Add(reservation);
+            await context.SaveChangesAsync();
+            var ctrl = TestControllerFactory.CreateKeyLockerController(true, context);
+
+            // Act
+            var result = await ctrl.OpenRandomAvailableBox("res5", null);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.Equal("Location is not set for reservation.", badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task OpenRandomAvailableBox_ReturnsOk_WhenLocationProvided()
+        {
+            // Arrange
+            var context = TestDbContextFactory.Create();
+            var keyLockerServiceMock = new Mock<IKeyLockerService>();
+            var reservation = new Reservation
+            {
+                Id = "res6",
+                UserId = "user1",
+                VehiclePlateNumber = "ABC123",
+                Location = null // No location initially
+            };
+            context.Reservation.Add(reservation);
+            await context.SaveChangesAsync();
+            keyLockerServiceMock.Setup(x => x.OpenRandomAvailableBoxAsync("locker1", "user1", It.IsAny<Func<string, Task>>()))
+                .ReturnsAsync(new KeyLockerBox
+                {
+                    Id = "box4",
+                    LockerId = "locker1",
+                    BoxSerial = 1,
+                    Building = "Bldg",
+                    Floor = "1",
+                    Name = "Box4"
+                });
+            var ctrl = TestControllerFactory.CreateKeyLockerController(true, context, keyLockerServiceMock.Object);
+
+            // Act - providing location as query parameter
+            var result = await ctrl.OpenRandomAvailableBox("res6", "Bldg/1/A1");
+
+            // Assert
+            Assert.IsType<OkObjectResult>(result.Result);
+            Assert.Equal("Bldg/1/A1", context.Reservation.First().Location);
+        }
     }
 
     // --- Test helpers ---
@@ -462,6 +521,12 @@ namespace CarWash.PWA.Tests
         public static IOptionsMonitor<CarWashConfiguration> Create()
         {
             var config = new CarWashConfiguration();
+            config.Garages.Add(new Garage
+            {
+                Building = "Bldg",
+                Floors = ["1", "2"],
+                KeyLockerId = "locker1"
+            });
             var mock = new Mock<IOptionsMonitor<CarWashConfiguration>>();
             mock.Setup(x => x.CurrentValue).Returns(config);
             return mock.Object;
