@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import apiFetch from '../Auth';
-import { getStateName } from '../Constants';
+import { getKeyLockerBoxStateName, getAdminStateName } from '../Constants';
 import { Box, Grid, Typography, Paper, Popover, IconButton, Button } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
@@ -166,7 +166,7 @@ function KeyLockerAdmin({ user, openSnackbar, closedKeyLockerBoxIds }) {
                         Box {selectedBox?.name}
                     </Typography>
                     <Typography variant="body2" gutterBottom>
-                        State: {getStateName(selectedBox?.state)}
+                        State: {getKeyLockerBoxStateName(selectedBox?.state)}
                         <br />
                         Connected: {selectedBox?.isConnected ? 'Yes' : 'No'}
                         <br />
@@ -180,6 +180,8 @@ function KeyLockerAdmin({ user, openSnackbar, closedKeyLockerBoxIds }) {
                         <Box sx={{ mt: 2 }}>
                             <Typography variant="subtitle1">Reservation Info</Typography>
                             <Typography variant="body2">
+                                State: {getAdminStateName(selectedBox.reservation.state)}
+                                <br />
                                 Vehicle Plate Number: {selectedBox.reservation.vehiclePlateNumber}
                                 <br />
                                 Location: {selectedBox.reservation.location}
