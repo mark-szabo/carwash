@@ -11,9 +11,33 @@ namespace CarWash.ClassLibrary.Services
     /// </summary>
     public interface IReservationService
     {
+        /// <summary>
+        /// Gets a reservation by its ID with access control
+        /// </summary>
+        /// <param name="reservationId"></param>
+        /// <param name="currentUser"></param>
+        /// <returns></returns>
         Task<Reservation?> GetReservationByIdAsync(string reservationId, User currentUser);
+
+        /// <summary>
+        /// Gets all reservations for the current user
+        /// </summary>
+        /// <param name="currentUser"></param>
+        /// <returns></returns>
         Task<List<Reservation>> GetReservationsOfUserAsync(User currentUser);
+
+        /// <summary>
+        /// Gets all reservations for the current user's company
+        /// </summary>
+        /// <param name="currentUser"></param>
+        /// <returns></returns>
         Task<List<Reservation>> GetReservationsOfCompanyAsync(User currentUser);
+
+        /// <summary>
+        /// Gets all reservations on the backlog (for carwash admins)
+        /// </summary>
+        /// <param name="currentUser"></param>
+        /// <returns></returns>
         Task<List<Reservation>> GetReservationsOnBacklog(User currentUser);
 
         /// <summary>
@@ -93,13 +117,6 @@ namespace CarWash.ClassLibrary.Services
         Task AddCommentAsync(string reservationId, string comment, User currentUser);
 
         /// <summary>
-        /// Checks if a vehicle is an MPV based on historical data
-        /// </summary>
-        /// <param name="vehiclePlateNumber">The vehicle plate number</param>
-        /// <returns>True if the vehicle is categorized as MPV</returns>
-        Task<bool> IsMpvAsync(string vehiclePlateNumber);
-
-        /// <summary>
         /// Sets the MPV flag for a reservation
         /// </summary>
         /// <param name="reservationId">The reservation ID</param>
@@ -152,10 +169,10 @@ namespace CarWash.ClassLibrary.Services
         /// Exports reservations to Excel for a given timespan
         /// </summary>
         /// <param name="currentUser">The current user</param>
-        /// <param name="startDate">Start date (optional)</param>
-        /// <param name="endDate">End date (optional)</param>
+        /// <param name="startDate">Start date</param>
+        /// <param name="endDate">End date</param>
         /// <returns>Excel file data as byte array</returns>
-        Task<byte[]> ExportReservationsAsync(User currentUser, DateTime? startDate = null, DateTime? endDate = null);
+        Task<byte[]> ExportReservationsAsync(User currentUser, DateTime startDate, DateTime endDate);
     }
 
     /// <summary>

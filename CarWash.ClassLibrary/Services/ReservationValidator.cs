@@ -14,8 +14,15 @@ namespace CarWash.ClassLibrary.Services
     internal interface IReservationValidator
     {
         /// <summary>
-        /// Gets the number of available capacity remaining for today for each slot.
+        /// Sums the capacity of all not started slots, what are left from the day and capacity of slots (not time in minutes!).
         /// </summary>
+        /// <remarks>
+        /// eg. It is 9:00 AM.
+        /// The slot 8-11 has already started.
+        /// The slot 11-14 is not yet started, so add the capacity (eg. 12) to the sum.
+        /// The slot 14-17 is not yet started, so add the capacity (eg. 11) to the sum.
+        /// Sum will be 23.
+        /// </remarks>
         int RemainingSlotCapacityToday { get; }
 
         /// <summary>
@@ -189,6 +196,7 @@ namespace CarWash.ClassLibrary.Services
         {
             if (endTime != null) return (DateTime)endTime;
 
+            // Ensure startTime is treated as UTC
             startTime = DateTime.SpecifyKind(startTime, DateTimeKind.Utc);
 
             TimeSpan startTimeOfDay;
@@ -196,24 +204,28 @@ namespace CarWash.ClassLibrary.Services
 
             if (timeZoneId == "UTC")
             {
+                // For UTC timezone, no conversion needed
                 startTimeOfDay = startTime.TimeOfDay;
             }
             else
             {
+                // Convert UTC start time to provider's timezone to find matching slot
                 var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
                 var startTimeInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(startTime, providerTimeZone);
                 startTimeOfDay = startTimeInProviderZone.TimeOfDay;
             }
 
-            var slot = configuration.CurrentValue.Slots.Find(s => s.StartTime == startTimeOfDay);
-            if (slot == null) throw new ArgumentOutOfRangeException(nameof(startTime), "Start time does not fit into any slot.");
+            var slot = configuration.CurrentValue.Slots.Find(s => s.StartTime == startTimeOfDay)
+                ?? throw new ArgumentOutOfRangeException(nameof(startTime), "Start time does not fit into any slot.");
 
             if (timeZoneId == "UTC")
             {
+                // For UTC timezone, create end time directly
                 return startTime.Date.Add(slot.EndTime);
             }
             else
             {
+                // Create end time in provider's timezone and convert back to UTC
                 var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
                 var startTimeInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(startTime, providerTimeZone);
                 var endTimeInProviderZone = startTimeInProviderZone.Date.Add(slot.EndTime);
@@ -221,8 +233,18 @@ namespace CarWash.ClassLibrary.Services
             }
         }
 
+        /// <summary>
+        /// Checks if the date/time is blocked
+        /// </summary>
+        /// <param name="startTime">start date and time</param>
+        /// <param name="endTime">end date and time</param>
+        /// <param name="currentUser"></param>
+        /// <returns>true if date/time is blocked and user is not carwash admin</returns>
         private async Task<bool> IsBlocked(DateTime startTime, DateTime? endTime, User currentUser)
         {
+            ArgumentNullException.ThrowIfNull(startTime);
+            ArgumentNullException.ThrowIfNull(endTime);
+
             if (currentUser.IsCarwashAdmin) return false;
 
             if (await context.Blocker.AnyAsync(b => b.StartDate < startTime && b.EndDate > endTime))
@@ -234,7 +256,7 @@ namespace CarWash.ClassLibrary.Services
                     {
                         { "UserId", currentUser.Id },
                         { "StartDate", startTime.ToString() },
-                        { "EndDate", endTime.ToString() }
+                        { "EndDate", endTime.ToString() ?? "" }
                     });
 
                 return true;
@@ -243,9 +265,17 @@ namespace CarWash.ClassLibrary.Services
             return false;
         }
 
+        /// <summary>
+        /// Checks whether end time is later than start time
+        /// </summary>
+        /// <param name="startTime">start date and time</param>
+        /// <param name="endTime">end date and time</param>
+        /// <param name="currentUser"></param>
+        /// <returns>true if end time is later than start time</returns>
         private bool IsEndTimeLaterThanStartTime(DateTime startTime, DateTime? endTime, User currentUser)
         {
-            if (endTime == null) throw new ArgumentNullException(nameof(endTime));
+            ArgumentNullException.ThrowIfNull(startTime);
+            ArgumentNullException.ThrowIfNull(endTime);
 
             if (startTime < endTime) return true;
 
@@ -256,12 +286,20 @@ namespace CarWash.ClassLibrary.Services
                 {
                     { "UserId", currentUser.Id },
                     { "StartDate", startTime.ToString() },
-                    { "EndDate", endTime.ToString() }
+                    { "EndDate", endTime.ToString() ?? "" }
                 });
 
             return false;
         }
 
+        /// <summary>
+        /// Check if there is enough time in that slot
+        /// </summary>
+        /// <param name="dateTime">Date and time of reservation</param>
+        /// <param name="timeRequirement">time requirement of the reservation in minutes</param>
+        /// <param name="currentUser"></param>
+        /// <param name="excludeReservationId"></param>
+        /// <returns>true if there is enough time left or user is carwash admin</returns>
         private async Task<bool> IsEnoughTimeInSlotAsync(DateTime dateTime, int timeRequirement, User currentUser, string? excludeReservationId = null)
         {
             if (currentUser.IsCarwashAdmin) return true;
@@ -276,6 +314,7 @@ namespace CarWash.ClassLibrary.Services
 
             var reservedTimeInSlot = await query.SumAsync(r => r.TimeRequirement);
 
+            // Ensure dateTime is treated as UTC
             if (dateTime.Kind == DateTimeKind.Unspecified)
                 dateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
 
@@ -284,10 +323,12 @@ namespace CarWash.ClassLibrary.Services
 
             if (timeZoneId == "UTC")
             {
+                // For UTC timezone, no conversion needed
                 timeOfDay = dateTime.TimeOfDay;
             }
             else
             {
+                // Convert UTC dateTime to provider's timezone to find matching slot
                 var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
                 var dateTimeInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(dateTime, providerTimeZone);
                 timeOfDay = dateTimeInProviderZone.TimeOfDay;
@@ -305,18 +346,28 @@ namespace CarWash.ClassLibrary.Services
                     { "StartDate", dateTime.ToString() },
                     { "reservedTimeInSlot", reservedTimeInSlot.ToString() },
                     { "TimeRequirement", timeRequirement.ToString() },
-                    { "slotCapacity", slotCapacity.ToString() },
+                    { "slotCapacity", slotCapacity.ToString() ?? "" },
                 });
 
             return false;
         }
 
+        /// <summary>
+        /// Checks if there is enough time on that day
+        /// </summary>
+        /// <param name="date">Date of reservation</param>
+        /// <param name="timeRequirement">time requirement of the reservation in minutes</param>
+        /// <param name="currentUser"></param>
+        /// <param name="excludeReservationId"></param>
+        /// <returns>true if there is enough time left or user is carwash admin</returns>
         private async Task<bool> IsEnoughTimeOnDateAsync(DateTime date, int timeRequirement, User currentUser, string? excludeReservationId = null)
         {
             if (currentUser.IsCarwashAdmin) return true;
 
             var userCompanyLimit = (await context.Company.SingleAsync(c => c.Name == currentUser.Company)).DailyLimit;
 
+            // Do not validate against company limit after {HoursAfterCompanyLimitIsNotChecked} for today
+            // or if company limit is 0 (meaning unlimited)
             if ((date.Date == DateTime.UtcNow.Date && DateTime.UtcNow.Hour >= configuration.CurrentValue.Reservation.HoursAfterCompanyLimitIsNotChecked)
                 || userCompanyLimit == 0)
             {
@@ -406,11 +457,20 @@ namespace CarWash.ClassLibrary.Services
             return true;
         }
 
+        /// <summary>
+        /// Checks whether start or end times are before the earliest allowed time
+        /// </summary>
+        /// <param name="startTime">start date and time</param>
+        /// <param name="endTime">end date and time</param>
+        /// <param name="currentUser"></param>
+        /// <returns>true if start and end times are both after the earliest allowed time</returns>
         private bool IsInPast(DateTime startTime, DateTime? endTime, User currentUser)
         {
+            ArgumentNullException.ThrowIfNull(startTime);
+            ArgumentNullException.ThrowIfNull(endTime);
+
             if (currentUser.IsCarwashAdmin) return false;
 
-            if (endTime == null) throw new ArgumentNullException(nameof(endTime));
             var earliestTimeAllowed = DateTime.UtcNow.AddMinutes(configuration.CurrentValue.Reservation.MinutesToAllowReserveInPast * -1);
 
             if (startTime < earliestTimeAllowed || endTime < earliestTimeAllowed)
@@ -422,7 +482,7 @@ namespace CarWash.ClassLibrary.Services
                     {
                         { "UserId", currentUser.Id },
                         { "StartDate", startTime.ToString() },
-                        { "EndDate", endTime.ToString() },
+                        { "EndDate", endTime.ToString() ?? "" },
                         { "EarliestTimeAllowed", earliestTimeAllowed.ToString() }
                     });
                 return true;
@@ -431,10 +491,19 @@ namespace CarWash.ClassLibrary.Services
             return false;
         }
 
+        /// <summary>
+        /// Checks whether start and end times fit into a slot
+        /// </summary>
+        /// <param name="startTime">start date and time (UTC)</param>
+        /// <param name="endTime">end date and time (UTC)</param>
+        /// <param name="currentUser"></param>
+        /// <returns>true if start and end times fit into a slot</returns>
         private bool IsInSlot(DateTime startTime, DateTime? endTime, User currentUser)
         {
-            if (endTime == null) throw new ArgumentNullException(nameof(endTime));
+            ArgumentNullException.ThrowIfNull(startTime);
+            ArgumentNullException.ThrowIfNull(endTime);
 
+            // Ensure DateTime objects are treated as UTC
             if (startTime.Kind == DateTimeKind.Unspecified)
                 startTime = DateTime.SpecifyKind(startTime, DateTimeKind.Utc);
 
@@ -447,11 +516,13 @@ namespace CarWash.ClassLibrary.Services
 
             if (timeZoneId == "UTC")
             {
+                // For UTC timezone, no conversion needed
                 startTimeOfDay = startTime.TimeOfDay;
                 endTimeOfDay = endTimeValue.TimeOfDay;
             }
             else
             {
+                // Convert UTC times to provider's timezone for slot validation
                 var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
                 var startTimeInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(startTime, providerTimeZone);
                 var endTimeInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(endTimeValue, providerTimeZone);
@@ -469,7 +540,7 @@ namespace CarWash.ClassLibrary.Services
                 {
                     { "UserId", currentUser.Id },
                     { "StartDate", startTime.ToString() },
-                    { "EndDate", endTime.ToString() },
+                    { "EndDate", endTime.ToString() ?? "" },
                     { "StartTimeOfDay", startTimeOfDay.ToString() },
                     { "EndTimeOfDay", endTimeOfDay.ToString() }
                 });
@@ -477,9 +548,17 @@ namespace CarWash.ClassLibrary.Services
             return false;
         }
 
+        /// <summary>
+        /// Checks whether start and end times are on the same day
+        /// </summary>
+        /// <param name="startTime">start date and time</param>
+        /// <param name="endTime">end date and time</param>
+        /// <param name="currentUser"></param>
+        /// <returns>true if start and end times are on the same day</returns>
         private bool IsStartAndEndTimeOnSameDay(DateTime startTime, DateTime? endTime, User currentUser)
         {
-            if (endTime == null) throw new ArgumentNullException(nameof(endTime));
+            ArgumentNullException.ThrowIfNull(startTime);
+            ArgumentNullException.ThrowIfNull(endTime);
 
             if (startTime.Date == ((DateTime)endTime).Date) return true;
 
@@ -490,12 +569,16 @@ namespace CarWash.ClassLibrary.Services
                 {
                     { "UserId", currentUser.Id },
                     { "StartDate", startTime.ToString() },
-                    { "EndDate", endTime.ToString() }
+                    { "EndDate", endTime.ToString() ?? "" }
                 });
 
             return false;
         }
 
+        /// <summary>
+        /// Checks whether user has met the active concurrent reservation limit: <see cref="CarWashConfiguration.ReservationSettings.UserConcurrentReservationLimit"/>
+        /// </summary>
+        /// <returns>true if user has met the limit and is not admin</returns>
         private async Task<bool> IsUserConcurrentReservationLimitMetAsync(User currentUser)
         {
             if (currentUser.IsAdmin || currentUser.IsCarwashAdmin) return false;

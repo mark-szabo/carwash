@@ -106,7 +106,7 @@ namespace CarWash.PWA.Controllers
                 // Update the reservation
                 var updatedReservation = await reservationService.UpdateReservationAsync(reservation, _user);
 
-                // Broadcast SignalR update
+                // Broadcast backlog update to all connected clients on SignalR
                 await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, updatedReservation.Id);
 
                 return Ok(new ReservationViewModel(updatedReservation));
@@ -150,7 +150,7 @@ namespace CarWash.PWA.Controllers
                 // Create the reservation
                 var createdReservation = await reservationService.CreateReservationAsync(reservation, _user);
 
-                // Broadcast SignalR update
+                // Broadcast backlog update to all connected clients on SignalR
                 await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationCreated, createdReservation.Id);
 
                 return CreatedAtAction(nameof(GetReservation), new { id = createdReservation.Id }, new ReservationViewModel(createdReservation));
@@ -174,8 +174,9 @@ namespace CarWash.PWA.Controllers
         /// Delete an existing reservation
         /// </summary>
         /// <param name="id">Reservation id</param>
-        /// <returns>No content</returns>
+        /// <returns>The deleted <see cref="Reservation"/></returns>
         /// <response code="200">OK</response>
+        /// <response code="400">BadRequest if <paramref name="id"/> is missing or not well-formatted.</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin but tries to delete another user's reservation.</response>
         /// <response code="404">NotFound if reservation not found.</response>
@@ -183,11 +184,13 @@ namespace CarWash.PWA.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult<ReservationViewModel>> DeleteReservation([FromRoute] string id)
         {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
             try
             {
                 var deletedReservation = await reservationService.DeleteReservationAsync(id, _user);
 
-                // Broadcast SignalR update
+                // Broadcast backlog update to all connected clients on SignalR
                 await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationDeleted, id);
 
                 return Ok(new ReservationViewModel(deletedReservation));
@@ -206,10 +209,11 @@ namespace CarWash.PWA.Controllers
         /// <summary>
         /// Get reservations for the company (admin only)
         /// </summary>
-        /// <returns>List of <see cref="AdminReservationViewModel"/></returns>
+        /// <returns>List of latest 100 <see cref="AdminReservationViewModel"/></returns>
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin.</response>
+        [UserAction]
         [HttpGet, Route("company")]
         public async Task<ActionResult<IEnumerable<AdminReservationViewModel>>> GetCompanyReservations()
         {
@@ -227,12 +231,13 @@ namespace CarWash.PWA.Controllers
 
         // GET: api/reservations/backlog
         /// <summary>
-        /// Get reservations in backlog (carwash admin only)
+        /// Get reservations on backlog (carwash admin only)
         /// </summary>
         /// <returns>List of <see cref="AdminReservationViewModel"/></returns>
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not carwash admin.</response>
+        [UserAction]
         [HttpGet, Route("backlog")]
         public async Task<ActionResult<IEnumerable<AdminReservationViewModel>>> GetBacklog()
         {
@@ -248,9 +253,9 @@ namespace CarWash.PWA.Controllers
             }
         }
 
-        // POST: api/reservations/{id}/confirm-dropoff
+        // POST: api/reservations/{id}/confirmdropoff
         /// <summary>
-        /// Confirm dropoff and location
+        /// Confirm car key dropoff and location
         /// </summary>
         /// <param name="id">Reservation id</param>
         /// <param name="location">Car location</param>
@@ -261,13 +266,16 @@ namespace CarWash.PWA.Controllers
         /// <response code="403">Forbidden if user is not admin but tries to update another user's reservation.</response>
         /// <response code="404">NotFound if reservation not found.</response>
         [UserAction]
-        [HttpPost("{id}/confirm-dropoff")]
+        [HttpPost("{id}/confirmdropoff")]
         public async Task<IActionResult> ConfirmDropoff([FromRoute] string id, [FromBody] string location)
         {
             try
             {
                 await reservationService.ConfirmDropoffAsync(id, location, _user);
-                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+
+                // Broadcast backlog update to all connected clients on SignalR
+                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationDropoffConfirmed, id);
+
                 return NoContent();
             }
             catch (ArgumentException ex)
@@ -284,7 +292,7 @@ namespace CarWash.PWA.Controllers
             }
         }
 
-        // POST: api/reservations/confirm-dropoff-by-email
+        // POST: api/reservations/next/confirmdropoff
         /// <summary>
         /// Confirm car key dropoff and location of user's next reservation (service endpoint)
         /// </summary>
@@ -302,7 +310,9 @@ namespace CarWash.PWA.Controllers
             try
             {
                 var reservation = await reservationService.ConfirmDropoffByEmail(model.Email, model.Location, model.VehiclePlateNumber);
-                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, reservation.Id);
+
+                // Broadcast backlog update to all connected clients on SignalR
+                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationDropoffConfirmed, reservation.Id);
 
                 return NoContent();
             }
@@ -316,7 +326,7 @@ namespace CarWash.PWA.Controllers
             }
             catch (InvalidOperationException)
             {
-                return NotFound();
+                return NotFound("No user or reservation found.");
             }
             catch (InvalidDataException ex)
             {
@@ -339,14 +349,22 @@ namespace CarWash.PWA.Controllers
         [HttpPost("{id}/startwash")]
         public async Task<IActionResult> StartWash([FromRoute] string id)
         {
-            if (!_user.IsCarwashAdmin) return Forbid();
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-
             try
             {
                 await reservationService.StartWashAsync(id, _user);
+
+                // Broadcast backlog update to all connected clients on SignalR
                 await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+
                 return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
             }
             catch (InvalidOperationException)
             {
@@ -369,14 +387,22 @@ namespace CarWash.PWA.Controllers
         [HttpPost("{id}/completewash")]
         public async Task<IActionResult> CompleteWash([FromRoute] string id)
         {
-            if (!_user.IsCarwashAdmin) return Forbid();
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-
             try
             {
                 await reservationService.CompleteWashAsync(id, _user);
+
+                // Broadcast backlog update to all connected clients on SignalR
                 await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+
                 return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
             }
             catch (InvalidOperationException)
             {
@@ -399,14 +425,22 @@ namespace CarWash.PWA.Controllers
         [HttpPost("{id}/confirmpayment")]
         public async Task<IActionResult> ConfirmPayment([FromRoute] string id)
         {
-            if (!_user.IsCarwashAdmin) return Forbid();
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-
             try
             {
                 await reservationService.ConfirmPaymentAsync(id, _user);
+
+                // Broadcast backlog update to all connected clients on SignalR
                 await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+
                 return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
             }
             catch (InvalidOperationException)
             {
@@ -430,46 +464,22 @@ namespace CarWash.PWA.Controllers
         [HttpPost("{id}/state/{state}")]
         public async Task<IActionResult> SetState([FromRoute] string id, [FromRoute] State state)
         {
-            if (!_user.IsCarwashAdmin) return Forbid();
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-
             try
             {
                 await reservationService.SetReservationStateAsync(id, state, _user);
+
+                // Broadcast backlog update to all connected clients on SignalR
                 await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+
                 return NoContent();
             }
-            catch (InvalidOperationException)
+            catch (ArgumentException ex)
             {
-                return NotFound();
+                return BadRequest(ex.Message);
             }
-        }
-
-        // POST: api/reservations/{id}/carwashcomment
-        /// <summary>
-        /// Add a carwash comment to a reservation
-        /// </summary>
-        /// <param name="id">reservation id</param>
-        /// <param name="comment">comment to be added</param>
-        /// <returns>No content</returns>
-        /// <response code="204">NoContent</response>
-        /// <response code="400">BadRequest if id or comment is null.</response>
-        /// <response code="401">Unauthorized</response>
-        /// <response code="403">Forbidden if user is not carwash admin.</response>
-        /// <response code="404">NotFound if reservation not found.</response>
-        [UserAction]
-        [HttpPost("{id}/carwashcomment")]
-        public async Task<IActionResult> AddCarwashComment([FromRoute] string id, [FromBody] string comment)
-        {
-            if (!_user.IsCarwashAdmin) return Forbid();
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-            if (comment == null) return BadRequest("Comment cannot be null.");
-
-            try
+            catch (UnauthorizedAccessException)
             {
-                await reservationService.AddCommentAsync(id, comment, _user);
-                await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
-                return NoContent();
+                return Forbid();
             }
             catch (InvalidOperationException)
             {
@@ -493,14 +503,18 @@ namespace CarWash.PWA.Controllers
         [HttpPost("{id}/comment")]
         public async Task<IActionResult> AddComment([FromRoute] string id, [FromBody] string comment)
         {
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-            if (comment == null) return BadRequest("Comment cannot be null.");
-
             try
             {
                 await reservationService.AddCommentAsync(id, comment, _user);
+
+                // Broadcast backlog update to all connected clients on SignalR
                 await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+
                 return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (UnauthorizedAccessException)
             {
@@ -528,14 +542,18 @@ namespace CarWash.PWA.Controllers
         [HttpPost("{id}/mpv")]
         public async Task<IActionResult> SetMpv([FromRoute] string id, [FromBody] bool mpv)
         {
-            if (!_user.IsCarwashAdmin) return Forbid();
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-
             try
             {
                 await reservationService.SetMpvAsync(id, mpv, _user);
+
+                // Broadcast backlog update to all connected clients on SignalR
                 await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+
                 return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (UnauthorizedAccessException)
             {
@@ -563,15 +581,18 @@ namespace CarWash.PWA.Controllers
         [HttpPost("{id}/services")]
         public async Task<IActionResult> UpdateServices([FromRoute] string id, [FromBody] List<int> services)
         {
-            if (!_user.IsCarwashAdmin) return Forbid();
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-            if (services == null) return BadRequest("Services param cannot be null.");
-
             try
             {
                 await reservationService.UpdateServicesAsync(id, services, _user);
+
+                // Broadcast backlog update to all connected clients on SignalR
                 await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+
                 return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (UnauthorizedAccessException)
             {
@@ -599,15 +620,18 @@ namespace CarWash.PWA.Controllers
         [HttpPost("{id}/location")]
         public async Task<IActionResult> UpdateLocation([FromRoute] string id, [FromBody] string location)
         {
-            if (!_user.IsCarwashAdmin) return Forbid();
-            if (id == null) return BadRequest("Reservation id cannot be null.");
-            if (location == null) return BadRequest("Location cannot be null.");
-
             try
             {
                 await reservationService.UpdateLocationAsync(id, location, _user);
+
+                // Broadcast backlog update to all connected clients on SignalR
                 await backlogHub.Clients.All.SendAsync(Constants.BacklogHubMethods.ReservationUpdated, id);
+
                 return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (UnauthorizedAccessException)
             {
@@ -621,44 +645,44 @@ namespace CarWash.PWA.Controllers
 
         // GET: api/reservations/not-available-dates-and-times
         /// <summary>
-        /// Get not available dates and times
+        /// Get the list of future dates that are not available
         /// </summary>
         /// <param name="daysAhead">Number of days ahead to check</param>
         /// <returns>Not available dates and times</returns>
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
         [UserAction]
-        [HttpGet, Route("not-available-dates-and-times")]
+        [HttpGet, Route("notavailabledates")]
         public async Task<NotAvailableDatesAndTimes> GetNotAvailableDatesAndTimes(int daysAhead = 365)
         {
             return await reservationService.GetNotAvailableDatesAndTimesAsync(_user, daysAhead);
         }
 
-        // GET: api/reservations/last-settings
+        // GET: api/reservations/lastsettings
         /// <summary>
-        /// Get last settings
+        /// Get some settings from the last reservation made by the user to be used as defaults for a new reservation
         /// </summary>
         /// <returns>Last settings</returns>
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
         [UserAction]
-        [HttpGet, Route("last-settings")]
+        [HttpGet, Route("lastsettings")]
         public async Task<ActionResult<LastSettings>> GetLastSettings()
         {
             var lastSettings = await reservationService.GetLastSettingsAsync(_user);
-            return lastSettings != null ? Ok(lastSettings) : NotFound();
+
+            return lastSettings != null ? Ok(lastSettings) : NoContent();
         }
 
-        // GET: api/reservations/capacity
+        // GET: api/reservations/reservationcapacity
         /// <summary>
-        /// Get reservation capacity for a date
-        /// </summary>
+        /// Gets a list of slots and their free reservation capacity on a given date
         /// <param name="date">Date to check</param>
         /// <returns>Reservation capacity</returns>
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
         [UserAction]
-        [HttpGet, Route("capacity")]
+        [HttpGet, Route("reservationcapacity")]
         public async Task<ActionResult<IEnumerable<ReservationCapacity>>> GetReservationCapacity(DateTime date)
         {
             var capacity = await reservationService.GetReservationCapacityAsync(date);
@@ -667,11 +691,11 @@ namespace CarWash.PWA.Controllers
 
         // GET: api/reservations/export
         /// <summary>
-        /// Export reservations to Excel
+        /// Export a list of reservations to Excel for a given timespan
         /// </summary>
-        /// <param name="startDate">Start date</param>
-        /// <param name="endDate">End date</param>
-        /// <returns>Excel file</returns>
+        /// <param name="startDate">start date (default: a month before today)</param>
+        /// <param name="endDate">end date (default: today)</param>
+        /// <returns>An Excel file of the list of reservations</returns>
         /// <response code="200">OK</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="403">Forbidden if user is not admin.</response>
@@ -685,7 +709,7 @@ namespace CarWash.PWA.Controllers
                 var startDateNonNull = startDate ?? DateTime.UtcNow.Date.AddMonths(-1);
                 var endDateNonNull = endDate ?? DateTime.UtcNow.Date;
 
-                var excelData = await reservationService.ExportReservationsAsync(_user, startDate, endDate);
+                var excelData = await reservationService.ExportReservationsAsync(_user, startDateNonNull, endDateNonNull);
                 var stream = new MemoryStream(excelData);
 
                 return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

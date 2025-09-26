@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -67,8 +68,9 @@ namespace CarWash.ClassLibrary.Services
             return await context.Reservation
                 .Include(r => r.User)
                 .Include(r => r.KeyLockerBox)
-                .Where(r => r.User!.Company == currentUser.Company)
+                .Where(r => r.User!.Company == currentUser.Company && r.UserId != currentUser.Id)
                 .OrderByDescending(r => r.StartDate)
+                .Take(100)
                 .ToListAsync();
         }
 
@@ -80,9 +82,7 @@ namespace CarWash.ClassLibrary.Services
             return await context.Reservation
                 .Include(r => r.User)
                 .Include(r => r.KeyLockerBox)
-                .Where(r => r.State == State.DropoffAndLocationConfirmed ||
-                           r.State == State.ReminderSentWaitingForKey ||
-                           r.State == State.WashInProgress)
+                .Where(r => r.StartDate.Date >= DateTime.UtcNow.Date.AddDays(-3) || r.State != State.Done)
                 .OrderBy(r => r.StartDate)
                 .ToListAsync();
         }
@@ -99,16 +99,16 @@ namespace CarWash.ClassLibrary.Services
             reservation.CreatedOn = DateTime.UtcNow;
 
             // Validate the reservation
-            var validationResult = await reservationValidator.ValidateReservationAsync(reservation, false, currentUser);
+            var validationResult = await reservationValidator.ValidateReservationAsync(reservation, isUpdate: false, currentUser);
             if (!validationResult.IsValid) throw new ReservationValidationExeption(validationResult.ErrorMessage);
 
-            if (reservation.Comments.Count == 1)
+            if (reservation.Comments?.Count == 1)
             {
                 reservation.Comments[0].UserId = currentUser.Id;
                 reservation.Comments[0].Timestamp = DateTime.UtcNow;
                 reservation.Comments[0].Role = CommentRole.User;
             }
-            if (reservation.Comments.Count > 1)
+            if (reservation.Comments?.Count > 1)
             {
                 telemetryClient.TrackTrace(
                     "BadRequest: Only one comment can be added when creating a reservation.",
@@ -116,14 +116,14 @@ namespace CarWash.ClassLibrary.Services
                     new Dictionary<string, string>
                     {
                         { "UserId", reservation.UserId },
-                        { "Comments", reservation.CommentsJson }
+                        { "Comments", reservation.CommentsJson ?? "" }
                     });
                 throw new ArgumentException("Only one comment can be added when creating a reservation.");
             }
 
             // EndDate should already be calculated during validation
 
-            // Time requirement calculation
+            // TODO: Simplify Time requirement calculation
             reservation.TimeRequirement = reservation.Services.Contains(Constants.ServiceType.Carpet) ?
                 configuration.CurrentValue.Reservation.CarpetCleaningMultiplier * configuration.CurrentValue.Reservation.TimeUnit :
                 configuration.CurrentValue.Reservation.TimeUnit;
@@ -132,7 +132,7 @@ namespace CarWash.ClassLibrary.Services
             reservation.Mpv = await IsMpvAsync(reservation.VehiclePlateNumber);
 
             // Create calendar event
-            await CreateCalendarEventAsync(reservation, currentUser);
+            reservation.OutlookEventId = await CreateCalendarEventAsync(reservation, currentUser);
 
             context.Reservation.Add(reservation);
             await context.SaveChangesAsync();
@@ -154,7 +154,7 @@ namespace CarWash.ClassLibrary.Services
         public async Task<Reservation> UpdateReservationAsync(Reservation reservation, User currentUser)
         {
             // Validate the reservation
-            var validationResult = await reservationValidator.ValidateReservationAsync(reservation, true, currentUser, reservation.Id);
+            var validationResult = await reservationValidator.ValidateReservationAsync(reservation, isUpdate: true, currentUser, reservation.Id);
             if (!validationResult.IsValid) throw new ReservationValidationExeption(validationResult.ErrorMessage);
 
             var dbReservation = await context.Reservation.FindAsync(reservation.Id) ?? throw new InvalidOperationException("Reservation not found.");
@@ -201,21 +201,7 @@ namespace CarWash.ClassLibrary.Services
                 dbReservation.OutlookEventId = await calendarService.UpdateEventAsync(dbReservation);
             }
 
-            try
-            {
-                await context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await context.Reservation.AnyAsync(e => e.Id == reservation.Id))
-                {
-                    throw new InvalidOperationException();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            await SaveReservationChangesAsync(reservation);
 
             // Track event
             telemetryClient.TrackEvent(
@@ -233,9 +219,8 @@ namespace CarWash.ClassLibrary.Services
         /// <inheritdoc />
         public async Task<Reservation> DeleteReservationAsync(string reservationId, User currentUser)
         {
-            var reservation = await context.Reservation.Include(r => r.User).SingleOrDefaultAsync(r => r.Id == reservationId);
-            if (reservation == null)
-                throw new InvalidOperationException("Reservation not found.");
+            var reservation = await context.Reservation.Include(r => r.User).SingleOrDefaultAsync(r => r.Id == reservationId)
+                ?? throw new InvalidOperationException("Reservation not found.");
 
             if (reservation.UserId != currentUser.Id && !currentUser.IsAdmin && !currentUser.IsCarwashAdmin)
                 throw new UnauthorizedAccessException("Cannot delete reservation for other users.");
@@ -273,8 +258,7 @@ namespace CarWash.ClassLibrary.Services
 
             reservation.State = State.DropoffAndLocationConfirmed;
             reservation.Location = location;
-
-            await context.SaveChangesAsync();
+            await SaveReservationChangesAsync(reservation);
 
             // Track event
             telemetryClient.TrackEvent(
@@ -287,6 +271,7 @@ namespace CarWash.ClassLibrary.Services
                 });
         }
 
+        /// <inheritdoc />
         public async Task<Reservation> ConfirmDropoffByEmail(string email, string location, string? vehiclePlateNumber)
         {
             ArgumentNullException.ThrowIfNull(email);
@@ -296,6 +281,7 @@ namespace CarWash.ClassLibrary.Services
                 ?? throw new InvalidOperationException($"No user found with email address '{email}'.");
 
             var reservations = await context.Reservation
+                .AsNoTracking()
                 .Include(r => r.User)
                 .Where(r => r.User!.Email == user.Email && (r.State == State.SubmittedNotActual || r.State == State.ReminderSentWaitingForKey))
                 .OrderBy(r => r.StartDate)
@@ -323,7 +309,13 @@ namespace CarWash.ClassLibrary.Services
                 reservation = reservations.Single(r => r.State == State.ReminderSentWaitingForKey);
                 reservationResolution = "Only one reservation is waiting for the key.";
             }
-            // Only one today - probably fine
+            // One where we are waiting for the key and is today - eg. there's another one in the past where the key was not dropped off and nobody deleted it
+            else if (reservations.Count(r => r.State == State.ReminderSentWaitingForKey && r.StartDate.Date == DateTime.UtcNow.Date) == 1)
+            {
+                reservation = reservations.Single(r => r.State == State.ReminderSentWaitingForKey && r.StartDate.Date == DateTime.UtcNow.Date);
+                reservationResolution = "Only one reservation TODAY is waiting for the key.";
+            }
+            // Only one active reservation today - eg. user has two reservations, one today, one in the future and on the morning drops off the keys before the reminder
             else if (reservations.Count(r => r.StartDate.Date == DateTime.UtcNow.Date) == 1)
             {
                 reservation = reservations.Single(r => r.StartDate.Date == DateTime.UtcNow.Date);
@@ -340,11 +332,19 @@ namespace CarWash.ClassLibrary.Services
 
             await ConfirmDropoffAsync(reservation.Id, location, reservation.User!);
 
-            telemetryClient.TrackEvent("ConfirmDropoffByEmail", new Dictionary<string, string>
-            {
-                { "Email", email },
-                { "Resolution", reservationResolution }
-            });
+            telemetryClient.TrackEvent(
+                "Key dropoff was confirmed by 3rd party service.",
+                new Dictionary<string, string>
+                {
+                    { "Reservation ID", reservation.Id },
+                    { "Reservation user ID", reservation.UserId },
+                    { "Reservation resolution method", reservationResolution },
+                    { "Number of active reservation of the user", reservations.Count.ToString() },
+                },
+                new Dictionary<string, double>
+                {
+                    { "Service dropoff", 1 },
+                });
 
             return reservation;
         }
@@ -352,18 +352,16 @@ namespace CarWash.ClassLibrary.Services
         /// <inheritdoc />
         public async Task StartWashAsync(string reservationId, User currentUser)
         {
+            ArgumentNullException.ThrowIfNull(reservationId);
+
             if (!currentUser.IsCarwashAdmin)
                 throw new UnauthorizedAccessException("Only carwash admins can start wash.");
 
-            if (string.IsNullOrEmpty(reservationId))
-                throw new ArgumentException("Reservation id cannot be null.");
-
-            var reservation = await context.Reservation.FindAsync(reservationId);
-            if (reservation == null)
-                throw new InvalidOperationException("Reservation not found.");
+            var reservation = await context.Reservation.FindAsync(reservationId)
+                ?? throw new InvalidOperationException("Reservation not found.");
 
             reservation.State = State.WashInProgress;
-            await context.SaveChangesAsync();
+            await SaveReservationChangesAsync(reservation);
 
             // Send bot message
             await botService.SendWashStartedMessageAsync(reservation);
@@ -372,22 +370,19 @@ namespace CarWash.ClassLibrary.Services
         /// <inheritdoc />
         public async Task CompleteWashAsync(string reservationId, User currentUser)
         {
+            ArgumentNullException.ThrowIfNull(reservationId);
+
             if (!currentUser.IsCarwashAdmin)
                 throw new UnauthorizedAccessException("Only carwash admins can complete wash.");
-
-            if (string.IsNullOrEmpty(reservationId))
-                throw new ArgumentException("Reservation id cannot be null.");
 
             var reservation = await context.Reservation
                 .Include(r => r.User)
                 .Include(r => r.KeyLockerBox)
-                .SingleOrDefaultAsync(r => r.Id == reservationId);
-
-            if (reservation == null)
-                throw new InvalidOperationException("Reservation not found.");
+                .SingleOrDefaultAsync(r => r.Id == reservationId)
+                ?? throw new InvalidOperationException("Reservation not found.");
 
             reservation.State = reservation.Private ? State.NotYetPaid : State.Done;
-            await context.SaveChangesAsync();
+            await SaveReservationChangesAsync(reservation);
 
             // Send notification
             await SendCompletionNotificationAsync(reservation);
@@ -399,58 +394,51 @@ namespace CarWash.ClassLibrary.Services
         /// <inheritdoc />
         public async Task ConfirmPaymentAsync(string reservationId, User currentUser)
         {
+            ArgumentNullException.ThrowIfNull(reservationId);
+
             if (!currentUser.IsCarwashAdmin)
                 throw new UnauthorizedAccessException("Only carwash admins can confirm payment.");
 
-            if (string.IsNullOrEmpty(reservationId))
-                throw new ArgumentException("Reservation id cannot be null.");
-
-            var reservation = await context.Reservation.FindAsync(reservationId);
-            if (reservation == null)
-                throw new InvalidOperationException("Reservation not found.");
+            var reservation = await context.Reservation.FindAsync(reservationId)
+                ?? throw new InvalidOperationException("Reservation not found.");
 
             if (reservation.State != State.NotYetPaid)
                 throw new InvalidOperationException("Reservation state is not 'Not yet paid'.");
 
             reservation.State = State.Done;
-            await context.SaveChangesAsync();
+            await SaveReservationChangesAsync(reservation);
         }
 
         /// <inheritdoc />
         public async Task SetReservationStateAsync(string reservationId, State state, User currentUser)
         {
+            ArgumentNullException.ThrowIfNull(reservationId);
+
             if (!currentUser.IsCarwashAdmin)
                 throw new UnauthorizedAccessException("Only carwash admins can set reservation state.");
 
-            if (string.IsNullOrEmpty(reservationId))
-                throw new ArgumentException("Reservation id cannot be null.");
-
-            var reservation = await context.Reservation.FindAsync(reservationId);
-            if (reservation == null)
-                throw new InvalidOperationException("Reservation not found.");
+            var reservation = await context.Reservation.FindAsync(reservationId)
+                ?? throw new InvalidOperationException("Reservation not found.");
 
             reservation.State = state;
-            await context.SaveChangesAsync();
+            await SaveReservationChangesAsync(reservation);
         }
 
         /// <inheritdoc />
         public async Task AddCommentAsync(string reservationId, string comment, User currentUser)
         {
-            if (string.IsNullOrEmpty(reservationId))
-                throw new ArgumentException("Reservation id cannot be null.");
-            if (string.IsNullOrEmpty(comment))
-                throw new ArgumentException("Comment cannot be null.");
+            ArgumentNullException.ThrowIfNull(reservationId);
+            ArgumentNullException.ThrowIfNull(comment);
 
-            var reservation = await context.Reservation.Include(r => r.User).SingleOrDefaultAsync(r => r.Id == reservationId);
-            if (reservation == null)
-                throw new InvalidOperationException("Reservation not found.");
+            var reservation = await context.Reservation.Include(r => r.User).SingleOrDefaultAsync(r => r.Id == reservationId)
+                ?? throw new InvalidOperationException("Reservation not found.");
 
             if (reservation.UserId != currentUser.Id)
             {
                 if (!currentUser.IsAdmin && !currentUser.IsCarwashAdmin)
                     throw new UnauthorizedAccessException("Cannot add comment to other users' reservations.");
 
-                if (currentUser.IsAdmin && reservation.User.Company != currentUser.Company)
+                if (currentUser.IsAdmin && reservation.User!.Company != currentUser.Company)
                     throw new UnauthorizedAccessException("Cannot add comment to reservations from other companies.");
             }
 
@@ -462,111 +450,64 @@ namespace CarWash.ClassLibrary.Services
                 Message = comment
             });
 
-            await context.SaveChangesAsync();
+            await SaveReservationChangesAsync(reservation);
 
             // Send notification if CarWash admin adds comment
             if (currentUser.IsCarwashAdmin)
             {
                 await SendCommentNotificationAsync(reservation, comment);
+
                 await botService.SendCarWashCommentLeftMessageAsync(reservation);
             }
-        }
 
-        /// <inheritdoc />
-        public async Task<bool> IsMpvAsync(string vehiclePlateNumber)
-        {
-            return await context.Reservation
-                .OrderByDescending(r => r.StartDate)
-                .Where(r => r.VehiclePlateNumber == vehiclePlateNumber)
-                .Select(r => r.Mpv)
-                .FirstOrDefaultAsync();
+            //TODO: Send push notification to carwash admins if user adds comment
         }
 
         /// <inheritdoc />
         public async Task SetMpvAsync(string reservationId, bool mpv, User currentUser)
         {
+            ArgumentNullException.ThrowIfNull(reservationId);
+
             if (!currentUser.IsCarwashAdmin)
                 throw new UnauthorizedAccessException("Only carwash admins can set MPV flag");
 
-            if (string.IsNullOrEmpty(reservationId))
-                throw new ArgumentException("Reservation id cannot be null.");
-
-            var reservation = await context.Reservation.FindAsync(reservationId);
-            if (reservation == null)
-                throw new InvalidOperationException("Reservation not found");
+            var reservation = await context.Reservation.FindAsync(reservationId)
+                ?? throw new InvalidOperationException("Reservation not found");
 
             reservation.Mpv = mpv;
-
-            try
-            {
-                await context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await context.Reservation.AnyAsync(e => e.Id == reservationId))
-                    throw new InvalidOperationException("Reservation not found");
-                throw;
-            }
+            await SaveReservationChangesAsync(reservation);
         }
 
         /// <inheritdoc />
         public async Task UpdateServicesAsync(string reservationId, List<int> services, User currentUser)
         {
+            ArgumentNullException.ThrowIfNull(reservationId);
+            ArgumentNullException.ThrowIfNull(services);
+
             if (!currentUser.IsCarwashAdmin)
                 throw new UnauthorizedAccessException("Only carwash admins can update services");
 
-            if (string.IsNullOrEmpty(reservationId))
-                throw new ArgumentException("Reservation id cannot be null.");
-
-            if (services == null)
-                throw new ArgumentException("Services param cannot be null.");
-
-            var reservation = await context.Reservation.FindAsync(reservationId);
-            if (reservation == null)
-                throw new InvalidOperationException("Reservation not found");
+            var reservation = await context.Reservation.FindAsync(reservationId)
+                ?? throw new InvalidOperationException("Reservation not found");
 
             reservation.Services = services;
-
-            try
-            {
-                await context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await context.Reservation.AnyAsync(e => e.Id == reservationId))
-                    throw new InvalidOperationException("Reservation not found");
-                throw;
-            }
+            await SaveReservationChangesAsync(reservation);
         }
 
         /// <inheritdoc />
         public async Task UpdateLocationAsync(string reservationId, string location, User currentUser)
         {
+            ArgumentNullException.ThrowIfNull(reservationId);
+            ArgumentNullException.ThrowIfNull(location);
+
             if (!currentUser.IsCarwashAdmin)
                 throw new UnauthorizedAccessException("Only carwash admins can update location");
 
-            if (string.IsNullOrEmpty(reservationId))
-                throw new ArgumentException("Reservation id cannot be null.");
-
-            if (string.IsNullOrEmpty(location))
-                throw new ArgumentException("New location cannot be null.");
-
-            var reservation = await context.Reservation.FindAsync(reservationId);
-            if (reservation == null)
-                throw new InvalidOperationException("Reservation not found");
+            var reservation = await context.Reservation.FindAsync(reservationId)
+                ?? throw new InvalidOperationException("Reservation not found");
 
             reservation.Location = location;
-
-            try
-            {
-                await context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await context.Reservation.AnyAsync(e => e.Id == reservationId))
-                    throw new InvalidOperationException("Reservation not found");
-                throw;
-            }
+            await SaveReservationChangesAsync(reservation);
         }
 
         /// <inheritdoc />
@@ -654,6 +595,95 @@ namespace CarWash.ClassLibrary.Services
                 })
                 .Select(d => d.DateTime)
                 .ToList();
+
+            // Check if a slot has already started today
+            foreach (var slot in configuration.CurrentValue.Slots)
+            {
+                var now = DateTime.UtcNow;
+                var timeZoneId = configuration.CurrentValue.Reservation.TimeZone;
+                DateTime slotStartTimeUtc;
+
+                if (timeZoneId == "UTC")
+                {
+                    // For UTC timezone, create time directly
+                    slotStartTimeUtc = now.Date.Add(slot.StartTime);
+                }
+                else
+                {
+                    // Convert current UTC time to provider's timezone
+                    var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+                    var nowInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(now, providerTimeZone);
+                    var todayInProviderZone = nowInProviderZone.Date;
+                    var slotStartTimeInProviderZone = todayInProviderZone.Add(slot.StartTime);
+                    slotStartTimeUtc = TimeZoneInfo.ConvertTimeToUtc(slotStartTimeInProviderZone, providerTimeZone);
+                }
+
+                if (!notAvailableTimes.Contains(slotStartTimeUtc) && slotStartTimeUtc.AddMinutes(configuration.CurrentValue.Reservation.MinutesToAllowReserveInPast) < DateTime.UtcNow)
+                {
+                    notAvailableTimes.Add(slotStartTimeUtc);
+                }
+            }
+            #endregion
+
+            #region Check blockers
+            var blockers = await context.Blocker
+                .Where(b => b.EndDate >= DateTime.UtcNow)
+                .ToListAsync();
+
+            foreach (var blocker in blockers)
+            {
+                Debug.Assert(blocker.EndDate != null, "blocker.EndDate != null");
+                if (blocker.EndDate == null) continue;
+
+                var dateIterator = blocker.StartDate.Date;
+                while (dateIterator <= ((DateTime)blocker.EndDate).Date)
+                {
+                    // Don't bother with the past part of the blocker
+                    if (dateIterator < DateTime.UtcNow.Date)
+                    {
+                        dateIterator = dateIterator.AddDays(1);
+                        continue;
+                    }
+
+                    var dateBlocked = true;
+
+                    foreach (var slot in configuration.CurrentValue.Slots)
+                    {
+                        // Convert slot times from provider timezone to UTC for the iteration date
+                        var timeZoneId = configuration.CurrentValue.Reservation.TimeZone;
+                        DateTime slotStart, slotEnd;
+
+                        if (timeZoneId == "UTC")
+                        {
+                            // For UTC timezone, create times directly
+                            slotStart = dateIterator.Date.Add(slot.StartTime);
+                            slotEnd = dateIterator.Date.Add(slot.EndTime);
+                        }
+                        else
+                        {
+                            var providerTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+                            var dateInProviderZone = TimeZoneInfo.ConvertTimeFromUtc(dateIterator, providerTimeZone).Date;
+                            var slotStartInProviderZone = dateInProviderZone.Add(slot.StartTime);
+                            var slotEndInProviderZone = dateInProviderZone.Add(slot.EndTime);
+                            slotStart = TimeZoneInfo.ConvertTimeToUtc(slotStartInProviderZone, providerTimeZone);
+                            slotEnd = TimeZoneInfo.ConvertTimeToUtc(slotEndInProviderZone, providerTimeZone);
+                        }
+
+                        if (slotStart > blocker.StartDate && slotEnd < blocker.EndDate && !notAvailableTimes.Contains(slotStart))
+                        {
+                            notAvailableTimes.Add(slotStart);
+                        }
+                        else
+                        {
+                            dateBlocked = false;
+                        }
+                    }
+
+                    if (dateBlocked && !notAvailableDates.Contains(dateIterator)) notAvailableDates.Add(dateIterator);
+
+                    dateIterator = dateIterator.AddDays(1);
+                }
+            }
             #endregion
 
             return new NotAvailableDatesAndTimes(
@@ -746,34 +776,29 @@ namespace CarWash.ClassLibrary.Services
         }
 
         /// <inheritdoc />
-        public async Task<byte[]> ExportReservationsAsync(User currentUser, DateTime? startDate = null, DateTime? endDate = null)
+        public async Task<byte[]> ExportReservationsAsync(User currentUser, DateTime startDate, DateTime endDate)
         {
-            var startDateNonNull = startDate ?? DateTime.UtcNow.Date.AddMonths(-1);
-            var endDateNonNull = endDate ?? DateTime.UtcNow.Date;
-
             List<Reservation> reservations;
 
             if (currentUser.IsCarwashAdmin)
                 reservations = await context.Reservation
                     .Include(r => r.User)
-                    .Where(r => r.StartDate.Date >= startDateNonNull.Date && r.StartDate.Date <= endDateNonNull.Date)
+                    .Where(r => r.StartDate.Date >= startDate.Date && r.StartDate.Date <= endDate.Date)
                     .OrderBy(r => r.StartDate)
                     .ToListAsync();
             else if (currentUser.IsAdmin)
                 reservations = await context.Reservation
                     .Include(r => r.User)
-                    .Where(r => r.User.Company == currentUser.Company && r.StartDate.Date >= startDateNonNull.Date &&
-                                r.StartDate.Date <= endDateNonNull.Date)
+                    .Where(r => r.User.Company == currentUser.Company && r.StartDate.Date >= startDate.Date &&
+                                r.StartDate.Date <= endDate.Date)
                     .OrderBy(r => r.StartDate)
                     .ToListAsync();
-            else
-                throw new UnauthorizedAccessException("Only admins or carwash admins can export reservations");
+            else throw new UnauthorizedAccessException("Only admins or carwash admins can export reservations");
 
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             using var package = new ExcelPackage();
-
             // Add a new worksheet to the empty workbook
-            var worksheet = package.Workbook.Worksheets.Add($"{startDateNonNull.Year}-{startDateNonNull.Month}");
+            var worksheet = package.Workbook.Worksheets.Add($"{startDate.Year}-{startDate.Month}");
 
             // Add the headers
             worksheet.Cells[1, 1].Value = "Date";
@@ -794,67 +819,116 @@ namespace CarWash.ClassLibrary.Services
             worksheet.Cells[1, 16].Value = "Carwash comment";
             worksheet.Cells[1, 17].Value = "Price (computed)";
 
-            // Add the data
-            for (var i = 0; i < reservations.Count; i++)
+            // Add values
+            var i = 2;
+            foreach (var reservation in reservations)
             {
-                var reservation = reservations[i];
-                worksheet.Cells[i + 2, 1].Value = reservation.StartDate.ToString("yyyy-MM-dd");
-                worksheet.Cells[i + 2, 2].Value = reservation.StartDate.ToString("HH:mm");
-                worksheet.Cells[i + 2, 3].Value = reservation.EndDate?.ToString("HH:mm");
-                worksheet.Cells[i + 2, 4].Value = reservation.User?.Company;
-                worksheet.Cells[i + 2, 5].Value = reservation.User?.FullName;
-                worksheet.Cells[i + 2, 6].Value = reservation.Private ? reservation.User?.Email : "";
-                worksheet.Cells[i + 2, 7].Value = reservation.Private ? reservation.User?.PhoneNumber : "";
-                worksheet.Cells[i + 2, 8].Value = reservation.Private ? reservation.User?.BillingName : "";
-                worksheet.Cells[i + 2, 9].Value = reservation.Private ? reservation.User?.BillingAddress : "";
-                worksheet.Cells[i + 2, 10].Value = reservation.Private ? reservation.User?.PaymentMethod.ToString() : "";
-                worksheet.Cells[i + 2, 11].Value = reservation.VehiclePlateNumber;
-                worksheet.Cells[i + 2, 12].Value = reservation.Mpv.ToString();
-                worksheet.Cells[i + 2, 13].Value = reservation.Private.ToString();
-                worksheet.Cells[i + 2, 14].Value = reservation.GetServiceNames(configuration.CurrentValue);
-                worksheet.Cells[i + 2, 15].Value = reservation.CommentsJson;
-                worksheet.Cells[i + 2, 16].Value = ""; // CarwashComment is not available - leaving empty
-                worksheet.Cells[i + 2, 17].Value = reservation.GetPrice(configuration.CurrentValue);
+                worksheet.Cells[i, 1].Style.Numberformat.Format = "yyyy-mm-dd";
+                worksheet.Cells[i, 1].Value = reservation.StartDate.Date;
+
+                worksheet.Cells[i, 2].Style.Numberformat.Format = "hh:mm";
+                worksheet.Cells[i, 2].Value = reservation.StartDate.TimeOfDay;
+
+                worksheet.Cells[i, 3].Style.Numberformat.Format = "hh:mm";
+                worksheet.Cells[i, 3].Value = reservation.EndDate?.TimeOfDay;
+
+                worksheet.Cells[i, 4].Value = reservation.User.Company;
+                worksheet.Cells[i, 5].Value = reservation.User.FullName;
+
+                worksheet.Cells[i, 6].Value = reservation.Private ? reservation.User.Email : "";
+                worksheet.Cells[i, 7].Value = reservation.Private ? reservation.User.PhoneNumber : "";
+                worksheet.Cells[i, 8].Value = reservation.Private ? reservation.User.BillingName : "";
+                worksheet.Cells[i, 9].Value = reservation.Private ? reservation.User.BillingAddress : "";
+                worksheet.Cells[i, 10].Value = reservation.Private ? reservation.User.PaymentMethod : "";
+
+                worksheet.Cells[i, 11].Value = reservation.VehiclePlateNumber;
+                worksheet.Cells[i, 12].Value = reservation.Mpv;
+                worksheet.Cells[i, 13].Value = reservation.Private;
+                worksheet.Cells[i, 14].Value = reservation.GetServiceNames(configuration.CurrentValue);
+                worksheet.Cells[i, 15].Value = reservation.CommentsJson;
+                worksheet.Cells[i, 17].Value = reservation.GetPrice(configuration.CurrentValue);
+
+                i++;
             }
 
-            return package.GetAsByteArray();
+            // Format as table
+            var dataRange = worksheet.Cells[1, 1, i == 2 ? i : i - 1, 17]; //cannot create table with only one row
+            var table = worksheet.Tables.Add(dataRange, $"reservations_{startDate.Year}_{startDate.Month}");
+            table.ShowTotal = false;
+            table.ShowHeader = true;
+            table.ShowFilter = true;
+
+            // Column auto-width
+            worksheet.Column(1).AutoFit();
+            worksheet.Column(2).AutoFit();
+            worksheet.Column(3).AutoFit();
+            worksheet.Column(4).AutoFit();
+            worksheet.Column(5).AutoFit();
+            worksheet.Column(6).AutoFit();
+            worksheet.Column(7).AutoFit();
+            worksheet.Column(8).AutoFit();
+            worksheet.Column(9).AutoFit();
+            worksheet.Column(10).AutoFit();
+            worksheet.Column(11).AutoFit();
+            worksheet.Column(12).AutoFit();
+            worksheet.Column(13).AutoFit();
+            // worksheet.Column(14).AutoFit(); //services
+            // don't do it for comment fields
+            worksheet.Column(17).AutoFit();
+
+            // Pivot table
+            var pivotSheet = package.Workbook.Worksheets.Add($"{startDate.Year}-{startDate.Month} pivot");
+            var pivot = pivotSheet.PivotTables.Add(pivotSheet.Cells[1, 1], dataRange, "Employee pivot");
+            if (currentUser.IsCarwashAdmin) pivot.RowFields.Add(pivot.Fields["Company"]);
+            pivot.RowFields.Add(pivot.Fields["Name"]);
+            pivot.DataFields.Add(pivot.Fields["Price (computed)"]);
+            pivot.DataOnRows = true;
+
+            return await package.GetAsByteArrayAsync();
         }
 
         #region Private Helper Methods
 
-        private async Task CreateCalendarEventAsync(Reservation reservation, User currentUser)
+        private async Task<bool> IsMpvAsync(string vehiclePlateNumber)
         {
-            if (reservation.UserId == currentUser.Id)
+            return await context.Reservation
+                .OrderByDescending(r => r.StartDate)
+                .Where(r => r.VehiclePlateNumber == vehiclePlateNumber)
+                .Select(r => r.Mpv)
+                .FirstOrDefaultAsync();
+        }
+
+        private async Task<string?> CreateCalendarEventAsync(Reservation reservation, User currentUser)
+        {
+            var user = (reservation.UserId == currentUser.Id) ? currentUser : await context.Users.FindAsync(reservation.UserId);
+
+            if (user == null) return null;
+
+            if (user.CalendarIntegration)
             {
-                if (currentUser.CalendarIntegration)
+                var timer = DateTime.UtcNow;
+                try
                 {
-                    reservation.User = currentUser;
-                    reservation.OutlookEventId = await calendarService.CreateEventAsync(reservation);
+                    reservation.User = user;
+                    var outlookEventId = await calendarService.CreateEventAsync(reservation);
+                    telemetryClient.TrackDependency("CalendarService", "CreateEvent", new { ReservationId = reservation.Id, UserId = user.Id }.ToString(), timer, DateTime.UtcNow - timer, success: true);
+
+                    return outlookEventId;
+                }
+                catch (Exception e)
+                {
+                    telemetryClient.TrackDependency("CalendarService", "CreateEvent", new { ReservationId = reservation.Id, UserId = user.Id }.ToString(), timer, DateTime.UtcNow - timer, success: false);
+                    telemetryClient.TrackException(e);
                 }
             }
-            else
-            {
-                var user = await context.Users.FindAsync(reservation.UserId);
-                if (user?.CalendarIntegration == true)
-                {
-                    var timer = DateTime.UtcNow;
-                    try
-                    {
-                        reservation.User = user;
-                        reservation.OutlookEventId = await calendarService.CreateEventAsync(reservation);
-                        telemetryClient.TrackDependency("CalendarService", "CreateEvent", new { ReservationId = reservation.Id, UserId = user.Id }.ToString(), timer, DateTime.UtcNow - timer, success: true);
-                    }
-                    catch (Exception e)
-                    {
-                        telemetryClient.TrackDependency("CalendarService", "CreateEvent", new { ReservationId = reservation.Id, UserId = user.Id }.ToString(), timer, DateTime.UtcNow - timer, success: false);
-                        telemetryClient.TrackException(e);
-                    }
-                }
-            }
+
+            return null;
         }
 
         private async Task SendCompletionNotificationAsync(Reservation reservation)
         {
+            ArgumentNullException.ThrowIfNull(reservation.User);
+
             switch (reservation.User.NotificationChannel)
             {
                 case NotificationChannel.Disabled:
@@ -868,7 +942,7 @@ namespace CarWash.ClassLibrary.Services
                     };
                     try
                     {
-                        await pushService.Send(reservation.UserId, notification);
+                        await pushService.Send(reservation.UserId!, notification);
                         break;
                     }
                     catch (PushService.NoActivePushSubscriptionException)
@@ -880,24 +954,27 @@ namespace CarWash.ClassLibrary.Services
                     {
                         telemetryClient.TrackException(e);
                     }
+                    // If push fails, fallback to email
                     goto case NotificationChannel.Email;
                 case NotificationChannel.NotSet:
                 case NotificationChannel.Email:
                     var email = new Email
                     {
-                        To = reservation.User.Email,
+                        To = reservation.User.Email!,
                         Subject = reservation.Private ? "Your car is ready! Don't forget to pay!" : "Your car is ready!",
                         Body = $"You can find it here: {reservation.Location}" + (reservation.KeyLockerBox != null ? $" (Locker: {reservation.KeyLockerBox.Name})" : ""),
                     };
                     await emailService.Send(email, TimeSpan.FromMinutes(1));
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(reservation.User.NotificationChannel));
             }
         }
 
         private async Task SendCommentNotificationAsync(Reservation reservation, string comment)
         {
+            ArgumentNullException.ThrowIfNull(reservation.User);
+
             switch (reservation.User.NotificationChannel)
             {
                 case NotificationChannel.Disabled:
@@ -911,7 +988,7 @@ namespace CarWash.ClassLibrary.Services
                     };
                     try
                     {
-                        await pushService.Send(reservation.UserId, notification);
+                        await pushService.Send(reservation.UserId!, notification);
                         break;
                     }
                     catch (PushService.NoActivePushSubscriptionException)
@@ -923,19 +1000,39 @@ namespace CarWash.ClassLibrary.Services
                     {
                         telemetryClient.TrackException(e);
                     }
+                    // If push fails, fallback to email
                     goto case NotificationChannel.Email;
                 case NotificationChannel.NotSet:
                 case NotificationChannel.Email:
                     var email = new Email
                     {
-                        To = reservation.User.Email,
+                        To = reservation.User.Email!,
                         Subject = "CarWash has left a comment on your reservation",
                         Body = comment + $"\n\n<a href=\"{configuration.CurrentValue.ConnectionStrings.BaseUrl}\">Reply</a>\n\nPlease do not reply to this email, messages to service providers can only be sent within the app. Kindly log in to your account and communicate directly through the in-app messaging feature.",
                     };
                     await emailService.Send(email, TimeSpan.FromMinutes(1));
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(reservation.User.NotificationChannel));
+            }
+        }
+
+        private async Task SaveReservationChangesAsync(Reservation reservation)
+        {
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await context.Reservation.AnyAsync(e => e.Id == reservation.Id))
+                {
+                    throw new InvalidOperationException();
+                }
+                else
+                {
+                    throw;
+                }
             }
         }
 

@@ -1633,7 +1633,7 @@ namespace CarWash.PWA.Tests
             var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
             const string COMMENT = "test";
 
-            var result = await controller.AddCarwashComment(reservation.Id, COMMENT);
+            var result = await controller.AddComment(reservation.Id, COMMENT);
 
             Assert.IsType<NoContentResult>(result);
             var updatedReservation = await dbContext.Reservation.FindAsync(reservation.Id);
@@ -1649,7 +1649,7 @@ namespace CarWash.PWA.Tests
             var controller = CreateControllerStub(dbContext);
             const string COMMENT = "test";
 
-            var result = await controller.AddCarwashComment(reservation.Id, COMMENT);
+            var result = await controller.AddComment(reservation.Id, COMMENT);
 
             Assert.IsType<ForbidResult>(result);
         }
@@ -1661,7 +1661,7 @@ namespace CarWash.PWA.Tests
             var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
             const string COMMENT = "test";
 
-            var result = await controller.AddCarwashComment(null, COMMENT);
+            var result = await controller.AddComment(null, COMMENT);
 
             Assert.IsType<BadRequestObjectResult>(result);
         }
@@ -1673,7 +1673,7 @@ namespace CarWash.PWA.Tests
             var reservation = await dbContext.Reservation.FirstAsync(r => r.State == State.WashInProgress);
             var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
 
-            var result = await controller.AddCarwashComment(reservation.Id, null);
+            var result = await controller.AddComment(reservation.Id, null);
 
             Assert.IsType<BadRequestObjectResult>(result);
         }
@@ -1686,7 +1686,7 @@ namespace CarWash.PWA.Tests
             var controller = CreateControllerStub(dbContext, CARWASH_ADMIN_EMAIL);
             const string COMMENT = "test";
 
-            var result = await controller.AddCarwashComment("invalid id", COMMENT);
+            var result = await controller.AddComment("invalid id", COMMENT);
 
             Assert.IsType<NotFoundResult>(result);
         }
@@ -1714,7 +1714,7 @@ namespace CarWash.PWA.Tests
             var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, reservationService, hubContextStub, CreateTelemetryClientStub());
             const string COMMENT = "test";
 
-            var result = await controller.AddCarwashComment(reservation.Id, COMMENT);
+            var result = await controller.AddComment(reservation.Id, COMMENT);
 
             Assert.IsType<NoContentResult>(result);
             emailServiceMock.Verify(m => m.Send(It.IsAny<Email>(), It.IsAny<TimeSpan?>()), Times.Never());
