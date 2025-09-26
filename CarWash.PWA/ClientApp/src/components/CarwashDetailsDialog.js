@@ -562,6 +562,13 @@ class CarwashDetailsDialog extends React.Component {
 
     handleDropoffKey = async () => {
         const { reservation, updateReservation, openSnackbar } = this.props;
+        
+        // Validate that location is set before opening locker
+        if (!reservation.location) {
+            openSnackbar('Location must be set before opening locker. Please set the vehicle location first.');
+            return;
+        }
+        
         this.setState({ lockerOpening: true, waitingForClosure: false });
         try {
             // Open available locker

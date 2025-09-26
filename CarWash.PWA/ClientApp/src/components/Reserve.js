@@ -386,7 +386,7 @@ class Reserve extends TrackedComponent {
             activeStep: 2,
             selectedDate,
             disabledSlots: this.props.configuration.slots.map((slot, index) => {
-                const startHour = parseInt(slot.startTime.split(':')[0], 10);
+                const startHour = dayjs(slot.startTime, 'HH:mm:ss').hour();
                 return this.isTimeNotAvailable(date, startHour);
             }),
             dateStepLabel: selectedDate.format('MMMM D, YYYY'),
@@ -639,9 +639,9 @@ class Reserve extends TrackedComponent {
                 }
             }
 
-            // Parse TimeSpan format (e.g., "08:00:00") to display hours
-            const startHour = parseInt(slot.startTime.split(':')[0], 10);
-            const endHour = parseInt(slot.endTime.split(':')[0], 10);
+            // Parse TimeSpan format (e.g., "08:00:00") to display hours using dayjs for robustness
+            const startHour = dayjs(slot.startTime, 'HH:mm:ss').hour();
+            const endHour = dayjs(slot.endTime, 'HH:mm:ss').hour();
 
             jsx.push(
                 <FormControlLabel

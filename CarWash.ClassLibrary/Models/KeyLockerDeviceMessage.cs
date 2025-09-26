@@ -11,10 +11,10 @@ namespace CarWash.ClassLibrary.Models
     public class KeyLockerDeviceMessage
     {
         /// <summary>
-        /// Gets or sets the integer value representing the state of all boxes in the key locker device.
-        /// Each bit in this integer corresponds to the state of a specific box.
+        /// Gets or sets the long integer value representing the state of all boxes in the key locker device.
+        /// Each bit in this long value corresponds to the state of a specific box.
         /// </summary>
-        public int Inputs { get; set; }
+        public long Inputs { get; set; }
 
         /// <summary>
         /// Returns a list of boolean values representing the state of each box in the key locker.

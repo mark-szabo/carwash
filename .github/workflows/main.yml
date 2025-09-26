@@ -1,5 +1,6 @@
 name: Build and deploy to PROD
 on:
+    workflow_dispatch:
     push:
         branches:
             - main
@@ -119,7 +120,7 @@ jobs:
                   --value ${{ needs.build-web.outputs.build_number }} `
                   --yes
             - name: Purge Cloudflare Cache
-              uses: aorfanos/cloudflare-purge-action@6ea4c10def01482f8a214c8e527a40918844345e
+              uses: aorfanos/cloudflare-purge-action@v1.0.3
               env:
                   CF_ZONE_NAME: ${{ env.CLOUDFLARE_ZONE }}
                   CF_TOKEN: ${{ env.CLOUDFLARE_TOKEN }}

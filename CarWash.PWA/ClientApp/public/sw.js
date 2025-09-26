@@ -20,9 +20,9 @@ workbox.core.setCacheNameDetails({
 });
 
 // Don't forget to increase the revision number of index.html (aka. '/')
-// as it is needed to include the newly genereted js and css files.
+// as it is needed to include the newly generated js and css files.
 // Error would be thrown: Refused to execute script from '...' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled.
-const VERSION = '2.6.3';
+const VERSION = '2.6.5';
 console.log(`Build: ${VERSION}`);
 workbox.precaching.cleanupOutdatedCaches();
 workbox.precaching.precacheAndRoute([
