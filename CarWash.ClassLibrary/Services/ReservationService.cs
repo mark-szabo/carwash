@@ -100,7 +100,7 @@ namespace CarWash.ClassLibrary.Services
 
             // Validate the reservation
             var validationResult = await reservationValidator.ValidateReservationAsync(reservation, isUpdate: false, currentUser);
-            if (!validationResult.IsValid) throw new ReservationValidationExeption(validationResult.ErrorMessage);
+            if (!validationResult.IsValid) throw new ReservationValidationException(validationResult.ErrorMessage);
 
             if (reservation.Comments?.Count == 1)
             {
@@ -155,7 +155,7 @@ namespace CarWash.ClassLibrary.Services
         {
             // Validate the reservation
             var validationResult = await reservationValidator.ValidateReservationAsync(reservation, isUpdate: true, currentUser, reservation.Id);
-            if (!validationResult.IsValid) throw new ReservationValidationExeption(validationResult.ErrorMessage);
+            if (!validationResult.IsValid) throw new ReservationValidationException(validationResult.ErrorMessage);
 
             var dbReservation = await context.Reservation.FindAsync(reservation.Id) ?? throw new ReservationNotFoundException();
 

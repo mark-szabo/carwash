@@ -107,7 +107,7 @@ namespace CarWash.PWA.Controllers
 
                 return Ok(new ReservationViewModel(updatedReservation));
             }
-            catch (ReservationValidationExeption ex)
+            catch (ReservationValidationException ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -151,7 +151,7 @@ namespace CarWash.PWA.Controllers
 
                 return CreatedAtAction(nameof(GetReservation), new { id = createdReservation.Id }, new ReservationViewModel(createdReservation));
             }
-            catch (ReservationValidationExeption ex)
+            catch (ReservationValidationException ex)
             {
                 return BadRequest(ex.Message);
             }

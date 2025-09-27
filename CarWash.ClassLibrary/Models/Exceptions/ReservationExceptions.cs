@@ -50,20 +50,20 @@ namespace CarWash.ClassLibrary.Models.Exceptions
     /// <remarks>This exception is typically used to indicate that a reservation operation has failed due to
     /// invalid input or a violation of business rules. It can be used to provide additional context about the
     /// validation failure through the exception message or an inner exception.</remarks>
-    public class ReservationValidationExeption : Exception
+    public class ReservationValidationException : Exception
     {
         /// <inheritdoc />
-        public ReservationValidationExeption()
+        public ReservationValidationException()
         {
         }
 
         /// <inheritdoc />
-        public ReservationValidationExeption(string? message) : base(message)
+        public ReservationValidationException(string? message) : base(message)
         {
         }
 
         /// <inheritdoc />
-        public ReservationValidationExeption(string? message, Exception? innerException) : base(message, innerException)
+        public ReservationValidationException(string? message, Exception? innerException) : base(message, innerException)
         {
         }
     }

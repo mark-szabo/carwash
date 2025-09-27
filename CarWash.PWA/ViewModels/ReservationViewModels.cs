@@ -11,9 +11,7 @@ namespace CarWash.PWA.ViewModels
     public record ConfirmDropoffByEmailViewModel(
         string Email, 
         string Location, 
-        string VehiclePlateNumber, 
-        string ReservationId, 
-        string Hash);
+        string VehiclePlateNumber);
 
     /// <summary>
     /// View model for reservations
