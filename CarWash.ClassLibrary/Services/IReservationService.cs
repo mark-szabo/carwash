@@ -72,6 +72,14 @@ namespace CarWash.ClassLibrary.Services
         /// <param name="currentUser">The current user</param>
         /// <returns>Task representing the operation</returns>
         Task ConfirmDropoffAsync(string reservationId, string location, User currentUser);
+
+        /// <summary>
+        /// Confirms the drop-off of a reservation using the provided email address and location.
+        /// </summary>
+        /// <param name="email">The email address associated with the reservation. Cannot be null or empty.</param>
+        /// <param name="location">The location where the drop-off is being confirmed. Cannot be null or empty.</param>
+        /// <param name="vehiclePlateNumber">The vehicle's plate number associated with the reservation. This parameter is optional and can be null.</param>
+        /// <returns>A task that represents the operation. The task result contains the confirmed reservation details.</returns>
         Task<Reservation> ConfirmDropoffByEmail(string email, string location, string? vehiclePlateNumber);
 
         /// <summary>
@@ -196,20 +204,4 @@ namespace CarWash.ClassLibrary.Services
     /// <param name="IsValid"></param>
     /// <param name="ErrorMessage"></param>
     internal record ValidationResult(bool IsValid, string ErrorMessage = "");
-
-    [Serializable]
-    public class ReservationValidationExeption : Exception
-    {
-        public ReservationValidationExeption()
-        {
-        }
-
-        public ReservationValidationExeption(string? message) : base(message)
-        {
-        }
-
-        public ReservationValidationExeption(string? message, Exception? innerException) : base(message, innerException)
-        {
-        }
-    }
 }

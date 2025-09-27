@@ -1428,7 +1428,7 @@ namespace CarWash.PWA.Tests
                 pushServiceMock.Object,
                 botServiceMock.Object,
                 CreateTelemetryClientStub());
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, reservationService, hubContextStub, CreateTelemetryClientStub());
+            var controller = new ReservationsController(userServiceStub.Object, reservationService, hubContextStub);
 
             var result = await controller.CompleteWash(reservation.Id);
 
@@ -1457,7 +1457,7 @@ namespace CarWash.PWA.Tests
             userServiceStub.Setup(s => s.CurrentUser).Returns(user);
             var hubContextStub = CreateHubContextStub();
             var reservationService = new ReservationService(dbContext, CreateConfigurationStub(), emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, reservationService, hubContextStub, CreateTelemetryClientStub());
+            var controller = new ReservationsController(userServiceStub.Object, reservationService, hubContextStub);
 
             var result = await controller.CompleteWash(reservation.Id);
 
@@ -1487,7 +1487,7 @@ namespace CarWash.PWA.Tests
             userServiceStub.Setup(s => s.CurrentUser).Returns(user);
             var hubContextStub = CreateHubContextStub();
             var reservationService = new ReservationService(dbContext, CreateConfigurationStub(), emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, reservationService, hubContextStub, CreateTelemetryClientStub());
+            var controller = new ReservationsController(userServiceStub.Object, reservationService, hubContextStub);
 
             var result = await controller.CompleteWash(reservation.Id);
 
@@ -1517,7 +1517,7 @@ namespace CarWash.PWA.Tests
             userServiceStub.Setup(s => s.CurrentUser).Returns(user);
             var hubContextStub = CreateHubContextStub();
             var reservationService = new ReservationService(dbContext, CreateConfigurationStub(), emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, reservationService, hubContextStub, CreateTelemetryClientStub());
+            var controller = new ReservationsController(userServiceStub.Object, reservationService, hubContextStub);
 
             var result = await controller.CompleteWash(reservation.Id);
 
@@ -1711,7 +1711,7 @@ namespace CarWash.PWA.Tests
             userServiceStub.Setup(s => s.CurrentUser).Returns(user);
             var hubContextStub = CreateHubContextStub();
             var reservationService = new ReservationService(dbContext, CreateConfigurationStub(), emailServiceMock.Object, calendarServiceStub.Object, pushServiceMock.Object, botServiceMock.Object, CreateTelemetryClientStub());
-            var controller = new ReservationsController(CreateConfigurationStub(), dbContext, userServiceStub.Object, reservationService, hubContextStub, CreateTelemetryClientStub());
+            var controller = new ReservationsController(userServiceStub.Object, reservationService, hubContextStub);
             const string COMMENT = "test";
 
             var result = await controller.AddComment(reservation.Id, COMMENT);
@@ -2276,12 +2276,9 @@ namespace CarWash.PWA.Tests
                 CreateTelemetryClientStub());
 
             return new ReservationsController(
-                configurationStub,
-                dbContext,
                 userServiceStub.Object,
                 reservationService,
-                hubContextStub,
-                CreateTelemetryClientStub());
+                hubContextStub);
         }
 
         private static ReservationsController CreateServiceControllerStub(ApplicationDbContext dbContext)
@@ -2306,12 +2303,9 @@ namespace CarWash.PWA.Tests
                 CreateTelemetryClientStub());
 
             return new ReservationsController(
-                configurationStub,
-                dbContext,
                 userServiceStub.Object,
                 reservationService,
-                hubContextStub,
-                CreateTelemetryClientStub());
+                hubContextStub);
         }
 
         private static TelemetryClient CreateTelemetryClientStub()

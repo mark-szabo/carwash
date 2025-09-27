@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
+using CarWash.ClassLibrary.Models.Exceptions;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.EntityFrameworkCore;
@@ -41,10 +41,10 @@ namespace CarWash.ClassLibrary.Services
             if (reservation.UserId != currentUser.Id)
             {
                 if (!currentUser.IsAdmin && !currentUser.IsCarwashAdmin)
-                    throw new UnauthorizedAccessException("Cannot view reservation of other users.");
+                    throw new UnauthorizedException("Cannot view reservation of other users.");
 
                 if (currentUser.IsAdmin && reservation.User.Company != currentUser.Company)
-                    throw new UnauthorizedAccessException("Cannot view reservation of users from other companies.");
+                    throw new UnauthorizedException("Cannot view reservation of users from other companies.");
             }
 
             return reservation;
@@ -63,7 +63,7 @@ namespace CarWash.ClassLibrary.Services
         /// <inheritdoc />
         public async Task<List<Reservation>> GetReservationsOfCompanyAsync(User currentUser)
         {
-            if (!currentUser.IsAdmin) throw new UnauthorizedAccessException();
+            if (!currentUser.IsAdmin) throw new UnauthorizedException();
 
             return await context.Reservation
                 .Include(r => r.User)
@@ -77,7 +77,7 @@ namespace CarWash.ClassLibrary.Services
         /// <inheritdoc />
         public async Task<List<Reservation>> GetReservationsOnBacklog(User currentUser)
         {
-            if (!currentUser.IsCarwashAdmin) throw new UnauthorizedAccessException();
+            if (!currentUser.IsCarwashAdmin) throw new UnauthorizedException();
 
             return await context.Reservation
                 .Include(r => r.User)
@@ -157,7 +157,7 @@ namespace CarWash.ClassLibrary.Services
             var validationResult = await reservationValidator.ValidateReservationAsync(reservation, isUpdate: true, currentUser, reservation.Id);
             if (!validationResult.IsValid) throw new ReservationValidationExeption(validationResult.ErrorMessage);
 
-            var dbReservation = await context.Reservation.FindAsync(reservation.Id) ?? throw new InvalidOperationException("Reservation not found.");
+            var dbReservation = await context.Reservation.FindAsync(reservation.Id) ?? throw new ReservationNotFoundException();
 
             // Update basic properties
             dbReservation.VehiclePlateNumber = reservation.VehiclePlateNumber.ToUpper().Replace("-", string.Empty).Replace(" ", string.Empty);
@@ -174,13 +174,13 @@ namespace CarWash.ClassLibrary.Services
             if (reservation.UserId != currentUser.Id)
             {
                 if (!currentUser.IsAdmin && !currentUser.IsCarwashAdmin)
-                    throw new UnauthorizedAccessException("Cannot update reservation for other users.");
+                    throw new UnauthorizedException("Cannot update reservation for other users.");
 
                 if (reservation.UserId != null)
                 {
                     var reservationUser = await context.Users.FindAsync(reservation.UserId);
                     if (currentUser.IsAdmin && reservationUser?.Company != currentUser.Company)
-                        throw new UnauthorizedAccessException("Cannot update reservation for users from other companies.");
+                        throw new UnauthorizedException("Cannot update reservation for users from other companies.");
 
                     dbReservation.UserId = reservation.UserId;
                 }
@@ -220,10 +220,10 @@ namespace CarWash.ClassLibrary.Services
         public async Task<Reservation> DeleteReservationAsync(string reservationId, User currentUser)
         {
             var reservation = await context.Reservation.Include(r => r.User).SingleOrDefaultAsync(r => r.Id == reservationId)
-                ?? throw new InvalidOperationException("Reservation not found.");
+                ?? throw new ReservationNotFoundException();
 
             if (reservation.UserId != currentUser.Id && !currentUser.IsAdmin && !currentUser.IsCarwashAdmin)
-                throw new UnauthorizedAccessException("Cannot delete reservation for other users.");
+                throw new UnauthorizedException("Cannot delete reservation for other users.");
 
             context.Reservation.Remove(reservation);
             await context.SaveChangesAsync();
@@ -251,10 +251,10 @@ namespace CarWash.ClassLibrary.Services
             ArgumentNullException.ThrowIfNull(location);
 
             var reservation = await context.Reservation.FindAsync(reservationId)
-                ?? throw new InvalidOperationException("Reservation not found.");
+                ?? throw new ReservationNotFoundException();
 
             if (reservation.UserId != currentUser.Id && !currentUser.IsAdmin && !currentUser.IsCarwashAdmin)
-                throw new UnauthorizedAccessException("Cannot confirm dropoff for other users.");
+                throw new UnauthorizedException("Cannot confirm dropoff for other users.");
 
             reservation.State = State.DropoffAndLocationConfirmed;
             reservation.Location = location;
@@ -278,7 +278,7 @@ namespace CarWash.ClassLibrary.Services
             ArgumentNullException.ThrowIfNull(location);
 
             var user = await context.Users.SingleOrDefaultAsync(u => u.Email == email)
-                ?? throw new InvalidOperationException($"No user found with email address '{email}'.");
+                ?? throw new UserNotFoundException($"No user found with email address '{email}'.");
 
             var reservations = await context.Reservation
                 .AsNoTracking()
@@ -287,7 +287,7 @@ namespace CarWash.ClassLibrary.Services
                 .OrderBy(r => r.StartDate)
                 .ToListAsync();
 
-            if (reservations.Count == 0) throw new InvalidOperationException("No reservations found.");
+            if (reservations.Count == 0) throw new UserNotFoundException("No reservations found.");
 
             Reservation reservation;
             string reservationResolution;
@@ -323,11 +323,11 @@ namespace CarWash.ClassLibrary.Services
             }
             else if (vehiclePlateNumber == null)
             {
-                throw new InvalidDataException("More than one reservation found where the reservation state is submitted or waiting for key. Please specify vehicle plate number!");
+                throw new ReservationConflictException("More than one reservation found where the reservation state is submitted or waiting for key. Please specify vehicle plate number!");
             }
             else
             {
-                throw new InvalidDataException("More than one reservation found where the reservation state is submitted or waiting for key.");
+                throw new ReservationConflictException("More than one reservation found where the reservation state is submitted or waiting for key.");
             }
 
             await ConfirmDropoffAsync(reservation.Id, location, reservation.User!);
@@ -355,10 +355,10 @@ namespace CarWash.ClassLibrary.Services
             ArgumentNullException.ThrowIfNull(reservationId);
 
             if (!currentUser.IsCarwashAdmin)
-                throw new UnauthorizedAccessException("Only carwash admins can start wash.");
+                throw new UnauthorizedException("Only carwash admins can start wash.");
 
             var reservation = await context.Reservation.FindAsync(reservationId)
-                ?? throw new InvalidOperationException("Reservation not found.");
+                ?? throw new ReservationNotFoundException();
 
             reservation.State = State.WashInProgress;
             await SaveReservationChangesAsync(reservation);
@@ -373,13 +373,13 @@ namespace CarWash.ClassLibrary.Services
             ArgumentNullException.ThrowIfNull(reservationId);
 
             if (!currentUser.IsCarwashAdmin)
-                throw new UnauthorizedAccessException("Only carwash admins can complete wash.");
+                throw new UnauthorizedException("Only carwash admins can complete wash.");
 
             var reservation = await context.Reservation
                 .Include(r => r.User)
                 .Include(r => r.KeyLockerBox)
                 .SingleOrDefaultAsync(r => r.Id == reservationId)
-                ?? throw new InvalidOperationException("Reservation not found.");
+                ?? throw new ReservationNotFoundException();
 
             reservation.State = reservation.Private ? State.NotYetPaid : State.Done;
             await SaveReservationChangesAsync(reservation);
@@ -397,13 +397,13 @@ namespace CarWash.ClassLibrary.Services
             ArgumentNullException.ThrowIfNull(reservationId);
 
             if (!currentUser.IsCarwashAdmin)
-                throw new UnauthorizedAccessException("Only carwash admins can confirm payment.");
+                throw new UnauthorizedException("Only carwash admins can confirm payment.");
 
             var reservation = await context.Reservation.FindAsync(reservationId)
-                ?? throw new InvalidOperationException("Reservation not found.");
+                ?? throw new ReservationNotFoundException();
 
             if (reservation.State != State.NotYetPaid)
-                throw new InvalidOperationException("Reservation state is not 'Not yet paid'.");
+                throw new ReservationNotFoundException("Reservation state is not 'Not yet paid'.");
 
             reservation.State = State.Done;
             await SaveReservationChangesAsync(reservation);
@@ -415,10 +415,10 @@ namespace CarWash.ClassLibrary.Services
             ArgumentNullException.ThrowIfNull(reservationId);
 
             if (!currentUser.IsCarwashAdmin)
-                throw new UnauthorizedAccessException("Only carwash admins can set reservation state.");
+                throw new UnauthorizedException("Only carwash admins can set reservation state.");
 
             var reservation = await context.Reservation.FindAsync(reservationId)
-                ?? throw new InvalidOperationException("Reservation not found.");
+                ?? throw new ReservationNotFoundException();
 
             reservation.State = state;
             await SaveReservationChangesAsync(reservation);
@@ -431,15 +431,15 @@ namespace CarWash.ClassLibrary.Services
             ArgumentNullException.ThrowIfNull(comment);
 
             var reservation = await context.Reservation.Include(r => r.User).SingleOrDefaultAsync(r => r.Id == reservationId)
-                ?? throw new InvalidOperationException("Reservation not found.");
+                ?? throw new ReservationNotFoundException();
 
             if (reservation.UserId != currentUser.Id)
             {
                 if (!currentUser.IsAdmin && !currentUser.IsCarwashAdmin)
-                    throw new UnauthorizedAccessException("Cannot add comment to other users' reservations.");
+                    throw new UnauthorizedException("Cannot add comment to other users' reservations.");
 
                 if (currentUser.IsAdmin && reservation.User!.Company != currentUser.Company)
-                    throw new UnauthorizedAccessException("Cannot add comment to reservations from other companies.");
+                    throw new UnauthorizedException("Cannot add comment to reservations from other companies.");
             }
 
             reservation.AddComment(new Comment
@@ -469,10 +469,10 @@ namespace CarWash.ClassLibrary.Services
             ArgumentNullException.ThrowIfNull(reservationId);
 
             if (!currentUser.IsCarwashAdmin)
-                throw new UnauthorizedAccessException("Only carwash admins can set MPV flag");
+                throw new UnauthorizedException("Only carwash admins can set MPV flag");
 
             var reservation = await context.Reservation.FindAsync(reservationId)
-                ?? throw new InvalidOperationException("Reservation not found");
+                ?? throw new ReservationNotFoundException();
 
             reservation.Mpv = mpv;
             await SaveReservationChangesAsync(reservation);
@@ -485,10 +485,10 @@ namespace CarWash.ClassLibrary.Services
             ArgumentNullException.ThrowIfNull(services);
 
             if (!currentUser.IsCarwashAdmin)
-                throw new UnauthorizedAccessException("Only carwash admins can update services");
+                throw new UnauthorizedException("Only carwash admins can update services");
 
             var reservation = await context.Reservation.FindAsync(reservationId)
-                ?? throw new InvalidOperationException("Reservation not found");
+                ?? throw new ReservationNotFoundException();
 
             reservation.Services = services;
             await SaveReservationChangesAsync(reservation);
@@ -501,10 +501,10 @@ namespace CarWash.ClassLibrary.Services
             ArgumentNullException.ThrowIfNull(location);
 
             if (!currentUser.IsCarwashAdmin)
-                throw new UnauthorizedAccessException("Only carwash admins can update location");
+                throw new UnauthorizedException("Only carwash admins can update location");
 
             var reservation = await context.Reservation.FindAsync(reservationId)
-                ?? throw new InvalidOperationException("Reservation not found");
+                ?? throw new ReservationNotFoundException();
 
             reservation.Location = location;
             await SaveReservationChangesAsync(reservation);
@@ -793,7 +793,7 @@ namespace CarWash.ClassLibrary.Services
                                 r.StartDate.Date <= endDate.Date)
                     .OrderBy(r => r.StartDate)
                     .ToListAsync();
-            else throw new UnauthorizedAccessException("Only admins or carwash admins can export reservations");
+            else throw new UnauthorizedException("Only admins or carwash admins can export reservations");
 
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             using var package = new ExcelPackage();
@@ -1027,7 +1027,7 @@ namespace CarWash.ClassLibrary.Services
             {
                 if (!await context.Reservation.AnyAsync(e => e.Id == reservation.Id))
                 {
-                    throw new InvalidOperationException();
+                    throw new ReservationNotFoundException();
                 }
                 else
                 {

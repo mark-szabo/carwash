@@ -6,15 +6,14 @@ using System.Threading.Tasks;
 using CarWash.ClassLibrary;
 using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
+using CarWash.ClassLibrary.Models.Exceptions;
 using CarWash.ClassLibrary.Services;
 using CarWash.PWA.Attributes;
 using CarWash.PWA.Hubs;
 using CarWash.PWA.ViewModels;
-using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Options;
 
 namespace CarWash.PWA.Controllers
 {
@@ -26,12 +25,9 @@ namespace CarWash.PWA.Controllers
     [Route("api/reservations")]
     [ApiController]
     public class ReservationsController(
-        IOptionsMonitor<CarWashConfiguration> configuration,
-        ApplicationDbContext context,
         IUserService userService,
         IReservationService reservationService,
-        IHubContext<BacklogHub> backlogHub,
-        TelemetryClient telemetryClient) : ControllerBase
+        IHubContext<BacklogHub> backlogHub) : ControllerBase
     {
         private readonly User _user = userService.CurrentUser;
 
@@ -76,7 +72,7 @@ namespace CarWash.PWA.Controllers
 
                 return Ok(new ReservationViewModel(reservation));
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedException ex)
             {
                 return Forbid(ex.Message);
             }
@@ -119,11 +115,11 @@ namespace CarWash.PWA.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedException)
             {
                 return Forbid();
             }
-            catch (InvalidOperationException)
+            catch (ReservationNotFoundException)
             {
                 return NotFound();
             }
@@ -163,7 +159,7 @@ namespace CarWash.PWA.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedException)
             {
                 return Forbid();
             }
@@ -195,11 +191,11 @@ namespace CarWash.PWA.Controllers
 
                 return Ok(new ReservationViewModel(deletedReservation));
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedException)
             {
                 return Forbid();
             }
-            catch (InvalidOperationException)
+            catch (ReservationNotFoundException)
             {
                 return NotFound();
             }
@@ -223,7 +219,7 @@ namespace CarWash.PWA.Controllers
 
                 return Ok(reservations.Select(r => new AdminReservationViewModel(r)));
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedException)
             {
                 return Forbid();
             }
@@ -247,7 +243,7 @@ namespace CarWash.PWA.Controllers
 
                 return Ok(reservations.Select(r => new AdminReservationViewModel(r)));
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedException)
             {
                 return Forbid();
             }
@@ -282,11 +278,11 @@ namespace CarWash.PWA.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedException)
             {
                 return Forbid();
             }
-            catch (InvalidOperationException)
+            catch (ReservationNotFoundException)
             {
                 return NotFound();
             }
@@ -320,15 +316,19 @@ namespace CarWash.PWA.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedException)
             {
                 return Forbid();
             }
-            catch (InvalidOperationException)
+            catch (ReservationNotFoundException ex)
             {
-                return NotFound("No user or reservation found.");
+                return NotFound(ex.Message);
             }
-            catch (InvalidDataException ex)
+            catch (UserNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (ReservationConflictException ex)
             {
                 return Conflict(ex.Message);
             }
@@ -362,11 +362,11 @@ namespace CarWash.PWA.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedException)
             {
                 return Forbid();
             }
-            catch (InvalidOperationException)
+            catch (ReservationNotFoundException)
             {
                 return NotFound();
             }
@@ -400,11 +400,11 @@ namespace CarWash.PWA.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedException)
             {
                 return Forbid();
             }
-            catch (InvalidOperationException)
+            catch (ReservationNotFoundException)
             {
                 return NotFound();
             }
@@ -438,11 +438,11 @@ namespace CarWash.PWA.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedException)
             {
                 return Forbid();
             }
-            catch (InvalidOperationException)
+            catch (ReservationNotFoundException)
             {
                 return NotFound();
             }
@@ -477,11 +477,11 @@ namespace CarWash.PWA.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedException)
             {
                 return Forbid();
             }
-            catch (InvalidOperationException)
+            catch (ReservationNotFoundException)
             {
                 return NotFound();
             }
@@ -516,11 +516,11 @@ namespace CarWash.PWA.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedException)
             {
                 return Forbid();
             }
-            catch (InvalidOperationException)
+            catch (ReservationNotFoundException)
             {
                 return NotFound();
             }
@@ -555,11 +555,11 @@ namespace CarWash.PWA.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedException)
             {
                 return Forbid();
             }
-            catch (InvalidOperationException)
+            catch (ReservationNotFoundException)
             {
                 return NotFound();
             }
@@ -594,11 +594,11 @@ namespace CarWash.PWA.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedException)
             {
                 return Forbid();
             }
-            catch (InvalidOperationException)
+            catch (ReservationNotFoundException)
             {
                 return NotFound();
             }
@@ -633,11 +633,11 @@ namespace CarWash.PWA.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedException)
             {
                 return Forbid();
             }
-            catch (InvalidOperationException)
+            catch (ReservationNotFoundException)
             {
                 return NotFound();
             }
@@ -715,7 +715,7 @@ namespace CarWash.PWA.Controllers
                 return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                            $"carwash-export-{startDateNonNull.Year}-{startDateNonNull.Month}-{startDateNonNull.Day}.xlsx");
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedException)
             {
                 return Forbid();
             }

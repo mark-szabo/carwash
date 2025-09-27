@@ -1,5 +1,6 @@
 ﻿using CarWash.ClassLibrary.Enums;
 using CarWash.ClassLibrary.Models;
+using CarWash.ClassLibrary.Models.Exceptions;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.EntityFrameworkCore;
@@ -141,7 +142,7 @@ namespace CarWash.ClassLibrary.Services
                             { "IsCarwashAdmin", currentUser.IsCarwashAdmin.ToString() },
                             { "CreatedById", currentUser.Id }
                         });
-                    throw new UnauthorizedAccessException("User cannot reserve in the name of others unless admin.");
+                    throw new UnauthorizedException("User cannot reserve in the name of others unless admin.");
                 }
 
                 if (reservation.UserId != null)
@@ -159,7 +160,7 @@ namespace CarWash.ClassLibrary.Services
                                 { "IsCarwashAdmin", currentUser.IsCarwashAdmin.ToString() },
                                 { "CreatedById", currentUser.Id }
                             });
-                        throw new UnauthorizedAccessException("Admin cannot reserve in the name of other companies' users.");
+                        throw new UnauthorizedException("Admin cannot reserve in the name of other companies' users.");
                     }
                 }
             }
